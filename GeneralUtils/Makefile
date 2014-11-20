@@ -1,0 +1,33 @@
+
+# assure correct shell is used
+SHELL = /bin/sh
+
+# apply implicit rules only for listed file types
+.SUFFIXES:
+.SUFFIXES: .c .cc .cpp .o
+
+# compiler command to use
+CC = cc
+CXX = g++
+
+CXXFLAGS = -std=c++0x -O3 -fPIC -pedantic -Wall -Wextra -I. 
+
+#
+# things to build
+#
+
+objects = ControlMenu.o FloatErr.o PathUtils.o QFile.o SMExcept.o StringManip.o Stringmap.o TagCounter.o
+
+all: libMPMGeneralUtils.a
+
+libMPMGeneralUtils.a: $(objects)
+	ar rs libMPMGeneralUtils.a $(objects)
+
+#
+# cleanup
+#
+
+.PHONY: clean
+clean:
+	-rm -f libMPMGeneralUtils.a
+	-rm -f *.o
