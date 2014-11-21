@@ -16,7 +16,7 @@ LDFLAGS =  -L../GeneralUtils/ -lMPMGeneralUtils `root-config --libs`
 # things to build
 #
 
-objects = OutputManager.o TChainScanner.o SegmentSaver.o
+objects = GraphicsUtils.o OutputManager.o TChainScanner.o SegmentSaver.o
 
 all: libMPMROOTUtils.a
 
@@ -24,7 +24,7 @@ libMPMROOTUtils.a: ../GeneralUtils/libMPMGeneralUtils.a $(objects)
 	ar rs  libMPMROOTUtils.a $(objects)
 
 ../GeneralUtils/libMPMGeneralUtils.a:
-	cd ../GeneralUtils; make
+	+cd ../GeneralUtils; make
 
 #
 # cleanup

@@ -76,7 +76,7 @@ string Stringmap::toString() const {
 
 void Stringmap::display(string linepfx) const {
     for(multimap<string,string>::const_iterator it = dat.begin(); it != dat.end(); it++)
-        std::cout << linepfx <<	it->first << ": " << it->second << "\n";
+        std::cout << linepfx << it->first << ": " << it->second << "\n";
 }
 
 
@@ -103,5 +103,5 @@ vector<double> Stringmap::retrieveDouble(const string& k) const {
 
 void Stringmap::mergeInto(Stringmap& S) const {
     for(multimap<string,string>::const_iterator it = dat.begin(); it != dat.end(); it++)
-        S.insert(it->first,it->second);	
+        S.insert(it->first,it->second);
 }

@@ -54,7 +54,7 @@ public:
     /// pop float off front of deque
     float popFloatD() { return atof(popStringD().c_str()); }
     
-    /// pop int off stack
+    /// pop string off stack
     string popString() { assert(mystack); string s = mystack->top(); mystack->pop(); return s; }
     /// pop int off stack
     int popInt() { return atoi(popString().c_str()); }
