@@ -24,6 +24,7 @@ SQLite_Helper::SQLite_Helper(const string& dbname) {
         db = NULL;
         throw e;
     }
+    sqlite3_busy_timeout(db, 1001);
 }
 
 SQLite_Helper::~SQLite_Helper() {
@@ -34,11 +35,18 @@ SQLite_Helper::~SQLite_Helper() {
 }
 
 int SQLite_Helper::setQuery(const char* qry, sqlite3_stmt*& stmt) {
-    int rc = sqlite3_prepare_v2(db, qry, strlen(qry), &stmt, NULL);
+    int rc;
+    while((rc = sqlite3_prepare_v2(db, qry, strlen(qry), &stmt, NULL)) == SQLITE_BUSY) { printf("Waiting for DB retry preparing statement...\n"); }
     if(rc != SQLITE_OK) {
         SMExcept e("failed_query");
         e.insert("message",sqlite3_errmsg(db));
         throw(e);
     }
+    return rc;
+}
+
+int SQLite_Helper::busyRetry(sqlite3_stmt*& stmt) {
+    int rc;
+    while((rc = sqlite3_step(stmt)) == SQLITE_BUSY) { printf("Waiting for DB retry executing statement...\n"); }
     return rc;
 }

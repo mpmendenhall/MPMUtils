@@ -18,6 +18,8 @@ public:
 protected:    
     /// set up query for use
     int setQuery(const char* qry, sqlite3_stmt*& stmt);
+    /// retry a query until DB is available
+    int busyRetry(sqlite3_stmt*& stmt);
     
     sqlite3* db = NULL;                 ///< database connection
     static SQLite_Helper* myDB;         ///< static singleton instance
