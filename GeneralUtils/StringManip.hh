@@ -83,5 +83,7 @@ vector<string> split(const string& str, const string splitchars = " \t\r\n");
 string join(const vector<string>& ss, const string& sep = " ");
 /// strip junk chars off start and end of string
 string strip(const string& str, const string stripchars = " \t\r\n");
+/// drop last segment after splitting character
+string dropLast(const string& str, const string splitchars);
 
 #endif

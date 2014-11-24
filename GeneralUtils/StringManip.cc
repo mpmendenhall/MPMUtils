@@ -128,3 +128,8 @@ vector< vector<double> > readArray(ifstream& fin, unsigned int minitems, const s
     }
     return a;
 }
+
+string dropLast(const string& str, const string splitchars) {
+    vector<string> v = split(str,splitchars);
+    return str.substr(0, str.size() - v.back().size() - 1);
+}
