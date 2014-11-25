@@ -6,10 +6,7 @@ SHELL = /bin/sh
 .SUFFIXES: .c .cc .cpp .o
 	 
 # compiler command to use
-CC = cc
-CXX = g++
-
-CXXFLAGS = -std=c++0x -O3 -fPIC `root-config --cflags` -pedantic -Wall -Wextra -I. -I../GeneralUtils/
+CXXFLAGS = -std=c++11 -O3 -fPIC `root-config --cflags` -pedantic -Wall -Wextra -I. -I../GeneralUtils/
 LDFLAGS =  -L../GeneralUtils/ -lMPMGeneralUtils `root-config --libs`
 
 #

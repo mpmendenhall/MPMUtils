@@ -7,10 +7,7 @@ SHELL = /bin/sh
 .SUFFIXES: .c .cc .cpp .o
 
 # compiler command to use
-CC = cc
-CXX = g++
-
-CXXFLAGS = -std=c++0x -O3 -fPIC -pedantic -Wall -Wextra -I. 
+CXXFLAGS = -std=c++11 -O3 -fPIC -pedantic -Wall -Wextra -I. 
 
 #
 # things to build
