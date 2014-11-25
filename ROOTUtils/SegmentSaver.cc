@@ -23,7 +23,7 @@
 #include "SMExcept.hh"
 #include <TString.h>
 
-TH1* SegmentSaver::tryLoad(const std::string& hname) {
+TH1* SegmentSaver::tryLoad(const string& hname) {
     if(!fIn) return NULL;
     TH1* h = NULL;
     fIn->GetObject(hname.c_str(),h);
@@ -42,7 +42,7 @@ TH1* SegmentSaver::tryLoad(const std::string& hname) {
     return h;
 }
 
-TH1* SegmentSaver::registerSavedHist(const std::string& hname, const std::string& title,unsigned int nbins, float xmin, float xmax) {
+TH1* SegmentSaver::registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax) {
     smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
     TH1* h = tryLoad(hname);
     if(!h)
@@ -51,7 +51,7 @@ TH1* SegmentSaver::registerSavedHist(const std::string& hname, const std::string
     return h;
 }
 
-TH1* SegmentSaver::registerSavedHist(const std::string& hname, const TH1& hTemplate) {
+TH1* SegmentSaver::registerSavedHist(const string& hname, const TH1& hTemplate) {
     smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
     TH1* h = tryLoad(hname);
     if(!h) {
@@ -62,7 +62,7 @@ TH1* SegmentSaver::registerSavedHist(const std::string& hname, const TH1& hTempl
     return h;
 }
 
-SegmentSaver::SegmentSaver(OutputManager* pnt, const std::string& nm, const std::string& inflName):
+SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
 OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalculated(false), inflAge(0) {
     // open file to load existing data
     fIn = (inflname.size())?(new TFile((inflname+".root").c_str(),"READ")):NULL;
@@ -80,38 +80,38 @@ SegmentSaver::~SegmentSaver() {
     }
 }
 
-bool SegmentSaver::inflExists(const std::string& inflName) {
+bool SegmentSaver::inflExists(const string& inflName) {
     return fileExists(inflName+".root") && fileExists(inflName+".txt");
 }
 
-TH1* SegmentSaver::getSavedHist(const std::string& hname) {
-    map<std::string,TH1*>::iterator it = saveHists.find(hname);
+TH1* SegmentSaver::getSavedHist(const string& hname) {
+    map<string,TH1*>::iterator it = saveHists.find(hname);
     smassert(it != saveHists.end());
     return it->second;
 }
 
-const TH1* SegmentSaver::getSavedHist(const std::string& hname) const {
-    map<std::string,TH1*>::const_iterator it = saveHists.find(hname);
+const TH1* SegmentSaver::getSavedHist(const string& hname) const {
+    map<string,TH1*>::const_iterator it = saveHists.find(hname);
     smassert(it != saveHists.end(),"missing_histogram");
     return it->second;
 }
 
 void SegmentSaver::zeroSavedHists() {
-    for(map<std::string,TH1*>::iterator it = saveHists.begin(); it != saveHists.end(); it++)
+    for(map<string,TH1*>::iterator it = saveHists.begin(); it != saveHists.end(); it++)
         it->second->Reset();
 }
 
 void SegmentSaver::scaleData(double s) {
     if(s==1.) return;
-             for(map<std::string,TH1*>::iterator it = saveHists.begin(); it != saveHists.end(); it++)
+             for(map<string,TH1*>::iterator it = saveHists.begin(); it != saveHists.end(); it++)
                  if(it->second->ClassName() != TString("TProfile"))
                      it->second->Scale(s);
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S) const {
     if(saveHists.size() != S.saveHists.size()) return false;
-             for(map<std::string,TH1*>::const_iterator it = saveHists.begin(); it != saveHists.end(); it++) {
-                 map<std::string,TH1*>::const_iterator otherit = S.saveHists.find(it->first);
+             for(map<string,TH1*>::const_iterator it = saveHists.begin(); it != saveHists.end(); it++) {
+                 map<string,TH1*>::const_iterator otherit = S.saveHists.find(it->first);
                  if(otherit == S.saveHists.end()) return false;
              // TODO other checks?
              }
@@ -121,6 +121,6 @@ bool SegmentSaver::isEquivalent(const SegmentSaver& S) const {
 void SegmentSaver::addSegment(const SegmentSaver& S) {
     smassert(isEquivalent(S),"mismatched_histogram");
     // add histograms
-    for(map<std::string,TH1*>::const_iterator it = saveHists.begin(); it != saveHists.end(); it++)
+    for(map<string,TH1*>::const_iterator it = saveHists.begin(); it != saveHists.end(); it++)
         it->second->Add(S.getSavedHist(it->first));
 }

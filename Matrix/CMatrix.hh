@@ -60,7 +60,7 @@ protected:
 
 namespace VarVec_element_IO {
     template<>
-    inline void writeToFile(const complex<double>& t, std::ostream& o) { o.write((char*)&t, sizeof(t)); }
+    inline void writeToFile(const complex<double>& t, ostream& o) { o.write((char*)&t, sizeof(t)); }
     
     template<>
     inline complex<double> readFromFile(std::istream& s) { complex<double> x; s.read((char*)&x, sizeof(x)); return x; }
@@ -87,7 +87,7 @@ public:
     
     /*
      * /// Save matrix to a file (to be read by readFromFile())
-     * void writeToFile(std::ostream& o) const;
+     * void writeToFile(ostream& o) const;
      * /// Read matrix from a file written by writeToFile()
      * static CMatrix readFromFile(std::istream& s);
      */
@@ -161,7 +161,7 @@ public:
     void printRow(int r) const;
     
     /// Dump binary data to file
-    void writeToFile(std::ostream& o) const;
+    void writeToFile(ostream& o) const;
     /// Read binary data from file
     static CMatrix readFromFile(std::istream& s);
     
@@ -183,6 +183,6 @@ private:
     mutable bool has_kspace;                            ///< whether the k-space representation of this matrix has been calculated
 };
 
-std::ostream& operator<<(std::ostream& o, const CMatrix& m);
+ostream& operator<<(ostream& o, const CMatrix& m);
 
 #endif

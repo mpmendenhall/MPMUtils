@@ -59,11 +59,11 @@ public:
     virtual void assertConsistent(const Monomial<N,T,P>& u) const { if(!consistentWith(u)) throw(InconsistentMonomialException()); }
     
     /// output representation in algebraic form
-    std::ostream& algebraicForm(std::ostream& o) const;
+    ostream& algebraicForm(ostream& o) const;
     /// output representation in data table form
-    std::ostream& tableForm(std::ostream& o) const;
+    ostream& tableForm(ostream& o) const;
     /// output representation in LaTeX form
-    std::ostream& latexForm(std::ostream& o) const;
+    ostream& latexForm(ostream& o) const;
     
     /// convert to dimensionless quantity of given unit
     double in(const Monomial<N,T,P>& u) const { assertConsistent(u); return val/u.val; }
@@ -220,7 +220,7 @@ const Monomial<N,T,P> Monomial<N,T,P>::operator/(T other) const {
 
 
 template<unsigned int N, typename T, typename P>
-std::ostream& Monomial<N,T,P>::algebraicForm(std::ostream& o) const {
+ostream& Monomial<N,T,P>::algebraicForm(ostream& o) const {
     o << std::showpos << val << std::noshowpos;
     for(P i=0; i<N; i++) {
         if(dimensions[i] > 0) {
@@ -234,7 +234,7 @@ std::ostream& Monomial<N,T,P>::algebraicForm(std::ostream& o) const {
 }
 
 template<unsigned int N, typename T, typename P>
-std::ostream& Monomial<N,T,P>::latexForm(std::ostream& o) const {
+ostream& Monomial<N,T,P>::latexForm(ostream& o) const {
     o << std::showpos << val << std::noshowpos;
     for(P i=0; i<N; i++) {
         if(dimensions[i] > 0) {
@@ -254,7 +254,7 @@ std::ostream& Monomial<N,T,P>::latexForm(std::ostream& o) const {
 
 
 template<unsigned int N, typename T, typename P>
-std::ostream& Monomial<N,T,P>::tableForm(std::ostream& o) const {
+ostream& Monomial<N,T,P>::tableForm(ostream& o) const {
     o << std::setw(20) << std::setprecision(10) << val << "\t";
     for(P i=0; i<N; i++)
         o << " " << std::setw(0) << dimensions[i];
@@ -265,7 +265,7 @@ std::ostream& Monomial<N,T,P>::tableForm(std::ostream& o) const {
 
 /// output representation
 template<unsigned int N, typename T, typename P>
-std::ostream& operator<<(std::ostream& o, const Monomial<N,T,P>& u) {
+ostream& operator<<(ostream& o, const Monomial<N,T,P>& u) {
     o << "[ " << u.val << " " << u.dimensions << " ]";
     return o;
 }

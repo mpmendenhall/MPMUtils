@@ -276,7 +276,7 @@ void Matrix<M,N,T>::subinvert(unsigned int n) {
     subinvert(n+1);
     
     // temporary space allocation
-    std::vector<T> subvec = std::vector<T>(M-n-1);
+    vector<T> subvec = vector<T>(M-n-1);
     
     // first column gets multiplied by inverting submatrix
     for(unsigned int r=n+1; r<M; r++)
@@ -305,7 +305,7 @@ void Matrix<M,N,T>::subinvert(unsigned int n) {
 
 /// string output representation for matrix
 template<unsigned int M, unsigned int N, typename T>
-std::ostream& operator<<(std::ostream& o, const Matrix<M,N,T>& A) {
+ostream& operator<<(ostream& o, const Matrix<M,N,T>& A) {
     for(unsigned int r=0; r<M; r++) {
         o << "| ";
         for(unsigned int c=0; c<N; c++)

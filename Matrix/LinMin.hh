@@ -48,7 +48,11 @@ public:
     void solve();
     /// get sum of squares of residuals
     double ssresid() const;
-    
+    /// get solution x
+    double getx(size_t i) const;
+    /// get resid r
+    double getr(size_t i) const;
+        
     const size_t m;
     const size_t n;
     

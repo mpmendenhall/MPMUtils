@@ -84,10 +84,10 @@ public:
 protected:
     
     /// attempt to load histogram from input file
-    TH1* tryLoad(const std::string& hname);
+    TH1* tryLoad(const string& hname);
     
-    map<std::string,TH1*> saveHists;       ///< saved histograms
-    double inflAge;                             ///< age of input file [s]; 0 for brand-new files
+    map<string,TH1*> saveHists; ///< saved histograms
+    double inflAge;             ///< age of input file [s]; 0 for brand-new files
 };
 
 #endif

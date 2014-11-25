@@ -80,11 +80,11 @@ public:
     const Polynomial<N,T> operator/(T c) const;
     
     /// output representation, algebraic form
-    std::ostream& algebraicForm(std::ostream& o) const;
+    ostream& algebraicForm(ostream& o) const;
     /// output in table form
-    std::ostream& tableForm(std::ostream& o) const;
+    ostream& tableForm(ostream& o) const;
     /// output in LaTeX form
-    std::ostream& latexForm(std::ostream& o) const;
+    ostream& latexForm(ostream& o) const;
     
     std::map<Vec<N,unsigned int>, T> terms;                     ///< terms of the polynomial
     typename std::map< Vec<N,unsigned int> , T >::iterator it;  ///< iterator for terms
@@ -266,7 +266,7 @@ const Polynomial<N,T> Polynomial<N,T>::operator/(T c) const {
 }
 
 template<unsigned int N, typename T>
-std::ostream& Polynomial<N,T>::algebraicForm(std::ostream& o) const {
+ostream& Polynomial<N,T>::algebraicForm(ostream& o) const {
     typename std::map< Vec<N,unsigned int> , T >::const_iterator it2;
     for(it2 = terms.begin(); it2 != terms.end(); it2++)
         Monomial<N,T,unsigned int>(it2->second, it2->first).algebraicForm(o);
@@ -274,7 +274,7 @@ std::ostream& Polynomial<N,T>::algebraicForm(std::ostream& o) const {
 }
 
 template<unsigned int N, typename T>
-std::ostream& Polynomial<N,T>::latexForm(std::ostream& o) const {
+ostream& Polynomial<N,T>::latexForm(ostream& o) const {
     typename std::map< Vec<N,unsigned int> , T >::const_iterator it2;
     for(it2 = terms.begin(); it2 != terms.end(); it2++)
         Monomial<N,T,unsigned int>(it2->second, it2->first).latexForm(o);
@@ -282,7 +282,7 @@ std::ostream& Polynomial<N,T>::latexForm(std::ostream& o) const {
 }
 
 template<unsigned int N, typename T>
-std::ostream& Polynomial<N,T>::tableForm(std::ostream& o) const {
+ostream& Polynomial<N,T>::tableForm(ostream& o) const {
     for(auto cit = terms.begin(); cit != terms.end(); cit++) {
         Monomial<N,T,unsigned int>(cit->second,cit->first).tableForm(o);
         o << "\n";
@@ -292,7 +292,7 @@ std::ostream& Polynomial<N,T>::tableForm(std::ostream& o) const {
 
 /// output representation
 template<unsigned int N, typename T>
-std::ostream& operator<<(std::ostream& o, const Polynomial<N,T>& p) {
+ostream& operator<<(ostream& o, const Polynomial<N,T>& p) {
     p.algebraicForm(o);
     return o;
 }

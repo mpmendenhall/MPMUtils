@@ -20,7 +20,7 @@
 
 #include "Permutation.hh"
 
-Permutation::Permutation(unsigned int n): data(std::vector<unsigned int>(n)) {
+Permutation::Permutation(unsigned int n): data(vector<unsigned int>(n)) {
     for(unsigned int i=0; i<n; i++)
         data[i] = i;
 }
@@ -43,7 +43,7 @@ Permutation Permutation::inverse() const {
 }
 
 Permutation& Permutation::invert() {
-    std::vector<unsigned int> newdat = std::vector<unsigned int>(size());
+    vector<unsigned int> newdat = vector<unsigned int>(size());
     for(unsigned int i=0; i<size(); i++) newdat[data[i]] = i;
     data = newdat;
     return *this;

@@ -27,6 +27,8 @@
 #include <iomanip>
 #include <algorithm>
 
+using std::cout;
+
 // FFT handler ------______------______-------_______------______------
 
 map<unsigned int,cmatrix_fft*> cmatrix_fft::ffters;
@@ -64,7 +66,7 @@ cmatrix_fft& cmatrix_fft::get_ffter(unsigned int m) {
 
 // File IO ------______------______-------_______------______------
 
-void CMatrix::writeToFile(std::ostream& o) const {
+void CMatrix::writeToFile(ostream& o) const {
     writeString("(CMatrix)",o);
     o.write((char*)&M,                  sizeof(M));
     o.write((char*)&has_realspace,      sizeof(has_realspace));
@@ -227,23 +229,23 @@ void CMatrix::printRow(int r) const {
 
 
 void CMatrix::display() const {
-    std::cout << "CMatrix " << M << " " << has_realspace << " " << has_kspace << std::endl;
+    cout << "CMatrix " << M << " " << has_realspace << " " << has_kspace << std::endl;
     for(unsigned int r=0; r<M; r++) {
         printRow(r);
         printf("\n");
     }
-    std::cout << "CMatrix " << M << " " << has_realspace << " " << has_kspace << std::endl;
+    cout << "CMatrix " << M << " " << has_realspace << " " << has_kspace << std::endl;
 }
 
 
 void CMatrix::displayK() const {
-    std::cout << "{ ";
-    for(unsigned int i=0; i<M/2+1; i++) std::cout << getKData()[i] << " ";
-    std::cout << "}" << std::endl;
+    cout << "{ ";
+    for(unsigned int i=0; i<M/2+1; i++) cout << getKData()[i] << " ";
+    cout << "}" << std::endl;
 }
 
 
-std::ostream& operator<<(std::ostream& o, const CMatrix& m) {
+ostream& operator<<(ostream& o, const CMatrix& m) {
     for(unsigned int r=0; r<m.nRows(); r++) {
         o << "| ";
         for(unsigned int c=0; c<m.nCols(); c++)

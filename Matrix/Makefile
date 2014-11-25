@@ -30,9 +30,6 @@ all: libMPMMatrix.a
 libMPMMatrix.a: $(objects)
 	ar rs libMPMMatrix.a $(objects)
 
-../GeneralUtils/libMPMGeneralUtils.a:
-	+cd ../GeneralUtils; make
-
 #
 # cleanup
 #
@@ -41,4 +38,3 @@ libMPMMatrix.a: $(objects)
 clean:
 	-rm -f libMPMMatrix.a
 	-rm -f *.o
-	-cd ../GeneralUtils; make clean

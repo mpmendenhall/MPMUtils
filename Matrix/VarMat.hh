@@ -121,7 +121,7 @@ public:
     const VarVec<T> operator*(const VarVec<T>& v) const { return lMultiply<T,T>(v); }
     
     /// Dump binary data to file
-    void writeToFile(std::ostream& o) const;
+    void writeToFile(ostream& o) const;
     /// Read binary data from file
     static VarMat<T> readFromFile(std::istream& s);
     
@@ -325,7 +325,7 @@ void VarMat<T>::subinvert(unsigned int n) {
     subinvert(n+1);
     
     // temporary space allocation
-    std::vector<T> subvec = std::vector<T>(M-n-1);
+    vector<T> subvec = vector<T>(M-n-1);
     
     // first column gets multiplied by inverting subVarMat
     for(unsigned int r=n+1; r<M; r++)
@@ -352,7 +352,7 @@ void VarMat<T>::subinvert(unsigned int n) {
 
 /// string output representation for VarMat; TODO sensible output for complex types
 template<typename T>
-std::ostream& operator<<(std::ostream& o, const VarMat<T>& A) {
+ostream& operator<<(ostream& o, const VarMat<T>& A) {
     for(unsigned int r=0; r<A.nRows(); r++) {
         o << "[ ";
         for(unsigned int c=0; c<A.nCols(); c++) {
@@ -365,7 +365,7 @@ std::ostream& operator<<(std::ostream& o, const VarMat<T>& A) {
 }
 
 template<typename T>
-void VarMat<T>::writeToFile(std::ostream& o) const {
+void VarMat<T>::writeToFile(ostream& o) const {
     writeString("(VarMat_"+std::to_string(sizeof(T))+")",o);
     o.write((char*)&M, sizeof(M));
     o.write((char*)&N, sizeof(N));

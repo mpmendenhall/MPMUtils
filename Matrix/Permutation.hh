@@ -27,6 +27,8 @@
 #include <vector>
 #include <cassert>
 
+using std::vector;
+
 /// Permutation matrix (each row and column has one entry which is 1, all others 0)
 class Permutation {
 public:
@@ -61,7 +63,7 @@ public:
     const Permutation operator*(const Permutation& p) const;
     
 private:
-    std::vector<unsigned int> data; ///< the permutation data
+    vector<unsigned int> data; ///< the permutation data
 };
 
 #endif

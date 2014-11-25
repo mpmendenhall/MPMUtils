@@ -9,6 +9,7 @@
 #include <cfloat>
 
 using std::vector;
+using std::string;
 
 /// axis directions
 enum AxisDirection {
@@ -21,9 +22,9 @@ enum AxisDirection {
 inline AxisDirection& operator++(AxisDirection& d) { return d = AxisDirection(d+1); }
 
 /// draw several histograms simultaneously; return max histogram height
-double drawSimulHistos(vector<TH1*>& hists, const std::string& opt = "", const std::string& newTitle = "DEFAULT");
+double drawSimulHistos(vector<TH1*>& hists, const string& opt = "", const string& newTitle = "DEFAULT");
 /// draw a pair of histograms (red and blue by default)
-void drawHistoPair(TH1* hRed, TH1* hBlue, const std::string& opt = "", Int_t c1 = 2, Int_t c2 = 4);
+void drawHistoPair(TH1* hRed, TH1* hBlue, const string& opt = "", Int_t c1 = 2, Int_t c2 = 4);
 /// draw a pair of histograms, with line and diamond markers
 void drawDataMCPair(TH1* dat, TH1* mc);
 

@@ -71,9 +71,9 @@ public:
     /// mutable access to back
     T& back() { assert(data.size()); return data.back(); }
     /// immutable access to the whole data vector
-    const std::vector<T>& getData() const { return data; }
+    const vector<T>& getData() const { return data; }
     /// mutable access to the whole data vector
-    std::vector<T>& getData() { return data; }
+    vector<T>& getData() { return data; }
     /// pointer to beginning of array
     T* getDataPtr() { return &data.front(); }
     /// pointer to beginning of array
@@ -81,7 +81,7 @@ public:
     /// append
     void push_back(const T& x) { data.push_back(x); }
     /// generate sub-vector
-    VarVec<T> subvec(unsigned int a, unsigned int b) const { VarVec<T> V; V.data = std::vector<T>(&data[a],&data[b]); return V; }
+    VarVec<T> subvec(unsigned int a, unsigned int b) const { VarVec<T> V; V.data = vector<T>(&data[a],&data[b]); return V; }
     /// copy data from a sub-vector, starting at position i
     void load_subvec(const VarVec<T>& V, unsigned int i) { assert(i+V.size()<=size()); std::copy(V.getData().begin(), V.getData().end(), &data[i]); }
     
@@ -195,12 +195,12 @@ public:
     VarVec<T>& permute(const Permutation& p);
     
     /// Dump binary data to file
-    void writeToFile(std::ostream& o) const;
+    void writeToFile(ostream& o) const;
     /// Read binary data from file
     static VarVec<T> readFromFile(std::istream& s);
     
 protected:
-    std::vector<T> data;        
+    vector<T> data;        
 };
     
     
@@ -389,7 +389,7 @@ const VarVec<T> VarVec<T>::permuted(const Permutation& p) const
 template<class T>
 VarVec<T>& VarVec<T>::permute(const Permutation& p)
 {
-    std::vector<T> dnew = std::vector<T>(size());
+    vector<T> dnew = vector<T>(size());
     for(unsigned int i=0; i<size(); i++) dnew[i] = data[p[i]];
     data = dnew;
     return *this;
@@ -397,9 +397,9 @@ VarVec<T>& VarVec<T>::permute(const Permutation& p)
 
 /// VarVec to vector<double>
 template<typename T>
-std::vector<double>
+vector<double>
 varvec2doublevec(const VarVec<T>& v) {
-    std::vector<double> dv(v.size());
+    vector<double> dv(v.size());
     for(unsigned int i=0; i<v.size(); i++) dv[i] = (double)v[i];
     return dv;
 }
@@ -415,8 +415,8 @@ namespace VarVec_element_norm_L2 {
 
 template<typename T>
 double VarVec<T>::max_norm_L2() const {
-    std::vector<double> vn;
-    for(typename std::vector<T>::const_iterator it = data.begin(); it != data.end(); it++)
+    vector<double> vn;
+    for(typename vector<T>::const_iterator it = data.begin(); it != data.end(); it++)
         vn.push_back(VarVec_element_norm_L2::norm_L2(*it));
     return *std::max_element(vn.begin(), vn.end());
 }
@@ -424,7 +424,7 @@ double VarVec<T>::max_norm_L2() const {
 template<typename T>
 double VarVec<T>::norm_L2() const {
     double s = 0;
-    for(typename std::vector<T>::const_iterator it = data.begin(); it != data.end(); it++) {
+    for(typename vector<T>::const_iterator it = data.begin(); it != data.end(); it++) {
         double n = VarVec_element_norm_L2::norm_L2(*it);
         s += n*n;
     }
@@ -433,7 +433,7 @@ double VarVec<T>::norm_L2() const {
 
 /// string output representation for vectors
 template<typename T>
-std::ostream& operator<<(std::ostream& o, const VarVec<T>& v) {
+ostream& operator<<(ostream& o, const VarVec<T>& v) {
     o << "< ";
     for(unsigned int i=0; i<v.size(); i++)
         o << v[i] << " ";
@@ -443,11 +443,11 @@ std::ostream& operator<<(std::ostream& o, const VarVec<T>& v) {
 
 namespace VarVec_element_IO {
     template<typename T>
-    inline void writeToFile(const T& t, std::ostream& o) { t.writeToFile(o); }
+    inline void writeToFile(const T& t, ostream& o) { t.writeToFile(o); }
     template<>
-    inline void writeToFile(const float& t, std::ostream& o) { o.write((char*)&t, sizeof(t)); }
+    inline void writeToFile(const float& t, ostream& o) { o.write((char*)&t, sizeof(t)); }
     template<>
-    inline void writeToFile(const double& t, std::ostream& o) { o.write((char*)&t, sizeof(t)); }
+    inline void writeToFile(const double& t, ostream& o) { o.write((char*)&t, sizeof(t)); }
     
     template<typename T>
     inline T readFromFile(std::istream& s) { return T::readFromFile(s); }
@@ -458,7 +458,7 @@ namespace VarVec_element_IO {
 }
 
 template<typename T>
-void VarVec<T>::writeToFile(std::ostream& o) const {
+void VarVec<T>::writeToFile(ostream& o) const {
     writeString("(VarVec_"+std::to_string(sizeof(T))+")",o);
     unsigned int N = size();
     o.write((char*)&N,  sizeof(N));

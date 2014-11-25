@@ -32,12 +32,12 @@ using std::vector;
 class TChainScanner {
 public:
     /// constructor
-    TChainScanner(const std::string& treeName);
+    TChainScanner(const string& treeName);
     /// destructor
     virtual ~TChainScanner() { delete(Tch); }
     
     /// add a file to the TChain
-    virtual int addFile(const std::string& filename);
+    virtual int addFile(const string& filename);
     
     /// start a "speed scan," possibly at a random entry number
     virtual void startScan(bool startRandom = false);
@@ -68,7 +68,7 @@ public:
 protected:
     
     /// "string friendly" SetBranchAddress
-    void SetBranchAddress(TTree* T, const std::string& bname, void* bdata);
+    void SetBranchAddress(TTree* T, const string& bname, void* bdata);
     
     vector<unsigned int> nnEvents; ///< number of events in each loaded TChain;
     unsigned int nFiles;                ///< get number of loaded files

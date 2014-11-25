@@ -85,9 +85,9 @@ public:
     /// action when selected
     virtual void doIt();
     /// add new argument
-    virtual void addArg(const std::string& s, const std::string& dflt = "", const std::string& descrip = "", NamedInteractor* filter = NULL);
+    virtual void addArg(const string& s, const string& dflt = "", const string& descrip = "", NamedInteractor* filter = NULL);
     /// add new argument, assuming descriptions come from filter
-    virtual void addArg(NamedInteractor* filter, const std::string& s = "") { addArg(s,"","",filter); }
+    virtual void addArg(NamedInteractor* filter, const string& s = "") { addArg(s,"","",filter); }
     /// set argument parameters
     virtual void setArgOpts(unsigned int i, string s, string dflt = "", NamedInteractor* filter = NULL);
     /// get option name
@@ -116,7 +116,7 @@ enum Selector_Option_Flags {
 };
 
 /// default soft-matching routine
-bool nameselector_default_softmatch(const std::string& a, const std::string& b);
+bool nameselector_default_softmatch(const string& a, const string& b);
 
 /// class for selecting an item from a list and applying an associated action
 class NameSelector: public InputRequester {
@@ -136,18 +136,18 @@ public:
     /// set catchall action
     virtual void setCatchall(StreamInteractor* SI) { catchAll = SI; }
     /// prevent adding arguments (doesn't make sense in this context)
-    virtual void addArg(const std::string&, const std::string& = "", const std::string& = "", NamedInteractor* = NULL) { assert(false); }
+    virtual void addArg(const string&, const string& = "", const string& = "", NamedInteractor* = NULL) { assert(false); }
     /// prevent adding arguments (doesn't make sense in this context)
-    virtual void addArg(NamedInteractor*, const std::string& = "") { assert(false); }
+    virtual void addArg(NamedInteractor*, const string& = "") { assert(false); }
     /// add a synonym for an existing argument
     virtual void addSynonym(string arg0, string syn);
     /// set soft-matching function (set to NULL to disable soft matching)
-    void setSoftmatch(bool (*f)(const std::string& a, const std::string& b) = &nameselector_default_softmatch) { softmatch = f; }
+    void setSoftmatch(bool (*f)(const string& a, const string& b) = &nameselector_default_softmatch) { softmatch = f; }
     static string barf_control;
     static string exit_control;
     
 protected:
-    map<std::string,unsigned int> nameMap;      ///< map from choice names to selected content
+    map<string,unsigned int> nameMap;      ///< map from choice names to selected content
     vector<string> choiceNames;                 ///< choice names
     vector<string> choiceDescrips;              ///< choice descriptions
     vector<string> choiceOut;                   ///< output for each choice
@@ -155,7 +155,7 @@ protected:
     vector<Selector_Option_Flags> oflags;       ///< option display flags
     StreamInteractor* catchAll;                 ///< catch-all action for unidentified choices
     bool isPersistent;                          ///< whether menu is persistent (repeats after selection is made)
-    bool (*softmatch)(const std::string& a, const std::string& b);      ///< function for "soft matching" comparison of selections
+    bool (*softmatch)(const string& a, const string& b);      ///< function for "soft matching" comparison of selections
 };
 
 /// Text menu of selectable items (simplified NameSelector specifically for actions)
@@ -168,7 +168,7 @@ public:
     /// add choice to selections list
     virtual void addChoice(NamedInteractor* M, string nm = "", Selector_Option_Flags o = SELECTOR_NORMAL);
     /// prevent adding choices through base mechanism
-    virtual void addChoice(std::string, std::string, Selector_Option_Flags, std::string, StreamInteractor*) { assert(false); }
+    virtual void addChoice(string, string, Selector_Option_Flags, string, StreamInteractor*) { assert(false); }
 };
 
 

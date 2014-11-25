@@ -23,13 +23,13 @@
 #include <stdlib.h>
 #include <time.h>
 
-TChainScanner::TChainScanner(const std::string& treeName): nEvents(0), nFiles(0), noEmpty(false), Tch(new TChain(treeName.c_str())),
+TChainScanner::TChainScanner(const string& treeName): nEvents(0), nFiles(0), noEmpty(false), Tch(new TChain(treeName.c_str())),
 currentEvent(0), noffset(0), nLocalEvents(0) {
     Tch->SetMaxVirtualSize(10000000);
 }
 
 
-int TChainScanner::addFile(const std::string& filename) {
+int TChainScanner::addFile(const string& filename) {
     unsigned int oldEvents = nEvents;
     int nfAdded = Tch->Add(filename.c_str(),0);
     if(!nfAdded) {
@@ -80,7 +80,7 @@ void TChainScanner::startScan(bool startRandom) {
     fflush(stdout);
 }
 
-void TChainScanner::SetBranchAddress(TTree* T, const std::string& bname, void* bdata) {
+void TChainScanner::SetBranchAddress(TTree* T, const string& bname, void* bdata) {
     smassert(bdata);
     smassert(T);
     Int_t err = T->SetBranchAddress(bname.c_str(),bdata);

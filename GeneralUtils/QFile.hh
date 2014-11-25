@@ -23,33 +23,33 @@
 
 #include "Stringmap.hh"
 
-/// wrapper for multimap<std::string,Stringmap> with useful functions
+/// wrapper for multimap<string,Stringmap> with useful functions
 class QFile {
 public:
     
     /// constructor given a string
-    QFile(const std::string& s = "", bool readit = true);
+    QFile(const string& s = "", bool readit = true);
     
     /// insert key/(string)value pair
-    void insert(const std::string& str, const Stringmap& v);
+    void insert(const string& str, const Stringmap& v);
     /// remove a key
-    void erase(const std::string& str);
+    void erase(const string& str);
     /// retrieve values for key
-    vector<Stringmap> retrieve(const std::string& s) const;
+    vector<Stringmap> retrieve(const string& s) const;
     /// retrieve first value for key
-    Stringmap getFirst(const std::string& str, const Stringmap& dflt = Stringmap()) const;
+    Stringmap getFirst(const string& str, const Stringmap& dflt = Stringmap()) const;
     /// retrieve all sub-key values
-    vector<string> retrieve(const std::string& k1, const std::string& k2) const;
+    vector<string> retrieve(const string& k1, const string& k2) const;
     /// retreive sub-key with default
-    string getDefault(const std::string& k1, const std::string& k2, const std::string& d) const;
+    string getDefault(const string& k1, const string& k2, const string& d) const;
     /// retrieve sub-key as double with default
-    double getDefault(const std::string& k1, const std::string& k2, double d) const;
+    double getDefault(const string& k1, const string& k2, double d) const;
     /// retrieve all sub-key values as doubles
-    vector<double> retrieveDouble(const std::string& k1, const std::string& k2) const;
+    vector<double> retrieveDouble(const string& k1, const string& k2) const;
     /// return number of elements
     unsigned int size() const { return dat.size(); }
     /// transfer all data for given key from other QFile
-    void transfer(const QFile& Q, const std::string& k);
+    void transfer(const QFile& Q, const string& k);
     
     /// set output file location
     void setOutfile(string fnm) { name = fnm; }
@@ -63,7 +63,7 @@ public:
 protected:
     
     string name;                                   ///< name for this object
-    std::multimap< std::string, Stringmap > dat;        ///< key-value multimap
+    multimap< string, Stringmap > dat;        ///< key-value multimap
     
 };
 

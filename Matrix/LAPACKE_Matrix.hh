@@ -33,11 +33,13 @@
 #include <complex.h>
 #define lapack_complex_float  std::complex<float>
 #define lapack_complex_double  std::complex<double>
-#include "lapacke.h"
+#include <lapacke.h>
 #include "BinaryOutputObject.hh"
 #include <algorithm>
 #include <cassert>
 #include <gsl/gsl_cblas.h>
+
+using std::cout;
 
 /// virtual base class for encapsulating BLAS operations on various matrix types
 template<typename T>
@@ -183,9 +185,9 @@ public:
         assert(!info);
         
         if(verbose) {
-            std::cout << "Bi-diagonalizing A:\n\n";
-            std::cout << "Main diagonal:\n" << S << "\n";
-            std::cout << "Secondary diagonal:\n" << e << "\n";
+            cout << "Bi-diagonalizing A:\n\n";
+            cout << "Main diagonal:\n" << S << "\n";
+            cout << "Secondary diagonal:\n" << e << "\n";
         }
         
         // extract bi-diagonalizing matrices, truncated to useful dimension
@@ -219,9 +221,9 @@ public:
         VT.resize(S.nRows(),A.nCols());
         
         if(verbose) {
-            std::cout << "Q left bidiagonalizer:\n" << U << "\n";
-            std::cout << "P right bidiagonalizer:\n" << VT << "\n";
-            std::cout << "\nSingular Value Decomposition:\n\n";
+            cout << "Q left bidiagonalizer:\n" << U << "\n";
+            cout << "P right bidiagonalizer:\n" << VT << "\n";
+            cout << "\nSingular Value Decomposition:\n\n";
         }
         
         // no longer need these
@@ -248,9 +250,9 @@ public:
         assert(!info);
         
         if(verbose) {
-            std::cout << "Left singular vectors:\n" << U << "\n";
-            std::cout << "Singular values:\n" << S << "\n";
-            std::cout << "Right singular vectors:\n" << VT << "\n";
+            cout << "Left singular vectors:\n" << U << "\n";
+            cout << "Singular values:\n" << S << "\n";
+            cout << "Right singular vectors:\n" << VT << "\n";
         }
         
     }
@@ -286,7 +288,7 @@ public:
     VarVec<CT> getLeftSVec(unsigned int i) { return U.getCol(i); }
     
     /// Dump binary data to file
-    void writeToFile(std::ostream& o) const {
+    void writeToFile(ostream& o) const {
         writeString("(LAPACKE_Matrix_SVD_"+std::to_string(sizeof(CT))+")",o);
         S.writeToFile(o);
         U.writeToFile(o);

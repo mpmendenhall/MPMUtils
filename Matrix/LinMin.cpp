@@ -89,11 +89,12 @@ LinEqSolver::~LinEqSolver() {
 }
 
 void LinEqSolver::sety(size_t i, double v) {
+    assert(i<m);
     gsl_vector_set(y, i, v);
 }
 
 void LinEqSolver::setM(size_t i, size_t j, double v) {
-    assert(M);
+    assert(M && i<m && j<n);
     gsl_matrix_set(M,i,j,v);
 }
 
@@ -107,3 +108,6 @@ void LinEqSolver::solve() {
 double LinEqSolver::ssresid() const {
     return gsl_blas_dnrm2(r);
 }
+
+double LinEqSolver::getx(size_t i) const { return x?gsl_vector_get(x,i):0; }
+double LinEqSolver::getr(size_t i) const { return gsl_vector_get(r,i); }

@@ -81,7 +81,7 @@ void InputRequester::doIt() {
     }
 }
 
-void InputRequester::addArg(const std::string& s, const std::string& dflt, const std::string& descrip, NamedInteractor* filter) {
+void InputRequester::addArg(const string& s, const string& dflt, const string& descrip, NamedInteractor* filter) {
     argNames.push_back(s);
     argDescrips.push_back(descrip);
     defaultArgs.push_back(dflt);
@@ -124,7 +124,7 @@ string InputRequester::getDescription() {
 //---- NameSelector
 
 
-bool nameselector_default_softmatch(const std::string& a, const std::string& b) {
+bool nameselector_default_softmatch(const string& a, const string& b) {
     return lower(a) == lower(b.substr(0,a.size()));
 }
 
@@ -152,7 +152,7 @@ void NameSelector::addChoice(string d, string nm, Selector_Option_Flags o, strin
 }
 
 void NameSelector::addSynonym(string arg0, string syn) {
-    map<std::string,unsigned int>::iterator it = nameMap.find(arg0);
+    map<string,unsigned int>::iterator it = nameMap.find(arg0);
     assert(it != nameMap.end());
     NameSelector::addChoice(choiceDescrips[it->second],syn,
                             Selector_Option_Flags(oflags[it->second] | SELECTOR_SYNONYM | SELECTOR_HIDDEN),
@@ -205,14 +205,14 @@ void NameSelector::doIt() {
                 continue;
             
             // find matching selection name
-            map<std::string,unsigned int>::iterator it = nameMap.find(myArg);
+            map<string,unsigned int>::iterator it = nameMap.find(myArg);
             
             // if no direct match, apply soft matching when available
             if(it == nameMap.end() && softmatch) {
                 
                 // find soft matches
-                vector<map<std::string,unsigned int>::iterator> matches;
-                for(map<std::string,unsigned int>::iterator i = nameMap.begin(); i != nameMap.end(); i++)
+                vector<map<string,unsigned int>::iterator> matches;
+                for(map<string,unsigned int>::iterator i = nameMap.begin(); i != nameMap.end(); i++)
                     if(!(oflags[i->second] & SELECTOR_DISABLED) && softmatch(myArg,i->first))
                         matches.push_back(i);
                     

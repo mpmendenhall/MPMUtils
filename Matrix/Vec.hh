@@ -29,6 +29,9 @@
 #include <iostream>
 #include <vector>
 
+using std::ostream;
+using std::vector;
+
 /// Fixed-length vector arithmetic class
 template<unsigned int N, typename T>
 class Vec {
@@ -131,7 +134,7 @@ public:
     bool operator>=(const Vec<N,T>& rhs) const;
     
     /// write in binray form to a file
-    void writeBinary(std::ostream& o) const { o.write((char*)x,N*sizeof(T)); }
+    void writeBinary(ostream& o) const { o.write((char*)x,N*sizeof(T)); }
     /// read a Vec from a file
     static Vec<N,T> readBinary(std::istream& s) { Vec<N,T> v; v.loadBinaryData(s); return v; }
     /// read in binary form from a file
@@ -307,7 +310,7 @@ bool Vec<N,T>::operator>=(const Vec<N,T>& rhs) const {
 
 /// string output representation for vectors
 template<unsigned int N, typename T>
-std::ostream& operator<<(std::ostream& o, const Vec<N,T>& v) {
+ostream& operator<<(ostream& o, const Vec<N,T>& v) {
     o << "<\t";
     for(unsigned int i=0; i<N; i++) {
         if(i) o << ",\t";
@@ -366,8 +369,8 @@ Vec<2,T> polarVec(T r, T th) {
 
 /// Vec to vector<double>
 template<unsigned int N, typename T>
-std::vector<double> vec2doublevec(const Vec<N,T>& v) {
-    std::vector<double> dv(N);
+vector<double> vec2doublevec(const Vec<N,T>& v) {
+    vector<double> dv(N);
     for(unsigned int i=0; i<N; i++) dv[i] = (double)v[i];
     return dv;
 }

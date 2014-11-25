@@ -31,7 +31,7 @@ bool compareHistosByXmax(TH1* i, TH1* j) {
     return getXmax(i) < getXmax(j);
 }
 
-double drawSimulHistos(vector<TH1*>& hists, const std::string& opt, const std::string& newTitle) {
+double drawSimulHistos(vector<TH1*>& hists, const string& opt, const string& newTitle) {
     if(!hists.size())
         return 0;
     printf("Drawing %i histograms together",(int)hists.size()); fflush(stdout);
@@ -62,7 +62,7 @@ double drawSimulHistos(vector<TH1*>& hists, const std::string& opt, const std::s
             return maxHist->GetMaximum();
 }
 
-void drawHistoPair(TH1* hRed, TH1* hBlue, const std::string& opt, Int_t c1, Int_t c2) {
+void drawHistoPair(TH1* hRed, TH1* hBlue, const string& opt, Int_t c1, Int_t c2) {
     smassert(hRed && hBlue);
     hRed->SetLineColor(c1);
     hRed->SetMarkerColor(c1);
