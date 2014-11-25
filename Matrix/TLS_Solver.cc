@@ -19,3 +19,8 @@ void TLS_Solver::solve() {
     mySVD = new LAPACKE_Matrix_SVD<double,double>(B);
     v = mySVD->getRightSVec(0);
 }
+
+double TLS_Solver::getSSR() const {
+    return (B*v).mag2();
+}
+

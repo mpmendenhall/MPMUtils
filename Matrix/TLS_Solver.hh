@@ -12,6 +12,8 @@ public:
     ~TLS_Solver();
     /// solve TLS system
     void solve();
+    /// Get sum of squares of residuals
+    double getSSR() const;
     
     const size_t m;             ///< number of points
     const size_t n;             ///< number of dimensions
