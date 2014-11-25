@@ -1,5 +1,5 @@
 /* 
- * CMatrix.cpp, part of the RotationShield program
+ * CMatrix.cpp, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
  * This code uses the FFTW3 library for Fourier transforms, http://www.fftw.org/

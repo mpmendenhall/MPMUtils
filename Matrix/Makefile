@@ -23,7 +23,7 @@ endif
 # things to build
 #
 
-objects = BlockCMat.o CMatrix.o LAPACKE_Matrix.o LinMin.o Permutation.o
+objects = BlockCMat.o CMatrix.o LAPACKE_Matrix.o LinMin.o Permutation.o TLS_Solver.o
 
 all: libMPMMatrix.a
 

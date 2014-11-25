@@ -1,5 +1,5 @@
 /* 
- * VarMat.hh, part of the RotationShield program
+ * VarMat.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
@@ -77,6 +77,10 @@ public:
     VarVec<T> getRow(unsigned int i) const;
     /// get column vector
     VarVec<T> getCol(unsigned int i) const;
+    /// get sum of each column
+    VarVec<T> getColSum() const;
+    /// get sum of each row
+    VarVec<T> getRowSum() const;
     
     /// unary minus (negated copy)
     const VarMat<T> operator-() const;
@@ -279,6 +283,24 @@ template<typename T>
 VarVec<T> VarMat<T>::getCol(unsigned int c) const {
     VarVec<T> v(nRows());
     for(unsigned int r=0; r<nRows(); r++) v[r] = (*this)(r,c);
+    return v;
+}
+
+template<typename T>
+VarVec<T> VarMat<T>::getRowSum() const {
+    VarVec<T> v(nRows());
+    for(unsigned int r=0; r<nRows(); r++)
+        for(unsigned int c=0; c<nCols(); c++)
+            v[r] += (*this)(r,c);
+    return v;
+}
+
+template<typename T>
+VarVec<T> VarMat<T>::getColSum() const {
+    VarVec<T> v(nCols());
+    for(unsigned int r=0; r<nRows(); r++)
+        for(unsigned int c=0; c<nCols(); c++)
+            v[c] += (*this)(r,c);
     return v;
 }
 

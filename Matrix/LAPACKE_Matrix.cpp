@@ -1,5 +1,5 @@
 /* 
- * LAPACKE_Matrix.cpp, part of the RotationShield program
+ * LAPACKE_Matrix.cpp, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
  * This code uses the LAPACKE C interface to LAPACK;

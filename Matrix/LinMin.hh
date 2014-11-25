@@ -1,5 +1,5 @@
 /* 
- * LinMin.hh, part of the RotationShield program
+ * LinMin.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
@@ -53,13 +53,14 @@ public:
     /// get resid r
     double getr(size_t i) const;
         
-    const size_t m;
-    const size_t n;
-    
-    gsl_matrix* M = NULL;
-    gsl_vector* x = NULL;
-    gsl_vector* y = NULL;
-    gsl_vector* r = NULL;
+    const size_t m;             ///< number of equations
+    const size_t n;             ///< number of variables
+
+protected:    
+    gsl_matrix* M = NULL;       ///< coefficients matrix
+    gsl_vector* x = NULL;       ///< solution vector
+    gsl_vector* y = NULL;       ///< RHS vector
+    gsl_vector* r = NULL;       ///< residuals vector
 };
 
 #endif

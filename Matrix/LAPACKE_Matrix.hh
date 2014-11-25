@@ -1,5 +1,5 @@
 /* 
- * LAPACKE_Matrix.hh, part of the RotationShield program
+ * LAPACKE_Matrix.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
  * This code uses the LAPACKE C interface to LAPACK;
@@ -29,7 +29,7 @@
 
 #ifdef WITH_LAPACKE
 
-#include <VarMat.hh>
+#include "VarMat.hh"
 #include <complex.h>
 #define lapack_complex_float  std::complex<float>
 #define lapack_complex_double  std::complex<double>
