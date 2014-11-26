@@ -279,11 +279,15 @@ public:
         return *PsI;
     }
     
+    /// get number of singular values
+    int n_singular_values() const { return S.size(); }
     /// get list of singular values
     const VarMat<T>& singular_values() const { return S; }
     
     /// get enumerated right singular vector
     VarVec<CT> getRightSVec(unsigned int i) { return VT.getRow(i); }
+    /// get all right singular vectors
+    VarMat<CT> getVT() const { return VT; }
     /// get enumerated left singular vector
     VarVec<CT> getLeftSVec(unsigned int i) { return U.getCol(i); }
     
