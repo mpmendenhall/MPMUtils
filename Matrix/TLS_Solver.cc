@@ -19,10 +19,11 @@ void TLS_Solver::solve() {
     VarMat<double> BB = B;
     mySVD = new LAPACKE_Matrix_SVD<double,double>(BB);
 
-    v = mySVD->getRightSVec(mySVD->n_singular_values()-1);
+    //v = mySVD->getRightSVec(mySVD->n_singular_values()-1);
+    v = mySVD->getRightSVec(0);
 }
 
 double TLS_Solver::getSSR() const {
-    return (B*v).mag2();
+    return B.getSumSquares() - (B*v).mag2();
 }
 

@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+using std::pair;
+
 void errorLogCallback(void*, int iErrCode, const char* zMsg){
     fprintf(stderr, "SQL error (%d): %s\n", iErrCode, zMsg);
 }
@@ -29,7 +31,7 @@ SQLite_Helper::SQLite_Helper(const string& dbname) {
 
 SQLite_Helper::~SQLite_Helper() {
     if(db) {
-        for(auto it = statements.begin(); it != statements.end(); it++) sqlite3_finalize(*it);
+        for(auto it = statements.begin(); it != statements.end(); it++) sqlite3_finalize(it->second);
         sqlite3_close(db);
     }
 }
@@ -45,8 +47,24 @@ int SQLite_Helper::setQuery(const char* qry, sqlite3_stmt*& stmt) {
     return rc;
 }
 
+sqlite3_stmt* SQLite_Helper::loadStatement(const string& qry) {
+    auto it = statements.find(qry);
+    if(it != statements.end()) return it->second;
+    sqlite3_stmt* stmt = NULL;
+    setQuery(qry.c_str(), stmt);
+    statements.insert(pair<string,sqlite3_stmt*>(qry,stmt));
+    return stmt;
+}
+
 int SQLite_Helper::busyRetry(sqlite3_stmt*& stmt) {
     int rc;
     while((rc = sqlite3_step(stmt)) == SQLITE_BUSY) { printf("Waiting for DB retry executing statement...\n"); }
+    return rc;
+}
+
+int SQLite_Helper::exec(const string& qry) {
+    sqlite3_stmt* stmt = loadStatement(qry);
+    int rc = busyRetry(stmt);
+    sqlite3_reset(stmt);
     return rc;
 }

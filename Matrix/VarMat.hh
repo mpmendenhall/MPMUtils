@@ -81,6 +81,8 @@ public:
     VarVec<T> getColSum() const;
     /// get sum of each row
     VarVec<T> getRowSum() const;
+    /// get sum of squares of elements
+    T getSumSquares() const { return vv.mag2(); }
     
     /// unary minus (negated copy)
     const VarMat<T> operator-() const;
