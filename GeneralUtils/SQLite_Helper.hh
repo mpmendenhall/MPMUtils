@@ -28,15 +28,15 @@ protected:
     sqlite3_stmt* loadStatement(const string& qry);
     /// retry a query until DB is available
     int busyRetry(sqlite3_stmt*& stmt);
-    /// run a statement expecting no return values (using busyRetry)
-    int exec(const string& qry);
+    /// run a statement expecting no return values (using busyRetry); optionally, throw error if not SQLITE_OK
+    int exec(const string& qry, bool checkOK = true);
 
-    sqlite3* db = NULL;                 ///< database connection
-    static SQLite_Helper* myDB;         ///< static singleton instance
-    map<string, sqlite3_stmt*> statements;   ///< prepared statements awaiting deletion
+    sqlite3* db = NULL;                     ///< database connection
+    static SQLite_Helper* myDB;             ///< static singleton instance
+    map<string, sqlite3_stmt*> statements;  ///< prepared statements awaiting deletion
 
 private:
-    static bool errlog_configured;      ///< whether error log output has been configured
+    static bool errlog_configured;          ///< whether error log output has been configured
 };
 
 #endif

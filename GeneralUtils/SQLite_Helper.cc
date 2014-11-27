@@ -22,12 +22,12 @@ SQLite_Helper::SQLite_Helper(const string& dbname) {
     if(err) {
         SMExcept e("failed_db_open");
         e.insert("dbname",dbname);
+        e.insert("err",err);
         e.insert("message",sqlite3_errmsg(db));
         sqlite3_close(db);
         db = NULL;
         throw e;
     }
-    sqlite3_busy_timeout(db, 1001);
 }
 
 SQLite_Helper::~SQLite_Helper() {
@@ -45,6 +45,7 @@ int SQLite_Helper::setQuery(const char* qry, sqlite3_stmt*& stmt) {
     }
     if(rc != SQLITE_OK) {
         SMExcept e("failed_query");
+        e.insert("err",rc);
         e.insert("message",sqlite3_errmsg(db));
         throw(e);
     }
@@ -62,13 +63,22 @@ sqlite3_stmt* SQLite_Helper::loadStatement(const string& qry) {
 
 int SQLite_Helper::busyRetry(sqlite3_stmt*& stmt) {
     int rc;
-    while((rc = sqlite3_step(stmt)) == SQLITE_BUSY) { printf("Waiting for DB retry executing statement...\n"); }
+    while((rc = sqlite3_step(stmt)) == SQLITE_BUSY) {
+        printf("Waiting for DB retry executing statement...\n");
+        usleep(100000);
+    }
     return rc;
 }
 
-int SQLite_Helper::exec(const string& qry) {
+int SQLite_Helper::exec(const string& qry, bool checkOK) {
     sqlite3_stmt* stmt = loadStatement(qry);
     int rc = busyRetry(stmt);
     sqlite3_reset(stmt);
+    if(checkOK && rc != SQLITE_OK) {
+        SMExcept e("failed_exec");
+        e.insert("err",rc);
+        e.insert("message",sqlite3_errmsg(db));
+        throw(e);
+    }
     return rc;
 }
