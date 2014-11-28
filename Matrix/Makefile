@@ -10,7 +10,7 @@ SHELL = /bin/sh
 OS_DIR = /usr/
 
 # compiler command to use
-CXXFLAGS = -std=c++11 -O3 -fPIC -pedantic -Wall -Wextra -Wpedantic -I. -I../GeneralUtils/
+CXXFLAGS = -std=c++11 -O3 -fPIC -pedantic -Wall -Wextra -I. -I../GeneralUtils/
 
 WITH_LAPACKE = 1
 ifdef WITH_LAPACKE

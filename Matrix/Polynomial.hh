@@ -25,6 +25,7 @@
 
 #include "Monomial.hh"
 #include <map>
+using std::map;
 
 template<unsigned int N, typename T>
 class Polynomial {
@@ -86,8 +87,8 @@ public:
     /// output in LaTeX form
     ostream& latexForm(ostream& o) const;
     
-    std::map<Vec<N,unsigned int>, T> terms;                     ///< terms of the polynomial
-    typename std::map< Vec<N,unsigned int> , T >::iterator it;  ///< iterator for terms
+    map<Vec<N,unsigned int>, T> terms;                     ///< terms of the polynomial
+    typename map< Vec<N,unsigned int> , T >::iterator it;  ///< iterator for terms
 };
 
 template<unsigned int N, typename T>
@@ -141,7 +142,7 @@ template<unsigned int N, typename T>
 Polynomial<N,T> Polynomial<N,T>::lowerTriangleTerms(unsigned int o) {
     Polynomial<N,T> lt = Polynomial<N,T>();
     Polynomial<N,T> t = Polynomial<N,T>::allTerms(o);
-    typename std::map< Vec<N,unsigned int> , T >::iterator it;
+    typename map< Vec<N,unsigned int> , T >::iterator it;
     for(it = t.terms.begin(); it != t.terms.end(); it++)
         if(it->first.sum() <= o)
             lt.terms[it->first] = 1.0;
@@ -181,7 +182,7 @@ Polynomial<N,T>& Polynomial<N,T>::operator-=(const Polynomial<N,T>& rhs) {
 
 template<unsigned int N, typename T>
 Polynomial<N,T>& Polynomial<N,T>::operator*=(const Polynomial<N,T>& rhs) {
-    std::map<Vec<N,unsigned int>, T> newterms;
+    map<Vec<N,unsigned int>, T> newterms;
     for(it = terms.begin(); it != terms.end(); it++)
         for(auto cit = rhs.terms.begin(); cit != rhs.terms.end(); cit++)
             newterms[it->first + cit->first] += it->second*cit->second; 
@@ -198,7 +199,7 @@ Polynomial<N,T>& Polynomial<N,T>::operator*=(T c) {
 
 template<unsigned int N, typename T>
 Polynomial<N,T>& Polynomial<N,T>::operator/=(const Monomial<N,T,unsigned int>& rhs) {
-    std::map<Vec<N,unsigned int>, T> newterms;
+    map<Vec<N,unsigned int>, T> newterms;
     for(it = terms.begin(); it != terms.end(); it++)
         newterms[it->first + rhs.dimensions] += it->second*rhs.val; 
     terms = newterms;
@@ -214,7 +215,7 @@ Polynomial<N,T>& Polynomial<N,T>::operator/=(T c) {
 
 template<unsigned int N, typename T>
 Polynomial<N,T>& Polynomial<N,T>::prune(T c) {
-    std::map<Vec<N,unsigned int>, T> newterms;
+    map<Vec<N,unsigned int>, T> newterms;
     for(it = terms.begin(); it != terms.end(); it++)
         if(it->second > c || it->second < -c)
             newterms[it->first] += it->second; 
@@ -267,7 +268,7 @@ const Polynomial<N,T> Polynomial<N,T>::operator/(T c) const {
 
 template<unsigned int N, typename T>
 ostream& Polynomial<N,T>::algebraicForm(ostream& o) const {
-    typename std::map< Vec<N,unsigned int> , T >::const_iterator it2;
+    typename map< Vec<N,unsigned int> , T >::const_iterator it2;
     for(it2 = terms.begin(); it2 != terms.end(); it2++)
         Monomial<N,T,unsigned int>(it2->second, it2->first).algebraicForm(o);
     return o;
@@ -275,7 +276,7 @@ ostream& Polynomial<N,T>::algebraicForm(ostream& o) const {
 
 template<unsigned int N, typename T>
 ostream& Polynomial<N,T>::latexForm(ostream& o) const {
-    typename std::map< Vec<N,unsigned int> , T >::const_iterator it2;
+    typename map< Vec<N,unsigned int> , T >::const_iterator it2;
     for(it2 = terms.begin(); it2 != terms.end(); it2++)
         Monomial<N,T,unsigned int>(it2->second, it2->first).latexForm(o);
     return o;
