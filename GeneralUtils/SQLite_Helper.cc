@@ -66,6 +66,7 @@ int SQLite_Helper::busyRetry(sqlite3_stmt*& stmt) {
     while((rc = sqlite3_step(stmt)) == SQLITE_BUSY) {
         printf("Waiting for DB retry executing statement...\n");
         usleep(100000);
+        sqlite3_reset(stmt);
     }
     return rc;
 }
@@ -74,7 +75,7 @@ int SQLite_Helper::exec(const string& qry, bool checkOK) {
     sqlite3_stmt* stmt = loadStatement(qry);
     int rc = busyRetry(stmt);
     sqlite3_reset(stmt);
-    if(checkOK && rc != SQLITE_OK) {
+    if(checkOK && !(rc == SQLITE_OK || rc == SQLITE_DONE)) {
         SMExcept e("failed_exec");
         e.insert("err",rc);
         e.insert("message",sqlite3_errmsg(db));
