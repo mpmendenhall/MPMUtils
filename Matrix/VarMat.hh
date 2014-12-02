@@ -266,15 +266,17 @@ const VarMat<T>& VarMat<T>::resize(unsigned int m, unsigned int n) {
     // change column dimension
     N = n;
     vv.getData().resize(M*N);
+    
     // change row dimension
     if(m != M) {
         VarVec<T> vnew;
         for(n=0; n<N; n++)
             for(unsigned int i=0; i<m; i++)
-                vnew.push_back( (*this)(i,n) );
-            vv = vnew;
+                vnew.push_back( i<M? (*this)(i,n) : T() );
+        vv = vnew;
         M = m;
     }
+    
     return *this;
 }
 

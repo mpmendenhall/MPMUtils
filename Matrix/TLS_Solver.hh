@@ -7,7 +7,7 @@
 class TLS_Solver {
 public:
     /// Constructor
-    TLS_Solver(size_t mm, size_t nn);
+    TLS_Solver(size_t nn, size_t mm = 0);
     /// Destructor
     ~TLS_Solver();
     /// solve TLS system
@@ -15,7 +15,6 @@ public:
     /// Get sum of squares of residuals
     double getSSR() const;
     
-    const size_t m;             ///< number of points
     const size_t n;             ///< number of dimensions
     
     VarMat<double> B;           ///< data points

@@ -1,6 +1,6 @@
 #include "TLS_Solver.hh"
 
-TLS_Solver::TLS_Solver(size_t mm, size_t nn): m(mm), n(nn), B(m,n), mu(n), v(n) {
+TLS_Solver::TLS_Solver(size_t nn, size_t mm): n(nn), B(mm,n), mu(n), v(n) {
 }
 
 TLS_Solver::~TLS_Solver() {
@@ -9,8 +9,8 @@ TLS_Solver::~TLS_Solver() {
 
 void TLS_Solver::solve() {
     // mean value
-    mu = B.getColSum()*(1./m);
-    for(size_t mm = 0; mm < m; mm++)
+    mu = B.getColSum()*(1./B.nRows());
+    for(size_t mm = 0; mm < B.nRows(); mm++)
         for(size_t nn = 0; nn < n; nn++)
             B(mm,nn) -= mu[nn];
             
@@ -18,8 +18,6 @@ void TLS_Solver::solve() {
     if(mySVD) delete mySVD;
     VarMat<double> BB = B;
     mySVD = new LAPACKE_Matrix_SVD<double,double>(BB);
-
-    //v = mySVD->getRightSVec(mySVD->n_singular_values()-1);
     v = mySVD->getRightSVec(0);
 }
 
