@@ -26,6 +26,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include "SMExcept.hh"
 
 using std::string;
 
@@ -38,7 +39,7 @@ public:
     virtual ~BinaryOutputObject() {}
     
     /// write string to file
-    static void writeString(const string& s, ostream& o) {
+    static void writeString(const string& s, std::ostream& o) {
         o.write(s.c_str(), s.size());
         o.flush();
     }
@@ -47,8 +48,10 @@ public:
         string s2(s.size(),'x');
         i.read(&s2[0],s2.size());
         if(throwIfMismatch && s2!=s) {
-            std::cout << "Mismatched file string '" << s << "' read as '" << s2 << "'!\n";
-            throw;
+            SMExcept e("mismatched_file_string");
+            e.insert("expected",s);
+            e.insert("got",s2);
+            throw e;
         }
         return s2==s;
     }
