@@ -41,8 +41,8 @@ cmatrix_fft::cmatrix_fft(unsigned int m): M(m), realspace(new double[M]), kspace
     }
     
     forwardplan = fftw_plan_dft_r2c_1d(M,
-        realspace,
-        (fftw_complex*)kspace,
+                                       realspace,
+                                       (fftw_complex*)kspace,
                                        FFTW_EXHAUSTIVE);
     reverseplan = fftw_plan_dft_c2r_1d(M,
                                        (fftw_complex*)kspace,
