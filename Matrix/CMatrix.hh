@@ -77,20 +77,11 @@ namespace VarVec_element_IO {
  * the necessary permutation of component order is automatically applied for vector multiplication.
  * The FFTs are performed by the <a href="http://www.fftw.org">FFTW library</a>,
  * which pre-calculates plans to expedite FFT'ing specific length data arrays. The CMatrix class keeps a cache of
- * the FFTW data needed for each size of CMatrix instantiated (which could become inefficient if a wide variety of
- * CMatrix sizes are used in the same code, but is suitable for this application where only one size of CMatrix is used
- * for a particular interaction symmetry).*/
+ * the FFTW data needed for each size of CMatrix instantiated. */
 class CMatrix: public BinaryOutputObject {
 public:
     /// Constructor
     CMatrix(unsigned int m = 0): M(m), data(M,0.), kdata(M/2+1,0.), has_realspace(true), has_kspace(true) { }
-    
-    /*
-     * /// Save matrix to a file (to be read by readFromFile())
-     * void writeToFile(ostream& o) const;
-     * /// Read matrix from a file written by writeToFile()
-     * static CMatrix readFromFile(std::istream& s);
-     */
     
     /// generate an identity CMatrix
     static CMatrix identity(unsigned int m);
@@ -177,12 +168,13 @@ private:
     /// zero all entries in this CMatrix
     void zero() const;
     
-    mutable vector<double> data;                   ///< real-space data
-    mutable vector< complex<double> > kdata;       ///< K-space data
-    mutable bool has_realspace;                         ///< whether the real-space representation of this matrix has been calculated
-    mutable bool has_kspace;                            ///< whether the k-space representation of this matrix has been calculated
+    mutable vector<double> data;                ///< real-space data
+    mutable vector< complex<double> > kdata;    ///< K-space data
+    mutable bool has_realspace;                 ///< whether the real-space representation of this matrix has been calculated
+    mutable bool has_kspace;                    ///< whether the k-space representation of this matrix has been calculated
 };
 
+/// display CMatrix
 ostream& operator<<(ostream& o, const CMatrix& m);
 
 #endif

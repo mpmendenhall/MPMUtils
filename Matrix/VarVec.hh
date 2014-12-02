@@ -78,15 +78,17 @@ public:
     T* getDataPtr() { return &data.front(); }
     /// pointer to beginning of array
     const T* getDataPtr() const { return &data.front(); }
-    /// append
+    /// append single data element
     void push_back(const T& x) { data.push_back(x); }
+    /// append vector of elements
+    void append(const VarVec<T>& v) { data.insert(data.end(), v.data.begin(), v.data.end()); }
     /// generate sub-vector
     VarVec<T> subvec(unsigned int a, unsigned int b) const { VarVec<T> V; V.data = vector<T>(&data[a],&data[b]); return V; }
     /// copy data from a sub-vector, starting at position i
     void load_subvec(const VarVec<T>& V, unsigned int i) { assert(i+V.size()<=size()); std::copy(V.getData().begin(), V.getData().end(), &data[i]); }
     
     /// size of vector
-    unsigned int size() const { return data.size(); }
+    size_t size() const { return data.size(); }
     /// display to stdout
     void display() const { std::cout << "< "; for(unsigned int i=0; i<size(); i++) std::cout << data[i] << " "; std::cout << ">\n"; }
     
@@ -448,6 +450,8 @@ namespace VarVec_element_IO {
     inline void writeToFile(const float& t, ostream& o) { o.write((char*)&t, sizeof(t)); }
     template<>
     inline void writeToFile(const double& t, ostream& o) { o.write((char*)&t, sizeof(t)); }
+    template<>
+    inline void writeToFile(const int16_t& t, ostream& o) { o.write((char*)&t, sizeof(t)); }
     
     template<typename T>
     inline T readFromFile(std::istream& s) { return T::readFromFile(s); }
@@ -455,6 +459,8 @@ namespace VarVec_element_IO {
     inline float readFromFile(std::istream& s) { float x; s.read((char*)&x, sizeof(x)); return x; }
     template<>
     inline double readFromFile(std::istream& s) { double x; s.read((char*)&x, sizeof(x)); return x; }
+    template<>
+    inline int16_t readFromFile(std::istream& s) { int16_t x; s.read((char*)&x, sizeof(x)); return x; }
 }
 
 template<typename T>
