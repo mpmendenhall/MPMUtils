@@ -76,7 +76,7 @@ public:
     /// append column
     void appendCol(const VarVec<T>& v) { assert(v.size() == nRows()); vv.append(v); N++; }
     /// append matrix of columns
-    void appendCols(const VarMat<T>& C) { assert(C.nRows == nRows()); vv.append(C.vv); N += C.nCols(); }
+    void appendCols(const VarMat<T>& C) { assert(C.nRows() == nRows()); vv.append(C.vv); N += C.nCols(); }
     /// get row vector
     VarVec<T> getRow(unsigned int i) const;
     /// get column vector
