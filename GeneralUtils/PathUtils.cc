@@ -73,7 +73,7 @@ double fileAge(const string& fname) {
     return timenow - attrib.st_mtime;
 }
 
-vector<string> listdir(const string& dir, bool includeHidden) {
+vector<string> listdir(const string& dir, bool includeHidden, bool fullPath) {
     vector<string> dirs;
     dirent* entry;
     DIR* dp = opendir(dir.c_str());
@@ -81,7 +81,7 @@ vector<string> listdir(const string& dir, bool includeHidden) {
         return dirs;
     while((entry = readdir(dp)))
         if(includeHidden || entry->d_name[0] != '.')
-            dirs.push_back(entry->d_name);
+            dirs.push_back((fullPath?dir+"/":"")+entry->d_name);
         closedir(dp);
     std::sort(dirs.begin(),dirs.end());
     return dirs;

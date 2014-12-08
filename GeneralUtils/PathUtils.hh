@@ -34,7 +34,7 @@ bool dirExists(string d);
 /// make sure the specified path exists (if not, create it); optionally, exclude last item on path (filename)
 void makePath(string p, bool forFile = false);
 /// list directory contents
-vector<string> listdir(const string& dir, bool includeHidden = false);
+vector<string> listdir(const string& dir, bool includeHidden = false, bool fullPath = false);
 /// get time since last file modification (s)
 double fileAge(const string& fname);
 /// get environment variable, with default or fail if missing
