@@ -485,4 +485,11 @@ VarVec<T> VarVec<T>::readFromFile(std::istream& s) {
     return foo;
 }
 
+template<typename T, typename U>
+VarVec<U> convertType(const VarVec<T>& v) {
+    VarVec<U> u(v.size());
+    for(size_t i=0; i<v.size(); i++) u[i] = v[i];
+    return u;
+}
+
 #endif

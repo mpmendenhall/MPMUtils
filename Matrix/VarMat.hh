@@ -74,9 +74,9 @@ public:
     /// const vector element access
     const T& operator[](unsigned int i) const { return vv[i]; }
     /// append column
-    void appendCol(const VarVec<T>& v) { assert(v.size() == nRows()); vv.append(v); N++; }
+    void appendCol(const VarVec<T>& v) { if(!nRows() && !nCols()) M=v.size(); assert(v.size() == nRows()); vv.append(v); N++; }
     /// append matrix of columns
-    void appendCols(const VarMat<T>& C) { assert(C.nRows() == nRows()); vv.append(C.vv); N += C.nCols(); }
+    void appendCols(const VarMat<T>& C) { if(!nRows() && !nCols()) M=C.nRows(); assert(C.nRows() == nRows()); vv.append(C.vv); N += C.nCols(); }
     /// get row vector
     VarVec<T> getRow(unsigned int i) const;
     /// get column vector
@@ -413,6 +413,13 @@ VarMat<T> VarMat<T>::readFromFile(std::istream& s) {
     assert(foo.M*foo.N == foo.vv.size());
     checkString("(/VarMat_"+std::to_string(sizeof(T))+")",s);
     return foo;
+}
+
+template<typename T, typename U>
+VarMat<U> convertType(const VarMat<T>& v) {
+    VarMat<U> u(v.nRows(),v.nCols());
+    for(size_t i=0; i<v.size(); i++) u[i] = v[i];
+    return u;
 }
 
 #endif
