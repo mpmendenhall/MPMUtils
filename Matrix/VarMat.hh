@@ -87,6 +87,8 @@ public:
     VarVec<T> getRowSum() const;
     /// get sum of squares of elements
     T getSumSquares() const { return vv.mag2(); }
+    /// get determinant TODO for M>2
+    T det() const { if(M!=N) return 0; if(M==1) return vv[0]; if(M==2) return vv[0]*vv[3]-vv[1]*vv[2]; assert(false); return 0; }
     
     /// unary minus (negated copy)
     const VarMat<T> operator-() const;
@@ -118,6 +120,8 @@ public:
     void operator-=(const VarMat<T>& rhs) { checkDimensions(rhs); vv -= rhs.getData(); }
     /// subtraction of a VarMat
     const VarMat<T> operator-(const VarMat<T>& rhs) const;
+    /// zero all elements
+    VarMat<T>& zero() { vv.zero(); return *this; }
     
     /// VarMat multiplication
     const VarMat<T> operator*(const VarMat<T>& B) const;
@@ -420,6 +424,16 @@ VarMat<U> convertType(const VarMat<T>& v) {
     VarMat<U> u(v.nRows(),v.nCols());
     for(size_t i=0; i<v.size(); i++) u[i] = v[i];
     return u;
+}
+
+/// outer product of vectors
+template<typename T>
+VarMat<T> outer(const VarVec<T>& a, const VarVec<T>& b) {
+    VarMat<T> M(a.size(),b.size());
+    for(size_t i=0; i<a.size(); i++)
+        for(size_t j=0; j<b.size(); j++)
+            M(i,j) = a[i]*b[j];
+    return M;
 }
 
 #endif

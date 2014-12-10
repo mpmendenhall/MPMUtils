@@ -183,7 +183,7 @@ public:
     bool operator>=(const VarVec<T>& rhs) const;
     
     /// zero all elements
-    VarVec& zero() { for(unsigned int i=0; i<size(); i++) data[i] = T(); return *this; }
+    VarVec<T>& zero() { for(unsigned int i=0; i<size(); i++) data[i] = T(); return *this; }
     /// Make the nth element of the vector =1, all others =0
     VarVec<T>& basis(int n) { zero(); data[n] += 1.0; return *this; }
     /// Fill the vector with random numbers in [0,1]
