@@ -83,3 +83,15 @@ int SQLite_Helper::exec(const string& qry, bool checkOK) {
     }
     return rc;
 }
+
+void SQLite_Helper::getVecBlob(vector<double>& v, sqlite3_stmt*& stmt, int col) {
+    const void* vdat = sqlite3_column_blob(stmt, col);
+    if(!vdat) { v.clear(); return; }
+    int nbytes = sqlite3_column_bytes(stmt, col);
+    v.resize(nbytes/sizeof(double));
+    memcpy(v.data(), vdat, nbytes);
+}
+
+int SQLite_Helper::bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v) {
+    return sqlite3_bind_blob(stmt, i, v.data(), v.size()*sizeof(double), NULL);
+}
