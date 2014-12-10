@@ -3,7 +3,8 @@
 
 #include <math.h>
 #include <TVirtualPad.h>
-
+#include <TPolyLine.h>
+    
 #include <vector>
 #include <TH1.h>
 #include <cfloat>
@@ -36,6 +37,9 @@ void drawHLine(Float_t y, TVirtualPad* C, Int_t color = 4);
 void drawCircle(float r, Int_t color = 1, Int_t lstyle = 1, float x0=0, float y0=0);
 /// draw shaded rectangle marker
 void drawExcludedRegion(Float_t x0, Float_t x1, TCanvas* C, Int_t color = 4, Int_t fill = 1001);
+
+/// make ellipse from center and inverse covariance matrix arrays (for Matrix/Clustering.hh)
+TPolyLine* makeEllipse(float x0, float y0, const double* iSigma);
 
 /// set up grayscale figures color palette, black-to-white by default, or inverted
 void makeGrayscalepalette(bool b2w = true);

@@ -96,6 +96,21 @@ void drawCircle(float r, Int_t color, Int_t lstyle, float x0, float y0) {
     e->Draw();
 }
 
+TPolyLine* makeEllipse(float x0, float y0, const double* iSigma) {
+    int npts = 50;
+    vector<Double_t> xs;
+    vector<Double_t> ys;
+    for(int i=0; i<npts; i++) {
+        double th = i*2*M_PI/(npts-1);
+        double c = cos(th);
+        double s = sin(th);
+        double r = 1./sqrt((iSigma[0]*c+iSigma[2]*s)*c + (iSigma[1]*c+iSigma[3]*s)*s);
+        xs.push_back(r*c+x0);
+        ys.push_back(r*s+y0);
+    }
+    return new TPolyLine(xs.size(), &xs[0], &ys[0]);
+}
+
 void drawVLine(Float_t x, TVirtualPad* C, Int_t color, Int_t style) {
     Double_t xmin,ymin,xmax,ymax;
     C->Update();
