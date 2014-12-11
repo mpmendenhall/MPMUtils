@@ -76,6 +76,8 @@ public:
     TemplateConvolverFactory() { }
     vector<double> v;   ///< convolving samples
     int s0 = 0;         ///< "zero" sample position
+    /// reverse convolving samples direction
+    void flip();
 protected:
     /// calculate convolution kernel for given size
     virtual vector<double> calcKernel(unsigned int i) const;

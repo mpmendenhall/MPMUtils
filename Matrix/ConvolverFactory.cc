@@ -120,3 +120,11 @@ vector<double> TemplateConvolverFactory::calcKernel(unsigned int i) const {
     for(int s=s0+1; s<(int)std::min(v.size(),i); s++) vs[i-(s-s0)] = v[s];
     return vs;
 }
+
+void TemplateConvolverFactory::flip() {
+    vector<double> vflip(v.size());
+    vflip[0] = v[0];
+    for(size_t i=1; i<v.size(); i++) vflip[i] = v[v.size()-i];
+    v = vflip;
+}
+
