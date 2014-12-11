@@ -64,11 +64,21 @@ public:
     GaussConvolverFactory(double rr): r(rr) { }
     
     const double r;     ///< convolution radius in samples
-protected:
     
+protected:
     /// calculate convolution kernel for given size
     virtual vector<double> calcKernel(unsigned int i) const;
 };
 
+/// Convolutions generator with template shape
+class TemplateConvolverFactory: public ConvolverFactory {
+public:
+    TemplateConvolverFactory() { }
+    vector<double> v;   ///< convolving samples
+    int s0 = 0;         ///< "zero" sample position
+protected:
+    /// calculate convolution kernel for given size
+    virtual vector<double> calcKernel(unsigned int i) const;
+};
 
 #endif

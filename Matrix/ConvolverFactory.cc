@@ -112,3 +112,11 @@ vector<double> GaussConvolverFactory::calcKernel(unsigned int i) const {
     for(unsigned int n=0; n<i; n++) v[n] /= nrm;
     return v;
 }
+
+vector<double> TemplateConvolverFactory::calcKernel(unsigned int i) const {
+    vector<double> vs(i);
+    assert(s0 >= 0 && s0 < (int)v.size());
+    for(int s=s0; s>=std::max(0,int(s0-i+1)); s--) vs[s0-s] = v[s];
+    for(int s=s0+1; s<(int)std::min(v.size(),i); s++) vs[i-(s-s0)] = v[s];
+    return vs;
+}
