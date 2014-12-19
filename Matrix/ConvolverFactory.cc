@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cassert>
+#include <sys/file.h>
 
 using std::pair;
 
@@ -36,9 +37,15 @@ int fftw_best_nearest_size(int i, int dmax) {
 map<unsigned int,Convolver_FFT*> Convolver_FFT::ffters;
 
 Convolver_FFT::Convolver_FFT(unsigned int m): M(m), realspace(new double[M]), kspace(new complex<double>[M/2+1]) {
+    
+    printf("Calculating convolver plan for N=%u...",m);
+    fflush(stdout);
+    
+    bool hasWisdom = false;
     FILE* fin = fopen("fftw_wisdom","r");
     if(fin) {
-        fftw_import_wisdom_from_file(fin);
+        if( (hasWisdom = !flock(fileno(fin), LOCK_SH)) ) fftw_import_wisdom_from_file(fin);
+        flock(fileno(fin), LOCK_UN);
         fclose(fin);
     }
     
@@ -51,15 +58,14 @@ Convolver_FFT::Convolver_FFT(unsigned int m): M(m), realspace(new double[M]), ks
                                        realspace,
                                        FFTW_MEASURE);
     
-    printf("Calculating convolver plan for N=%u...",m);
-    fflush(stdout);
-    
+    bool savedWisdom = false;
     FILE* fout = fopen("fftw_wisdom","w");
     if(fout) {
-        fftw_export_wisdom_to_file(fout);
+        if( (savedWisdom = !flock(fileno(fin), LOCK_EX)) ) fftw_export_wisdom_to_file(fout);
+        flock(fileno(fin), LOCK_UN);
         fclose(fout);
     }
-    printf("Done.\n");
+    printf("%s%sDone.\n", hasWisdom?"Loaded wisdom; ":"", savedWisdom?"Saved wisdom; ":"");
 }
 
 //////////////////////
