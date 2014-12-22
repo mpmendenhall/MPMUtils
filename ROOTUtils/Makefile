@@ -13,7 +13,7 @@ LDFLAGS =  -L../GeneralUtils/ -lMPMGeneralUtils `root-config --libs`
 # things to build
 #
 
-objects = GraphicsUtils.o OutputManager.o PointCloudHistogram.o TChainScanner.o SegmentSaver.o
+objects = GraphicsUtils.o GraphUtils.o OutputManager.o PointCloudHistogram.o TChainScanner.o SegmentSaver.o
 
 all: libMPMROOTUtils.a
 

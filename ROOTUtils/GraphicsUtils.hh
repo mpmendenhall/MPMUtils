@@ -1,6 +1,7 @@
 #ifndef GRAPHICSUTILS_HH
 #define GRAPHICSUTILS_HH
 
+#include "AxisEnum.hh"
 #include <math.h>
 #include <TVirtualPad.h>
 #include <TPolyLine.h>
@@ -11,16 +12,6 @@
 
 using std::vector;
 using std::string;
-
-/// axis directions
-enum AxisDirection {
-    X_DIRECTION = 0,
-    Y_DIRECTION = 1,
-    Z_DIRECTION = 2,
-    T_DIRECTION = 3
-};
-/// iteration to next axis
-inline AxisDirection& operator++(AxisDirection& d) { return d = AxisDirection(d+1); }
 
 /// draw several histograms simultaneously; return max histogram height
 double drawSimulHistos(vector<TH1*>& hists, const string& opt = "", const string& newTitle = "DEFAULT");
