@@ -44,6 +44,15 @@ void fill_interp(TH1* h, double x, double w) {
     h->Fill(c1, (1-a)*w);
 }
 
+void normalize_to_bin_width(TH1* f) {
+    for(int i=1; i<f->GetNbinsX(); i++) {
+        TAxis* A = f->GetXaxis();
+        double scale = 1./A->GetBinWidth(i);
+        f->SetBinContent(i, f->GetBinContent(i)*scale);
+        f->SetBinError(i, f->GetBinError(i)*scale);
+    }
+}
+
 TGraphErrors* histoDeriv(const TH1* h, unsigned int dxi, double s) {
     assert(h);
     int nb = h->GetNbinsX();

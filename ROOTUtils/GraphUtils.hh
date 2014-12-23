@@ -42,6 +42,9 @@ TGraphErrors* TProf2TGraph(const TProfile& P, unsigned int minpts = 0);
 /// make cumulative histogram
 TH1F* cumulativeHist(const TH1F& h, bool normalize = false);
 
+/// Divide out histogram bin width, for differential spectrum
+void normalize_to_bin_width(TH1* f);
+
 /// invert a TGraph
 TGraph* invertGraph(const TGraph* g);
 
