@@ -43,6 +43,8 @@ public:
     /// get bin with maximum weight
     DHBinData getMax() const;
     
+    DHBinData total;            ///< total of all filled data
+    
 protected:
     /// choose bin center for inserting data point
     virtual double bincenter(const DHBinData& d) const { return d.mu(); }

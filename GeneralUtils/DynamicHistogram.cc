@@ -9,6 +9,7 @@ void DHBinData::operator+=(const DHBinData& r) {
 
 void DynamicHistogram::fill(double x, double w) {
     DHBinData d(x,w);
+    total += d;
     
     if(!dat.size()) {
         dat.insert(pair<double,DHBinData>(bincenter(d),d));
