@@ -42,8 +42,8 @@ TGraphErrors* TProf2TGraph(const TProfile& P, unsigned int minpts = 0);
 /// make cumulative histogram
 TH1F* cumulativeHist(const TH1F& h, bool normalize = false);
 
-/// Divide out histogram bin width, for differential spectrum
-void normalize_to_bin_width(TH1* f);
+/// Divide out histogram bin width, for differential spectrum (with optional extra scale factor)
+void normalize_to_bin_width(TH1* f, double xscale = 1.);
 
 /// invert a TGraph
 TGraph* invertGraph(const TGraph* g);
@@ -69,8 +69,8 @@ void accumPoints(TGraphErrors& a, const TGraphErrors& b, bool errorWeight = true
 /// generate derivative graph
 TGraph* derivative(TGraph& g);
 
-/// Poisson-smear a histogram, preserving total counts
-TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut = NULL);
+/// Poisson-smear a histogram (with optional limiting resolution), preserving total counts
+TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut = NULL, double n_max = 0);
 
 /// transform axis on a TGraph, optionally using jacobean to preserve integral
 void transformAxis(TGraph& g, TGraph& T, bool useJacobean = true);

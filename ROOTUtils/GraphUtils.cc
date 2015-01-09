@@ -44,10 +44,10 @@ void fill_interp(TH1* h, double x, double w) {
     h->Fill(c1, (1-a)*w);
 }
 
-void normalize_to_bin_width(TH1* f) {
-    for(int i=1; i<f->GetNbinsX(); i++) {
+void normalize_to_bin_width(TH1* f, double xscale) {
+    for(int i=1; i<=f->GetNbinsX(); i++) {
         TAxis* A = f->GetXaxis();
-        double scale = 1./A->GetBinWidth(i);
+        double scale = xscale/A->GetBinWidth(i);
         f->SetBinContent(i, f->GetBinContent(i)*scale);
         f->SetBinError(i, f->GetBinError(i)*scale);
     }
@@ -266,7 +266,7 @@ void drawTogether(vector<TGraphErrors*>& gs, float ymin, float ymax, TCanvas* C,
     
 }
 
-TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut) {
+TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut, double n_max) {
     if(!hOut) {
         hOut = (TH1*)hIn.Clone((string(hIn.GetName())+"_Smeared").c_str());
         hOut->Reset();
@@ -276,11 +276,13 @@ TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut) {
         if(!c0) continue;
         double X = hIn.GetBinCenter(i);
         double n0 = X*NperX;
+        if(n_max && n0) n0 = 1./(1./n0 + 1./n_max);
+        double NperXeff = n0/X;
         double nrm = 0;
-        for(int j=1; j<=hOut->GetNbinsX(); j++) nrm += TMath::Poisson(hOut->GetBinCenter(j)*NperX, n0);
+        for(int j=1; j<=hOut->GetNbinsX(); j++) nrm += TMath::Poisson(hOut->GetBinCenter(j)*NperXeff, n0);
         for(int j=1; j<=hOut->GetNbinsX(); j++) {
             double X1 = hOut->GetBinCenter(j);
-            hOut->Fill(X1, c0 * TMath::Poisson(X1*NperX, n0)/nrm);
+            hOut->Fill(X1, c0 * TMath::Poisson(X1*NperXeff, n0)/nrm);
         }
     }
     return hOut;
