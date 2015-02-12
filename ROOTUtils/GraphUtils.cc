@@ -267,6 +267,14 @@ void drawTogether(vector<TGraphErrors*>& gs, float ymin, float ymax, TCanvas* C,
     
 }
 
+double integralAndError(TH1* h, double x0, double x1, Double_t& err, const string& option) {
+    if(!h) {
+        err = 0;
+        return 0;
+    }
+    return h->IntegralAndError(h->FindBin(x0), h->FindBin(x1), err, option.c_str());
+}
+
 TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut, double n_max) {
     if(!hOut) {
         hOut = (TH1*)hIn.Clone((string(hIn.GetName())+"_Smeared").c_str());

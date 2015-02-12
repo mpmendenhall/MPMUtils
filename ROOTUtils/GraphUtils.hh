@@ -84,6 +84,9 @@ double invCDF(TH1* h, double p);
 /// check histogram for NaNs
 void fixNaNs(TH1* h);
 
+/// histogram integral and error specified by x axis range
+double integralAndError(TH1* h, double x0, double x1, Double_t& err, const string& option = "");
+
 /// slice a TH3 into a stack of TH2Fs
 vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d = Z_DIRECTION);
 

@@ -92,13 +92,12 @@ void TChainScanner::SetBranchAddress(TTree* T, const string& bname, void* bdata)
     }
 }
 
-void TChainScanner::speedload(unsigned int e, bool loadBaskets) {
+void TChainScanner::speedload(unsigned int e) {
     if(e < noffset || e-noffset >= nLocalEvents) {
         Tch->LoadTree(e);
-        Tch->GetTree()->SetMaxVirtualSize(1000000);
-        if(loadBaskets) Tch->GetTree()->LoadBaskets();
         nLocalEvents = Tch->GetTree()->GetEntries();
         noffset = Tch->GetChainOffset();
+        nextTreeLoaded();
     }
     Tch->GetTree()->GetEvent(e-noffset);
 }
