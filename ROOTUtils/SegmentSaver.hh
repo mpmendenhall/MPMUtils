@@ -46,6 +46,8 @@ public:
     
     /// generate or restore from file a saved TH1F histogram
     TH1* registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax);
+    /// generate or restore from file a saved TH2F histogram
+    TH2* registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax);
     /// generate or restore from file a saved histogram from a template
     TH1* registerSavedHist(const string& hname, const TH1& hTemplate);
     

@@ -51,6 +51,15 @@ TH1* SegmentSaver::registerSavedHist(const string& hname, const string& title,un
     return h;
 }
 
+TH2* SegmentSaver::registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax) {
+    smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
+    TH2* h = dynamic_cast<TH2*>(tryLoad(hname));
+    if(!h)
+        h = registeredTH2F(hname,title,nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+    saveHists.insert(std::make_pair(hname,h));
+    return h;
+}
+
 TH1* SegmentSaver::registerSavedHist(const string& hname, const TH1& hTemplate) {
     smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
     TH1* h = tryLoad(hname);
