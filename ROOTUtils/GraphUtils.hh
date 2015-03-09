@@ -45,6 +45,9 @@ TH1F* cumulativeHist(const TH1F& h, bool normalize = false);
 /// Divide out histogram bin width, for differential spectrum (with optional extra scale factor)
 void normalize_to_bin_width(TH1* f, double xscale = 1.);
 
+/// Scale histogram by geometric bin center (for Lethargy plot)
+void scale_times_bin_center(TH1* f);
+
 /// invert a TGraph
 TGraph* invertGraph(const TGraph* g);
 

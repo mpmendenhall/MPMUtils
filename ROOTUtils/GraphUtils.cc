@@ -54,6 +54,16 @@ void normalize_to_bin_width(TH1* f, double xscale) {
     f->Scale(xscale);
 }
 
+void scale_times_bin_center(TH1* f) {
+    for(int i=1; i<=f->GetNbinsX(); i++) {
+        TAxis* A = f->GetXaxis();
+        double scale = sqrt(A->GetBinLowEdge(i)*A->GetBinUpEdge(i));
+        f->SetBinContent(i, f->GetBinContent(i)*scale);
+        f->SetBinError(i, f->GetBinError(i)*scale);
+    }
+    f->Scale(1.0);
+}
+
 TGraphErrors* histoDeriv(const TH1* h, unsigned int dxi, double s) {
     assert(h);
     int nb = h->GetNbinsX();
