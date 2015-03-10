@@ -23,7 +23,7 @@ void drawDataMCPair(TH1* dat, TH1* mc);
 /// draw vertical line marker
 void drawVLine(Float_t x, TVirtualPad* C, Int_t color = 4, Int_t style = 1);
 /// draw horizontal line
-void drawHLine(Float_t y, TVirtualPad* C, Int_t color = 4);
+void drawHLine(Float_t y, TVirtualPad* C, Int_t color = 4, Int_t style = 1);
 /// draw circle
 void drawCircle(float r, Int_t color = 1, Int_t lstyle = 1, float x0=0, float y0=0);
 /// draw shaded rectangle marker

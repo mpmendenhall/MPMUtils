@@ -125,12 +125,13 @@ void drawVLine(Float_t x, TVirtualPad* C, Int_t color, Int_t style) {
     l->Draw();
 }
 
-void drawHLine(Float_t y, TVirtualPad* C, Int_t color) {
+void drawHLine(Float_t y, TVirtualPad* C, Int_t color, Int_t style) {
     Double_t xmin,ymin,xmax,ymax;
     C->Update();
     C->GetRangeAxis(xmin,ymin,xmax,ymax);
     TLine* l = new TLine(xmin,y,xmax,y);
     l->SetLineColor(color);
+    l->SetLineStyle(style);
     l->Draw();
 }
 
