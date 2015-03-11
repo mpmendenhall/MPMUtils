@@ -26,6 +26,7 @@
 #include <TFile.h>
 #include <map>
 #include <string>
+#include <cassert>
 
 using std::map;
 using std::string;
@@ -74,8 +75,8 @@ public:
     
     // ----- Subclass me! ----- //
     
-    /// create a new instance of this object (cloning self settings) for given directory
-    virtual SegmentSaver* makeAnalyzer(const string& nm, const string& inflname) = 0;
+    /// create a new instance of this object(nm,inflname) (cloning self settings) for given directory
+    virtual SegmentSaver* makeAnalyzer(const string&, const string&) { assert(false); return NULL; } 
     /// virtual routine for generating output plots
     virtual void makePlots() {}
     /// virtual routine for generating calculated hists
