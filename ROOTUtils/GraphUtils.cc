@@ -33,6 +33,7 @@ TH2F* loglogHist(const string& nm, const string& descrip, unsigned int nbins, do
 }
 
 void fill_interp(TH1* h, double x, double w) {
+    if(!h) return;
     TAxis* Ax = h->GetXaxis();
     int b0 = Ax->FindBin(x);
     if(b0 < 1 || b0 > h->GetNbinsX()) { h->Fill(x); return; }
@@ -45,6 +46,7 @@ void fill_interp(TH1* h, double x, double w) {
 }
 
 void normalize_to_bin_width(TH1* f, double xscale) {
+    if(!f) return;
     for(int i=1; i<=f->GetNbinsX(); i++) {
         TAxis* A = f->GetXaxis();
         double scale = 1./A->GetBinWidth(i);
@@ -55,6 +57,7 @@ void normalize_to_bin_width(TH1* f, double xscale) {
 }
 
 void scale_times_bin_center(TH1* f) {
+    if(!f) return;
     for(int i=1; i<=f->GetNbinsX(); i++) {
         TAxis* A = f->GetXaxis();
         double scale = sqrt(A->GetBinLowEdge(i)*A->GetBinUpEdge(i));
