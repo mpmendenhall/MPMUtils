@@ -100,3 +100,20 @@ string getEnvSafe(const string& v, const string& dflt) {
     }
     return envv;
 }
+
+void combo_pdf(const vector<string>& namelist, const string& outname) {
+    if(!namelist.size()) return;
+    string cmd;
+    if(namelist.size()==1) {
+        cmd = "mv " + namelist[0] + " " + outname;
+        int rc = system(cmd.c_str());
+        if(rc) printf("%s: %i\n", cmd.c_str(), rc);
+        return;
+    }
+    for(auto it = namelist.begin(); it != namelist.end(); it++)
+        cmd += *it + " ";
+    cmd = "pdfunite " + cmd + outname +"; rm " + cmd;
+    int rc = system(cmd.c_str());
+    if(rc) printf("%s: %i\n", cmd.c_str(), rc);
+}
+

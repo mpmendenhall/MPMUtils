@@ -1,4 +1,5 @@
 #include "GraphicsUtils.hh"
+#include "PathUtils.hh"
 #include "StringManip.hh"
 #include "SMExcept.hh"
 #include <algorithm>
@@ -87,6 +88,35 @@ void drawDataMCPair(TH1* dat, TH1* mc) {
     }
 }
 
+void combo_draw(const vector<TH1*>& hs, const string& outp, const char* opt) {
+    string aName;
+    string outpath = outp;
+    string nbase = split(outpath,"/").back();
+    if(split(nbase,".").back()=="pdf") {
+        nbase = dropLast(nbase,".");
+        outpath = dropLast(outpath,"/");
+    } else nbase = "";
+    
+    vector<string> hNames;
+    for(auto it = hs.begin(); it != hs.end(); it++) {
+        if(!(*it)) continue;
+        (*it)->Draw(opt);
+        char file_template[] = "/tmp/plot_XXXXXX";
+        int fd = mkstemp(file_template);
+        if(fd==-1) continue; // failure to make temp file
+        close(fd);
+        hNames.push_back(file_template);
+        if(!nbase.size()) nbase = dropLast((*it)->GetName(),"_");
+        gPad->Print(file_template,"pdf");
+    }
+    combo_pdf(hNames, outpath + "/"+nbase+".pdf");
+}
+
+void combo_draw(const vector<TH2*>& hs, const string& outpath, const char* opt) {
+    vector<TH1*> hs1;
+    for(auto it = hs.begin(); it != hs.end(); it++) hs1.push_back(*it);
+    combo_draw(hs1, outpath, opt);
+}
 
 void drawCircle(float r, Int_t color, Int_t lstyle, float x0, float y0) {
     TEllipse* e = new TEllipse(x0,y0,r,r);

@@ -5,6 +5,8 @@
 #include <math.h>
 #include <TVirtualPad.h>
 #include <TPolyLine.h>
+#include <TH1.h>
+#include <TH2.h>
     
 #include <vector>
 #include <TH1.h>
@@ -19,6 +21,10 @@ double drawSimulHistos(vector<TH1*>& hists, const string& opt = "", const string
 void drawHistoPair(TH1* hRed, TH1* hBlue, const string& opt = "", Int_t c1 = 2, Int_t c2 = 4);
 /// draw a pair of histograms, with line and diamond markers
 void drawDataMCPair(TH1* dat, TH1* mc);
+/// Draw list of histograms into multi-page PDF
+void combo_draw(const vector<TH1*>& hs, const string& outpath, const char* opt = "");
+/// Draw list of histograms into multi-page PDF
+void combo_draw(const vector<TH2*>& hs, const string& outpath, const char* opt = "");
 
 /// draw vertical line marker
 void drawVLine(Float_t x, TVirtualPad* C, Int_t color = 4, Int_t style = 1);
