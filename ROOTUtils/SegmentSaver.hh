@@ -63,7 +63,7 @@ public:
     /// scale all saved histograms by a factor
     virtual void scaleData(double s);
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
-    virtual void normalize() { }
+    virtual void normalize(double = 1) { }
     
     /// add histograms from another SegmentSaver of the same type
     virtual void addSegment(const SegmentSaver& S);
