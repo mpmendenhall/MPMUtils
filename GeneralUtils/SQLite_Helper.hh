@@ -39,7 +39,6 @@ protected:
     int bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v);
     
     sqlite3* db = NULL;                     ///< database connection
-    static SQLite_Helper* myDB;             ///< static singleton instance
     map<string, sqlite3_stmt*> statements;  ///< prepared statements awaiting deletion
 
 private:
