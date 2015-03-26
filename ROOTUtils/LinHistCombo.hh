@@ -31,7 +31,9 @@ public:
     
     /// fit evaluation
     double Evaluate(double* x, double* p);
-    
+    /// fit evaluation with current coefficients
+    double eval(double x) { return Evaluate(&x, coeffs.data()); }
+
 protected:
     TF1* myFit;                         ///< fit function
     vector<TH1*> terms;                 ///< fit terms
