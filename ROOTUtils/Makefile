@@ -13,8 +13,9 @@ LDFLAGS =  -L../GeneralUtils/ -lMPMGeneralUtils `root-config --libs`
 # things to build
 #
 
-objects = EnumerationFitter.o GraphicsUtils.o GraphUtils.o HistogramSequenceFitter.o LinHistCombo.o \
-	MultiGaus.o OutputManager.o PointCloudHistogram.o TChainScanner.o TSQLHelper.o SegmentSaver.o
+objects = EnumerationFitter.o GraphicsUtils.o GraphUtils.o HistogramSequenceFitter.o \
+	LinHistCombo.o MultiGaus.o OutputManager.o PointCloudHistogram.o TChainScanner.o \
+	TSQLHelper.o SegmentSaver.o SplineFit.o
 
 all: libMPMROOTUtils.a
 
