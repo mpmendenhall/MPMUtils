@@ -281,11 +281,24 @@ void drawTogether(vector<TGraphErrors*>& gs, float ymin, float ymax, TCanvas* C,
 }
 
 double integralAndError(TH1* h, double x0, double x1, Double_t& err, const string& option) {
-    if(!h) {
-        err = 0;
-        return 0;
+    err = 0;
+    if(!h) return 0;
+    const TAxis* Ax = h->GetXaxis();
+    int b0 = Ax->FindBin(x0);
+    int b1 = Ax->FindBin(x1);
+    if(option == "interpolate") {
+        double ss = 0;
+        if(b0+1 <= b1-1) ss += h->IntegralAndError(b0+1, b1-1, err);
+        double fx0 = Ax->GetBinUpEdge(b0) - x0;
+        double fx1 = x1 - Ax->GetBinLowEdge(b1);
+        ss += fx0*h->GetBinContent(b0);
+        ss += fx1*h->GetBinContent(b1);
+        double e0 = fx0*h->GetBinError(b0);
+        double e1 = fx1*h->GetBinError(b1);
+        err = sqrt(err*err + e0*e0 + e1*e1);
+        return ss;
     }
-    return h->IntegralAndError(h->FindBin(x0), h->FindBin(x1), err, option.c_str());
+    return h->IntegralAndError(b0, b1, err, option.c_str());
 }
 
 TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut, double n_max) {
@@ -423,6 +436,23 @@ void fixNaNs(TH1* h) {
     }
 }
 
+TH1F* axisHist(const TH2& h, const string& hname,  AxisDirection d) {
+    const TAxis* Ax = (d==X_DIRECTION? h.GetXaxis() : d ==Y_DIRECTION?  h.GetYaxis() : h.GetZaxis());
+    int nbins = Ax->GetNbins();
+    TH1F* h1;
+    if(Ax->IsVariableBinSize()) {
+        vector<double> binedges;
+        for(int i=1; i<=nbins; i++) binedges.push_back(Ax->GetBinLowEdge(i));
+        binedges.push_back(Ax->GetBinUpEdge(nbins));
+        h1 = new TH1F(hname.c_str(), h.GetTitle(), nbins, binedges.data());
+    } else {
+        h1 = new TH1F(hname.c_str(), h.GetTitle(), nbins, Ax->GetBinLowEdge(1), Ax->GetBinUpEdge(nbins));
+    }
+    if(h.GetSumw2()) h1->Sumw2();
+    h1->GetXaxis()->SetTitle(Ax->GetTitle());
+    return h1;
+}
+
 vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d) {
     smassert(d<=Z_DIRECTION);
     
@@ -470,19 +500,12 @@ vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection d, bool includeOverflow) {
     vector<TH1F*> h1s;
     const unsigned int nx = h2.GetNbinsX();
     const unsigned int ny = h2.GetNbinsY();
-    const TAxis* axs = d==X_DIRECTION?h2.GetYaxis():h2.GetXaxis();
     const unsigned int nz = d==X_DIRECTION?nx:ny;
     const unsigned int nn = d==X_DIRECTION?ny:nx;
     
     for(unsigned int z = 0; z <= nz+1; z++) {
         if(!includeOverflow && (z==0 || z==nz+1)) continue;
-        TH1F* h1 = new TH1F((std::string(h2.GetName())+"_"+to_str(z)).c_str(),
-        h2.GetTitle(),
-        nn,
-        axs->GetBinLowEdge(1),
-        axs->GetBinUpEdge(nn));
-        if(h2.GetSumw2()) h1->Sumw2();
-        h1->GetXaxis()->SetTitle(axs->GetTitle());
+        TH1F* h1 = axisHist(h2, h2.GetName()+("_"+to_str(z)), d==X_DIRECTION? Y_DIRECTION : X_DIRECTION);
         for(unsigned int n=0; n <= nn+1; n++) {
             if(d==X_DIRECTION) {
                 h1->SetBinContent(n,h2.GetBinContent(z,n));
