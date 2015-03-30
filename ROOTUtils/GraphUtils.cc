@@ -280,24 +280,32 @@ void drawTogether(vector<TGraphErrors*>& gs, float ymin, float ymax, TCanvas* C,
     
 }
 
+
+
+double integralAndErrorInterp(TH1* h, double x0, double x1, Double_t& err, bool dxmul) {
+    err = 0;
+    if(!h) return 0;
+    const TAxis* Ax = h->GetXaxis();
+    int b0 = Ax->FindBin(x0);
+    int b1 = Ax->FindBin(x1);
+    double ss = 0;
+    if(b0+1 <= b1-1) ss += h->IntegralAndError(b0+1, b1-1, err, dxmul?"width":"");
+    double fx0 = (Ax->GetBinUpEdge(b0) - x0)*(dxmul? 1 : 1./Ax->GetBinWidth(b0));
+    double fx1 = (x1 - Ax->GetBinLowEdge(b1))*(dxmul? 1 : 1./Ax->GetBinWidth(b1));
+    ss += fx0*h->GetBinContent(b0);
+    ss += fx1*h->GetBinContent(b1);
+    double e0 = fx0*h->GetBinError(b0);
+    double e1 = fx1*h->GetBinError(b1);
+    err = sqrt(err*err + e0*e0 + e1*e1);
+    return ss;
+}
+
 double integralAndError(TH1* h, double x0, double x1, Double_t& err, const string& option) {
     err = 0;
     if(!h) return 0;
     const TAxis* Ax = h->GetXaxis();
     int b0 = Ax->FindBin(x0);
     int b1 = Ax->FindBin(x1);
-    if(option == "interpolate") {
-        double ss = 0;
-        if(b0+1 <= b1-1) ss += h->IntegralAndError(b0+1, b1-1, err);
-        double fx0 = Ax->GetBinUpEdge(b0) - x0;
-        double fx1 = x1 - Ax->GetBinLowEdge(b1);
-        ss += fx0*h->GetBinContent(b0);
-        ss += fx1*h->GetBinContent(b1);
-        double e0 = fx0*h->GetBinError(b0);
-        double e1 = fx1*h->GetBinError(b1);
-        err = sqrt(err*err + e0*e0 + e1*e1);
-        return ss;
-    }
     return h->IntegralAndError(b0, b1, err, option.c_str());
 }
 
@@ -506,6 +514,7 @@ vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection d, bool includeOverflow) {
     for(unsigned int z = 0; z <= nz+1; z++) {
         if(!includeOverflow && (z==0 || z==nz+1)) continue;
         TH1F* h1 = axisHist(h2, h2.GetName()+("_"+to_str(z)), d==X_DIRECTION? Y_DIRECTION : X_DIRECTION);
+        h1->GetYaxis()->SetTitle(h2.GetZaxis()->GetTitle());
         for(unsigned int n=0; n <= nn+1; n++) {
             if(d==X_DIRECTION) {
                 h1->SetBinContent(n,h2.GetBinContent(z,n));

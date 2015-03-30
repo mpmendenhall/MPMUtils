@@ -87,8 +87,11 @@ double invCDF(TH1* h, double p);
 /// check histogram for NaNs
 void fixNaNs(TH1* h);
 
-/// histogram integral and error specified by x axis range. Option = "interpolate" for fractional-bin-interpolated result.
+/// histogram integral and error specified by x axis range.
 double integralAndError(TH1* h, double x0, double x1, Double_t& err, const string& option = "");
+
+/// histogram integral and error with fractional-bin-interpolated result; optional to multiply by dx.
+double integralAndErrorInterp(TH1* h, double x0, double x1, Double_t& err, bool dxmul = true);
 
 /// create 1D histogram binned with axis from higher-dimensional histogram
 TH1F* axisHist(const TH2& h, const string& hname, AxisDirection d);
