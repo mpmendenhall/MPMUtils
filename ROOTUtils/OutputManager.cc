@@ -21,6 +21,7 @@
 #include "OutputManager.hh"
 #include "PathUtils.hh"
 #include <TH1.h>
+#include <TStyle.h>
 
 bool OutputManager::squelchAllPrinting = false;
 
@@ -30,6 +31,8 @@ parent(NULL), writeRootOnDestruct(false) {
     // set up output canvas
     defaultCanvas->SetFillColor(0);
     defaultCanvas->SetCanvasSize(300,300);
+    gStyle->SetTitleOffset(1.35,"Y");
+    gStyle->SetTitleOffset(1.35,"Z");
     #ifdef PUBLICATION_PLOTS
     defaultCanvas->SetGrayscale(true);
     #endif
