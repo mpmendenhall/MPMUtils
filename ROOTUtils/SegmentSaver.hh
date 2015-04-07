@@ -51,7 +51,9 @@ public:
     TH2* registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax);
     /// generate or restore from file a saved histogram from a template
     TH1* registerSavedHist(const string& hname, const TH1& hTemplate);
-    
+    /// display list of saved histograms
+    void displaySavedHists() const;
+
     /// get core histogram by name
     TH1* getSavedHist(const string& hname);
     /// get core histogram by name, const version
@@ -68,7 +70,7 @@ public:
     /// add histograms from another SegmentSaver of the same type
     virtual void addSegment(const SegmentSaver& S);
     /// check if this is equivalent layout to another SegmentSaver
-    virtual bool isEquivalent(const SegmentSaver& S) const;
+    virtual bool isEquivalent(const SegmentSaver& S, bool throwit = false) const;
     
     bool ignoreMissingHistos;   ///< whether to quietly ignore missing histograms in input file
     
