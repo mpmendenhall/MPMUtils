@@ -56,6 +56,21 @@ void normalize_to_bin_width(TH1* f, double xscale) {
     f->Scale(xscale);
 }
 
+void normalize_to_bin_area(TH2* h, double xscale) {
+    if(!h) return;
+    TAxis* Ax = h->GetXaxis();
+    TAxis* Ay = h->GetYaxis();
+    Int_t bx,by,bz;
+    for(int i=0; i<h->GetNcells(); i++) {
+        h->GetBinXYZ(i,bx,by,bz);
+        if(!bx || !by || bx > Ax->GetNbins() || by > Ay->GetNbins()) continue;
+        double scale = 1./Ax->GetBinWidth(bx)/Ay->GetBinWidth(by);
+        h->SetBinContent(i, h->GetBinContent(i)*scale);
+        h->SetBinError(i, h->GetBinError(i)*scale);
+    }
+    h->Scale(xscale);
+}
+
 void scale_times_bin_center(TH1* f) {
     if(!f) return;
     for(int i=1; i<=f->GetNbinsX(); i++) {
