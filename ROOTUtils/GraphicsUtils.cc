@@ -180,15 +180,14 @@ void drawExcludedRegion(Float_t x0, Float_t x1, TCanvas* C, Int_t color, Int_t f
 }
 
 void makeGrayscalepalette(bool b2w) {
-    const unsigned int ncol = 256;
-    Int_t cnum[ncol];
-    for(unsigned int i=0; i<ncol; i++) {
-        float l = float(i)/float(ncol-1);
-        l = b2w?l:1-l;
-        cnum[i] = TColor::GetColor(l,l,l);
-    }
-    gStyle->SetPalette(ncol,cnum);
-    gStyle->SetNumberContours(64);
+    const UInt_t nstops = 2;
+    const Int_t nb=255;
+    const double c0 = !b2w;
+    const double c1 = b2w;
+    Double_t l[nstops] = { c0, c1 };
+    Double_t s[nstops] = { 0., 1. };
+
+    TColor::CreateGradientColorTable(nstops, s, l, l, l, nb);
 }
 
 void makeRBpalette() {
