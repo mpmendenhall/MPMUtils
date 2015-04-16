@@ -159,6 +159,10 @@ void drawHLine(Float_t y, TVirtualPad* C, Int_t color, Int_t style) {
     Double_t xmin,ymin,xmax,ymax;
     C->Update();
     C->GetRangeAxis(xmin,ymin,xmax,ymax);
+    if(C->GetLogx()) {
+        xmin = pow(10,xmin);
+        xmax = pow(10,xmax);
+    }
     TLine* l = new TLine(xmin,y,xmax,y);
     l->SetLineColor(color);
     l->SetLineStyle(style);
