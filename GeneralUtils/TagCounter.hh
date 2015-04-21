@@ -34,7 +34,9 @@ template<typename T>
 class TagCounter {
 public:
     /// constructor
-    TagCounter(Stringmap m = Stringmap());
+    TagCounter() { }
+    /// constructor from stringmap
+    TagCounter(Stringmap m);
     /// destructor
     ~TagCounter() {}
     /// add counts
