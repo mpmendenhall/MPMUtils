@@ -29,10 +29,7 @@ OutputManager::OutputManager(string nm, string bp): rootOut(NULL), defaultCanvas
 parent(NULL), writeRootOnDestruct(false) {
     TH1::AddDirectory(kFALSE);
     // set up output canvas
-    defaultCanvas->SetFillColor(0);
-    defaultCanvas->SetCanvasSize(300,300);
-    gStyle->SetTitleOffset(1.35,"Y");
-    gStyle->SetTitleOffset(1.35,"Z");
+    defaultCanvas->SetCanvasSize(200,200);
     #ifdef PUBLICATION_PLOTS
     defaultCanvas->SetGrayscale(true);
     #endif

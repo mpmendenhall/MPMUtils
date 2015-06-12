@@ -3,6 +3,7 @@
 #include "StringManip.hh"
 #include "SMExcept.hh"
 #include <algorithm>
+#include <cassert>
 
 #include <TEllipse.h>
 #include <TPad.h>
@@ -204,4 +205,23 @@ void makeRBpalette() {
     Double_t blue[NRGBs]  = { 1.00, 0.50, 1.00, 0.00, 0.00 };
     TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
     gStyle->SetNumberContours(NCont);
+}
+
+void setupSlideStyle(TStyle* S) {
+    assert(S);
+    S->SetOptStat("");
+    S->SetLabelSize(0.05, "XYZ");
+    //S->SetLabelOffset(0.02, "X");
+    S->SetPadBottomMargin(0.14);
+    S->SetPadLeftMargin(0.15);
+    S->SetTitleSize(0.06,"xyz");
+    S->SetTitleOffset(1.0,"X");
+    S->SetTitleOffset(1.1,"Y");
+    S->SetTitleOffset(1.0,"Z");
+    S->SetTitleFontSize(0.08);
+    S->SetTitleY(0.992);
+    S->SetFillColor(0);
+    S->SetHistLineWidth(2);
+    S->SetLineWidth(2);
+    S->SetNdivisions(507);
 }

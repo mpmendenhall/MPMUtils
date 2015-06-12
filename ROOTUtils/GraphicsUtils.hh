@@ -5,6 +5,7 @@
 #include <math.h>
 #include <TVirtualPad.h>
 #include <TPolyLine.h>
+#include <TStyle.h>
 #include <TH1.h>
 #include <TH2.h>
     
@@ -42,5 +43,8 @@ TPolyLine* makeEllipse(float x0, float y0, const double* iSigma);
 void makeGrayscalepalette(bool b2w = true);
 /// set up blue-white-red palette
 void makeRBpalette();
+
+/// gStyle settings for "slideshow-ready" plots
+void setupSlideStyle(TStyle* S = gStyle);
 
 #endif
