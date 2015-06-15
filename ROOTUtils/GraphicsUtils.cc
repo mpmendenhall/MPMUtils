@@ -219,6 +219,7 @@ void setupSlideStyle(TStyle* S) {
     S->SetTitleOffset(1.1,"Y");
     S->SetTitleOffset(1.0,"Z");
     S->SetTitleFontSize(0.08);
+    S->SetTitleW(1.0);
     S->SetTitleY(0.992);
     S->SetFillColor(0);
     S->SetHistLineWidth(2);
