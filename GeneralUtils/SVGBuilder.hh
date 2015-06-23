@@ -4,6 +4,7 @@
 
 #include "XMLBuilder.hh"
 #include "StringManip.hh"
+#include "ColorSpec.hh"
 
 namespace SVG {
 

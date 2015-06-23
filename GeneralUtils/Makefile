@@ -13,8 +13,8 @@ CXXFLAGS = -std=c++11 -O3 -fPIC -pedantic -Wall -Wextra -I.
 # things to build
 #
 
-objects = ControlMenu.o DynamicHistogram.o FloatErr.o PathUtils.o ProgressBar.o QFile.o RollingWindow.o \
-	SMExcept.o StringManip.o Stringmap.o TagCounter.o
+objects = ColorSpec.o ControlMenu.o DynamicHistogram.o FloatErr.o PathUtils.o ProgressBar.o QFile.o \
+	RollingWindow.o SMExcept.o StringManip.o Stringmap.o TagCounter.o
 
 all: libMPMGeneralUtils.a
 
