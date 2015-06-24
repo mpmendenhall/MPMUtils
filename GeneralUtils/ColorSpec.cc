@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cassert>
+#include <stdio.h>
 
 namespace color {
     
@@ -61,6 +62,12 @@ namespace color {
         int32_t bb = b <= 0? 0 : 256*b;
         if(bb > 255) bb = 255;
         return (rr << 16) + (gg << 8) + bb;
+    }
+    
+    string rgb::asHexString() const {
+        char c[7];
+        sprintf(c,"%06x",as24bit());
+        return c;
     }
     
     hsv::hsv(const rgb& c) {

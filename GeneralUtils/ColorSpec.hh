@@ -4,6 +4,8 @@
 #include <map>
 using std::map;
 using std::pair;
+#include <string>
+using std::string;
 #include <cstdint>
 
 namespace color {
@@ -24,9 +26,10 @@ namespace color {
         /// Constructor from hsv specification
         rgb(const hsv& c);
         
-        /// Color as #RgGgBb 24-bit number
+        /// Color as 0xRgGgBb 24-bit number
         int32_t as24bit() const;
-        
+        /// Color as RgGgBb hexadecimal string
+        string asHexString() const;
     };
 
     /// Color specified by hsv(a) components
@@ -62,6 +65,9 @@ namespace color {
         
         /// Create a new gradient as a sub-range of this one
         Gradient subGradient(double x0, double x1) const;
+        
+        /// gradient stops map access
+        const map<double,pair<rgb,hsv> >& getStops() const { return stops; }
         
     protected:
         map<double,pair<rgb,hsv> > stops;       ///< gradient stops
