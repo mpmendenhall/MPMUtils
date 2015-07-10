@@ -1,3 +1,10 @@
+/// \file TLS_Solver.cc
+// This file was produced under the employ of the United States Government,
+// and is consequently in the PUBLIC DOMAIN, free from all provisions of
+// US Copyright Law (per USC Title 17, Section 105).
+// 
+// -- Michael P. Mendenhall, 2015
+
 #include "TLS_Solver.hh"
 
 TLS_Solver::TLS_Solver(size_t nn, size_t mm): n(nn), B(mm,n), mu(n), v(n) {

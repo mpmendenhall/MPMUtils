@@ -1,3 +1,10 @@
+/// \file TLS_Solver.hh \brief Total Least Squares (TLS) solver for line through point cloud
+// This file was produced under the employ of the United States Government,
+// and is consequently in the PUBLIC DOMAIN, free from all provisions of
+// US Copyright Law (per USC Title 17, Section 105).
+// 
+// -- Michael P. Mendenhall, 2015
+
 #ifndef TLS_SOLVER_HH
 #define TLS_SOLVER_HH
 

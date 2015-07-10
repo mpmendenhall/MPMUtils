@@ -1,3 +1,10 @@
+/// \file ConvolverFactory.hh \brief Wrapper for convolutions with fftw3
+// This file was produced under the employ of the United States Government,
+// and is consequently in the PUBLIC DOMAIN, free from all provisions of
+// US Copyright Law (per USC Title 17, Section 105).
+// 
+// -- Michael P. Mendenhall, 2015
+
 #ifndef CONVOLVERFACTORY_HH
 #define CONVOLVERFACTORY_HH
 
