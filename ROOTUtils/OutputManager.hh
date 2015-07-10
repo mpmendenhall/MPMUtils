@@ -22,13 +22,17 @@
 #ifndef OUTPUTMANAGER_HH
 #define OUTPUTMANAGER_HH
 
-#include "SMFile.hh"
 #include <TObject.h>
 #include <TCanvas.h>
 #include <TH1.h>
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TFile.h>
+
+#include <string>
+using std::string;
+#include <vector>
+using std::vector;
 
 /// collection of saved TObjects
 class TObjCollector {
@@ -86,10 +90,7 @@ public:
     TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
     /// print current canvas
     virtual void printCanvas(string fname, string suffix=".pdf") const;
-    
-    /// put a data quality warning in the parent output file
-    void warn(WarningLevel l, string descrip, Stringmap M = Stringmap());
-    
+        
     /// write output SMFile
     virtual void write(string outName = "");
     /// open output ROOT file for writing (useful if output tree is being created and needs a home)
@@ -97,7 +98,6 @@ public:
     /// set whether to write ROOT output when destructed
     void setWriteRoot(bool w) { writeRootOnDestruct = w; }
     
-    SMFile qOut;                 ///< SMFile output
     TFile* rootOut;             ///< ROOT file output
     TCanvas* defaultCanvas;     ///< canvas for drawing plots
     OutputManager* parent;      ///< parent output manager

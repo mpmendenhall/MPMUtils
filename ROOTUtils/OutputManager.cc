@@ -54,46 +54,6 @@ void OutputManager::setName(string nm) {
     }
 }
 
-void OutputManager::warn(WarningLevel l, string descrip, Stringmap M) {
-    
-    M.insert("description",descrip);
-    M.insert("subsystem",name);
-    
-    if(l==BENIGN_WARNING) {
-        printf("* Warning: %s\n",descrip.c_str());
-        M.insert("level","benign");
-    } else if(l==MODERATE_WARNING) {
-        printf("\n*** WARNING: %s\n",descrip.c_str());
-        M.insert("level","moderate");
-    } else if(l==SEVERE_WARNING) {
-        printf("\n\n*******************\n* SEVERE WARNING: %s\n*******************\n",descrip.c_str());
-        M.insert("level","severe");
-    } if(l==FATAL_WARNING) {
-        printf("\n\n*******************\n*******************\n** FATAL WARNING: %s\n*******************\n*******************\n",descrip.c_str());
-        M.insert("level","fatal");
-    }
-    
-    M.display("\t");
-    printf("\n");
-    
-    if(parent)
-        parent->qOut.insert("Warning",M);
-    else
-        qOut.insert("Warning",M);
-}
-
-void OutputManager::write(string outName) {
-    // write text data file
-    if(qOut.size()) {
-        makePath(dataPath+"/"+outName,true);
-        if(outName.size())
-            qOut.setOutfile(dataPath+"/"+outName);
-        else
-            qOut.setOutfile(dataPath+"/"+name+".txt");
-        qOut.commit();
-    }
-}
-
 void OutputManager::openOutfile() {
     if(rootOut) { rootOut->Close(); }
     makePath(rootPath);
