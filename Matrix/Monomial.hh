@@ -42,7 +42,7 @@ class InconsistentMonomialException: public PolynomialException {
     }
 };
 
-
+/// Monomial (one term in a Polynomial)
 template<unsigned int N, typename T, typename P>
 class Monomial {
 public:

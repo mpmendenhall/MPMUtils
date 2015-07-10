@@ -1,3 +1,4 @@
+/// \file PointCloudHistogram.cc
 #include "PointCloudHistogram.hh"
 #include <cassert>
 #include <Math/QuasiRandom.h>

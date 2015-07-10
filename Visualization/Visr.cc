@@ -1,5 +1,6 @@
+/// \file Visr.cc
 /* 
- * Visr.cpp, part of the MPMUtils package
+ * Visr.cc, part of the MPMUtils package
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify

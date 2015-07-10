@@ -13,6 +13,7 @@
 
 using std::pair;
 
+/// callback function to display SQLite3 errors
 void errorLogCallback(void*, int iErrCode, const char* zMsg){
     fprintf(stderr, "SQL error (%d): %s\n", iErrCode, zMsg);
 }

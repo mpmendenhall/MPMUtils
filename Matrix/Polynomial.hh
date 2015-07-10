@@ -27,6 +27,7 @@
 #include <map>
 using std::map;
 
+/// Templatized polynomial
 template<unsigned int N, typename T>
 class Polynomial {
 public:

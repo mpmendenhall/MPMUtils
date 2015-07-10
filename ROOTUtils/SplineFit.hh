@@ -1,3 +1,4 @@
+/// \file SplineFit.hh \brief TF1 fits to TGraph cubic spline
 #ifndef SPLINEFIT_HH
 #define SPLINEFIT_HH
 

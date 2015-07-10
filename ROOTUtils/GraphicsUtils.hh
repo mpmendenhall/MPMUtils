@@ -1,3 +1,4 @@
+/// \file GraphicsUtils.hh \brief ROOT graphics utilities
 #ifndef GRAPHICSUTILS_HH
 #define GRAPHICSUTILS_HH
 

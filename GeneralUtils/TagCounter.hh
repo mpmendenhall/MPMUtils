@@ -31,6 +31,7 @@
 
 using std::map;
 
+/// Templatized counts tally
 template<typename T>
 class TagCounter {
 public:

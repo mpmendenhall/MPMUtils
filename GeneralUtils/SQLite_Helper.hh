@@ -17,6 +17,7 @@ using std::string;
 #include <vector>
 using std::vector;
 
+/// Convenience wrapper for SQLite3 database interface
 class SQLite_Helper {
 public:
     /// Constructor

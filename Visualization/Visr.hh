@@ -1,3 +1,4 @@
+/// \file Visr.hh \brief Simple OpenGL visualization window
 /* 
  * Visr.hh, part of the MPMUtils package
  * Copyright (c) 2007-2014 Michael P. Mendenhall
@@ -18,7 +19,6 @@
  *
  */
 
-/// \file Visr.hh \brief Simple OpenGL visualization window
 #ifndef VISCONTROLLER_HH
 /// Make sure this header is only loaded once
 #define VISCONTROLLER_HH

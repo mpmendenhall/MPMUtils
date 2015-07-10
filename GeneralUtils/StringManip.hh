@@ -87,9 +87,13 @@ string strip(const string& str, const string stripchars = " \t\r\n");
 /// drop last segment after splitting character
 string dropLast(const string& str, const string splitchars);
 
+/// lowercase alphabet
 const string alpha_lower = "abcdefghijklmnopqrstuvwxyz";
+/// uppercase alphabet
 const string alpha_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+/// lower+upper alphabet
 const string alphabet = alpha_lower+alpha_upper;
+/// digit characters
 const string s_digits = "0123456789";
 
 #endif
