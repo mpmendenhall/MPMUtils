@@ -1,6 +1,6 @@
-/// \file QFile.cc
+/// \file SMFile.cc
 /* 
- * QFile.cc, part of the MPMUtils package.
+ * SMFile.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
  *
  */
 
-#include "QFile.hh"
+#include "SMFile.hh"
 
 #include <iostream>
 #include <sstream>
@@ -29,7 +29,7 @@
 #include "PathUtils.hh"
 #include "SMExcept.hh"
 
-QFile::QFile(const string& fname, bool readit) {
+SMFile::SMFile(const string& fname, bool readit) {
     name = fname;
     if(!readit || name=="")
         return;
@@ -60,33 +60,33 @@ QFile::QFile(const string& fname, bool readit) {
     fin.close();
 }
 
-void QFile::insert(const string& s, const Stringmap& v) {
+void SMFile::insert(const string& s, const Stringmap& v) {
     dat.insert(std::make_pair(s,v));
 }
 
-void QFile::erase(const string& s) { dat.erase(s); }
+void SMFile::erase(const string& s) { dat.erase(s); }
 
-vector<Stringmap> QFile::retrieve(const string& s) const {
+vector<Stringmap> SMFile::retrieve(const string& s) const {
     vector<Stringmap> v;
     for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(s); it != dat.upper_bound(s); it++)
         v.push_back(it->second);
     return v;
 }
 
-void QFile::transfer(const QFile& Q, const string& k) {
+void SMFile::transfer(const SMFile& Q, const string& k) {
     vector<Stringmap> v = Q.retrieve(k);
     for(vector<Stringmap>::iterator it = v.begin(); it != v.end(); it++)
         insert(k,*it);
 }
 
-void QFile::display() const {
+void SMFile::display() const {
     for(multimap<string, Stringmap>::const_iterator it = dat.begin(); it != dat.end(); it++) {
         std::cout << "--- " << it->first << " ---:\n";
         it->second.display();
     }
 }
 
-void QFile::commit(string outname) const {
+void SMFile::commit(string outname) const {
     if(outname=="")
         outname = name;
     makePath(outname,true);
@@ -102,7 +102,7 @@ void QFile::commit(string outname) const {
     fout.close();
 }
 
-vector<string> QFile::retrieve(const string& k1, const string& k2) const {
+vector<string> SMFile::retrieve(const string& k1, const string& k2) const {
     vector<string> v1;
     for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
         vector<string> v2 = it->second.retrieve(k2);
@@ -112,7 +112,7 @@ vector<string> QFile::retrieve(const string& k1, const string& k2) const {
     return v1;
 }
 
-vector<double> QFile::retrieveDouble(const string& k1, const string& k2) const {
+vector<double> SMFile::retrieveDouble(const string& k1, const string& k2) const {
     vector<double> v1;
     for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
         vector<double> v2 = it->second.retrieveDouble(k2);
@@ -122,7 +122,7 @@ vector<double> QFile::retrieveDouble(const string& k1, const string& k2) const {
     return v1;
 }
 
-string QFile::getDefault(const string& k1, const string& k2, const string& d) const {
+string SMFile::getDefault(const string& k1, const string& k2, const string& d) const {
     for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
         vector<string> v2 = it->second.retrieve(k2);
         if(v2.size())
@@ -131,7 +131,7 @@ string QFile::getDefault(const string& k1, const string& k2, const string& d) co
     return d;
 }
 
-double QFile::getDefault(const string& k1, const string& k2, double d) const {
+double SMFile::getDefault(const string& k1, const string& k2, double d) const {
     for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
         vector<double> v2 = it->second.retrieveDouble(k2);
         if(v2.size())
@@ -140,7 +140,7 @@ double QFile::getDefault(const string& k1, const string& k2, double d) const {
     return d;
 }
 
-Stringmap QFile::getFirst(const string& s, const Stringmap& dflt) const {
+Stringmap SMFile::getFirst(const string& s, const Stringmap& dflt) const {
     multimap<string,Stringmap>::const_iterator it = dat.find(s);
     if(it == dat.end())
         return dflt;

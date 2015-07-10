@@ -33,3 +33,4 @@ clean:
 	-cd GeneralUtils; make clean
 	-cd ROOTUtils; make clean
 	-cd Matrix; make clean
+	-rm -rf html/ latex/

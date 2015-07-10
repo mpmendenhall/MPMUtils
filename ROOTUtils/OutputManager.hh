@@ -22,7 +22,7 @@
 #ifndef OUTPUTMANAGER_HH
 #define OUTPUTMANAGER_HH
 
-#include "QFile.hh"
+#include "SMFile.hh"
 #include <TObject.h>
 #include <TCanvas.h>
 #include <TH1.h>
@@ -64,7 +64,7 @@ enum WarningLevel {
     FATAL_WARNING       ///< data is corrupted and cannot be analyzed
 };
 
-/// manages output directory for grouping related information; manages a canvas, output QFile, output ROOT file, recursive subdirectories
+/// manages output directory for grouping related information; manages a canvas, output SMFile, output ROOT file, recursive subdirectories
 class OutputManager: public TObjCollector {
 public:
     /// constructor for top-level
@@ -90,14 +90,14 @@ public:
     /// put a data quality warning in the parent output file
     void warn(WarningLevel l, string descrip, Stringmap M = Stringmap());
     
-    /// write output QFile
+    /// write output SMFile
     virtual void write(string outName = "");
     /// open output ROOT file for writing (useful if output tree is being created and needs a home)
     void openOutfile();
     /// set whether to write ROOT output when destructed
     void setWriteRoot(bool w) { writeRootOnDestruct = w; }
     
-    QFile qOut;                 ///< QFile output
+    SMFile qOut;                 ///< SMFile output
     TFile* rootOut;             ///< ROOT file output
     TCanvas* defaultCanvas;     ///< canvas for drawing plots
     OutputManager* parent;      ///< parent output manager

@@ -1,6 +1,6 @@
-/// \file QFile.hh \brief simple text data format
+/// \file SMFile.hh \brief simple text data format
 /* 
- * QFile.hh, part of the MPMUtils package.
+ * SMFile.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,17 +19,17 @@
  *
  */
 
-#ifndef QFILE_HH
-#define QFILE_HH
+#ifndef SMFile_HH
+#define SMFile_HH
 
 #include "Stringmap.hh"
 
 /// wrapper for multimap<string,Stringmap> with useful functions
-class QFile {
+class SMFile {
 public:
     
     /// constructor given a string
-    QFile(const string& s = "", bool readit = true);
+    SMFile(const string& s = "", bool readit = true);
     
     /// insert key/(string)value pair
     void insert(const string& str, const Stringmap& v);
@@ -49,8 +49,8 @@ public:
     vector<double> retrieveDouble(const string& k1, const string& k2) const;
     /// return number of elements
     unsigned int size() const { return dat.size(); }
-    /// transfer all data for given key from other QFile
-    void transfer(const QFile& Q, const string& k);
+    /// transfer all data for given key from other SMFile
+    void transfer(const SMFile& Q, const string& k);
     
     /// set output file location
     void setOutfile(string fnm) { name = fnm; }

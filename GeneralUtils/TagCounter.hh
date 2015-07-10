@@ -26,7 +26,7 @@
 #include <iostream>
 #include <istream>
 #include <sstream>
-#include "QFile.hh"
+#include "SMFile.hh"
 #include "StringManip.hh"
 
 using std::map;
