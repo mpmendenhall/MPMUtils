@@ -57,6 +57,3 @@ const Permutation Permutation::operator*(const Permutation& p) const {
     return o;
 }
 
-int main() {
-    return 0;
-}
