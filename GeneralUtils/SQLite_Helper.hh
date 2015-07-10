@@ -1,3 +1,10 @@
+/// \file SQLite_Helper.hh \brief convenience wrapper for SQLite3 database interface
+// This file was produced under the employ of the United States Government,
+// and is consequently in the PUBLIC DOMAIN, free from all provisions of
+// US Copyright Law (per USC Title 17, Section 105).
+//
+// -- Michael P. Mendenhall, 2015
+
 #ifndef SQLITE_HELPER_HH
 #define SQLITE_HELPER_HH
 

@@ -1,3 +1,4 @@
+/// \file RollingWindow.cc
 #include "RollingWindow.hh"
 #include "SMExcept.hh"
 

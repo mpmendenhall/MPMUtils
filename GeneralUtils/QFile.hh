@@ -1,3 +1,4 @@
+/// \file QFile.hh \brief simple text data format
 /* 
  * QFile.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

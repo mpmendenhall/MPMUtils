@@ -1,3 +1,4 @@
+/// \file LAPACKE_Matrix.hh \brief Convenience interface to LAPACK matrix operations
 /* 
  * LAPACKE_Matrix.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
@@ -22,7 +23,6 @@
  *
  */
 
-/// \file MAPACKE_Matrix.hh \brief Convenience interface to LAPACK matrix operations
 #ifndef LAPACKE_MATRIX_HH
 /// Make sure this header is only loaded once
 #define LAPACKE_MATRIX_HH

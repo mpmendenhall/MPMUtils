@@ -1,3 +1,4 @@
+/// \file BBox.hh \brief Templatized D-dimensional bounding box
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
@@ -38,6 +39,7 @@ public:
     T hi[D];    /// upper bounds
 };
 
+/// create BBox<D,double> with "null" bounds
 template<size_t D>
 BBox<D,double> empty_double_bbox() {
     BBox<D,double> b;

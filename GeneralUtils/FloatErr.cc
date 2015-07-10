@@ -1,3 +1,4 @@
+/// \file FloatErr.cc
 #include "FloatErr.hh"
 #include "StringManip.hh"
 #include <math.h>

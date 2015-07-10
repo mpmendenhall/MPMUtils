@@ -1,3 +1,4 @@
+/// \file StringManip.hh \brief string manipulation utilities
 /* 
  * StringManip.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

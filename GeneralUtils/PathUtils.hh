@@ -1,3 +1,4 @@
+/// \file PathUtils.hh \brief file, path, and environment variable utilities
 /* 
  * PathUtils.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

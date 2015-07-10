@@ -1,3 +1,4 @@
+/// \file FloatErr.hh \brief floating-point values with uncertainties that add in quadrature
 #ifndef FLOATERR_HH
 #define FLOATERR_HH
 

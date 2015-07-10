@@ -1,3 +1,4 @@
+/// \file "LinMin.hh" \brief Least-squares linear polynomial fits
 /* 
  * LinMin.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
@@ -18,7 +19,6 @@
  *
  */
 
-/// \file "linmin.hh" \brief Least-squares linear polynomial fits
 #ifndef LINMIN_HH
 /// Make sure this header is included only once
 #define LINMIN_HH

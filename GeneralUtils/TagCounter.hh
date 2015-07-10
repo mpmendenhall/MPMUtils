@@ -1,3 +1,4 @@
+/// \file TagCounter.hh \brief templatized counts tally
 /* 
  * TagCounter.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

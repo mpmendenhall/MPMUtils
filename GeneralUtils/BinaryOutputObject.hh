@@ -1,3 +1,4 @@
+/// \file BinaryOutputObject.hh \brief base utility class for tag-string-delimited binary IO
 /* 
  * BinaryOutputObject.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
@@ -18,7 +19,6 @@
  *
  */
 
-/// \file BinaryOutputObject.hh \brief base utility class for tag-string-delimited binary IO
 #ifndef BINARYOUTPUTOBJECT_HH
 /// Make sure this header is only loaded once
 #define BINARYOUTPUTOBJECT_HH

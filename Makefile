@@ -9,9 +9,7 @@ SHELL = /bin/sh
 CXXFLAGS = -std=c++11 -O3 -fPIC -pedantic -Wall -Wextra -Wpedantic -I. \
 	-IGeneralUtils/ -IMatrix/ -IROOTUtils/
 
-#
 # things to build
-#
 
 all: GeneralUtils/libMPMGeneralUtils.a ROOTUtils/libMPMROOTUtils.a Matrix/libMPMMatrix.a
 
@@ -24,9 +22,11 @@ ROOTUtils/libMPMROOTUtils.a:
 Matrix/libMPMMatrix.a:
 	+cd Matrix; make
 
-#
+.PHONY: doc
+doc:
+	doxygen Doxyfile
+
 # cleanup
-#
 
 .PHONY: clean
 clean:
