@@ -91,8 +91,6 @@ public:
     /// print current canvas
     virtual void printCanvas(string fname, string suffix=".pdf") const;
         
-    /// write output SMFile
-    virtual void write(string outName = "");
     /// open output ROOT file for writing (useful if output tree is being created and needs a home)
     void openOutfile();
     /// set whether to write ROOT output when destructed
