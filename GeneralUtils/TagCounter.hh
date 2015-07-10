@@ -26,7 +26,7 @@
 #include <iostream>
 #include <istream>
 #include <sstream>
-#include "SMFile.hh"
+#include "Stringmap.hh"
 #include "StringManip.hh"
 
 using std::map;
