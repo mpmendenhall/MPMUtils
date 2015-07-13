@@ -27,7 +27,7 @@
 bool OutputManager::squelchAllPrinting = false;
 
 OutputManager::OutputManager(string nm, string bp): rootOut(NULL), defaultCanvas(new TCanvas()),
-parent(NULL), writeRootOnDestruct(false) {
+parent(NULL), name(nm), writeRootOnDestruct(false) {
     TH1::AddDirectory(kFALSE);
     // set up output canvas
     defaultCanvas->SetCanvasSize(200,200);
@@ -36,20 +36,13 @@ parent(NULL), writeRootOnDestruct(false) {
     #endif
     
     basePath = plotPath = dataPath = rootPath = bp;
-    setName(nm);
 }
 
 OutputManager::OutputManager(string nm, OutputManager* pnt):
-rootOut(NULL), defaultCanvas(NULL), parent(pnt), writeRootOnDestruct(false) {
+rootOut(NULL), defaultCanvas(NULL), parent(pnt), name(nm), writeRootOnDestruct(false) {
     TH1::AddDirectory(kFALSE);
-    if(parent)
-        defaultCanvas = parent->defaultCanvas;
-    setName(nm);
-}
-
-void OutputManager::setName(string nm) {
-    name = nm;
     if(parent) {
+        defaultCanvas = parent->defaultCanvas;
         plotPath = dataPath = basePath = rootPath = parent->basePath+"/"+name+"/";
     }
 }

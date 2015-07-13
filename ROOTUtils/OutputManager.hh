@@ -110,8 +110,6 @@ public:
     
 protected:
     
-    /// set name of this detector
-    virtual void setName(string nm);
     /// write output ROOT file; WARNING: THIS DELETES ALL REGISTERED ITEMS; do last if you reference these.
     void writeROOT();
 };
