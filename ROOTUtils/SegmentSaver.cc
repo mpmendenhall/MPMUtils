@@ -73,10 +73,10 @@ TH1* SegmentSaver::registerSavedHist(const string& hname, const TH1& hTemplate) 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
 OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalculated(false), inflAge(0) {
     // open file to load existing data
-    fIn = (inflname.size())?(new TFile((inflname+".root").c_str(),"READ")):NULL;
+    fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")):NULL;
     smassert(!fIn || !fIn->IsZombie(),"unreadable_file");
     if(fIn) {
-        inflAge = fileAge(inflname+".root");
+        inflAge = fileAge(inflname);
         printf("Loading data from %s [%.1f hours old]...\n",inflname.c_str(),inflAge/3600.);
     }
 }
@@ -86,10 +86,6 @@ SegmentSaver::~SegmentSaver() {
         fIn->Close();
         delete(fIn);
     }
-}
-
-bool SegmentSaver::inflExists(const string& inflName) {
-    return fileExists(inflName+".root") && fileExists(inflName+".txt");
 }
 
 TH1* SegmentSaver::getSavedHist(const string& hname) {
@@ -115,8 +111,12 @@ void SegmentSaver::zeroSavedHists() {
 
 void SegmentSaver::scaleData(double s) {
     if(s==1.) return;
-    for(auto it = saveHists.begin(); it != saveHists.end(); it++)
-        if(it->second->ClassName() != TString("TProfile")) it->second->Scale(s);
+    for(auto it = saveHists.begin(); it != saveHists.end(); it++) {
+        if(it->second->ClassName() != TString("TProfile")) {
+            if(!it->second->GetSumw2()) it->second->Sumw2();
+            it->second->Scale(s);
+        }
+    }
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
