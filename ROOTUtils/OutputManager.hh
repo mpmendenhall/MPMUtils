@@ -22,43 +22,11 @@
 #ifndef OUTPUTMANAGER_HH
 #define OUTPUTMANAGER_HH
 
-#include <TObject.h>
+#include "TObjCollector.hh"
 #include <TCanvas.h>
 #include <TH1.h>
 #include <TH1F.h>
 #include <TH2F.h>
-#include <TFile.h>
-
-#include <string>
-using std::string;
-#include <vector>
-using std::vector;
-
-/// collection of saved TObjects
-class TObjCollector {
-public:
-    /// destructor
-    virtual ~TObjCollector() { clearItems(); }
-    virtual void writeItems() {
-        printf("Saving registered objects...");
-        fflush(stdout);
-        for(vector<TObject*>::iterator i = rootItems.begin(); i != rootItems.end(); i++)
-            (*i)->Write();
-        printf(" Done.\n");
-    }
-    void clearItems() {
-        for(vector<TObject*>::iterator i = rootItems.begin(); i != rootItems.end(); i++)
-            delete(*i);
-        rootItems.clear();
-        for(vector<TObject*>::iterator i = deleteItems.begin(); i != deleteItems.end(); i++)
-            delete(*i);
-        deleteItems.clear();
-    }
-    /// register a root object for output (and eventual deletion)
-    virtual TObject* addObject(TObject* o, bool noWrite=false) { if(noWrite) deleteItems.push_back(o); else rootItems.push_back(o); return o; }
-    vector<TObject*> rootItems;    ///< objects held until deleted
-    vector<TObject*> deleteItems;  ///< other objects never written to file
-};
 
 /// indicator for level of problem with analysis
 enum WarningLevel {

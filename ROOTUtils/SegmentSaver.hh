@@ -24,6 +24,7 @@
 
 #include "OutputManager.hh"
 #include <TH1.h>
+#include <TVectorT.h>
 #include <TFile.h>
 #include <map>
 #include <string>
@@ -53,6 +54,9 @@ public:
     /// display list of saved histograms
     void displaySavedHists() const;
 
+    /// generate or restore from file a named TVectorD
+    TVectorD* registerNamedVector(const string& vname, size_t nels = 0);
+    
     /// get core histogram by name
     TH1* getSavedHist(const string& hname);
     /// get core histogram by name, const version

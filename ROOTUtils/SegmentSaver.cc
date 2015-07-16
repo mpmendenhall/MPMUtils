@@ -63,11 +63,31 @@ TH1* SegmentSaver::registerSavedHist(const string& hname, const TH1& hTemplate) 
     smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
     TH1* h = tryLoad(hname);
     if(!h) {
-        h = (TH1*)addObject(hTemplate.Clone(hname.c_str()));
+        h = (TH1*)addObject((TH1*)hTemplate.Clone(hname.c_str()));
         h->Reset();
     }
     saveHists.insert(std::make_pair(hname,h));
     return h;
+}
+
+TVectorD* SegmentSaver::registerNamedVector(const string& vname, size_t nels) {
+    if(fIn) { 
+        TVectorD* V = NULL;
+        fIn->GetObject(vname.c_str(),V);
+        if(!V) {
+            if(ignoreMissingHistos) {
+                printf("Warning: missing vector '%s' in '%s'\n",vname.c_str(),inflname.c_str());
+            } else {
+                SMExcept e("fileStructureMismatch");
+                e.insert("fileName",inflname);
+                e.insert("objectName",vname);
+                throw(e);
+            }
+        } else {
+            return (TVectorD*)addWithName(V, vname);
+        }
+    }
+    return (TVectorD*)addWithName(new TVectorD(nels), vname);
 }
 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
