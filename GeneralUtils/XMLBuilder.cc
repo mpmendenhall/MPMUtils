@@ -36,3 +36,4 @@ XMLBuilder* XMLProvider::makeXML() {
     for(auto it = children.begin(); it != children.end(); it++) B->addChild((*it)->makeXML());
     return B;
 }
+

@@ -61,6 +61,8 @@ class XMLProvider {
 public:
     /// Constructor
     XMLProvider(const string& name): tagname(name) { }
+    /// Destructor
+    virtual ~XMLProvider() { }
     /// build XML output
     XMLBuilder* makeXML();
     /// Add child node
