@@ -22,6 +22,9 @@
 #ifndef STRINGMANIP_HH
 #define STRINGMANIP_HH
 
+#define STRINGIFY2(X) #X
+#define STRINGIFY(X) STRINGIFY2(X)
+
 #include <string>
 #include <vector>
 #include <iostream>
