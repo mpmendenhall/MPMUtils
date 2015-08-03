@@ -37,6 +37,7 @@ public:
     
     string name;                        ///< tag head
     map<string,string> attrs;           ///< tag attributes
+    static string indent;               ///< indentation string
     
 protected:
     

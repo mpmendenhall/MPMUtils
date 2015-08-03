@@ -7,15 +7,17 @@
 
 #include "XMLBuilder.hh"
 
+string XMLBuilder::indent = "    ";
+
 void XMLBuilder::write(ostream& o, unsigned int ndeep) {
     prepare();
-    for(unsigned int i=0; i<ndeep; i++) o << "\t";
+    for(unsigned int i=0; i<ndeep; i++) o << indent;
     o << "<" << name;
     for(auto it = attrs.begin(); it != attrs.end(); it++) o << " " << it->first << "=\"" << it->second << "\"";
     if(children.size()) {
         o << ">\n";
         for(auto it = children.begin(); it != children.end(); it++) { (*it)->write(o,ndeep+1); o << "\n"; }
-        while(ndeep--) o << "\t";
+        while(ndeep--) o << indent;
         closeTag(o);
     } else {
         closeTag(o,true);
