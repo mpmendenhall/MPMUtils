@@ -67,6 +67,8 @@ public:
     XMLBuilder* makeXML();
     /// Add child node
     virtual void addChild(XMLProvider* C) { assert(C); children.push_back(C); }
+    /// Add a tag attribute
+    virtual void addAttr(const string& nm, const string& val) { xattrs[nm] = val; }
     
 protected:
     /// add class-specific XML data; subclass me!
