@@ -52,9 +52,11 @@ protected:
 /// "verbatim contents" XML-includable text
 class XMLText: public XMLBuilder {
 public:
+    /// Constructor
     XMLText(const string& c): contents(c) { }
-    virtual void write(ostream& o, unsigned int ndeep = 0) { while(ndeep--) o << "\t"; o << contents; }
-    string contents;
+    /// write output
+    virtual void write(ostream& o, unsigned int ndeep = 0) { while(ndeep--) o << indent; o << contents; }
+    string contents;    ///< text to include between tags
 };
 
 /// Base class for objects that can provide XML output ``on demand''
