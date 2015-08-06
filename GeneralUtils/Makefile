@@ -24,7 +24,7 @@ libMPMGeneralUtils.a: $(objects)
 .PHONY: CompileVersion.o
 CompileVersion.o: 
 	$(CXX) -c $(CXXFLAGS) -DGIT_SHA=$(shell git rev-parse -q HEAD) CompileVersion.cc -o CompileVersion.o
-	
+
 #
 # cleanup
 #

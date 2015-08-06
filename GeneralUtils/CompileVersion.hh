@@ -13,7 +13,7 @@
 
 namespace MPMUtils {
 extern const std::string git_sha;       ///< git repository version SHA hash identifier
-extern const time_t compile_time;       ///< time of compile
+extern const std::string compile_time;  ///< time of compile
 /// print compile info to stdout
 void display_version();
 }

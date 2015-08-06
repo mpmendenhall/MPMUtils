@@ -8,8 +8,8 @@
 #include <stdio.h>
 
 namespace MPMUtils {
-    
-const time_t compile_time = time(NULL);
+
+const std::string compile_time = __DATE__ " " __TIME__;
 
 #ifdef GIT_SHA
 #define STRINGIFY2(X) #X
@@ -20,7 +20,7 @@ const std::string git_sha = "unknown";
 #endif
 
 void display_version() {
-    printf("MPMUtils repository %s, compiled %li\n", git_sha.c_str(), compile_time);
+    printf("MPMUtils repository %s, compiled %s\n", git_sha.c_str(), compile_time.c_str());
 }
 
 }
