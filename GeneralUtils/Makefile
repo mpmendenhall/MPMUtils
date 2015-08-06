@@ -13,14 +13,18 @@ CXXFLAGS = -std=c++11 -O3 -fPIC -pedantic -Wall -Wextra -I.
 # things to build
 #
 
-objects = ColorSpec.o ControlMenu.o DynamicHistogram.o FloatErr.o PathUtils.o ProgressBar.o SMFile.o \
-	RollingWindow.o SMExcept.o StringManip.o Stringmap.o TagCounter.o XMLBuilder.o
+objects = ColorSpec.o CompileVersion.o ControlMenu.o DynamicHistogram.o FloatErr.o PathUtils.o ProgressBar.o \
+	SMFile.o RollingWindow.o SMExcept.o StringManip.o Stringmap.o TagCounter.o XMLBuilder.o
 
 all: libMPMGeneralUtils.a
 
 libMPMGeneralUtils.a: $(objects)
 	ar rs libMPMGeneralUtils.a $(objects)
 
+.PHONY: CompileVersion.o
+CompileVersion.o: 
+	$(CXX) -c $(CXXFLAGS) -DGIT_SHA=$(shell git rev-parse -q HEAD) CompileVersion.cc -o CompileVersion.o
+	
 #
 # cleanup
 #
