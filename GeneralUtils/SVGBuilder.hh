@@ -24,8 +24,9 @@ namespace SVG {
     class svg: public XMLBuilder {
     public:
         svg(): XMLBuilder("svg") {
-            attrs["version"]="1.1";
-            attrs["xmlns"]="http://www.w3.org/2000/svg";
+            attrs["version"] = "1.1";
+            attrs["xmlns"] = "http://www.w3.org/2000/svg";
+            attrs["xmlns:xlink"] = "http://www.w3.org/1999/xlink";
         }
         
         void setView(BBox<2,double> BB, double xToCm) {
@@ -113,6 +114,18 @@ namespace SVG {
         }
         
         string idstr() const { return "url(#" + attrs.find("id")->second + ")"; }
+    };
+    
+    class text: public XMLBuilder {
+    public:
+        text(const string& t, double x, double y, const string& fill = "black"): XMLBuilder("text"), myText(new XMLText(t)) {
+            attrs["x"] = to_str(x);
+            attrs["y"] = to_str(y);
+            attrs["fill"] = fill;
+            oneline = true;
+            addChild(myText);
+        }
+        XMLText* myText;
     };
 }
 

@@ -36,6 +36,7 @@ public:
     virtual void write(ostream& o, unsigned int ndeep = 0);
     
     string name;                        ///< tag head
+    bool oneline = false;               ///< whether to force single-line output
     map<string,string> attrs;           ///< tag attributes
     static string indent;               ///< indentation string
     

@@ -15,9 +15,17 @@ void XMLBuilder::write(ostream& o, unsigned int ndeep) {
     o << "<" << name;
     for(auto it = attrs.begin(); it != attrs.end(); it++) o << " " << it->first << "=\"" << it->second << "\"";
     if(children.size()) {
-        o << ">\n";
-        for(auto it = children.begin(); it != children.end(); it++) { (*it)->write(o,ndeep+1); o << "\n"; }
-        while(ndeep--) o << indent;
+        if(oneline) {
+            o << ">";
+            for(auto it = children.begin(); it != children.end(); it++) {
+                (*it)->oneline = true;
+                (*it)->write(o,0);
+            }
+        } else {
+            o << ">\n";
+            for(auto it = children.begin(); it != children.end(); it++) { (*it)->write(o,ndeep+1); o << "\n"; }
+            while(ndeep--) o << indent;
+        }
         closeTag(o);
     } else {
         closeTag(o,true);
