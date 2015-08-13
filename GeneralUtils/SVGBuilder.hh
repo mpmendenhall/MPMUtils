@@ -97,7 +97,8 @@ namespace SVG {
     public:
         gradstop(double l, color::rgb c): XMLBuilder("stop") {
             attrs["offset"] = to_str(l);
-            attrs["style"] = "stop-color:#"+c.asHexString() + (c.a != 1? ";stop-opacity:"+to_str(c.a) : "");
+            attrs["stop-color"] = "#"+c.asHexString();
+            if(c.a != 1) attrs["stop-opacity:"] = to_str(c.a);
         }
     };
     
