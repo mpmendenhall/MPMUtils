@@ -8,6 +8,8 @@
 #ifndef BBOX_HH
 #define BBOX_HH
 
+#include <cfloat>
+
 /// Templatized D-dimensional bounding box
 template<size_t D, typename T>
 class BBox {
