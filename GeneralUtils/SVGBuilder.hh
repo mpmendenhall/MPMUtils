@@ -48,7 +48,7 @@ namespace SVG {
     
     class title: public XMLBuilder {
     public:
-        title(const string& t): XMLBuilder("title") { addChild(new XMLText(t)); }
+        title(const string& t): XMLBuilder("title") { addChild(new XMLText(t)); oneline = true; }
     };
     
     class line: public XMLBuilder {
