@@ -16,11 +16,6 @@
 
 namespace SVG {
 
-    void make_standalone_header(ostream& o) {
-        o << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
-        o << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n";
-    }
-    
     class svg: public XMLBuilder {
     public:
         svg(): XMLBuilder("svg") {
@@ -33,6 +28,11 @@ namespace SVG {
             attrs["viewBox"] = to_str(BB.lo[0])+","+to_str(BB.lo[1])+","+to_str(BB.dl(0))+","+to_str(BB.dl(1));
             attrs["width"] = to_str(BB.dl(0)*xToCm)+"cm";
             attrs["height"] = to_str(BB.dl(1)*xToCm)+"cm";
+        }
+        
+        static  void make_standalone_header(ostream& o) {
+            o << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
+            o << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n";
         }
     };
     
