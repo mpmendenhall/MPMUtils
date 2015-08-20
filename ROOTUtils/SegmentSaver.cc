@@ -90,6 +90,26 @@ TVectorD* SegmentSaver::registerNamedVector(const string& vname, size_t nels) {
     return (TVectorD*)addWithName(new TVectorD(nels), vname);
 }
 
+TObjString* SegmentSaver::registerAttrString(const string& nm, const string& val) {
+    if(fIn) { 
+        TObjString* s = NULL;
+        fIn->GetObject(nm.c_str(),s);
+        if(!s) {
+            if(ignoreMissingHistos) {
+                printf("Warning: missing string '%s' in '%s'\n",nm.c_str(),inflname.c_str());
+            } else {
+                SMExcept e("fileStructureMismatch");
+                e.insert("fileName",inflname);
+                e.insert("objectName",nm);
+                throw(e);
+            }
+        } else {
+            return (TObjString*)addWithName(s, nm);
+        }
+    }
+    return (TObjString*)addWithName(new TObjString(val.c_str()), nm);
+}
+
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
 OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalculated(false), inflAge(0) {
     // open file to load existing data

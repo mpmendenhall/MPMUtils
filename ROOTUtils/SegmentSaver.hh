@@ -25,6 +25,7 @@
 #include "OutputManager.hh"
 #include <TH1.h>
 #include <TVectorT.h>
+#include <TObjString.h>
 #include <TFile.h>
 #include <map>
 #include <string>
@@ -56,6 +57,8 @@ public:
 
     /// generate or restore from file a named TVectorD
     TVectorD* registerNamedVector(const string& vname, size_t nels = 0);
+    /// generate or restore from file a named attribute string
+    TObjString* registerAttrString(const string& nm, const string& val);
     
     /// get core histogram by name
     TH1* getSavedHist(const string& hname);
