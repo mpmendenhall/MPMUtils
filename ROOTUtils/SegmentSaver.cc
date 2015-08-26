@@ -24,6 +24,11 @@
 #include "SMExcept.hh"
 #include <TString.h>
 
+void resetZaxis(TH1* o) {
+    TObject* a = o->GetListOfFunctions()->FindObject("palette");
+    if(a) o->GetListOfFunctions()->Remove(a);
+}
+
 TH1* SegmentSaver::tryLoad(const string& hname) {
     if(!fIn) return NULL;
     TH1* h = NULL;
@@ -38,6 +43,7 @@ TH1* SegmentSaver::tryLoad(const string& hname) {
             throw(e);
         }
     } else {
+        resetZaxis(h);
         addObject(h);
     }
     return h;

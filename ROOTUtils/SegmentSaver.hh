@@ -103,4 +103,7 @@ protected:
     double inflAge;             ///< age of input file [s]; 0 for brand-new files
 };
 
+/// utility function to remove color axis data, to force re-draw with current dimensions
+void resetZaxis(TH1* o);
+
 #endif
