@@ -28,7 +28,7 @@ public:
     /// write items to file
     virtual void writeItems();
     /// clear (delete) items
-    void clearItems();
+    virtual void clearItems();
     /// register a named ROOT object for output (and eventual deletion)
     virtual TNamed* addObject(TNamed* o);
     /// register object to deletion list (not written to file)

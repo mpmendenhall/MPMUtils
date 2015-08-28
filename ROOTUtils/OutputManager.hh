@@ -46,7 +46,6 @@ public:
     
     /// destructor
     virtual ~OutputManager() {
-        if(writeRootOnDestruct) writeROOT();
         clearItems();
         if(rootOut) rootOut->Close();
         if(defaultCanvas && !parent) delete(defaultCanvas); 
@@ -59,10 +58,10 @@ public:
     /// print current canvas
     virtual void printCanvas(string fname, string suffix=".pdf") const;
         
-    /// open output ROOT file for writing (useful if output tree is being created and needs a home)
-    void openOutfile();
-    /// set whether to write ROOT output when destructed
-    void setWriteRoot(bool w) { writeRootOnDestruct = w; }
+    /// open output ROOT file for writing
+    virtual void openOutfile();
+    /// write output ROOT file; WARNING: THIS DELETES ALL REGISTERED ITEMS; do last if you reference these!
+    void writeROOT();
     
     TFile* rootOut;             ///< ROOT file output
     TCanvas* defaultCanvas;     ///< canvas for drawing plots
@@ -72,14 +71,8 @@ public:
     string dataPath;            ///< specific output path for output data
     string rootPath;            ///< specific output path for ROOT files
     string name;                ///< name for this subsystem
-    bool writeRootOnDestruct;   ///< whether to write ROOT file when destructed
     
     static bool squelchAllPrinting;     ///< whether to cancel all printCanvas output
-    
-protected:
-    
-    /// write output ROOT file; WARNING: THIS DELETES ALL REGISTERED ITEMS; do last if you reference these.
-    void writeROOT();
 };
 
 #endif

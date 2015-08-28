@@ -67,7 +67,7 @@ public:
     /// get full histograms listing
     const map<string,TH1*>& getHists() const { return saveHists; }
     /// zero out all saved histograms
-    void zeroSavedHists();
+    virtual void zeroSavedHists();
     /// scale all saved histograms by a factor
     virtual void scaleData(double s);
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
@@ -92,7 +92,7 @@ public:
     
     TFile* fIn;                 ///< input file to read in histograms from
     string inflname;            ///< where to look for input file
-    bool isCalculated;
+    bool isCalculated;          ///< flag for whether calculation step has been completed
     
 protected:
     

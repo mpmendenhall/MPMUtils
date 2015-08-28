@@ -26,20 +26,20 @@
 
 bool OutputManager::squelchAllPrinting = false;
 
-OutputManager::OutputManager(string nm, string bp): rootOut(NULL), defaultCanvas(new TCanvas()),
-parent(NULL), name(nm), writeRootOnDestruct(false) {
+OutputManager::OutputManager(string nm, string bp):
+rootOut(NULL), defaultCanvas(new TCanvas()),
+parent(NULL), name(nm) {
     TH1::AddDirectory(kFALSE);
     // set up output canvas
     defaultCanvas->SetCanvasSize(200,200);
-    #ifdef PUBLICATION_PLOTS
+#ifdef PUBLICATION_PLOTS
     defaultCanvas->SetGrayscale(true);
-    #endif
-    
+#endif    
     basePath = plotPath = dataPath = rootPath = bp;
 }
 
 OutputManager::OutputManager(string nm, OutputManager* pnt):
-rootOut(NULL), defaultCanvas(NULL), parent(pnt), name(nm), writeRootOnDestruct(false) {
+rootOut(NULL), defaultCanvas(NULL), parent(pnt), name(nm) {
     TH1::AddDirectory(kFALSE);
     if(parent) {
         defaultCanvas = parent->defaultCanvas;
