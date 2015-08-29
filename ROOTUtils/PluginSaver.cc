@@ -77,8 +77,12 @@ void PluginSaver::addSegment(const SegmentSaver& S) {
 
 void PluginSaver::makePlots() {
     SegmentSaver::makePlots();
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++)
+    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) {
+        defaultCanvas->SetLogz(false);
+        defaultCanvas->SetLogx(false);
+        defaultCanvas->SetLogy(false);
         if(it->second->thePlugin) it->second->thePlugin->makePlots();
+    }
 }
 
 void PluginSaver::calculateResults() {
