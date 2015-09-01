@@ -89,6 +89,8 @@ public:
     virtual void makePlots() {}
     /// virtual routine for generating calculated hists
     virtual void calculateResults() { isCalculated = true; }
+    /// virtual routine for comparing to other analyzers (of this type or NULL; meaning implementation-dependent)
+    virtual void compare(const vector<SegmentSaver*>&) { }
     
     TFile* fIn;                 ///< input file to read in histograms from
     string inflname;            ///< where to look for input file

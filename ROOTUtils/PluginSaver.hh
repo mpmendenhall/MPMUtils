@@ -28,7 +28,7 @@ public:
     ~PluginSaver();
     
     /// get plugin by name; NULL if not available
-    const SegmentSaver* getPlugin(const string& nm) const;
+    SegmentSaver* getPlugin(const string& nm) const;
     
     /// zero out all saved histograms
     virtual void zeroSavedHists();
@@ -42,6 +42,8 @@ public:
     virtual void makePlots();
     /// virtual routine for generating calculated hists
     virtual void calculateResults();
+    /// virtual routine for comparing to other analyzers (of this type or NULL; meaning implementation-dependent)
+    virtual void compare(const vector<SegmentSaver*>& v);
     
     /// write items to file
     virtual void writeItems();

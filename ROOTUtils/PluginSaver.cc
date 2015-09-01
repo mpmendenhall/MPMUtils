@@ -48,7 +48,7 @@ void PluginSaver::buildPlugins() {
     }
 }
 
-const SegmentSaver* PluginSaver::getPlugin(const string& nm) const {
+SegmentSaver* PluginSaver::getPlugin(const string& nm) const {
     auto PB = myBuilders.find(nm);
     if(PB==myBuilders.end()) return NULL;
     return PB->second->thePlugin;
@@ -76,7 +76,7 @@ void PluginSaver::addSegment(const SegmentSaver& S) {
     const PluginSaver& PS = dynamic_cast<const PluginSaver&>(S);
     for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) {
         if(it->second->thePlugin) {
-            const SegmentSaver* Si = PS.getPlugin(it->first);
+            SegmentSaver* Si = PS.getPlugin(it->first);
             if(Si) it->second->thePlugin->addSegment(*Si);
         }
     }
@@ -89,6 +89,23 @@ void PluginSaver::makePlots() {
         defaultCanvas->SetLogx(false);
         defaultCanvas->SetLogy(false);
         if(it->second->thePlugin) it->second->thePlugin->makePlots();
+    }
+}
+
+void PluginSaver::compare(const vector<SegmentSaver*>& v) {
+    SegmentSaver::compare(v);
+    
+    vector<PluginSaver*> vP;
+    for(auto it = v.begin(); it != v.end(); it++) vP.push_back(dynamic_cast<PluginSaver*>(*it));
+    
+    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) {
+        if(!it->second->thePlugin) continue;
+        vector<SegmentSaver*> vPi;
+        for(auto it2 = vP.begin(); it2 != vP.end(); it2++) {
+            if(!(*it2)) vPi.push_back(NULL);
+            else vPi.push_back((*it2)->getPlugin(it->first));
+        }
+        it->second->thePlugin->compare(vPi);
     }
 }
 
