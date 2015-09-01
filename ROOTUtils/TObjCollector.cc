@@ -9,11 +9,11 @@
 #include <cassert>
 
 void TObjCollector::writeItems() {
-    printf("Saving registered objects...");
-    fflush(stdout);
+    //printf("Saving registered objects...");
+    //fflush(stdout);
     for(auto i = namedItems.begin(); i != namedItems.end(); i++) (*i)->Write();
     for(auto i = anonItems.begin(); i != anonItems.end(); i++) i->second->Write(i->first.c_str());
-    printf(" Done.\n");
+    //printf(" Done.\n");
 }
 
 void TObjCollector::clearItems() {

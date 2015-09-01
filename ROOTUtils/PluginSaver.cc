@@ -7,9 +7,11 @@
 
 #include "PluginSaver.hh"
 #include "StringManip.hh"
+#include <cassert>
 
 PluginSaver::PluginSaver(OutputManager* pnt, const string& nm, const string& inflName): SegmentSaver(pnt, nm, inflName) {
     filePlugins = registerAttrString("filePlugins", "");
+    assert(filePlugins);
 }
 
 PluginSaver::~PluginSaver() {
@@ -34,10 +36,15 @@ void PluginSaver::buildPlugins() {
         /// construct all plugins
         vector<string> pnames;
         for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) {
+            assert(it->second);
             it->second->makePlugin(parent);
             if(it->second->thePlugin) pnames.push_back(it->first);
+            else assert(false);
         }
-        filePlugins->SetString(join(pnames,",").c_str());
+        assert(filePlugins);
+        string pstr = join(pnames,",");
+        printf("Set up plugins '%s'\n", pstr.c_str());
+        filePlugins->SetString(pstr.c_str());
     }
 }
 
