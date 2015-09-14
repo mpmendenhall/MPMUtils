@@ -153,26 +153,26 @@ template<unsigned int N, typename T, typename P>
 Monomial<N,T,P>& Monomial<N,T,P>::operator*=(const Monomial<N,T,P>& rhs) {
     dimensions += rhs.dimensions;
     val *= rhs.val;
-    return *this;	
+    return *this;
 }
 
 template<unsigned int N, typename T, typename P>
 Monomial<N,T,P>& Monomial<N,T,P>::operator/=(const Monomial<N,T,P>& rhs) {
     dimensions -= rhs.dimensions;
     val /= rhs.val;
-    return *this;	
+    return *this;
 }
 
 template<unsigned int N, typename T, typename P>
 Monomial<N,T,P>& Monomial<N,T,P>::operator*=(T rhs) {
     val *= rhs;
-    return *this;	
+    return *this;
 }
 
 template<unsigned int N, typename T, typename P>
 Monomial<N,T,P>& Monomial<N,T,P>::operator/=(T rhs) {
     val /= rhs;
-    return *this;	
+    return *this;
 }
 
 

@@ -50,7 +50,7 @@ int SQLite_Helper::setQuery(const char* qry, sqlite3_stmt*& stmt) {
     int rc;
     while((rc = sqlite3_prepare_v2(db, qry, strlen(qry), &stmt, NULL)) == SQLITE_BUSY) {
         printf("Waiting for DB retry preparing statement...\n");
-	fflush(stdout);
+        fflush(stdout);
         usleep(500000+(rand()%500000));
     }
     if(rc != SQLITE_OK) {
@@ -75,7 +75,7 @@ int SQLite_Helper::busyRetry(sqlite3_stmt*& stmt) {
     int rc;
     while((rc = sqlite3_step(stmt)) == SQLITE_BUSY) {
         printf("Waiting for DB retry executing statement...\n");
-	fflush(stdout);
+        fflush(stdout);
         usleep(500000+(rand()%500000));
         sqlite3_reset(stmt);
     }

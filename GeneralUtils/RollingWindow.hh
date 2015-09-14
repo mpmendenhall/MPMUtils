@@ -21,7 +21,7 @@ public:
     /// remove item off back
     void popExcess();
     /// update leading time limit without adding items
-    void moveTimeLimit(double t);	
+    void moveTimeLimit(double t);
     /// get items sum
     inline double getSum() const { return sw; }
     /// get items count
