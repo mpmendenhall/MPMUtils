@@ -1,27 +1,23 @@
-#!/usr/bin/python
+## @file LinFitter.py Linear fitter utility
 
-from numpy import array, linalg, dot, matrix, diag
+from numpy import array, linalg, dot, matrix, diag, linspace
 from math import *
 from bisect import bisect
 
-# uniformly spaced points
-def unifrange(xmin,xmax,npts):
-    return [ xmin + float(i)/float(npts-1)*(xmax-xmin) for i in range(npts)]
-
-# mean and standard deviation of a distribution
 def musigma(l):
+    """mean and standard deviation of a distribution"""
     mu = sum(l)/len(l)
     s = sqrt(sum([x*x for x in l])/len(l)-mu*mu)
     return [mu,s]
 
-# mean and uncertainty of points
 def mu_uncert(l):
+    """mean and uncertainty of points"""
     mu,s = musigma(l)
     s /= sqrt(len(l))
     return [mu,s]
 
-# LaTeX formatting for polynomial term
 def latexPoly(varname,n):
+    """LaTeX formatting for polynomial term"""
     if n==0:
         return "1"
     if n==1:
@@ -30,16 +26,8 @@ def latexPoly(varname,n):
         return "\\left[ %s \\right]^{%i}"%(varname,n)
     return "%s^{%i}"%(varname,n)
 
-# zero function
-def returnZero(x):
-    return 0
-
-# one function
-def returnOne(x):
-    return 1
-    
-# polynomial term for fit (use in place of lambda for better picklability)
 class polyterm:
+    """polynomial term for fit (use in place of lambda for better pickleability)"""
     def __init__(self,n):
         self.n = n
     def __call__(self,x):
@@ -47,8 +35,8 @@ class polyterm:
     def toLatex(self,varname='x'):
         return latexPoly(varname,self.n)
         
-# polynomial term turning on after a certain point
 class halfpolyterm:
+    """polynomial term turning on after a certain point"""
     def __init__(self,n,x0):
         self.n = n
         self.x0= x0
@@ -71,8 +59,8 @@ class tagWrapper:
     def __call__(self,x):
         return (self.f(x[0]),x[1])
     
-# switching wrapper for split-key fits
 class idSwitcher:
+    """switching wrapper for split-key fits"""
     def __init__(self,f,t0=None):
         self.t0 = t0
         self.f = f
@@ -81,25 +69,26 @@ class idSwitcher:
             return self.f(x[0])
         return 0
             
-# easy linear fitter
-class LinearFitter:
 
-    #  constructor with terms and values for any fixed terms
+class LinearFitter:
+    """easy linear fitter"""
+    
     def __init__(self, terms=[polyterm(0),polyterm(1)], fixparams = {}):
+        """constructor with terms and values for any fixed terms"""
         self.terms = terms
         self.fixparams = fixparams
         self.coeffs = [0.0 for t in terms]
         for n in fixparams:
             self.coeffs[n] = fixparams[n]
-
-    # make weights and covariance matrix for diagonal (uncorrelated) terms
+            
     def makeDiagWeights(self,wts):
+        """make weights and covariance matrix for diagonal (uncorrelated) terms"""
         self.weights = diag(wts)
         self.Cov = diag([1./w for w in wts])
-
-    # perform linear fit with on (x,y) pair data (using specified columns);            
+         
     def fit(self,xydat,cols=(0,1),errorbarWeights=False):
-    
+        """perform linear fit with on (x,y) pair data (using specified columns)"""
+        
         self.xdat = [x[cols[0]] for x in xydat]
         self.ydat = matrix([ x[cols[1]] for x in xydat]).transpose()
         
@@ -136,68 +125,68 @@ class LinearFitter:
         for n in self.fixparams:
             self.coeffs[n] = self.fixparams[n]
 
-    # calculate covariance matrix of fit coefficients
     def calcCoeffCov(self):
+        """calculate covariance matrix of fit coefficients"""
         if self.M is None:
             self.M = linalg.solve(self.XT_W_X,self.XT_W)
         return self.M*self.Cov*self.M.transpose()
     
-    # individual coefficient uncertainty, not chi^2 inflated
     def coeffErr(self,i):
+        """individual coefficient uncertainty, not chi^2 inflated"""
         return sqrt(self.calcCoeffCov()[i,i])
     
-    # display individual coefficient errors and correlations
     def displayCoeffErrCorr(self):
+        """display individual coefficient errors and correlations"""
         ccov = self.calcCoeffCov()
         for i in range(ccov.shape[0]):
             s = "%f\t"%sqrt(ccov[i,i])
             for j in range(ccov.shape[0]):
                 s += "%f\t"%(ccov[i,j]/sqrt(ccov[i,i]*ccov[j,j]))
             print s
-        
-    # evaluate fit function at position x
+
     def __call__(self,x):
+        """evaluate fit function at position x"""
         return sum([f(x)*self.coeffs[n] for (n,f) in enumerate(self.terms)])
     
-    # predicted y values for each input
     def yhat(self):
+        """predicted y values for each input"""
         return matrix([self(x) for x in self.xdat]).transpose()
 
-    # calculate chi^2
     def chisquared(self):
+        """calculate chi^2"""
         dy = self.ydat-self.yhat()
         return (dy.transpose()*self.weights*dy)[0,0]
 
-    # number of degrees of freedom
     def nu(self):
+        """number of degrees of freedom"""
         return self.ydat.shape[0]-self.X.shape[1]
 
-    # get a list of the fitted points along with the fit value
     def fittedpoints(self,dosort = True):
+        """get a list of the fitted points along with the fit value"""
         fp = [ [self.xdat[i],self.ydat[i],self(self.xdat[i])] for i in range(len(self.xdat))]
         if dosort:
             fp.sort()
         return fp
-    
-    # rms deviation        
+            
     def rmsDeviation(self):
+        """root-mean-square deviation"""
         dy = self.ydat - self.yhat()
         return sqrt((dy.transpose() * dy)[0,0])/sqrt(dy.size)
     
-    # get a list of npts uniformly spaced points between xmin and xmax
     def unifPoints(self,xmin,xmax,npts):
-        return unifrange(xmin,xmax,npts)
+        """get a list of npts uniformly spaced points between xmin and xmax; subclass for transformed axis"""
+        return linspace(xmin,xmax,npts)
     
-    # plottable curve produced by fit
     def fitcurve(self,xmin,xmax,npts = 100):
+        """plottable curve produced by fit"""
         return [ [x,self(x)] for x in self.unifPoints(xmin,xmax,npts) ]
 
-    # print coefficients
     def setCoeffs(self,c):
+        """print coefficients"""
         self.coeffs = c
     
-    # latex printable form
     def toLatex(self,varname='x',cfmt=".4g"):
+        """LaTeX display form"""
         s = ""
         ccov = self.calcCoeffCov()
         
@@ -229,13 +218,15 @@ class LinearFitter:
 
 
 def nderiv(f,x,h=0.001):
+    """Simplistic numerical derivative"""
     return (f(x+h)-f(x-h))/(2*h)
 
-# wrap a linear fitter with axis transforms
-class TransformedFitter:
 
-    # constructor with transform and inverse-transform functions
+class TransformedFitter:
+    """Wrap a linear fitter with axis transforms"""
+    
     def __init__(self,xtrans,ytrans,xinv,yinv,**kwargs):
+        """constructor with transform and inverse-transform functions"""
         self.LF = LinearFitter(**kwargs)
         self.xtrans = xtrans
         self.ytrans = ytrans
@@ -243,8 +234,8 @@ class TransformedFitter:
         self.yinv = yinv
         self.coeffs = self.LF.coeffs
     
-    # perform fit
     def fit(self,xydat,cols=(0,1),errorbarWeights=False):
+        """perform fit"""
         if len(cols) < 3:
             self.LF.fit([(self.xtrans(x[cols[0]]),self.ytrans(x[cols[1]])) for x in xydat])
         else:
@@ -254,46 +245,46 @@ class TransformedFitter:
                 self.LF.fit([(self.xtrans(x[cols[0]]),self.ytrans(x[cols[1]]),x[cols[2]]) for x in xydat],cols=(0,1,2))
         self.coeffs = self.LF.coeffs
     
-    # evaluate at x
     def __call__(self,x):
+        """evaluate at x"""
         return self.yinv(self.LF(self.xtrans(x)))
 
-    # return fitted points plus fit value
     def fittedpoints(self,dosort = True):
+        """return fitted points plus fit value"""
         fp = [ (self.xinv(p[0]),self.yinv(p[1]),self.yinv(p[2])) for p in self.LF.fittedpoints(False) ]
         if dosort:
             fp.sort()
         return fp
     
-    # list of points uniformly spaced in transform space
     def unifPoints(self,xmin,xmax,npts):
+        """list of points uniformly spaced in transform space"""
         return [ self.xinv(x) for x in self.LF.unifPoints(self.xtrans(xmin),self.xtrans(xmax),npts) ]
 
-    # plottable fit curve
     def fitcurve(self,xmin,xmax,npts = 100):
+        """plottable fit curve"""
         return [ [x,self(x)] for x in self.unifPoints(xmin,xmax,npts) ]
 
-    # set coefficients
     def setCoeffs(self,c):
+        """set coefficients"""
         self.LF.setCoeffs(c)
         
-# log x vs. linear y transformed fitter        
 class LogXer(TransformedFitter):
+    """log x vs. linear y transformed fitter"""
     def __init__(self,**kwargs):
         TransformedFitter.__init__(self,log,polyterm(1),exp,polyterm(1),**kwargs)
 
-# log y vs. linear x transformed fitter
 class LogYer(TransformedFitter):
+    """log y vs. linear x transformed fitter"""
     def __init__(self,**kwargs):
         TransformedFitter.__init__(self,polyterm(1),log,polyterm(1),exp,**kwargs)
         
-# log-log plot transformed fitter
 class LogLogger(TransformedFitter):
+    """log-log plot transformed fitter"""
     def __init__(self,**kwargs):
         TransformedFitter.__init__(self,log,log,exp,exp,**kwargs)
     
-    # latex printable form
     def toLatex(self,varname='x'):
+        """LaTeX printable form"""
         return "\\exp \\left[ %s \\right]"%self.LF.toLatex("{\\ln %s}"%varname)
     
 def logderiv(f,x,h=0.001):
@@ -363,10 +354,10 @@ class piecewiseExtender:
         return y
     
     def fitcurve(self,xmin,xmax,npts = 100):
-        return [ [x,self(x)] for x in unifrange(xmin,xmax,npts) ]
+        return [ [x,self(x)] for x in linspace(xmin,xmax,npts) ]
     
     def unifPoints(self,xmin,xmax,npts):
-        return unifrange(xmin,xmax,npts)
+        return linspace(xmin,xmax,npts)
         
     def toLatex(self,varname='x'):
         return "\\left. %s \\right|_{%s < %i}"%(self.f0.toLatex(varname),varname,self.xmax)
@@ -378,11 +369,12 @@ class yMulShifter:
     def __call__(self,x):
         return self.f0(x)*self.mul
 
-# function inverse class
-class inverseFunction:
 
+class inverseFunction:
+    """inverse function calculator"""
+    
     def __init__(self,f,xrange,abstol = 0.001,reltol = 0.001):
-        self.f = f                # function to invert
+        self.f = f              # function to invert
         self.abstol = abstol    # absolute error tolerance
         self.reltol = reltol    # relative error tolerance
         self.xrange = xrange    # x range for inversion
@@ -390,7 +382,7 @@ class inverseFunction:
         self.make_invtable(10)
         
     def make_invtable(self,npts):
-        invtable = [ (self.f(x),x) for x in unifrange(self.xrange[0],self.xrange[1],npts) ]
+        invtable = [ (self.f(x),x) for x in linspace(self.xrange[0],self.xrange[1],npts) ]
         invtable.sort()
         self.xtable = [ x[1] for x in invtable ]
         self.ytable = [ x[0] for x in invtable ]
@@ -419,9 +411,9 @@ class inverseFunction:
                 y0 = self.f(xnew)
         
         return x1
-
-# fit several groups of data with unknown normalization    
+   
 def multiGroupFit(datagroups,fitter,normlGuess=None):
+    """fit several groups of data with unknown normalization"""
     
     # default normalization guess
     if not normlGuess:
@@ -444,11 +436,10 @@ def multiGroupFit(datagroups,fitter,normlGuess=None):
     navg = sum(normlGuess)/len(normlGuess)
     normlGuess = [ x/navg for x in normlGuess ]
     return normlGuess
-    
-                    
-# solve for inverse point on a function
-def isolve(f,y,x0,x1,abstol = 0.001,reltol = 0.001):
 
+def isolve(f,y,x0,x1,abstol = 0.001,reltol = 0.001):
+    """solve for inverse point on a function"""
+    
     y0 = f(x0)
     y1 = f(x1)
     
@@ -462,10 +453,9 @@ def isolve(f,y,x0,x1,abstol = 0.001,reltol = 0.001):
             y0 = f(xnew)
     
     return x1
-    
-    
-# bilinear term for class below
+
 class bilinearTerm:
+    """bilinear term for bilinearFactory class"""
     def __init__(self,xki,xkj):
         self.xki=xki
         self.xkj=xkj
@@ -474,8 +464,9 @@ class bilinearTerm:
         assert 0 <= k < len(self.xki)
         return self.xki[k]*self.xkj[k]
         
-# set up bilinear matrix best fit y_k = x_ki M_ij x_kj^T for (lower triangular) M_ij
 class bilinearFactory:
+    """set up bilinear matrix best fit y_k = x_ki M_ij x_kj^T for (lower triangular) M_ij"""
+    
     def __init__(self,xki):
         self.xki = [1 for x in xki[0]] + xki
         self.n = len(self.xki)

@@ -1,10 +1,10 @@
-#!/usr/bin/python
+## @file SMFile.py key-value string map and file; compatible with SMFile.hh c++ output format
 
 import os
-    
-# multimap (dictionary with lists of values for each key)
-class KVMap:
 
+class KVMap:
+    """multimap (dictionary with lists of values for each key)"""
+    
     def __init__(self,str=None):
         
         if isinstance(str,KVMap):
@@ -17,19 +17,19 @@ class KVMap:
                         continue
                     self.insert(p[0].strip(),p[1].strip())
     
-    # insert new entry for given key
     def insert(self,key,value):
+        """insert new entry for given key"""
         self.dat[key] = self.dat.get(key,[]) + [value,]
     
-    # get first value for given key
     def getFirst(self,k,default=None):
+        """get first value for given key"""
         v = self.dat.get(k,[])
         if not len(v):
             return default
         return v[0]
     
-    # get first value for given key as a float
     def getFirstF(self,k,default=None):
+        """get first value for given key as a float"""
         if default is not None:
             return float(self.getFirst(k,str(default)))
         else:
@@ -38,45 +38,45 @@ class KVMap:
                 return None
             return float(s)
     
-    # get first value as a vector of floats
     def getFirstV(self,k,default=None):
+        """get first value as a vector of floats"""
         s = self.getFirst(k,None)
         if s is None:
             return default
         return [float(c) for c in s.split(",")]
 
-            
-    # set attributes for float values
     def loadFloats(self,names):
+        """set attributes for float values"""
         for nm in names:
             self.__dict__[nm] = self.getFirstF(nm)
     
-    # set attributes for string values
     def loadStrings(self,names):
+        """set attributes for string values"""
         for nm in names:
             self.__dict__[nm] = self.getFirst(nm)
 
-    # whether this has a matching key:value pair
     def matches(self,k,v):
+        """whether this has a matching key:value pair"""
         return v in self.dat.get(k,[])
-    # whether this matches a set of key:value pairs
+    
     def matchesMany(self,kdict):
+        """whether this matches a set of key:value pairs"""
         for k in kdict:
             if not self.matches(k,kdict[k]):
                 return False
         return True
         
-    # convert to string
     def toString(self):
+        """convert to string"""
         outstr = ""
         for k in self.dat:
             for i in self.dat[k]:
                 outstr += str(k)+" = "+str(i)+"\t"
         return outstr[:-1]
 
-# a KVMap string:KVMap
-class QFile(KVMap):
-
+class SMFile(KVMap):
+    """a KVMap< string, KVMap<string,string> >"""
+    
     def __init__(self,fname=None):
         self.dat = {}
         self.fname = fname
@@ -90,40 +90,40 @@ class QFile(KVMap):
                     continue
                 self.dat[l[0]] = self.dat.get(l[0],[]) + [KVMap(l[1]),]
     
-    # get first value for key:key
     def getItem(self,k1,k2,default=None):
+        """get first value for key:key"""
         m = self.getFirst(k1,None)
         if not m:
             return default
         return m.getFirst(k2,default)
     
-    # get first value for key:key as float
     def getItemF(self,k1,k2,default=None):
+        """get first value for key:key as float"""
         m = self.getFirst(k1,None)
         if not m:
             return default
         return m.getFirstF(k2,default)
         
-    # get KVMap with matching subkey:value pairs
     def getMatching(self,key,value):
-        Q = QFile()
+        """get KVMap with matching subkey:value pairs"""
+        Q = SMFile()
         for k in self.dat.keys():
             for m in self.dat[k]:
                 if m.matches(key,value):
                     Q.insert(k,m)
         return Q
         
-    # get KVMap with matching subkeys:values pairs
     def getMatchingMany(self,requirements):
-        Q = QFile()
+        """get KVMap with matching subkeys:values pairs"""
+        Q = SMFile()
         for k in self.dat.keys():
             for m in self.dat[k]:
                 if m.matchesMany(requirements):
                     Q.insert(k,m)
         return Q
     
-    # convert to string
     def toString(self):
+        """convert to string"""
         outstr = ""
         dkeys = self.dat.keys()
         dkeys.sort()
@@ -131,4 +131,3 @@ class QFile(KVMap):
             for i in self.dat[k]:
                 outstr += str(k)+":\t\t"+i.toString()+"\n"
         return outstr[:-1]
-    

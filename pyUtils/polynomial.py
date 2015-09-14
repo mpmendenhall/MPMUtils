@@ -1,4 +1,4 @@
-#!/usr/bin/python
+## @file polynomial.py multivariate polynomial class
 
 import numpy
 from numpy import *
@@ -6,18 +6,20 @@ import numpy.linalg as linalg
 import cmath
 
 def product(l):
+    """Product of list elements"""
     p = 1
     for i in l:
         p *= i
     return p
     
 def basisv(n,m=-1):
+    """Basis vector tuple, with 1 in m^th place"""
     return tuple([int(l==m) for l in range(n)])
         
-# polynomial, represented by a dictionary with tuples of exponents as the keys
-# mapped to the coefficient of the term
 class polynomial:
-    """Class for manipulating polynomials in N variables"""
+    """Class for manipulating polynomials in N variables
+    
+    represented by a dictionary with tuples of exponents as the keys, mapped to the coefficient of the term"""
     
     def __init__(self,N,coeffs={}):
         self.N = N
