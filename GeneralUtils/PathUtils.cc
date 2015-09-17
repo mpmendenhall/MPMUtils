@@ -104,6 +104,7 @@ string getEnvSafe(const string& v, const string& dflt) {
 
 void combo_pdf(const vector<string>& namelist, const string& outname) {
     if(!namelist.size()) return;
+    makePath(outname, true);
     string cmd;
     if(namelist.size()==1) {
         cmd = "mv " + namelist[0] + " " + outname;
