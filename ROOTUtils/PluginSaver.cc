@@ -30,14 +30,14 @@ void PluginSaver::buildPlugins() {
                 printf("Plugin '%s' missing from input file; skipped.\n", it->c_str());
                 continue;
             }
-            PB->second->makePlugin(parent, inflname);
+            PB->second->makePlugin(this, inflname);
         }
     } else {
         /// construct all plugins
         vector<string> pnames;
         for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) {
             assert(it->second);
-            it->second->makePlugin(parent);
+            it->second->makePlugin(this);
             if(it->second->thePlugin) pnames.push_back(it->first);
             else assert(false);
         }
