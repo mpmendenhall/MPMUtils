@@ -2,7 +2,7 @@
 #include "PointCloudHistogram.hh"
 #include <cassert>
 #include <Math/QuasiRandom.h>
-#include <Math/Random.h>
+#include <TRandom3.h>
 
 //-------------------------
 
@@ -19,7 +19,7 @@ void KDTreeSet::fillPointRange(unsigned int npts, const float* xlo, const float*
     assert(!T);
     
     ROOT::Math::QuasiRandomNiederreiter r(ndim);
-    ROOT::Math::RandomMT r0;
+    TRandom3 r0;
     vector<double> x(ndim);
     
     // generate bin points
