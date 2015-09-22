@@ -13,7 +13,6 @@
 #include <TCanvas.h>
 #include <TH1F.h>
 #include <TH2F.h>
-#include <TLine.h>
 #include <TLatex.h>
 #include <TBox.h>
 #include <TStyle.h>
@@ -122,12 +121,13 @@ void combo_draw(const vector<TH2*>& hs, const string& outpath, const char* opt) 
     combo_draw(hs1, outpath, opt);
 }
 
-void drawCircle(float r, Int_t color, Int_t lstyle, float x0, float y0) {
+TEllipse* drawCircle(float r, Int_t color, Int_t lstyle, float x0, float y0) {
     TEllipse* e = new TEllipse(x0,y0,r,r);
     e->SetFillStyle(0);
     e->SetLineColor(color);
     e->SetLineStyle(lstyle);
     e->Draw();
+    return e;
 }
 
 TPolyLine* makeEllipse(float x0, float y0, const double* iSigma) {
@@ -145,7 +145,7 @@ TPolyLine* makeEllipse(float x0, float y0, const double* iSigma) {
     return new TPolyLine(xs.size(), &xs[0], &ys[0]);
 }
 
-void drawVLine(Float_t x, TVirtualPad* C, Int_t color, Int_t style) {
+TLine* drawVLine(Float_t x, TVirtualPad* C, Int_t color, Int_t style) {
     Double_t xmin,ymin,xmax,ymax;
     C->Update();
     C->GetRangeAxis(xmin,ymin,xmax,ymax);
@@ -157,9 +157,10 @@ void drawVLine(Float_t x, TVirtualPad* C, Int_t color, Int_t style) {
     l->SetLineColor(color);
     l->SetLineStyle(style);
     l->Draw();
+    return l;
 }
 
-void drawHLine(Float_t y, TVirtualPad* C, Int_t color, Int_t style) {
+TLine* drawHLine(Float_t y, TVirtualPad* C, Int_t color, Int_t style) {
     Double_t xmin,ymin,xmax,ymax;
     C->Update();
     C->GetRangeAxis(xmin,ymin,xmax,ymax);
@@ -171,6 +172,7 @@ void drawHLine(Float_t y, TVirtualPad* C, Int_t color, Int_t style) {
     l->SetLineColor(color);
     l->SetLineStyle(style);
     l->Draw();
+    return l;
 }
 
 void drawExcludedRegion(Float_t x0, Float_t x1, TCanvas* C, Int_t color, Int_t fill) {
