@@ -41,7 +41,7 @@ SQLite_Helper::SQLite_Helper(const string& dbname) {
 
 SQLite_Helper::~SQLite_Helper() {
     if(db) {
-        for(auto it = statements.begin(); it != statements.end(); it++) sqlite3_finalize(it->second);
+        for(auto const& kv: statements) sqlite3_finalize(kv.second);
         sqlite3_close(db);
     }
 }

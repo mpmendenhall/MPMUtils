@@ -28,28 +28,28 @@
 
 template<>
 TagCounter<int>::TagCounter(Stringmap m) {
-    for(multimap< string, string >::iterator it = m.dat.begin(); it != m.dat.end(); it++)
-        add(atoi(it->first.c_str()),atof(it->second.c_str()));
+    for(auto const& kv: m.dat)
+        add(atoi(kv.first.c_str()),atof(kv.second.c_str()));
 }
 
 template<>
 TagCounter<unsigned int>::TagCounter(Stringmap m) {
-    for(multimap< string, string >::iterator it = m.dat.begin(); it != m.dat.end(); it++)
-        add(atoi(it->first.c_str()),atof(it->second.c_str()));
+    for(auto const& kv: m.dat)
+        add(atoi(kv.first.c_str()),atof(kv.second.c_str()));
 }
 
 template<>
 TagCounter<string>::TagCounter(Stringmap m) {
-    for(multimap< string, string >::iterator it = m.dat.begin(); it != m.dat.end(); it++)
-        add(it->first,atof(it->second.c_str()));
+    for(auto const& kv: m.dat)
+        add(kv.first,atof(kv.second.c_str()));
 }
 
 template<>
 TagCounter< std::pair<unsigned int, unsigned int> >::TagCounter(Stringmap m) {
-    for(multimap< string, string >::iterator it = m.dat.begin(); it != m.dat.end(); it++) {
-        vector<int> v = sToInts(it->first, "/");
+    for(auto const& kv: m.dat) {
+        vector<int> v = sToInts(kv.first, "/");
         assert(v.size()==2);
         if(v.size()==2)
-            add(std::pair<unsigned int, unsigned int>(v[0],v[1]),atof(it->second.c_str()));
+            add(std::pair<unsigned int, unsigned int>(v[0],v[1]),atof(kv.second.c_str()));
     }
 }

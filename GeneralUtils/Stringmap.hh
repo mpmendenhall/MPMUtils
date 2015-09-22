@@ -34,11 +34,8 @@ using std::string;
 /// wrapper for multimap<string,string> with useful functions
 class Stringmap {
 public:
-    
-    /// constructor
+    /// constructor from a string
     Stringmap(const string& str = "");
-    /// copy constructor from another Stringmap
-    Stringmap(const Stringmap& m);
     /// destructor
     virtual ~Stringmap() {}
     

@@ -75,7 +75,7 @@ double IntervalIntegralFitter::eval_error(const double* params) const {
 double IntervalIntegralFitter::operator()(const intervalList& L, const double* params) const {
     if(!params) params = myParams;
     double I = 0;
-    for(auto it = L.begin(); it != L.end(); it++) I += integ_f(it->second,params) - integ_f(it->first,params);
+    for(auto const& iv: L) I += integ_f(iv.second,params) - integ_f(iv.first,params);
     return I;
 }
 
@@ -84,9 +84,9 @@ double IntervalIntegralFitter::operator()(const intervalList& L, const double* p
 double mean_point(const intervalList& L, double& w) {
     double sx = 0;
     w = 0;
-    for(auto it = L.begin(); it != L.end(); it++) {
-        sx += 0.5*(it->second+it->first)*(it->second-it->first);
-        w += it->second - it->first;
+    for(auto const& iv: L) {
+        sx += 0.5*(iv.second+iv.first)*(iv.second-iv.first);
+        w += iv.second - iv.first;
     }
     return sx/w;
 }

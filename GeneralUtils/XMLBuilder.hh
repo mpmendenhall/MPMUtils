@@ -27,7 +27,7 @@ public:
     /// Constructor
     XMLBuilder(const string& nm = ""): name(nm) { }
     /// Destructor
-    virtual ~XMLBuilder() { for(auto it = children.begin(); it != children.end(); it++) (*it)->release(); }
+    virtual ~XMLBuilder() { for(auto c: children) c->release(); }
     
     /// Add child node
     virtual void addChild(XMLBuilder* C) { assert(C); C->retain(); children.push_back(C); }

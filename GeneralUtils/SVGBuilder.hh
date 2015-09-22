@@ -81,8 +81,7 @@ namespace SVG {
     protected:
         virtual void prepare() {
             string s = "";
-            for(auto it = pts.begin(); it != pts.end(); it++)
-                s += to_str(it->first) + "," +  to_str(it->second) + " ";
+            for(auto const& pt: pts) s += to_str(pt.first) + "," +  to_str(pt.second) + " ";
             attrs["points"] = s;
         }
     };
@@ -110,8 +109,7 @@ namespace SVG {
             attrs["y1"] = to_str(y1);
             attrs["x2"] = to_str(x2);
             attrs["y2"] = to_str(y2);
-            for(auto it = G.getStops().begin(); it != G.getStops().end(); it++)
-                addChild(new gradstop(it->first, it->second.first));
+            for(auto const& s: G.getStops()) addChild(new gradstop(s.first, s.second.first));
         }
         
         string idstr() const { return "url(#" + attrs.find("id")->second + ")"; }

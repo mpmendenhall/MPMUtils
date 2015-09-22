@@ -418,16 +418,15 @@ namespace VarVec_element_norm_L2 {
 template<typename T>
 double VarVec<T>::max_norm_L2() const {
     vector<double> vn;
-    for(typename vector<T>::const_iterator it = data.begin(); it != data.end(); it++)
-        vn.push_back(VarVec_element_norm_L2::norm_L2(*it));
+    for(auto const& d: data) vn.push_back(VarVec_element_norm_L2::norm_L2(d));
     return *std::max_element(vn.begin(), vn.end());
 }
 
 template<typename T>
 double VarVec<T>::norm_L2() const {
     double s = 0;
-    for(typename vector<T>::const_iterator it = data.begin(); it != data.end(); it++) {
-        double n = VarVec_element_norm_L2::norm_L2(*it);
+    for(auto const& d: data) {
+        double n = VarVec_element_norm_L2::norm_L2(d);
         s += n*n;
     }
     return sqrt(s);

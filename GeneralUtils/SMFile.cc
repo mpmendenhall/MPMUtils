@@ -68,21 +68,19 @@ void SMFile::erase(const string& s) { dat.erase(s); }
 
 vector<Stringmap> SMFile::retrieve(const string& s) const {
     vector<Stringmap> v;
-    for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(s); it != dat.upper_bound(s); it++)
+    for(auto it = dat.lower_bound(s); it != dat.upper_bound(s); it++)
         v.push_back(it->second);
     return v;
 }
 
 void SMFile::transfer(const SMFile& Q, const string& k) {
-    vector<Stringmap> v = Q.retrieve(k);
-    for(vector<Stringmap>::iterator it = v.begin(); it != v.end(); it++)
-        insert(k,*it);
+    for(auto const& sm: Q.retrieve(k)) insert(k,sm);
 }
 
 void SMFile::display() const {
-    for(multimap<string, Stringmap>::const_iterator it = dat.begin(); it != dat.end(); it++) {
-        std::cout << "--- " << it->first << " ---:\n";
-        it->second.display();
+    for(auto const& kv: dat) {
+        std::cout << "--- " << kv.first << " ---:\n";
+        kv.second.display();
     }
 }
 
@@ -97,52 +95,42 @@ void SMFile::commit(string outname) const {
         throw(e);
     }
     printf("Writing File '%s'.\n",outname.c_str());
-    for(multimap<string, Stringmap>::const_iterator it = dat.begin(); it != dat.end(); it++)
-        fout << it->first << ":\t" << it->second.toString() << "\n";
+    for(auto const& kv: dat) fout << kv.first << ":\t" << kv.second.toString() << "\n";
     fout.close();
 }
 
 vector<string> SMFile::retrieve(const string& k1, const string& k2) const {
     vector<string> v1;
-    for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
-        vector<string> v2 = it->second.retrieve(k2);
-        for(vector<string>::const_iterator it2 = v2.begin(); it2 != v2.end(); it2++)
-            v1.push_back(*it2);
-    }
+    for(auto it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++)
+        for(auto const& s: it->second.retrieve(k2)) v1.push_back(s);
     return v1;
 }
 
 vector<double> SMFile::retrieveDouble(const string& k1, const string& k2) const {
     vector<double> v1;
-    for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
-        vector<double> v2 = it->second.retrieveDouble(k2);
-        for(vector<double>::const_iterator it2 = v2.begin(); it2 != v2.end(); it2++)
-            v1.push_back(*it2);
-    }
+    for(auto it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++)
+        for(auto d: it->second.retrieveDouble(k2)) v1.push_back(d);
     return v1;
 }
 
 string SMFile::getDefault(const string& k1, const string& k2, const string& d) const {
-    for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
+    for(auto it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
         vector<string> v2 = it->second.retrieve(k2);
-        if(v2.size())
-            return v2[0];
+        if(v2.size()) return v2[0];
     }
     return d;
 }
 
 double SMFile::getDefault(const string& k1, const string& k2, double d) const {
-    for(multimap<string,Stringmap>::const_iterator it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
+    for(auto it = dat.lower_bound(k1); it != dat.upper_bound(k1); it++) {
         vector<double> v2 = it->second.retrieveDouble(k2);
-        if(v2.size())
-            return v2[0];
+        if(v2.size()) return v2[0];
     }
     return d;
 }
 
 Stringmap SMFile::getFirst(const string& s, const Stringmap& dflt) const {
-    multimap<string,Stringmap>::const_iterator it = dat.find(s);
-    if(it == dat.end())
-        return dflt;
+    auto it = dat.find(s);
+    if(it == dat.end()) return dflt;
     return it->second;
 }

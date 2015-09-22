@@ -11,17 +11,17 @@
 void TObjCollector::writeItems() {
     //printf("Saving registered objects...");
     //fflush(stdout);
-    for(auto i = namedItems.begin(); i != namedItems.end(); i++) (*i)->Write();
-    for(auto i = anonItems.begin(); i != anonItems.end(); i++) i->second->Write(i->first.c_str());
+    for(auto i: namedItems) i->Write();
+    for(auto const& kv: anonItems) kv.second->Write(kv.first.c_str());
     //printf(" Done.\n");
 }
 
 void TObjCollector::clearItems() {
-    for(auto i = namedItems.begin(); i != namedItems.end(); i++) delete(*i);
+    for(auto i: namedItems) delete i;
     namedItems.clear();
-    for(auto i = anonItems.begin(); i != anonItems.end(); i++) delete(i->second);
+    for(auto const& kv: anonItems) delete(kv.second);
     anonItems.clear();
-    for(auto i = deleteItems.begin(); i != deleteItems.end(); i++) delete(*i);
+    for(auto i: deleteItems) delete i;
     deleteItems.clear();
 }
 

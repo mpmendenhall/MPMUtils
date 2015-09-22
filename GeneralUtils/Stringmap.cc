@@ -30,18 +30,13 @@
 #include "SMExcept.hh"
 
 Stringmap::Stringmap(const string& str) {
-    vector<string> pairs = split(str,"\t");
-    for(vector<string>::const_iterator it = pairs.begin(); it!=pairs.end(); it++) {
-        vector<string> keyval = split(*it,"=");
+    auto pairs = split(str,"\t");
+    for(auto const& s: pairs) {
+        auto keyval = split(s,"=");
         if(keyval.size() != 2)
             continue;
         dat.insert(std::make_pair(strip(keyval[0]),strip(keyval[1])));
     }
-}
-
-Stringmap::Stringmap(const Stringmap& m) {
-    for(multimap< string, string >::const_iterator it = m.dat.begin(); it!=m.dat.end(); it++)
-        dat.insert(std::make_pair(it->first,it->second));
 }
 
 void Stringmap::insert(const string& s, const string& v) {
@@ -70,14 +65,14 @@ string Stringmap::getDefault(const string& s, const string& d) const {
 
 string Stringmap::toString() const {
     string s;
-    for(multimap<string,string>::const_iterator it = dat.begin(); it != dat.end(); it++)
-        s += "\t" + it->first + " = " + it->second;
+    for(auto const& kv: dat)
+        s += "\t" + kv.first + " = " + kv.second;
     return s;
 }
 
 void Stringmap::display(string linepfx) const {
-    for(multimap<string,string>::const_iterator it = dat.begin(); it != dat.end(); it++)
-        std::cout << linepfx << it->first << ": " << it->second << "\n";
+    for(auto const& kv: dat)
+        std::cout << linepfx << kv.first << ": " << kv.second << "\n";
 }
 
 
@@ -91,11 +86,10 @@ double Stringmap::getDefault(const string& k, double d) const {
 }
 
 vector<double> Stringmap::retrieveDouble(const string& k) const {
-    vector<string> vs = retrieve(k);
     vector<double> v;
     double d;
-    for(vector<string>::const_iterator it = vs.begin(); it != vs.end(); it++) {
-        std::stringstream s(*it);
+    for(auto const& ss: retrieve(k)) {
+        std::stringstream s(ss);
         s >> d;
         v.push_back(d);
     }
@@ -103,6 +97,5 @@ vector<double> Stringmap::retrieveDouble(const string& k) const {
 }
 
 void Stringmap::mergeInto(Stringmap& S) const {
-    for(multimap<string,string>::const_iterator it = dat.begin(); it != dat.end(); it++)
-        S.insert(it->first,it->second);
+    for(auto const& kv: dat) S.insert(kv.first,kv.second);
 }

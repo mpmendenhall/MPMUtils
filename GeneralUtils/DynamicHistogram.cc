@@ -33,7 +33,6 @@ void DynamicHistogram::fill(double x, double w) {
 
 DHBinData DynamicHistogram::getMax() const {
     DHBinData d;
-    for(auto it = dat.begin(); it != dat.end(); it++)
-        if(d.w < it->second.w) d = it->second;
+    for(auto const& kv: dat) if(d.w < kv.second.w) d = kv.second;
     return d;
 }

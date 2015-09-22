@@ -105,16 +105,14 @@ string getEnvSafe(const string& v, const string& dflt) {
 void combo_pdf(const vector<string>& namelist, const string& outname) {
     if(!namelist.size()) return;
     makePath(outname, true);
-    string cmd;
     if(namelist.size()==1) {
-        cmd = "mv " + namelist[0] + " " + outname;
+        string cmd = "mv " + namelist[0] + " " + outname;
         int rc = system(cmd.c_str());
         if(rc) printf("%s: %i\n", cmd.c_str(), rc);
         return;
     }
-    for(auto it = namelist.begin(); it != namelist.end(); it++)
-        cmd += *it + " ";
-    cmd = "pdfunite " + cmd + outname +"; rm " + cmd;
+    string cmd = join(namelist," ");
+    cmd = "pdfunite " + cmd + " " + outname +"; rm " + cmd;
     int rc = system(cmd.c_str());
     if(rc) printf("%s: %i\n", cmd.c_str(), rc);
 }

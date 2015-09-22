@@ -66,24 +66,24 @@ void TagCounter<T>::add(const T& itm, double c) {
 
 template<typename T>
 void TagCounter<T>::operator+=(const TagCounter<T>& c) {
-    for(typename map<T,double>::const_iterator it = c.counts.begin(); it != c.counts.end(); it++)
-        add(it->first,it->second);
+    for(auto const& kv: c.counts)
+        add(kv.first,kv.second);
 }
 
 template<typename T>
 void TagCounter<T>::scale(double s) {
     if(s==1) return;
-    for(typename map<T,double>::iterator it = counts.begin(); it != counts.end(); it++)
-        it->second *= s;
+    for(auto& kv: counts)
+        kv.second *= s;
 }
 
 template<typename T>
 Stringmap TagCounter<T>::toStringmap() {
     Stringmap m;
-    for(typename map<T,double>::const_iterator it = counts.begin(); it != counts.end(); it++) {
+    for(auto const& kv: counts) {
         std::ostringstream s;
-        s << (*it).first;
-        m.insert(s.str(),to_str(it->second));
+        s << kv.first;
+        m.insert(s.str(),to_str(kv.second));
     }
     return m;
 }
@@ -91,8 +91,7 @@ Stringmap TagCounter<T>::toStringmap() {
 template<typename T>
 double TagCounter<T>::total() const {
     double d = 0;
-    for(typename map<T,double>::const_iterator it = counts.begin(); it != counts.end(); it++)
-        d += it->second;
+    for(auto const& kv: counts) d += kv.second;
     return d;
 }
 

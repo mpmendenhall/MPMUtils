@@ -51,14 +51,14 @@ double drawSimulHistos(vector<TH1*>& hists, const string& opt, const string& new
     if(newTitle != "DEFAULT")
         maxHist->SetTitle(newTitle.c_str());
     maxHist->Draw(opt.c_str());
-    for(vector<TH1*>::iterator it = hists.begin(); it != hists.end(); it++) {
-        smassert(*it);
-        if(*it == maxHist)
+    for(auto h: hists) {
+        smassert(h);
+        if(h == maxHist)
             continue;
         if(opt.size())
-            (*it)->Draw((opt+" SAME").c_str());
+            h->Draw((opt+" SAME").c_str());
         else
-            (*it)->Draw("SAME");
+            h->Draw("SAME");
     }
     printf(" Done.\n");
             
@@ -101,15 +101,15 @@ void combo_draw(const vector<TH1*>& hs, const string& outp, const char* opt) {
     } else nbase = "";
     
     vector<string> hNames;
-    for(auto it = hs.begin(); it != hs.end(); it++) {
-        if(!(*it)) continue;
-        (*it)->Draw(opt);
+    for(auto h: hs) {
+        if(!h) continue;
+        h->Draw(opt);
         char file_template[] = "/tmp/plot_XXXXXX";
         int fd = mkstemp(file_template);
         if(fd==-1) continue; // failure to make temp file
         close(fd);
         hNames.push_back(file_template);
-        if(!nbase.size()) nbase = dropLast((*it)->GetName(),"_");
+        if(!nbase.size()) nbase = dropLast(h->GetName(),"_");
         gPad->Print(file_template,"pdf");
     }
     combo_pdf(hNames, outpath + "/"+nbase+".pdf");
@@ -117,7 +117,7 @@ void combo_draw(const vector<TH1*>& hs, const string& outp, const char* opt) {
 
 void combo_draw(const vector<TH2*>& hs, const string& outpath, const char* opt) {
     vector<TH1*> hs1;
-    for(auto it = hs.begin(); it != hs.end(); it++) hs1.push_back(*it);
+    for(auto h: hs) hs1.push_back(h);
     combo_draw(hs1, outpath, opt);
 }
 

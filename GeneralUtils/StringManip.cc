@@ -89,7 +89,7 @@ string join(const vector<string>& ss, const string& sep) {
     if(!ss.size())
         return s;
     s = ss[0];
-    for(vector<string>::const_iterator it = ss.begin()+1; it < ss.end(); it++)
+    for(auto it = ss.begin()+1; it < ss.end(); it++)
         s += sep + *it;
     return s;
 }

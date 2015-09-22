@@ -53,19 +53,19 @@ void PointCloudHistogram::Fill(const float* x, float v) {
 
 void PointCloudHistogram::project(const float* v, TGraph& g) const {
     unsigned int i=0;
-    for(map<int,float>::const_iterator it = bins.begin(); it != bins.end(); it++) {
+    for(auto const& b: bins) {
         double s = 0;
-        for(unsigned int j=0; j<myTree->ndim; j++) s += myTree->fData[j][it->first] * v[j];
-        g.SetPoint(i++, s, it->second);
+        for(unsigned int j=0; j<myTree->ndim; j++) s += myTree->fData[j][b.first] * v[j];
+        g.SetPoint(i++, s, b.second);
     }
     g.Sort();
 }
 
 void PointCloudHistogram::project(const float* v, TH1& h) const {
-    for(map<int,float>::const_iterator it = bins.begin(); it != bins.end(); it++) {
+    for(auto const& b: bins) {
         double s = 0;
-        for(unsigned int j=0; j<myTree->ndim; j++) s += myTree->fData[j][it->first] * v[j];
-        h.Fill(s,it->second);
+        for(unsigned int j=0; j<myTree->ndim; j++) s += myTree->fData[j][b.first] * v[j];
+        h.Fill(s, b.second);
     }
 }
 

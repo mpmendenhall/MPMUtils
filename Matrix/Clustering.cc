@@ -12,7 +12,7 @@
 void KMeansCalculator::calcClassCounts() {
     printf("\tClassification counts:");
     class_counts = VarVec<unsigned int>(nmeans);
-    for(auto it = classification.begin(); it != classification.end(); it++) class_counts[*it]++;
+    for(auto c: classification) class_counts[c]++;
     for(unsigned int j=0; j<nmeans; j++) printf("\t[%u] %u", j, class_counts[j]);
     printf("\n");
 }
