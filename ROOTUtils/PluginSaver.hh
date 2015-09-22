@@ -31,24 +31,24 @@ public:
     SegmentSaver* getPlugin(const string& nm) const;
     
     /// zero out all saved histograms
-    virtual void zeroSavedHists();
+    virtual void zeroSavedHists() override;
     /// scale all saved histograms by a factor
-    virtual void scaleData(double s);
+    virtual void scaleData(double s) override;
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
-    virtual void normalize();
+    virtual void normalize() override;
     /// add histograms from another SegmentSaver of the same type
-    virtual void addSegment(const SegmentSaver& S);
+    virtual void addSegment(const SegmentSaver& S) override;
     /// virtual routine for generating output plots
-    virtual void makePlots();
+    virtual void makePlots() override;
     /// virtual routine for generating calculated hists
-    virtual void calculateResults();
+    virtual void calculateResults() override;
     /// virtual routine for comparing to other analyzers (of this type or NULL; meaning implementation-dependent)
-    virtual void compare(const vector<SegmentSaver*>& v);
+    virtual void compare(const vector<SegmentSaver*>& v) override;
     
     /// write items to file
-    virtual void writeItems();
+    virtual void writeItems() override;
     /// clear (delete) items
-    virtual void clearItems();
+    virtual void clearItems() override;
     
 protected:
     /// build plugins appropriate for input file; call in subclass after setting up myBuilders

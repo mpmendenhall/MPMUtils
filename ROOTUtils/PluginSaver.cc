@@ -15,19 +15,19 @@ PluginSaver::PluginSaver(OutputManager* pnt, const string& nm, const string& inf
 }
 
 PluginSaver::~PluginSaver() {
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) 
-        if(it->second->thePlugin) delete it->second->thePlugin;
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            delete kv.second->thePlugin;
 }
 
 void PluginSaver::buildPlugins() {
     if(fIn) {
         /// try to load all plugins named in input file
         printf("Loading plugins '%s'\n", filePlugins->String().Data());
-        auto pnames = split(filePlugins->String().Data(), ",");
-        for(auto it = pnames.begin(); it != pnames.end(); it++) {
-            auto PB = myBuilders.find(*it);
+        for(auto& pnm: split(filePlugins->String().Data(), ",")) {
+            auto PB = myBuilders.find(pnm);
             if(PB==myBuilders.end()) {
-                printf("Plugin '%s' missing from input file; skipped.\n", it->c_str());
+                printf("Plugin '%s' missing from input file; skipped.\n", pnm.c_str());
                 continue;
             }
             PB->second->makePlugin(this, inflname);
@@ -35,10 +35,10 @@ void PluginSaver::buildPlugins() {
     } else {
         /// construct all plugins
         vector<string> pnames;
-        for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) {
-            assert(it->second);
-            it->second->makePlugin(this);
-            if(it->second->thePlugin) pnames.push_back(it->first);
+        for(auto& kv: myBuilders) {
+            assert(kv.second);
+            kv.second->makePlugin(this);
+            if(kv.second->thePlugin) pnames.push_back(kv.first);
             else assert(false);
         }
         assert(filePlugins);
@@ -56,39 +56,45 @@ SegmentSaver* PluginSaver::getPlugin(const string& nm) const {
 
 void PluginSaver::zeroSavedHists() {
     SegmentSaver::zeroSavedHists();
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++)
-        if(it->second->thePlugin) it->second->thePlugin->zeroSavedHists();
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->zeroSavedHists();
 }
 
 void PluginSaver::scaleData(double s) {
     SegmentSaver::scaleData(s);
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++)
-        if(it->second->thePlugin) it->second->thePlugin->scaleData(s);
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->scaleData(s);
 }
 
 void PluginSaver::normalize() {
     SegmentSaver::normalize();
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++)
-        if(it->second->thePlugin) it->second->thePlugin->normalize();
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->normalize();
 }
 
 void PluginSaver::addSegment(const SegmentSaver& S) {
+    SegmentSaver::addSegment(S);
     const PluginSaver& PS = dynamic_cast<const PluginSaver&>(S);
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) {
-        if(it->second->thePlugin) {
-            SegmentSaver* Si = PS.getPlugin(it->first);
-            if(Si) it->second->thePlugin->addSegment(*Si);
+    for(auto& kv: myBuilders) {
+        if(kv.second->thePlugin) {
+            SegmentSaver* Si = PS.getPlugin(kv.first);
+            if(Si) kv.second->thePlugin->addSegment(*Si);
+            else printf("Warning: PluginSaver::addSegment missing matching plugin for '%s'\n", kv.first.c_str());
         }
     }
 }
 
 void PluginSaver::makePlots() {
-    SegmentSaver::makePlots();
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) {
+    SegmentSaver::makePlots(); 
+    for(auto& kv: myBuilders) {
         defaultCanvas->SetLogz(false);
         defaultCanvas->SetLogx(false);
         defaultCanvas->SetLogy(false);
-        if(it->second->thePlugin) it->second->thePlugin->makePlots();
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->makePlots();
     }
 }
 
@@ -96,34 +102,37 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
     SegmentSaver::compare(v);
     
     vector<PluginSaver*> vP;
-    for(auto it = v.begin(); it != v.end(); it++) vP.push_back(dynamic_cast<PluginSaver*>(*it));
+    for(auto SS: v) vP.push_back(dynamic_cast<PluginSaver*>(SS));
     
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++) {
-        if(!it->second->thePlugin) continue;
+    for(auto& kv: myBuilders) {
+        if(!kv.second->thePlugin) continue;
         vector<SegmentSaver*> vPi;
-        for(auto it2 = vP.begin(); it2 != vP.end(); it2++) {
-            if(!(*it2)) vPi.push_back(NULL);
-            else vPi.push_back((*it2)->getPlugin(it->first));
+        for(auto PS: vP) {
+            if(!PS) vPi.push_back(NULL);
+            else vPi.push_back(PS->getPlugin(kv.first));
         }
-        it->second->thePlugin->compare(vPi);
+        kv.second->thePlugin->compare(vPi);
     }
 }
 
 void PluginSaver::calculateResults() {
     SegmentSaver::calculateResults();
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++)
-        if(it->second->thePlugin) it->second->thePlugin->calculateResults();
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->calculateResults();
 }
 
 void PluginSaver::writeItems() {
     SegmentSaver::writeItems();
     printf("Writing plugins '%s'\n", filePlugins->String().Data());
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++)
-        if(it->second->thePlugin) it->second->thePlugin->writeItems();
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->writeItems();
 }
 
 void PluginSaver::clearItems() {
     SegmentSaver::clearItems();
-    for(auto it = myBuilders.begin(); it != myBuilders.end(); it++)
-        if(it->second->thePlugin) it->second->thePlugin->clearItems();
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->clearItems();
 }

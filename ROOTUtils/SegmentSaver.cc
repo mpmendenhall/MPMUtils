@@ -151,45 +151,51 @@ const TH1* SegmentSaver::getSavedHist(const string& hname) const {
 }
 
 void SegmentSaver::zeroSavedHists() {
-    for(auto it = saveHists.begin(); it != saveHists.end(); it++)
-        it->second->Reset();
+    for(auto& kv: saveHists) kv.second->Reset();
 }
 
 void SegmentSaver::scaleData(double s) {
     if(s==1.) return;
-    for(auto it = saveHists.begin(); it != saveHists.end(); it++) {
-        if(it->second->ClassName() != TString("TProfile")) {
-            if(!it->second->GetSumw2()) it->second->Sumw2();
-            it->second->Scale(s);
+    for(auto& kv: saveHists) {
+        if(kv.second->ClassName() != TString("TProfile")) {
+            if(!kv.second->GetSumw2()) kv.second->Sumw2();
+            kv.second->Scale(s);
         }
     }
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
-    for(auto it = saveHists.begin(); it != saveHists.end(); it++) {
-        auto otherit = S.saveHists.find(it->first);
-        if(otherit == S.saveHists.end()) {
+    for(auto& kv: saveHists) {
+        if(!S.saveHists.count(kv.first)) {
             if(throwit) {
                 SMExcept e("mismatched_histogram");
-                e.insert("name", it->first);
+                e.insert("name", kv.first);
                 throw e;
             }
             return false;
         }
-        // TODO other checks?
     }
     return true;
 }
 
 void SegmentSaver::addSegment(const SegmentSaver& S) {
     isEquivalent(S, true);
-    // add histograms
-    for(auto it = saveHists.begin(); it != saveHists.end(); it++)
-        it->second->Add(S.getSavedHist(it->first));
+    for(auto& kv: saveHists) kv.second->Add(S.getSavedHist(kv.first));        
+}
+
+size_t SegmentSaver::addFiles(const vector<string>& inflnames) {
+    size_t nMerged = 0;
+    for(auto f: inflnames) {
+        if(!fileExists(f)) continue;
+        SegmentSaver* subRA = makeAnalyzer("", f);
+        addSegment(*subRA);
+        delete(subRA);
+        nMerged++;
+    }
+    return nMerged;
 }
 
 void SegmentSaver::displaySavedHists() const {
-    for(auto it = saveHists.begin(); it != saveHists.end(); it++)
-        printf("\t'%s'\n", it->first.c_str());
+    for(auto& kv: saveHists) printf("\t'%s'\n", kv.first.c_str());
 }
 
