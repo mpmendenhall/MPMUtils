@@ -21,6 +21,7 @@
 
 #include "StringManip.hh"
 #include <stdlib.h>
+#include <fstream>
 
 string itosRN(int i) {
     if(!i) return "0";
@@ -133,4 +134,18 @@ vector< vector<double> > readArray(ifstream& fin, unsigned int minitems, const s
 string dropLast(const string& str, const string splitchars) {
     vector<string> v = split(str,splitchars);
     return str.substr(0, str.size() - v.back().size() - 1);
+}
+
+string loadFileString(const string& fname) {
+    std::ifstream in(fname.c_str(), std::ios::in | std::ios::binary);
+    if (in) {
+        string contents;
+        in.seekg(0, std::ios::end);
+        contents.resize(in.tellg());
+        in.seekg(0, std::ios::beg);
+        in.read(&contents[0], contents.size());
+        in.close();
+        return contents;
+    }
+    return "";
 }

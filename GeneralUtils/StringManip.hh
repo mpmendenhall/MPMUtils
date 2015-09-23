@@ -70,6 +70,8 @@ vector<double> sToDoubles(const string& str, const string splitchars = ", \t\r\n
 vector<int> sToInts(const string& str, const string splitchars = ", \t\r\n");
 /// read in an array from a file
 vector< vector<double> > readArray(ifstream& fin, unsigned int minitems = 1, const string splitchars = ", \t\r\n");
+/// load file as string
+string loadFileString(const string& fname);
 
 /// convert a char to a string
 string ctos(char c);
