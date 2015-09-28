@@ -7,6 +7,7 @@ from pyx.graph.style import symbol
 from scipy.integrate import quad
 from bisect import bisect
 from LinFitter import *
+import os
 
 ###############
 # utility functions
@@ -96,7 +97,7 @@ class pow_spectrum:
 def load_specfile(fname,fDir=None):
 	"""Load text columns file; first column for wavelength, spectra in each other column"""
 	if fDir is None:
-		fDir = "../SpectraDat"
+		fDir = os.environ["MPMUTILS"]+"/pyUtils/Color/SpectraDat"
 	fdat = [[float(x) for x in l.split()] for l in open(fDir+"/"+fname,"r").readlines() if len(l.split())>=2 and l[0] in "0123456789+-"]
 	ncols = len(fdat[0])
 	if not ncols:

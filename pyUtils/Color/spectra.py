@@ -2,7 +2,7 @@
 
 from SpectrumUtils import *
 from Colorspace import *
-
+from numpy import linspace
 
 def spectrum_estimator(inSpecs,outSpecs):
 	"""model output spectra as linear combination of inputs"""
@@ -56,10 +56,10 @@ def spectrum_recon(inSpecs,outSpecs):
 					x=graph.axis.lin(title="wavelength [nm]",min=l0,max=l1),
 					y=graph.axis.lin(title="spectral sensitivity",min=0,max=2))
 	for i in range(n):
-		gIn.plot(graph.data.points([(x,inSpecs[i](x)) for x in unifrange(l0,l1,200)],x=1,y=2), [graph.style.line(lineattrs=[style.linestyle.dashed,]),])
+		gIn.plot(graph.data.points([(x,inSpecs[i](x)) for x in linspace(l0,l1,200)],x=1,y=2), [graph.style.line(lineattrs=[style.linestyle.dashed,]),])
 	for j in range(m):
-		gIn.plot(graph.data.points([(x,outSpecs[j](x)) for x in unifrange(l0,l1,200)],x=1,y=2), [graph.style.line([color.rgb.blue]),])
-		gIn.plot(graph.data.points([(x,sum([inSpecs[i](x)*C[i,j] for i in range(n)])) for x in unifrange(l0,l1,200)],x=1,y=2), [graph.style.line([style.linestyle.dotted,color.rgb.red]),])
+		gIn.plot(graph.data.points([(x,outSpecs[j](x)) for x in linspace(l0,l1,200)],x=1,y=2), [graph.style.line([color.rgb.blue]),])
+		gIn.plot(graph.data.points([(x,sum([inSpecs[i](x)*C[i,j] for i in range(n)])) for x in linspace(l0,l1,200)],x=1,y=2), [graph.style.line([style.linestyle.dotted,color.rgb.red]),])
 
 	gIn.writetofile("/Users/michael/Desktop/inSpecs.pdf")
 
@@ -96,9 +96,9 @@ def plot_spectra_colors(illum,specs,l0=380,l1=750,ymx=1,ymn=0):
 						key = graph.key.key(pos="ml"))
 	for i in range(len(specs)):
 		rgbCol = color.rgb(spec_RGB[i][0],spec_RGB[i][1],spec_RGB[i][2])
-		gSquares.plot(graph.data.points([(x,specs[i](x)) for x in unifrange(l0,l1,400)],x=1,y=2,title="%i"%i),
+		gSquares.plot(graph.data.points([(x,specs[i](x)) for x in linspace(l0,l1,400)],x=1,y=2,title="%i"%i),
 				    [graph.style.line([style.linewidth.THICK]),graph.style.line([style.linewidth.THick,rgbCol])])
-		gSquares.plot(graph.data.points([(x,specs[i](x)) for x in unifrange(l0,l1,400)],x=1,y=2,title=None),
+		gSquares.plot(graph.data.points([(x,specs[i](x)) for x in linspace(l0,l1,400)],x=1,y=2,title=None),
 				    [graph.style.line([style.linewidth.THick,rgbCol]),])
 
 	return gSquares
@@ -150,7 +150,7 @@ def cchecker_values(T0=6600):
 	for i in range(len(cspecs)):
 		RGB = LsRGB_to_sRGB((squarecols[i][0]/squarecols[0][0],squarecols[i][1]/squarecols[0][1],squarecols[i][2]/squarecols[0][2]))
 		scolors.append(RGB)
-		gSquares.plot(graph.data.points([(x,cspecs[i](x)) for x in unifrange(l0,l1,400)],x=1,y=2,title="%i"%i),
+		gSquares.plot(graph.data.points([(x,cspecs[i](x)) for x in linspace(l0,l1,400)],x=1,y=2,title="%i"%i),
 				    [graph.style.line([style.linewidth.THICK]),graph.style.line([style.linewidth.THick,color.rgb(RGB[0],RGB[1],RGB[2])])])
 	
 	draw_colorgrid(scolors[1:],6).writetofile("/Users/michael/Desktop/colorchecker_recon_%i%s.pdf"%(T0,sfx), margin=0., bboxenlarge=0.)
@@ -158,7 +158,7 @@ def cchecker_values(T0=6600):
 	for i in range(len(cspecs)):
 		RGB = LsRGB_to_sRGB((squarecols[i][0]/squarecols[0][0],squarecols[i][1]/squarecols[0][1],squarecols[i][2]/squarecols[0][2]))
 		print i, RGB
-		gSquares.plot(graph.data.points([(x,cspecs[i](x)) for x in unifrange(l0,l1,400)],x=1,y=2,title=None), [graph.style.line([style.linewidth.THick,color.rgb(RGB[0],RGB[1],RGB[2])]),])
+		gSquares.plot(graph.data.points([(x,cspecs[i](x)) for x in linspace(l0,l1,400)],x=1,y=2,title=None), [graph.style.line([style.linewidth.THick,color.rgb(RGB[0],RGB[1],RGB[2])]),])
 
 	gSquares.writetofile("/Users/michael/Desktop/colorchecker_%i%s.pdf"%(T0,sfx))
 
@@ -371,10 +371,10 @@ if __name__=="__main__":
 	bpath = "/Users/michael/Desktop/MultiColor/"
 		
 	# sensor/filter combinations
-	if 0:
+	if 1:
 		sensRGB = load_specfile("Canon_5D_Spectral_Sensitivity.txt")
 		superR = product_spectrum([sensRGB[0],longpass_spectrum(630,10)])
-		superB = product_spectrum([sensRGB[2],load_specfile("Wratten/Wratten_Curve_47b.txt")[0]])
+		superB = product_spectrum([sensRGB[2],load_specfile("Wratten_47b_Tx.txt")[0]])
 		superOG495 = product_spectrum([sensRGB[1],longpass_spectrum(495,10)])
 		superOG550 = product_spectrum([sensRGB[1],longpass_spectrum(550,10)])
 		superBG495 = product_spectrum([sensRGB[2],longpass_spectrum(495,10)])
@@ -389,6 +389,7 @@ if __name__=="__main__":
 		dd491 = [product_spectrum([load_specfile("B+W_491_Tx.txt")[0],s]) for s in sensRGB]
 		hpn13 = [product_spectrum([load_specfile("Heliopan_13_Tx.txt")[0],s]) for s in sensRGB]
 		
+		wr47b = [product_spectrum([load_specfile("Wratten_47b_Tx.txt")[0],s]) for s in sensRGB]
 		wr58 = [product_spectrum([load_specfile("Wratten_58_Tx.txt")[0],s]) for s in sensRGB]
 		wr56 = [product_spectrum([load_specfile("Wratten_56_Tx.txt")[0],s]) for s in sensRGB]
 		
@@ -397,14 +398,15 @@ if __name__=="__main__":
 		mag70 = [product_spectrum([pow_spectrum(load_specfile("Wratten_CC50M_Tx.txt")[0],7./5.),s]) for s in sensRGB]
 	
 	###### define calculation ######
-	comboname = "RGB+CC70M"
-	#sensors = sensRGB
+	comboname = "RGB+47B"
+	sensors = sensRGB+wr47b
 	img_illum = CIE_D_Illum(75)
 	dest_illum = CIE_D_Illum(50)
 	cAdapt = ChromAdapt_XYZ_LMat(img_illum,dest_illum)
 
-	#plot_spectra_colors(img_illum,sensors).writetofile(bpath+"/sensors_%s.pdf"%comboname) # spectral sensitivity with illuminant
-	
+	plot_spectra_colors(img_illum,sensors).writetofile(bpath+"/sensors_%s.pdf"%comboname) # spectral sensitivity with illuminant
+	exit(0)
+
 	#ObsCols = calcSensorResponse(sensors,img_illum,calSwatches)
 	#bPoint = None
 	ObsCols = SensorResponseLoader()
