@@ -29,14 +29,16 @@ def plot_spectra_colors(specs, l0=350, l1=750, gSpectra = None, whitepoint = (10
                             key = graph.key.key(pos="mr"))
         
     for (i,s) in enumerate(specs):
-        spec_RGB = spectrum_sRGB(s,whitepoint)
-        rgbCol = color.rgb(spec_RGB[0],spec_RGB[1],spec_RGB[2])
+        rgbCol = None
         if hasattr(s,"plotcolor"):
             if type(s.plotcolor) == type(color.rgb.red):
                 rgbCol = s.plotcolor
             else:
-                rgbcol = color.rgb(s.plotcolor[0],s.plotcolor[1],s.plotcolor[2])
-            
+                rgbCol = color.rgb(s.plotcolor[0],s.plotcolor[1],s.plotcolor[2])
+        if not rgbCol:
+            spec_RGB = spectrum_sRGB(s,whitepoint)
+            rgbCol = color.rgb(spec_RGB[0],spec_RGB[1],spec_RGB[2])
+        
         title = "%i"%i
         if hasattr(s,"name"):
             title = s.name

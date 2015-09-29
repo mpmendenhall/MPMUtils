@@ -26,10 +26,12 @@ endif
 objects = BlockCMat.o Clustering.o CMatrix.o ConvolverFactory.o \
 	LAPACKE_Matrix.o LinMin.o Permutation.o TLS_Solver.o
 
-all: libMPMMatrix.a
+all: libMPMMatrix.a libMPMMatrix.so
 
 libMPMMatrix.a: $(objects)
 	ar rs libMPMMatrix.a $(objects)
+libMPMMatrix.so: $(objects)
+	$(CXX) -shared -o libMPMMatrix.so $(objects)
 
 #
 # cleanup
@@ -37,5 +39,4 @@ libMPMMatrix.a: $(objects)
 
 .PHONY: clean
 clean:
-	-rm -f libMPMMatrix.a
-	-rm -f *.o
+	-rm -f *.o *.a *so

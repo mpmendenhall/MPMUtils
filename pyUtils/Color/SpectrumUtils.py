@@ -141,6 +141,11 @@ class rescale_spectrum:
         if c is None:
             c = 1./max([s(l) for l in linspace(300,800,100)])
         self.c = c
+        if hasattr(s,"name"):
+            self.name = s.name
+        if hasattr(s,"plotcolor"):
+            self.plotcolor = s.plotcolor
+                
     def __call__(self,l):
         return self.s(l)*self.c
     

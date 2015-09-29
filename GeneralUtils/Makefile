@@ -16,10 +16,12 @@ CXXFLAGS = -std=c++11 -O3 -fPIC -pedantic -Wall -Wextra -I.
 objects = ColorSpec.o CompileVersion.o ControlMenu.o DynamicHistogram.o FloatErr.o PathUtils.o ProgressBar.o \
 	SMFile.o RollingWindow.o SMExcept.o StringManip.o Stringmap.o TagCounter.o XMLBuilder.o
 
-all: libMPMGeneralUtils.a
+all: libMPMGeneralUtils.a libMPMGeneralUtils.so
 
 libMPMGeneralUtils.a: $(objects)
 	ar rs libMPMGeneralUtils.a $(objects)
+libMPMGeneralUtils.so: $(objects)
+	$(CXX) -shared -o libMPMGeneralUtils.so $(objects)
 
 .PHONY: CompileVersion.o
 CompileVersion.o: 
@@ -31,5 +33,4 @@ CompileVersion.o:
 
 .PHONY: clean
 clean:
-	-rm -f libMPMGeneralUtils.a
-	-rm -f *.o
+	-rm -f *.o *.a *.so
