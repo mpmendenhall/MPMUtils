@@ -1,10 +1,8 @@
+from LinFitter import *
 from math import *
 from numpy import *
-from pyx import *
-from pyx.graph.style import symbol
 from scipy.integrate import quad
 from bisect import bisect
-from LinFitter import *
 import os
 
 ###############
@@ -37,6 +35,49 @@ class cubterpolator:
         p3 = self.ypts[b+1]
         return A*p0*(1-l)*(1-l)*l + p1*(1-l)*(1-l*((2+A)*l-1)) - p2*l*(A*(1-l)*(1-l)+l*(2*l-3)) + A*p3*(1-l)*l*l
 
+def spectrum_estimator(inSpecs,outSpecs):
+    """model output spectra as linear combination of inputs"""
+    n = len(inSpecs)
+    M = matrix(zeros((n,n)))
+    l0,l1 = 400,700
+    for i in range(n):
+        for j in range(i+1):
+            M[i,j] = fdot(inSpecs[i],inSpecs[j],l0,l1)/(l1-l0)
+            M[j,i] += M[i,j]
+    Mi = linalg.inv(M)
+    print("Spectrum Correlations Matrix")
+    print(M)
+    print("Correlation Inverse")
+    print(Mi)
+
+    m = len(outSpecs)
+    V = matrix(zeros((n,m)))
+    for i in range(n):
+        for j in range(m):
+            V[i,j] = fdot(inSpecs[i],outSpecs[j],l0,l1)/(l1-l0)
+    C = Mi*V
+    print("Output correlation")
+    print(V)
+    print("Output conversion")
+    print(C)
+
+    # calculate errors
+    print("Reconstruction errors:")
+    for r in range(m):
+        err = 0
+        for i in range(n):
+            for j in range(n):
+                if i==j:
+                    err += C[i,r]*C[j,r]*M[i,j]*0.5
+                else:
+                    err += C[i,r]*C[j,r]*M[i,j]
+            err -= C[i,r]*V[i,r]
+        rr = fdot(outSpecs[r],outSpecs[r],l0,l1)/(l1-l0)
+        err += rr
+        err /= rr
+        print((r,err))
+
+    return C
 
 ###############
 # Spectrum generators
@@ -70,6 +111,7 @@ class bbody_norm_spectrum:
     """Blackbody spectrum, normalized to height 1 at (estimated) peak"""
     def __init__(self,T):
         self.T = T
+        self.name = "%iK blackbody"%T
         # normalization at estimated peak
         self.nrm = 1.0/self.spec_unnorm(2.897835e6/self.T)
     def spec_unnorm(self,l):

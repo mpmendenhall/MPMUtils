@@ -54,6 +54,11 @@ def sRGB_to_Lin(C):
 def LsRGB_to_sRGB(LsRGB):
     return tuple([sRGB_Lin_to_C(LsRGB[i]) for i in range(3)])
 
+def LsRGB_Whitepoint(illum, l0=350, l1=750):
+    """Linear sRGB whitepoint for illuminant""" 
+    XnYnZn = [fdot(s,illum,l0,l1) for s in cieXYZ_spectra]
+    return CIE_XYZ_to_sRGB_Lin(XnYnZn)
+
 def CIE_XYZ_to_sRGB(XYZ,XnYnZn):
     """Convert XYZ relative to given white point to sRGB"""
     LsRGB_w = CIE_XYZ_to_sRGB_Lin(XnYnZn)
