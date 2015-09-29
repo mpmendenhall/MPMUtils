@@ -241,10 +241,11 @@ if __name__=="__main__":
     comboname = "RGB+47B"
     sensors = sensRGB+[superB, mag70[-1]]
     img_illum = CIE_D_Illum(75)
+    whitepoint = LsRGB_Whitepoint(img_illum)
     dest_illum = CIE_D_Illum(50)
     cAdapt = ChromAdapt_XYZ_LMat(img_illum,dest_illum)
 
-    plot_spectra_colors(img_illum,sensors).writetofile(bpath+"/sensors_%s.pdf"%comboname) # spectral sensitivity with illuminant
+    plot_spectra_colors(sensors, whitepoint = whitepoint).writetofile(bpath+"/sensors_%s.pdf"%comboname) # spectral sensitivity with illuminant
     exit(0)
 
     #ObsCols = calcSensorResponse(sensors,img_illum,calSwatches)

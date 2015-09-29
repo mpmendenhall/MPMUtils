@@ -59,6 +59,14 @@ def LsRGB_Whitepoint(illum, l0=350, l1=750):
     XnYnZn = [fdot(s,illum,l0,l1) for s in cieXYZ_spectra]
     return CIE_XYZ_to_sRGB_Lin(XnYnZn)
 
+def spectrum_sRGB(s, whitepoint):
+    """sRGB color for spectrum given LsRGB whitepoint"""
+    #calculate XYZ color for spectrum
+    specXYZ = matrix([fdot(c,s,350,750) for c in cieXYZ_spectra])
+    # calculate sRGB color for spectrum relative to whitepoint
+    spec_lRGB = CIE_XYZ_to_sRGB_Lin(specXYZ)
+    return LsRGB_to_sRGB([spec_lRGB[i]/whitepoint[i] for i in range(3)])
+    
 def CIE_XYZ_to_sRGB(XYZ,XnYnZn):
     """Convert XYZ relative to given white point to sRGB"""
     LsRGB_w = CIE_XYZ_to_sRGB_Lin(XnYnZn)

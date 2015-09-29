@@ -134,6 +134,16 @@ class pow_spectrum:
     def __call__(self,l):
         return self.s(l)**self.p
 
+class rescale_spectrum:
+    """Re-scaled spectrum"""
+    def __init__(self,s,c=None):
+        self.s = s
+        if c is None:
+            c = 1./max([s(l) for l in linspace(300,800,100)])
+        self.c = c
+    def __call__(self,l):
+        return self.s(l)*self.c
+    
 def load_specfile(fname,fDir=None):
     """Load text columns file; first column for wavelength, spectra in each other column"""
     if fDir is None:

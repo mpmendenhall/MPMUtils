@@ -28,17 +28,14 @@ def plot_spectra_colors(specs, l0=350, l1=750, gSpectra = None, whitepoint = (10
                             y=graph.axis.lin(title="spectrum",min=0,max=1),
                             key = graph.key.key(pos="mr"))
         
-    for i in range(len(specs)):
-        s = specs[i]
-        
-        # calculate XYZ color for spectrum
-        specXYZ = matrix([fdot(c,s,l0,l1) for c in cieXYZ_spectra])
-        # calculate sRGB color for spectrum relative to illuminant
-        spec_lRGB = CIE_XYZ_to_sRGB_Lin(specXYZ)
-        spec_RGB = LsRGB_to_sRGB([spec_lRGB[i]/whitepoint[i] for i in range(3)])
+    for (i,s) in enumerate(specs):
+        spec_RGB = spectrum_sRGB(s,whitepoint)
         rgbCol = color.rgb(spec_RGB[0],spec_RGB[1],spec_RGB[2])
         if hasattr(s,"plotcolor"):
-            rgbCol = s.plotcolor
+            if type(s.plotcolor) == type(color.rgb.red):
+                rgbCol = s.plotcolor
+            else:
+                rgbcol = color.rgb(s.plotcolor[0],s.plotcolor[1],s.plotcolor[2])
             
         title = "%i"%i
         if hasattr(s,"name"):
