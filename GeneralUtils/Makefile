@@ -21,7 +21,7 @@ all: libMPMGeneralUtils.a libMPMGeneralUtils.so
 libMPMGeneralUtils.a: $(objects)
 	ar rs libMPMGeneralUtils.a $(objects)
 libMPMGeneralUtils.so: $(objects)
-	$(CXX) -shared -o libMPMGeneralUtils.so $(objects)
+	$(CXX) -shared -fPIC -o libMPMGeneralUtils.so $(objects)
 
 .PHONY: CompileVersion.o
 CompileVersion.o: 

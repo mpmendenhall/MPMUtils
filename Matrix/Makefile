@@ -31,7 +31,7 @@ all: libMPMMatrix.a libMPMMatrix.so
 libMPMMatrix.a: $(objects)
 	ar rs libMPMMatrix.a $(objects)
 libMPMMatrix.so: $(objects)
-	$(CXX) -shared -o libMPMMatrix.so $(objects)
+	$(CXX) -shared -fPIC -o libMPMMatrix.so $(objects)
 
 #
 # cleanup

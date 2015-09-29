@@ -17,7 +17,7 @@ all: libMPMROOTUtils.a libMPMROOTUtils.so
 libMPMROOTUtils.a: $(objects)
 	ar rs  libMPMROOTUtils.a $(objects)
 libMPMROOTUtils.so: $(objects)
-	$(CXX) -shared -o libMPMROOTUtils.so $(objects)
+	$(CXX) -shared -fPIC -o libMPMROOTUtils.so $(objects)
 
 .PHONY: clean
 clean:
