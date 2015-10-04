@@ -74,7 +74,7 @@ vector< vector<double> > readArray(ifstream& fin, unsigned int minitems = 1, con
 string loadFileString(const string& fname);
 
 /// convert a char to a string
-string ctos(char c);
+string c_to_str(char c);
 /// convert a string to lowercase
 string lower(string s);
 /// convert a string to uppercase

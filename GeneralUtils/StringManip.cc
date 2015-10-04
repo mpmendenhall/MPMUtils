@@ -43,7 +43,7 @@ string itosRN(int i) {
     return s;
 }
 
-string ctos(char c) {
+string c_to_str(char c) {
     char ch[3];
     sprintf(ch,"%c",c);
     return string(ch);          
