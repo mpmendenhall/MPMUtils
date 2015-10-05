@@ -11,7 +11,17 @@ import os
 
 def fdot(f1,f2,x0=350,x1=750,fw=(lambda x: 1.0)):
     """Inner product between two functions over specififed range"""
+    srange = getattr(f1,"support",(-1e12, 1e12))
+    srange = combine_range(srange,getattr(f2,"support",(-1e12, 1e12)))
+    x0 = max([x0, srange[0]])
+    x1 = min([x1, srange[1]])
     return quad((lambda x:f1(x)*f2(x)*fw(x)),x0,x1,epsabs=1.e-6, epsrel=1.e-4)[0]
+
+def spectrum_integral(s,x0=350,x1=750):
+    srange = getattr(s,"support",(-1e12, 1e12))
+    x0 = max([x0, srange[0]])
+    x1 = min([x1, srange[1]])
+    return quad(s,x0,x1,epsabs=1.e-6, epsrel=1.e-4)[0]
 
 class cubterpolator:
     """Quick-and-dirty cubic interpolator"""
@@ -19,6 +29,7 @@ class cubterpolator:
         xydat.sort()
         self.xpts = [x[0] for x in xydat]
         self.ypts = [x[1] for x in xydat]
+        self.support = (xydat[0][0], xydat[-1][0])
     
     def __call__(self,x):
         b = bisect(self.xpts,x)
@@ -83,6 +94,9 @@ def spectrum_estimator(inSpecs,outSpecs):
 # Spectrum generators
 ###############
 
+def combine_range(s1,s2):
+    return (max([s1[0], s2[0]]), min([s1[1], s2[1]]))
+
 class nd_spectrum:
     """'Neutral density' (constant value) spectrum"""
     def __init__(self,h=1.0):
@@ -124,6 +138,9 @@ class product_spectrum:
     """Product of a set of spectra"""
     def __init__(self,ss):
         self.ss = ss
+        self.support = (-1e12, 1e12)
+        for s in self.ss:
+            self.support = combine_range(self.support,getattr(s,"support",(-1e12, 1e12)))
     def __call__(self,l):
         return prod([s(l) for s in self.ss])
 
@@ -131,6 +148,7 @@ class pow_spectrum:
     def __init__(self,s,p):
         self.s = s
         self.p = p
+        self.support = getattr(s,"support",(-1e12, 1e12))
     def __call__(self,l):
         return self.s(l)**self.p
 
@@ -141,6 +159,7 @@ class rescale_spectrum:
         if c is None:
             c = 1./max([s(l) for l in linspace(300,800,100)])
         self.c = c
+        self.support = getattr(s,"support",(-1e12, 1e12))
         if hasattr(s,"name"):
             self.name = s.name
         if hasattr(s,"plotcolor"):
