@@ -8,14 +8,10 @@
 #include <stddef.h>
 #include <vector>
 using std::vector;
+#include <iostream>
+using std::istream;
+using std::ostream;
 #include <cassert>
-
-// integer power for pre-set array sizes
-template<size_t N, size_t M>
-constexpr size_t pow_nm() {
-    return M? N*pow_nm<N, M? M-1 : M>() : 1;
-}
-
 
 /// Cubic interpolation on N-dimensional uniform grid TODO: boundary conditions unimplemented
 template<size_t N, typename T>
@@ -35,7 +31,7 @@ public:
     /// set grid dimensions; pre-calculate offsets
     void setDimensions(const size_t d[N]);
     /// set user grid coordinates
-    void setUserRange(const T r0[N], const T r1[N], const T e[N]);
+    void setUserRange(const T r0[N], const T r1[N], const T e[N] = NULL);
     /// set grid point value (adds guard values for boundary conditions as needed)
     void set(const size_t i[N], T v);
     
@@ -45,14 +41,19 @@ public:
     T at(const size_t i[N]) { return dat[idx(i) + g_offset]; }
     /// get user coordinate for (user) grid point
     void gridpos(const size_t i[N], T x[N]) const { for(size_t a = 0; a < N; a++) x[a] = (i[a]+2)/sx[a] + ox[a]; }
-
+    
+    
+    /// binary file dump
+    virtual void write(ostream& o) const;
+    /// binary file load
+    virtual void read(istream& is);
+    
 protected:
     static const size_t N_INTERP_PTS = 4;
     
     vector<T> dat;      ///< data, with guard values
     size_t NX[N];       ///< grid dimensions, not counting guard values
     size_t NStep[N];    ///< step size along each axis
-    vector<ptrdiff_t> grid_di;  ///< interpolation grid points precalculated offsets
     size_t g_offset;    ///< offset to skip guard points
     T sx[N];            ///< user coordinates scale for each dimension
     T ox[N];            ///< user coordinates offset for each dimension
@@ -62,13 +63,6 @@ protected:
     /// interpolate point in grid coordinates
     inline T eval_interpolated(const T x[N]) const;
 };
-
-/*
-class BicubicGrid: public NCubicGrid<2,double> {
-public:
-    BicubicGrid();
-};
-*/
 
 ////////////////////////////////////////////
 ////////////////////////////////////////////
@@ -122,28 +116,19 @@ void NCubicGrid<N,T>::setDimensions(const size_t d[N]) {
         ns *= d[a]+4;
     }
     dat.resize(ns);
-    
-    // data offsets for sample points
-    grid_di.clear();
-    size_t c[N];
-    ptrdiff_t i0 = 0;
-    for(size_t a = 0; a < N; a++) {
-        c[a] = 0;
-        i0 -= NStep[a];
-    }
-    do {
-        ptrdiff_t i = i0;
-        for(size_t a = 0; a < N; a++) i += NStep[a]*c[a];
-        grid_di.push_back(i);
-    } while (increment_counter<N,N_INTERP_PTS>(c));
 }
 
 template<size_t N, typename T>
 void NCubicGrid<N,T>::setUserRange(const T r0[N], const T r1[N], const T e[N]) {
     // solution to sx*(r0-ox) = 2-e; sx*(r1-ox) = NX+1+e
     for(size_t a = 0; a < N; a++) {
-        sx[a] = (NX[a]-1+2*e[a])/(r1[a]-r0[a]);
-        ox[a] = ((NX[a]+1+e[a])*r0[a]-(2-e[a])*r1[a])/(NX[a]-1+2*e[a]);
+        if(e) {
+            sx[a] = (NX[a]-1+2*e[a])/(r1[a]-r0[a]);
+            ox[a] = ((NX[a]+1+e[a])*r0[a]-(2-e[a])*r1[a])/(NX[a]-1+2*e[a]);
+        } else {
+            sx[a] = (NX[a]-1)/(r1[a]-r0[a]);
+            ox[a] = ((NX[a]+1)*r0[a]-2*r1[a])/(NX[a]-1);
+        }
     }
 }
 
@@ -168,6 +153,13 @@ T NCubicGrid<N,T>::operator()(const T x[N]) const {
     T xx[N];
     for(size_t a = 0; a < N; a++) xx[a] = sx[a]*(x[a]-ox[a]);
     return eval_interpolated(xx);
+}
+
+
+/// integer power for pre-set array sizes
+template<size_t N, size_t M>
+constexpr size_t pow_nm() {
+    return M? N*pow_nm<N, M? M-1 : M>() : 1;
 }
 
 template<typename T>
@@ -230,4 +222,27 @@ inline T NCubicGrid<N,T>::eval_interpolated(const T x[N]) const {
     T interpdat[pow_nm<4,N>()];
     transfer4N<T,N>(i0, interpdat, NStep);
     return sumreduce_block<T,N>(interpdat, px);
+}
+
+template<size_t N, typename T>
+void NCubicGrid<N,T>::write(ostream& o) const {
+    for(size_t a = 0; a < N; a++) {
+        o.write((char*)&NX[a], sizeof(NX[a]));
+        o.write((char*)&sx[a], sizeof(sx[a]));
+        o.write((char*)&ox[a], sizeof(ox[a]));
+        o.write((char*)&edgeBC[a], sizeof(edgeBC[a]));
+    }
+    o.write((char*)dat.data(), sizeof(dat[0])*dat.size());
+}
+
+template<size_t N, typename T>
+void NCubicGrid<N,T>::read(istream& is) {
+    for(size_t a = 0; a < N; a++) {
+        is.read((char*)&NX[a], sizeof(NX[a]));
+        is.read((char*)&sx[a], sizeof(sx[a]));
+        is.read((char*)&ox[a], sizeof(ox[a]));
+        is.read((char*)&edgeBC[a], sizeof(edgeBC[a]));
+    }
+    setDimensions(NX);
+    is.read((char*)dat.data(), sizeof(dat[0])*dat.size());
 }
