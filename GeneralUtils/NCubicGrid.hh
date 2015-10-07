@@ -10,6 +10,13 @@
 using std::vector;
 #include <cassert>
 
+// integer power for pre-set array sizes
+template<size_t N, size_t M>
+constexpr size_t pow_nm() {
+    return M? N*pow_nm<N, M? M-1 : M>() : 1;
+}
+
+
 /// Cubic interpolation on N-dimensional uniform grid TODO: boundary conditions unimplemented
 template<size_t N, typename T>
 class NCubicGrid {
@@ -53,8 +60,15 @@ protected:
     /// index for coordinate
     size_t idx(const size_t i[N]) const;
     /// interpolate point in grid coordinates
-    T eval_interpolated(const T x[N]) const;
+    inline T eval_interpolated(const T x[N]) const;
 };
+
+/*
+class BicubicGrid: public NCubicGrid<2,double> {
+public:
+    BicubicGrid();
+};
+*/
 
 ////////////////////////////////////////////
 ////////////////////////////////////////////
@@ -156,12 +170,36 @@ T NCubicGrid<N,T>::operator()(const T x[N]) const {
     return eval_interpolated(xx);
 }
 
+template<typename T>
+inline T sum4coeffs(const T* dat, const T* coeffs) {
+    return dat[0]*coeffs[0] + dat[1]*coeffs[1] + dat[2]*coeffs[2] + dat[3]*coeffs[3];
+}
+
+template<typename T, size_t N>
+inline T sumreduce_block(const T* dat, const T coeffs[N*4]) {
+    if(N==1) return sum4coeffs<T>(dat, coeffs);
+    
+    T datreduced[pow_nm<4,N? N-1 : 0>()];
+    for(size_t i=0; i<pow_nm<4,N? N-1 : 0>(); i++)
+        datreduced[i] = sum4coeffs<T>(dat+4*i, coeffs);
+    return sumreduce_block<T,N? N-1 : 0>(datreduced, coeffs+4);
+}
+
+template<typename T, size_t N>
+inline void transfer4N(const T* dIn, T* dOut, const size_t stride[N]) {
+    if(N==1) {
+        for(int i=0; i<4; i++) dOut[i] = dIn[i];
+        return;
+    }
+    for(int i=0; i<4; i++) transfer4N<T,N? N-1 : 0>(dIn + i*stride[N-1], dOut+i*pow_nm<4,N? N-1 : 0>(), stride);
+}
+
 template<size_t N, typename T>
-T NCubicGrid<N,T>::eval_interpolated(const T x[N]) const {
+inline T NCubicGrid<N,T>::eval_interpolated(const T x[N]) const {
     // integral and fractional coordinates; data start index
     int ix[N];              // integer coordinates, including guard offset
     T fx[N];                // fractional coordinates
-    const T* i0 = dat.data();     // data (0,0,0...) pointer
+    const T* i0 = dat.data();     // data[-1,-1,-1...] pointer
     for(size_t a = 0; a < N; a++) {
         ix[a] = int(x[a]);
         fx[a] = x[a]-ix[a];
@@ -174,55 +212,22 @@ T NCubicGrid<N,T>::eval_interpolated(const T x[N]) const {
         }
         assert(1<=ix[a] && ix[a]<=int(NX[a]+1));
         
-        i0 += ix[a]*NStep[a];
+        i0 += (ix[a]-1)*NStep[a];
     }
     
     // cubic interpolating polynomials at each axis' fractional component
-    T px[N][N_INTERP_PTS];
+    T px[N*N_INTERP_PTS];
     for(size_t a = 0; a < N; a++) {
         const T& x = fx[a];
         const T xx = x*x;
         const T xxx = x*xx;
-        px[a][0] = -0.5*(x - 2*xx + xxx);
-        px[a][1] = 1 - 2.5*xx + 1.5*xxx;
-        px[a][2] = 0.5*x + 2*xx - 1.5*xxx;
-        px[a][3] = 0.5*(xxx-xx);
-        
-        //px[a][0] = -0.5*(1-x)*(1-x)*x;
-        //px[a][1] = (1-x)*(1-x*(1.5*x-1));
-        //px[a][2] = -x*(-0.5*(1-x)*(1-x)+x*(2*x-3));
-        //px[a][3] = -0.5*(1-x)*x*x;
+        px[a*4+0] = -0.5*(x - 2*xx + xxx);
+        px[a*4+1] = 1 - 2.5*xx + 1.5*xxx;
+        px[a*4+2] = 0.5*x + 2*xx - 1.5*xxx;
+        px[a*4+3] = 0.5*(xxx-xx);
     }
     
-    // setup for counter start
-    size_t c[N];    // counter
-    T pprod[N+1];   // polynomial products
-    pprod[N] = 1;
-    for(size_t a = 0; a < N; a++) {
-        c[a] = 0;
-        pprod[N-1-a] = pprod[N-a]*px[N-1-a][0];
-    }
-    
-    // sum terms
-    T isum = 0;
-    const ptrdiff_t* di = grid_di.data() ; // offsets to data points
-    while(true) {
-        // sum in contribution term
-        isum += pprod[0] * (*(i0 + *(di++)));
-        
-        // update counter
-        int i = 0;
-        for(; i<N; i++) {
-            c[i]++;
-            if(c[i] >= N_INTERP_PTS) c[i] = 0;
-            else break;
-        }
-        if(i==N) break;
-        
-        // update product based on counter flip
-        do pprod[i] = pprod[i+1] * px[i][c[i]];
-        while(--i >= 0);
-    }
-    
-    return isum;
+    T interpdat[pow_nm<4,N>()];
+    transfer4N<T,N>(i0, interpdat, NStep);
+    return sumreduce_block<T,N>(interpdat, px);
 }
