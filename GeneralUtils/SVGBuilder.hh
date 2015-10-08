@@ -65,6 +65,8 @@ namespace SVG {
     class rect: public XMLBuilder {
     public:
         rect(double x, double y, double dx, double dy, const string& style = ""): XMLBuilder("rect") {
+            if(dx < 0) { x += dx; dx = fabs(dx); }
+            if(dy < 0) { y += dy; dy = fabs(dy); }
             attrs["x"] = to_str(x);
             attrs["y"] = to_str(y);
             attrs["width"] = to_str(dx);
