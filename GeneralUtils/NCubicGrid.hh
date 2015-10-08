@@ -38,7 +38,7 @@ public:
     /// evaluate at given position
     T operator()(const T x[N]) const;
     /// access (user) grid point value
-    T at(const size_t i[N]) { return dat[idx(i) + g_offset]; }
+    T at(const size_t i[N]) const { return dat[idx(i) + g_offset]; }
     /// get user coordinate for (user) grid point
     void gridpos(const size_t i[N], T x[N]) const { for(size_t a = 0; a < N; a++) x[a] = (i[a]+2)/sx[a] + ox[a]; }
     
