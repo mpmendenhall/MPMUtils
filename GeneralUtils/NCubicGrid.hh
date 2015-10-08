@@ -48,9 +48,7 @@ public:
     /// binary file load
     virtual void read(istream& is);
     
-protected:
     static const size_t N_INTERP_PTS = 4;
-    
     vector<T> dat;      ///< data, with guard values
     size_t NX[N];       ///< grid dimensions, not counting guard values
     size_t NStep[N];    ///< step size along each axis
