@@ -37,6 +37,8 @@ public:
     
     /// evaluate at given position
     T operator()(const T x[N]) const;
+    /// evaluate at given position: linear interpolation
+    inline T eval_linear(const T x[N]) const;
     /// access (user) grid point value
     T at(const size_t i[N]) const { return dat[idx(i) + g_offset]; }
     /// get user coordinate for (user) grid point
@@ -160,28 +162,30 @@ constexpr size_t pow_nm() {
     return M? N*pow_nm<N, M? M-1 : M>() : 1;
 }
 
-template<typename T>
-inline T sum4coeffs(const T* dat, const T* coeffs) {
-    return dat[0]*coeffs[0] + dat[1]*coeffs[1] + dat[2]*coeffs[2] + dat[3]*coeffs[3];
+template<typename T, size_t M>
+inline T sumMcoeffs(const T* dat, const T* coeffs) {
+    T s = 0;
+    for(int i=0; i<M; i++) s += dat[i]*coeffs[i];
+    return s;
 }
 
-template<typename T, size_t N>
-inline T sumreduce_block(const T* dat, const T coeffs[N*4]) {
-    if(N==1) return sum4coeffs<T>(dat, coeffs);
+template<typename T, size_t N, size_t M>
+inline T sumreduce_block(const T* dat, const T coeffs[N*M]) {
+    if(N==1) return sumMcoeffs<T, M>(dat, coeffs);
     
-    T datreduced[pow_nm<4,N? N-1 : 0>()];
-    for(size_t i=0; i<pow_nm<4,N? N-1 : 0>(); i++)
-        datreduced[i] = sum4coeffs<T>(dat+4*i, coeffs);
-    return sumreduce_block<T,N? N-1 : 0>(datreduced, coeffs+4);
+    T datreduced[pow_nm<M,N? N-1 : 0>()];
+    for(size_t i=0; i<pow_nm<M,N? N-1 : 0>(); i++)
+        datreduced[i] = sumMcoeffs<T,M>(dat+M*i, coeffs);
+    return sumreduce_block<T,N? N-1 : 0,M>(datreduced, coeffs+M);
 }
 
-template<typename T, size_t N>
-inline void transfer4N(const T* dIn, T* dOut, const size_t stride[N]) {
+template<typename T, size_t N, size_t M>
+inline void transferMN(const T* dIn, T* dOut, const size_t stride[N]) {
     if(N==1) {
-        for(int i=0; i<4; i++) dOut[i] = dIn[i];
+        for(int i=0; i<M; i++) dOut[i] = dIn[i];
         return;
     }
-    for(int i=0; i<4; i++) transfer4N<T,N? N-1 : 0>(dIn + i*stride[N-1], dOut+i*pow_nm<4,N? N-1 : 0>(), stride);
+    for(int i=0; i<M; i++) transferMN<T,N? N-1 : 0,M>(dIn + i*stride[N-1], dOut+i*pow_nm<M,N? N-1 : 0>(), stride);
 }
 
 template<size_t N, typename T>
@@ -218,8 +222,42 @@ inline T NCubicGrid<N,T>::eval_interpolated(const T x[N]) const {
     }
     
     T interpdat[pow_nm<4,N>()];
-    transfer4N<T,N>(i0, interpdat, NStep);
-    return sumreduce_block<T,N>(interpdat, px);
+    transferMN<T,N,4>(i0, interpdat, NStep);
+    return sumreduce_block<T,N,4>(interpdat, px);
+}
+
+template<size_t N, typename T>
+inline T NCubicGrid<N,T>::eval_linear(const T x[N]) const {
+    T xx[N];
+    for(size_t a = 0; a < N; a++) xx[a] = sx[a]*(x[a]-ox[a]);
+    int ix[N];              // integer coordinates, including guard offset
+    T fx[N];                // fractional coordinates
+    const T* i0 = dat.data();     // data[0,0,0...] pointer
+    for(size_t a = 0; a < N; a++) {
+        ix[a] = int(xx[a]);
+        fx[a] = xx[a]-ix[a];
+        if(fx[a]<0) { fx[a] += 1; ix[a] -= 1; }
+        
+        // range check
+        if(ix[a] < 1 || ix[a] > int(NX[a]+1)) {
+            //if(edgeBC[a]==IB_CYCLIC) ix[a] = ((ix[a]-2)+100*NX[a])%NX[a] + 2;
+            return 0;
+        }
+        assert(1<=ix[a] && ix[a]<=int(NX[a]+1));
+        
+        i0 += ix[a]*NStep[a];
+    }
+    
+    T px[N*2];
+    for(size_t a = 0; a < N; a++) {
+        const T& x = fx[a];
+        px[a*2+0] = 1-x;
+        px[a*2+1] = x;
+    }
+    
+    T interpdat[pow_nm<2,N>()];
+    transferMN<T,N,2>(i0, interpdat, NStep);
+    return sumreduce_block<T,N,2>(interpdat, px);
 }
 
 template<size_t N, typename T>
