@@ -32,7 +32,7 @@ ntotal(nt), nsteps(ns), c(0), s(0), verbose(v) {
     }
 }
 
-void ProgressBar::update(unsigned int i) {
+void ProgressBar::update(uint64_t i) {
     if(i<=c) return;
     c = i;
     

@@ -38,7 +38,7 @@ public:
     ~ProgressBar() { if(verbose) printf("* Done.\n"); }
     
     /// update status at i items completed
-    void update(unsigned int i);
+    void update(uint64_t i);
     
 protected:
     
