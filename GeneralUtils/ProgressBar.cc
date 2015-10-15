@@ -36,7 +36,8 @@ void ProgressBar::update(unsigned int i) {
     if(i<=c) return;
     c = i;
     
-    for(; s < (nsteps*c)/ntotal; s++) {
+    unsigned int smax = (uint64_t(nsteps)*uint64_t(c))/ntotal;
+    for(; s < smax; s++) {
         if(verbose) {
             printf("*");
             fflush(stdout);
