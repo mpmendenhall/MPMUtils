@@ -55,7 +55,7 @@ void N3BodyUncorrelated::gen_evt_weighted() {
     phi_1 = 2*M_PI*myR->u[4];
     n_from_angles(c_1, phi_1, n_1);
     
-    evt_w = evt_w0 = plainPhaseSpace(E_2/m_2);
+    evt_w = plainPhaseSpace(E_2/m_2);
     
     // proton kinematics
     mag_p_f = 0;

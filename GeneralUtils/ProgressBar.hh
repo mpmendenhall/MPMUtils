@@ -32,7 +32,7 @@ class ProgressBar {
 public:
     
     /// constructor, given total number of items and number of output steps
-    ProgressBar(unsigned int nt, unsigned int ns = 20, bool v=true, const std::string& label="");
+    ProgressBar(uint64_t nt, unsigned int ns = 20, bool v=true, const std::string& label="");
     
     /// destructor
     ~ProgressBar() { if(verbose) printf("* Done.\n"); }
@@ -42,10 +42,10 @@ public:
     
 protected:
     
-    const unsigned int ntotal;  ///< total number of items to completion
+    const uint64_t ntotal;      ///< total number of items to completion
     const unsigned int nsteps;  ///< number of steps to mark
     
-    unsigned int c;             ///< number of items completed
+    uint64_t c;                 ///< number of items completed
     unsigned int s;             ///< steps displayed
     const bool verbose;         ///< whether to display the progress bar
 };

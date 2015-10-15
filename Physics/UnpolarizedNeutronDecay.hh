@@ -64,7 +64,6 @@ public:
     double mag_p_f;     ///< magnitude of recoil momentum
     
     double evt_w;       ///< calculated event weight for kinematics
-    double evt_w0;      ///< weight coming from uncorrected spectrum shape
     
     double pt2_max = 0; ///< optional limit on maximum electron transverse momentum
     double c_2_min;     ///< optional minimum electron cos theta, calculated from pt2_max
@@ -145,6 +144,8 @@ public:
     double Mtilde;      ///< (3.2)
     double M_VS;        ///< virtual and soft brem amplitude (3.9)
     double M_BR;        ///< hard brem amplitude (4.4)
+    
+    double evt_w0;      ///< event weight without radiative corrections
     
     /// number of random entries required
     virtual size_t n_random() const override { return 8; }

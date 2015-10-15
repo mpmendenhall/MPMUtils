@@ -21,7 +21,7 @@
 
 #include "ProgressBar.hh"
 
-ProgressBar::ProgressBar(unsigned int nt, unsigned int ns, bool v, const std::string& label):
+ProgressBar::ProgressBar(uint64_t nt, unsigned int ns, bool v, const std::string& label):
 ntotal(nt), nsteps(ns), c(0), s(0), verbose(v) {
     if(verbose) {
         printf("%s+",label.c_str()); 
@@ -36,7 +36,7 @@ void ProgressBar::update(unsigned int i) {
     if(i<=c) return;
     c = i;
     
-    unsigned int smax = (uint64_t(nsteps)*uint64_t(c))/ntotal;
+    unsigned int smax = (uint64_t(nsteps)*c)/ntotal;
     for(; s < smax; s++) {
         if(verbose) {
             printf("*");
