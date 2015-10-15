@@ -2,7 +2,7 @@
 #ifndef POLARIZEDBETAASYM_HH
 #define POLARIZEDBETAASYM_HH
 
-#include "UnpolarizedBeta.hh"
+#include "NeutronPhysConstants.hh"
 
 // references:
 // [0] Wilkinson, Analysis of Neutron Beta-Decay, Nucl. Phys. A 377 (1982) 474-504

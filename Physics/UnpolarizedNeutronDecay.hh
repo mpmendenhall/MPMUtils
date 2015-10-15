@@ -40,7 +40,7 @@ public:
     const double G2_V = G_F*G_F*0.94920; ///< |G_V|^2 = |V_ud G_F g_V|^2
     const double m = m_n;               ///< initial nucleus mass
     const double m_2 = m_e;             ///< mass of charged lepton
-    const double Delta = m_n - m_p;     ///< decay energy m - m_f;
+    const double Delta = delta_mn_mp;   ///< decay energy m - m_f;
     
     /// Generate weighted event
     virtual void gen_evt_weighted() = 0;
