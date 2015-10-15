@@ -69,8 +69,13 @@ void OutputManager::writeROOT() {
 TH1F* OutputManager::registeredTH1F(string hname, string htitle, unsigned int nbins, float x0, float x1) {
     if(rootOut) rootOut->cd();
     TH1F* h = new TH1F(hname.c_str(),htitle.c_str(),nbins,x0,x1);
-    h->GetYaxis()->SetTitleOffset(1.4);
     return (TH1F*)addObject(h);
+}
+
+TH1D* OutputManager::registeredTH1D(string hname, string htitle, unsigned int nbins, float x0, float x1) {
+    if(rootOut) rootOut->cd();
+    TH1D* h = new TH1D(hname.c_str(),htitle.c_str(),nbins,x0,x1);
+    return (TH1D*)addObject(h);
 }
 
 TH2F* OutputManager::registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1) {

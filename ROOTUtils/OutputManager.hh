@@ -53,6 +53,8 @@ public:
     
     /// generate a TH1F registered with this runs output objects list
     TH1F* registeredTH1F(string hname, string htitle, unsigned int nbins, float x0, float x1);
+    /// generate a TH1D registered with this runs output objects list
+    TH1D* registeredTH1D(string hname, string htitle, unsigned int nbins, float x0, float x1);
     /// generate a TH2F registered with this runs output objects list
     TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
     /// print current canvas
