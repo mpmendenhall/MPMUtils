@@ -14,10 +14,15 @@
 using std::map;
 using std::vector;
 
-// hyperbolic sine
-//double my_sinh(double x) { return (exp(x)-exp(-x))*0.5; }
-/// inverse hyperbolic tangent
-//double atanh(double x) throw() { return 0.5*log((1.+x)/(1.-x)); }
+double plainPhaseSpaceCDF(double W, double W0) {
+    if(W <= 1) return 0;
+    
+    double x = sqrt(W*W-1);
+    double W2 = W*W;
+    double W3 = W*W2;
+    double W4 = W2*W2;
+    return W0*log(x+W)/4 + x/60 * (12*W4 - 30*W3*W0 + 4*W2*(5*W0*W0-1) + 15*W*W0 -20*W0*W0 - 8);
+}
 
 /// struct for 1-index coefficients
 struct coeff1 {

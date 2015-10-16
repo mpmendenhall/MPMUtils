@@ -22,6 +22,8 @@ double SpenceL(double x, unsigned int N = 20);
 
 /// beta decay phase space without corrections
 inline double plainPhaseSpace(double W, double W0=beta_W0) { return (1.<W && W<W0)?sqrt(W*W-1)*W*(W0-W)*(W0-W):0; }
+/// integral from 1 to W of plainPhaseSpace
+double plainPhaseSpaceCDF(double W, double W0=beta_W0);
 /// beta for particle with given KE
 inline double beta(double KE, double m = m_e) { return sqrt(KE*KE+2*m*KE)/(m+KE); }
 

@@ -46,6 +46,12 @@ public:
     virtual void gen_evt_weighted() = 0;
     /// calculate cos theta between electron, neutrino
     double cos_theta_e_nu() const { return dot3(n_1, n_2); }
+    /// calcualte "proton inferred" cos theta between electron, neutrino
+    double proton_ctheta() const;
+    /// radiative correction weight from fit to [Glu93] tables 
+    double Gluck93_radcxn_wt() const;
+    /// recoil and weak magnetism correction weight
+    double B59_rwm_cxn_wt() const;
     
     double E_2;         ///< electron total energy [keV]
     double p_2;         ///< electron momentum magnitude [keV/c]
@@ -84,20 +90,25 @@ protected:
     static inline double dot3(const double a[3], const double b[3]) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
 };
 
-/// Angular-uncorrelated 3-body neutron decay generator
+/// Angular-uncorrelated (a=0), uncorrected 3-body neutron decay generator (weight = 1 efficient)
 class N3BodyUncorrelated: public NeutronDecayKinematics {
 public:
     /// Constructor
-    N3BodyUncorrelated(NKine_Rndm_Src* R): NeutronDecayKinematics(R) { }
+    N3BodyUncorrelated(NKine_Rndm_Src* R);
     /// Generate weighted event
     virtual void gen_evt_weighted() override;
 
-    double c_1, c_2;    ///< phase-space cosines
-    double phi_1, phi_2;///< phase-space azimuths
-
+    double c_1, c_2;            ///< phase-space cosines
+    double phi_1, phi_2;        ///< phase-space azimuths
+    
     /// number of random entries required
     virtual size_t n_random() const override { return 5; }
+    
+protected:
+    static const size_t NPTS = 16384;   ///< lookup table dimensions
+    double invcdf[NPTS+4];              ///< inverse CDF lookup table with interpolation guard entries
 };
+
 
 /// Event generator for unpolarized neutron decays, including radiative corrections
 /// Implementation of F. Gl\"uck, Computer Physics Communications 101 (1997) 223--231 ,
@@ -189,11 +200,20 @@ protected:
     void calc_rho();
 };
 
-/// Recoil, weak magnetism weight factor, from Bilenki'i 1959 Eq. (10)
+/// Recoil, weak magnetism weight factor (1 + delta rwm)
+/// from Bilenkii et. al., JETP 37 (10), No. 6, 1960
+/// formula in equation (10), with 1+3*lambda^2 factored out
+/// and also dividing out (1+beta*a0*cth) to avoid double-counting 'a' contribution.
+/// lambda = |lambda| > 0 sign convention.
 double B59_rwm_cxn(double E, double cos_thn);
 
 /// Radiative correction according to Garcia, Maya, Phys. Rev. D, 1978 (irrelevant for lab (proton) observables)
 double GM78_radiative_cxn(double E, double cos_thn);
+
+/// Lab-observable radiative correction r_{e\nu}
+/// Parametrized fit to table in Gluck, Phys. Rev. D 47 (1993), 2840-2848
+/// x in [0,1] is rescaled electron kinetic energy; c is "proton inferred" \cos \theta_{e\nu}
+inline double Gluck93_r_enu(double x, double c) { return 0.002 + 0.014*x + (-0.009+0.179*x)*c; }
 
 
 #endif

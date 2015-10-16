@@ -19,4 +19,7 @@ const double proton_M0 = m_p/m_e;               ///< proton mass, ``natural'' un
 const double neutron_M0 = m_n/m_e;              ///< neutron mass, ``natural'' units
 const double gamma_euler = 0.577215;            ///< Euler's constant
 
+/// a_0 calculated from given lambda
+inline double calc_a0(double l = lambda) { return (1-l*l)/(1+3*l*l); }
+
 #endif

@@ -25,17 +25,70 @@ void NeutronDecayKinematics::n_from_angles(double c, double phi, double n[3]) {
     n[2] = c;
 }
 
+double NeutronDecayKinematics::proton_ctheta() const {
+    double pep[3];
+    for(int i=0; i<3; i++) pep[i] = n_2[i]*p_2 + p_f[i];
+    return -dot3(pep, n_2)/sqrt(dot3(pep,pep));
+}
+
+double NeutronDecayKinematics::Gluck93_radcxn_wt() const {
+    double c = proton_ctheta();
+    double x = (E_2-m_2)/(Delta-m_2);
+    return 1 + Wilkinson_g_a2pi(E_2/m_2) + 0.01*Gluck93_r_enu(x,c);
+}
+
+double NeutronDecayKinematics::B59_rwm_cxn_wt() const {
+    return B59_rwm_cxn(E_2, cos_theta_e_nu());
+}
+
 ////////////////////////////////////
 ////////////////////////////////////
+
+N3BodyUncorrelated::N3BodyUncorrelated(NKine_Rndm_Src* R): NeutronDecayKinematics(R) {
+    // build cumulative density table
+    double cdf[NPTS];
+    double nrm = plainPhaseSpaceCDF(beta_W0);
+    for(size_t i = 0; i < NPTS; i++) {
+        double W = 1 + double(i)/double(NPTS-1)*(beta_W0-1);
+        cdf[i] = plainPhaseSpaceCDF(W)/nrm;
+    }
+    cdf[0] = -1e-6;
+    cdf[NPTS-1] = 1.000001;
+    
+    // linearly interpolate inverse table, plus guard values
+    size_t j = 1;
+    invcdf[0] = 0;
+    for(size_t i = 1; i < NPTS; i++) {
+        double x = double(i)/double(NPTS-1);
+        while(x > cdf[j]) j++; // make cdf[j] >= x
+        double f = (cdf[j]-x)/(cdf[j]-cdf[j-1]);
+        invcdf[i+2] = neutronBetaEp*(j-f)/double(NPTS-1);
+    }
+    invcdf[1] = -2*invcdf[3];
+    invcdf[NPTS+1] = neutronBetaEp;
+    invcdf[NPTS+2] = 6*neutronBetaEp - 5*invcdf[NPTS];
+    invcdf[NPTS+3] = 1e9;
+}
+
+double eval_cubic_interpl(double y, const double* d) {
+    return ( -0.5*d[0]*(1-y)*(1-y)*y
+    +d[1]*(1-y)*(1-y*(1.5*y-1))
+    -d[2]*y*(-0.5*(1-y)*(1-y)+y*(2*y-3))
+    -0.5*d[3]*(1-y)*y*y );
+}
 
 void N3BodyUncorrelated::gen_evt_weighted() {
     assert(myR);
     myR->next(); // random seed
-    
     evt_w = 1;
     
-    // electron energy, momentum magnitude, velocity
-    E_2 = m_2 + (Delta-m_2)*myR->u[0];
+    // electron energy cubic interpolated from inverse CDF lookup table
+    double jf = myR->u[0]*(NPTS-1);
+    size_t j = size_t(jf);
+    jf -= j;
+    E_2 = m_2 + eval_cubic_interpl(jf, invcdf + j + 1);
+    
+    // electron momentum magnitude, velocity
     p_2 = sqrt(E_2*E_2 - m_2*m_2);
     beta = sqrt(1-m_2*m_2/E_2/E_2);
     
@@ -54,8 +107,6 @@ void N3BodyUncorrelated::gen_evt_weighted() {
     c_1 = 2*myR->u[3] - 1;
     phi_1 = 2*M_PI*myR->u[4];
     n_from_angles(c_1, phi_1, n_1);
-    
-    evt_w = plainPhaseSpace(E_2/m_2);
     
     // proton kinematics
     mag_p_f = 0;
@@ -336,10 +387,6 @@ double Gluck_beta_MC::rwm_cxn() const {
 }
 
 double B59_rwm_cxn(double E, double cos_thn) {
-    // from Bilenkii et. al., JETP 37 (10), No. 6, 1960
-    // formula in equation (10), with 1+3*lambda^2 factored out
-    // and also dividing out (1+beta*a0*cth) to avoid double-counting 'a' contribution.
-    // lambda = |lambda| > 0 sign convention.
     
     const double mu = 2.792847356-(-1.91304273);
     const double Delta = m_n-m_p;
@@ -364,7 +411,7 @@ double B59_rwm_cxn(double E, double cos_thn) {
 }
 
 double GM78_radiative_cxn(double E, double cos_thn) {
-    const double E_m = m_n - m_p;
+    const double E_m = delta_mn_mp;
     double beta = sqrt(1-m_e*m_e/(E*E));
     double athb = atanh(beta);
     double c0 = athb/beta;
