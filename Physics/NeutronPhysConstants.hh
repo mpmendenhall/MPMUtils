@@ -11,7 +11,7 @@ const double neutronBetaEp = delta_mn_mp - m_e; ///< neutron beta decay endpoint
 const double m_p = 938272.046;                  ///< +-(21), proton mass [keV/c^2]. PDG 2014 = CODATA 2010
 const double m_n = m_p + delta_mn_mp;           ///< neutron mass [keV/c^2]
 const double alpha = .0072973525664;            ///< +-(17), fine structure constant. CODATA 2014
-const double lambda = +1.2723;                  ///< +-(23), lambda = |g_A/g_V|, PDG 2014 value, Wilkinson sign convention
+const double lambda = 1.2723;                  ///< +-(23), lambda = |g_A/g_V|, PDG 2014 value, Wilkinson sign convention
 const double A0_PDG = -0.1184;                  ///< +-(10), beta decay asymmetry A_0, PDG 2014
 const double beta_W0 = delta_mn_mp/m_e;         ///< neutron beta decay energy, ``natural'' units
 const double neutron_R0 = 0.0025896*1.2;        ///< neutron and proton radius approximation, in "natural" units (1.2fm)/(hbar/m_e*c)

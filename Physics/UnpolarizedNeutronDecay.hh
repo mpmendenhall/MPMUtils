@@ -125,7 +125,7 @@ public:
     /// Show "efficiency" of MC (5.22)
     void showEffic();
     /// test calculate hard photon decay probability by MC
-    void test_calc_P_H();
+    void test_calc_P_H(size_t n_sim = 1000000);
     
     /// additional recoil, weak magnetism weight factor, from Bilenki'i 1959 Eq. (10)
     double rwm_cxn() const;

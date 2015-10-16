@@ -120,11 +120,14 @@ void N3BodyUncorrelated::gen_evt_weighted() {
 ////////////////////////////////////
 ////////////////////////////////////
 
+
 double Gluck_beta_MC::z_VS() const {
     // (3.10)
     if(!omega) return 0;
+    double L = -SpenceL(2*beta/(1+beta)); // note, Gluck uses opposite sign convention for L than "normal"!
+    //double L = -gsl_sf_dilog(2*beta/(1+beta));
     return alpha/M_PI * (3./2.*log(m_p/m_2) + 2*(N/beta-1)*log(2*omega/m_2)
-                         +2*N/beta*(1-N) + 2/beta*SpenceL(2*beta/(1+beta)) - 3./8.);
+                         +2*N/beta*(1-N) + 2/beta*L - 3./8.);
 }
 
 double Gluck_beta_MC::z_H() const {
@@ -206,7 +209,7 @@ double Gluck_beta_MC::calc_hard_brem() {
     const double H_0 = E_1*(-(E_2+K)*Psq + K/p4_2_dot_k4);
     // (4.6)
     const double H_1 = ( p_1_dot_p_2 * ( -Psq + 1./p4_2_dot_k4 )
-                        + p_1_dot_k * ( (E_2+K)/K -m_2*m_2/p4_2_dot_k4)/p4_2_dot_k4);
+                        + p_1_dot_k * ((E_2+K)/K -m_2*m_2/p4_2_dot_k4) / p4_2_dot_k4);
     // (4.3)
     const double esq = 4*M_PI*alpha;
     // (4.4)
@@ -223,7 +226,7 @@ double Gluck_beta_MC::calc_hard_brem() {
 
 void Gluck_beta_MC::calc_beta_N() {
     // (2.10)
-    beta = sqrt(1-m_2*m_2/E_2/E_2);
+    beta = sqrt(1-m_2*m_2/(E_2*E_2));
     if(!(beta==beta)) beta = 0;
     // (3.3)
     N = 0.5*log((1+beta)/(1-beta));
@@ -330,20 +333,19 @@ void Gluck_beta_MC::calc_rho() {
     
     // (6.1)
     r_rho = 100*(rho_VS+rho_H)/rho_0;
-    r_H = 100*rho_H/rho_0;
+    r_H = 100*P_H;
     
     printf("\trho_0 = %g, rho_VS = %g, rho_H = %g => P_H = %g\n", rho_0, rho_VS, rho_H, P_H);
     printf("\tr_rho = %g (Gluck: 1.503),\tr_H = %g (Gluck: 0.847)\n", r_rho, r_H);
 }
 
-void Gluck_beta_MC::test_calc_P_H() {
+void Gluck_beta_MC::test_calc_P_H(size_t n_sim) {
     
     // (5.16), (5.17) MC calculation of rho_H
     double t_rho_H = 0;
     double sw2 = 0;
-    const int n_sim = 1000000;
-    printf("Calculating P_H using %i points... ", n_sim);
-    for(int i=0; i<n_sim; i++) {
+    printf("Calculating P_H using %zu points... ", n_sim);
+    for(size_t i=0; i<n_sim; i++) {
         if(!(i%(n_sim/20))) { printf("*"); fflush(stdout); }
         
         myR->next();

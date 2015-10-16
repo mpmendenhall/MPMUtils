@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <cassert>
+#include <gsl/gsl_sf_dilog.h>
 
 #ifdef USE_ROOT_MATH
 #include <TMath.h>
@@ -264,7 +265,10 @@ double WilkinsonQ(double, double W, double W0, double M) {
     return 1.-M_PI*alpha/(M*sqrt(W*W-1))*(1+B*(W0-W)/(3.*W));
 }
 
-double SpenceL(double x, unsigned int N) {
+double SpenceL(double x) {
+    return gsl_sf_dilog(x);
+    
+    /* sum approximation
     assert(-1.<x && x<=1.);
     double s = 0;
     double xk = x;
@@ -273,6 +277,7 @@ double SpenceL(double x, unsigned int N) {
         xk *= x;
     }
     return -s;
+    */
 }
 
 //-----------------------------------------------------//

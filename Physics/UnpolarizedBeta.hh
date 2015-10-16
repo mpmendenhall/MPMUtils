@@ -15,8 +15,8 @@
 
 // NOTE: functions of W are using Wilkinson's ``natural'' units for energy, W=(KE+m_e)/m_e
 
-/// Spence function, approximated by N-term sum
-double SpenceL(double x, unsigned int N = 20);
+/// Spence function L = - int_0^x ln(1-z)/z dz, approximated by N-term sum
+double SpenceL(double x);
 
 //-------------- Spectrum corrections ------------------
 
@@ -25,7 +25,7 @@ inline double plainPhaseSpace(double W, double W0=beta_W0) { return (1.<W && W<W
 /// integral from 1 to W of plainPhaseSpace
 double plainPhaseSpaceCDF(double W, double W0=beta_W0);
 /// beta for particle with given KE
-inline double beta(double KE, double m = m_e) { return sqrt(KE*KE+2*m*KE)/(m+KE); }
+inline double beta(double KE, double m = m_e) { return sqrt(1-m*m/((KE+m)*(KE+m))); }
 
 /// lowest order approximation of F
 inline double crudeF(double Z, double W) { return 1+M_PI*alpha*Z*W/sqrt(W*W-1.); }
