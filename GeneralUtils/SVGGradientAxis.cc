@@ -49,12 +49,25 @@ void SVGGradientAxis::finalize() {
     if(logscale) {
         if(range.lo[0] < 1e-6*range.hi[0]) range.lo[0] = 1e-6*range.hi[0];
     }
-    SVG::text* uLabel = new SVG::text(to_str(range.hi[0]), 0.107, 0.06);
-    uLabel->attrs["dominant-baseline"]="middle";
-    axisGroup->addChild(uLabel);
-    SVG::text* lLabel = new SVG::text(to_str(range.lo[0]), 0.107, 0.995);
-    lLabel->attrs["dominant-baseline"]="middle";
-    axisGroup->addChild(lLabel);
+    
+    if(!axticks.size()) {
+        addtick(range.lo[0]);
+        addtick(range.hi[0]);
+    }
+    
+    for(auto const& t: axticks) {
+        double zz = 1-axisUnits(t.z);
+        if(zz < 0 || zz > 1) continue;
+        SVG::line* tln = new SVG::line(0.1-0.03*pow(0.66,t.level), zz, .1 + 0.01*pow(0.5,t.level), zz, "stroke:black;stroke-width:"+to_str(0.005*pow(2,-t.level)));
+        axisGroup->addChild(tln);
+        if(!t.label.size()) continue;
+        if(zz < 0.06) zz = 0.06;
+        else if(zz > 0.995) zz = 0.995;
+        else zz += 0.025;        // ugly manual tweak to center text
+        SVG::text* tktxt = new SVG::text(t.label, 0.115, zz);
+        //tktxt->attrs["dominant-baseline"]="middle"; // unfortunately unsupported
+        axisGroup->addChild(tktxt);
+    }
 }
 
 string SVGGradientAxis::gradient_remap(const PlaneEquation<2,float>& P) const {
@@ -67,4 +80,13 @@ string SVGGradientAxis::gradient_remap(const PlaneEquation<2,float>& P) const {
     txstr += "scale("+to_str(1./sqrt(mg2))+") ";
     txstr += "translate("+to_str(-axisUnits(P.P[0]))+",0)";
     return txstr;
+}
+
+void SVGGradientAxis::addtick(double z, const string& lbl, int lvl) {
+    tick t;
+    t.z = z;
+    if(lbl == "auto") t.label = to_str(z);
+    else t.label = lbl;
+    t.level = lvl;
+    axticks.insert(t);
 }

@@ -11,6 +11,8 @@
 #include "SVGBuilder.hh"
 #include "BBox.hh"
 #include <cfloat>
+#include <set>
+using std::set;
 
 /// D-dimensional plane equation
 template<size_t D, typename val_tp>
@@ -42,9 +44,19 @@ public:
     void finalize();
     /// Determine gradient mapping given face plane equation
     string gradient_remap(const PlaneEquation<2,float>& P) const;
+    /// add an axis label tick
+    void addtick(double z, const string& lbl = "auto", int lvl = 0);
+    
+    struct tick {
+        double z;
+        int level;
+        string label;
+        bool operator<(const tick& rhs) const { return z < rhs.z; }
+    };
     
     bool logscale = false;                                      ///< log scale setting
     BBox<1,double> range = empty_double_bbox<1>();              ///< axis range
+    set<tick> axticks;                                          ///< axis tick locations
     SVG::group* axisGroup = new SVG::group();                   ///< group containing axis information
     
     color::Gradient G;                                          ///< gradient color definition
