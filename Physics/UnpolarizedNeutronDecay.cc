@@ -125,7 +125,6 @@ double Gluck_beta_MC::z_VS() const {
     // (3.10)
     if(!omega) return 0;
     double L = -SpenceL(2*beta/(1+beta)); // note, Gluck uses opposite sign convention for L than "normal"!
-    //double L = -gsl_sf_dilog(2*beta/(1+beta));
     return alpha/M_PI * (3./2.*log(m_p/m_2) + 2*(N/beta-1)*log(2*omega/m_2)
                          +2*N/beta*(1-N) + 2/beta*L - 3./8.);
 }
@@ -186,13 +185,9 @@ double Gluck_beta_MC::calc_hard_brem() {
     vec_rel_n_2(c_gamma, phi_gamma, n_gamma);
     
     // neutrino direction in hard case is in fixed coordinate system
-    // (5.11) applied to sine of neutrino angle from z axis
-    const double s_1 = sqrt(1-c_1*c_1);
-    // (5.12) applied to neutrino direction
-    n_1[0] = s_1*cos(phi_1);
-    n_1[1] = s_1*sin(phi_1);
-    n_1[2] = c_1;
-    
+    // (5.11), (5.12) applied to neutrino direction
+    n_from_angles(c_1, phi_1, n_1);
+   
     // (5.13) calculate momentum dot products
     const double p_1_dot_k = E_1 * K * dot3(n_1, n_gamma);
     const double p_2_dot_k = beta * E_2 * K * c_gamma;
@@ -275,15 +270,15 @@ void Gluck_beta_MC::gen_evt_weighted() {
     assert(myR);
     myR->next(); // random seed
     
-    if(P_H < myR->u[4]) {
-        myR->u[4] = (myR->u[4]-P_H)/(1-P_H);
+    if(P_H.q < myR->u[4]) {
+        myR->u[4] = (myR->u[4]-P_H.q)/(1-P_H.q);
         propose_kinematics();
-        evt_w *= calc_soft()/Wavg_0VS;
+        evt_w *= calc_soft()/Wavg_0VS * P_H.np_wt();
         evt_w0 /= Wavg_0VS;
     } else {
-        myR->u[4] /= P_H;
+        myR->u[4] /= P_H.q;
         propose_kinematics();
-        evt_w *= calc_hard_brem()/w_avg;
+        evt_w *= calc_hard_brem()/w_avg * P_H.p_wt();
         evt_w0 = 0;
     }
     calc_proton();
@@ -294,7 +289,7 @@ void Gluck_beta_MC::calc_rho() {
     printf("Calculating correction rates:\n");
     
     // numerical integration over electron energy E2 by Simpson's Rule
-    const int npts = 1001;
+    const int npts = 4001;
     rho_0 = rho_VS = rho_H = 0;
     const double C = G2_V * zeta / (2*pow(M_PI,3));
     for(int i=0; i<=npts; i++) {
@@ -324,7 +319,7 @@ void Gluck_beta_MC::calc_rho() {
     rho_0VS = rho_0 + rho_VS;
     
     // (5.21)
-    P_H = rho_H/(rho_H + rho_0VS);
+    P_H.p = P_H.q = rho_H/(rho_H + rho_0VS);
     
     // (5.15)
     V_g = -32*pow(M_PI,3)*(Delta-m_2)*log(C_S);
@@ -333,9 +328,9 @@ void Gluck_beta_MC::calc_rho() {
     
     // (6.1)
     r_rho = 100*(rho_VS+rho_H)/rho_0;
-    r_H = 100*P_H;
+    r_H = 100*P_H.p;
     
-    printf("\trho_0 = %g, rho_VS = %g, rho_H = %g => P_H = %g\n", rho_0, rho_VS, rho_H, P_H);
+    printf("\trho_0 = %g, rho_VS = %g, rho_H = %g => P_H = %g\n", rho_0, rho_VS, rho_H, P_H.p);
     printf("\tr_rho = %g (Gluck: 1.503),\tr_H = %g (Gluck: 0.847)\n", r_rho, r_H);
 }
 
@@ -364,9 +359,10 @@ void Gluck_beta_MC::test_calc_P_H(size_t n_sim) {
     t_rho_H *= V_g/n_sim;
     
     // (5.21)
-    double t_P_H = t_rho_H/(rho_H + rho_0VS);
+    double t_P_H = t_rho_H/(t_rho_H + rho_0VS);
+    double dt_P_H = dt_rho_H/(t_rho_H + rho_0VS);
     printf("\tMC rho_H = %g +/- %g, P_H = %g\n", t_rho_H, dt_rho_H, t_P_H);
-    printf("\tMC r_H = %g\n", 100*t_rho_H/rho_0);
+    printf("\tMC r_H = %g +- %g;\t\tV_g = %g\n", 100*t_P_H, 100*dt_P_H, V_g);
     
     showEffic();
 }

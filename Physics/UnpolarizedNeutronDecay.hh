@@ -109,6 +109,15 @@ protected:
     double invcdf[NPTS+4];              ///< inverse CDF lookup table with interpolation guard entries
 };
 
+/// Math for re-assigning "natural" weighted splitting p, (1-p) to re-weighted q, (1-q)
+class Reweighter {
+public:
+    Reweighter(double pp = 0, double qq = 0): p(pp), q(qq) { }
+    double p;
+    double q;
+    double p_wt() const { return p/q; }
+    double np_wt() const { return (1-p)/(1-q); }
+};
 
 /// Event generator for unpolarized neutron decays, including radiative corrections
 /// Implementation of F. Gl\"uck, Computer Physics Communications 101 (1997) 223--231 ,
@@ -142,7 +151,7 @@ public:
     double rho_0VS;     ///< soft decay rate = rho_0 + rho_VS;
     double r_rho;       ///< total radiative correction to decay rate (6.1)
     double r_H;         ///< hard photon contribution to total radiative correction
-    double P_H;         ///< probability of hard photon decay (5.21)
+    Reweighter P_H;     ///< probability of hard photon decay (5.21)
     double E_0VS;       ///< MC efficiency for virtual-soft events (5.22)
     double E_H;         ///< MC efficiency for hard decay events (5.22)
     
