@@ -111,8 +111,8 @@ void combo_pdf(const vector<string>& namelist, const string& outname) {
         if(rc) printf("%s: %i\n", cmd.c_str(), rc);
         return;
     }
-    string cmd = join(namelist," ");
-    cmd = "pdfunite " + cmd + " " + outname +"; rm " + cmd;
+    string cmd = join(namelist," "); // file list
+    cmd = "if command -v pdfunite; then pdfunite " + cmd + " " + outname +"; else pdftk " + cmd + " cat output " + outname + "; fi; rm " + cmd;
     int rc = system(cmd.c_str());
     if(rc) printf("%s: %i\n", cmd.c_str(), rc);
 }
