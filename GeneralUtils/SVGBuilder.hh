@@ -13,6 +13,7 @@
 #include "StringManip.hh"
 #include "ColorSpec.hh"
 #include "BBox.hh"
+#include <cmath>
 
 namespace SVG {
 
