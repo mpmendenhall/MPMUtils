@@ -37,7 +37,7 @@ int fftw_best_nearest_size(int i, int dmax) {
         powcount.back() = resid;
         if(better(powcount,bestcount)) { bestcount = powcount; jbest = j; } 
     }
-    m.insert(pair< pair<int,int>, int >(pair<int,int>(i,dmax),jbest));
+    m.emplace(pair<int,int>(i,dmax),jbest);
     return jbest;
 }
 
@@ -83,7 +83,7 @@ Convolver_FFT& Convolver_FFT::get_ffter(unsigned int m) {
     auto it = ffters.find(m);
     if(it != ffters.end()) return *(it->second);
     Convolver_FFT* f = new Convolver_FFT(m);
-    ffters.insert(pair<unsigned int, Convolver_FFT*>(m,f));
+    ffters.emplace(m,f);
     return *f;
 }
 
@@ -101,7 +101,7 @@ const vector< complex<double> >& ConvolverFactory::getKernel(unsigned int i) {
     auto it = kdata.find(i);
     if(it != kdata.end()) return it->second;
     
-    it = kdata.insert(pair<unsigned int, vector< complex<double> > >(i, vector< complex<double> >(i/2+1))).first;
+    it = kdata.emplace(i, vector< complex<double> >(i/2+1)).first;
     vector<double> kern = calcKernel(i);
     
     Convolver_FFT& ffter = Convolver_FFT::get_ffter(i);

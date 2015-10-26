@@ -35,12 +35,12 @@ Stringmap::Stringmap(const string& str) {
         auto keyval = split(s,"=");
         if(keyval.size() != 2)
             continue;
-        dat.insert(std::make_pair(strip(keyval[0]),strip(keyval[1])));
+        dat.emplace(strip(keyval[0]),strip(keyval[1]));
     }
 }
 
 void Stringmap::insert(const string& s, const string& v) {
-    dat.insert(std::make_pair(s,v));
+    dat.emplace(s,v);
 }
 
 void Stringmap::insert(const string& s, double d) {

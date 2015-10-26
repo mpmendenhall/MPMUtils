@@ -67,7 +67,7 @@ sqlite3_stmt* SQLite_Helper::loadStatement(const string& qry) {
     if(it != statements.end()) return it->second;
     sqlite3_stmt* stmt = NULL;
     setQuery(qry.c_str(), stmt);
-    statements.insert(pair<string,sqlite3_stmt*>(qry,stmt));
+    statements.emplace(qry,stmt);
     return stmt;
 }
 

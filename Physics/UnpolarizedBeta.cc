@@ -225,9 +225,9 @@ double WilkinsonL0(double Z, double W, double R) {
     if(!aiZ.count(Z)) {
         vector<coeff1> aiZi;
         for(unsigned int i=0; i<6; i++)
-            aiZi.push_back(coeff1(i,sumCoeffs(ai[i],alpha*Z)));
-        aiZ.insert(std::make_pair(Z,aiZi));
-        aminus1Z.insert(std::make_pair(Z,sumCoeffs(aminus1,alpha*Z)));
+            aiZi.push_back(coeff1(i, sumCoeffs(ai[i], alpha*Z)));
+        aiZ.emplace(Z, aiZi);
+        aminus1Z.emplace(Z, sumCoeffs(aminus1,alpha*Z));
     }
     
     if(W<=1)

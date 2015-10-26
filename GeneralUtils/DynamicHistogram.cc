@@ -13,20 +13,20 @@ void DynamicHistogram::fill(double x, double w) {
     total += d;
     
     if(!dat.size()) {
-        dat.insert(pair<double,DHBinData>(bincenter(d),d));
+        dat.emplace(bincenter(d),d);
         return;
     }
     
     auto it = choosebin(d);
     if(it == dat.end()) {
-        dat.insert(pair<double,DHBinData>(bincenter(d),d));
+        dat.emplace(bincenter(d),d);
     } else {
         it->second += d;
         double c = bincenter(it->second);
         if(c != it->first) {
             d = it->second;
             dat.erase(it);
-            dat.insert(pair<double,DHBinData>(c,d));
+            dat.emplace(c,d);
         }
     }
 }

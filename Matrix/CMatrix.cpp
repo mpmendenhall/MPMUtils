@@ -61,7 +61,7 @@ cmatrix_fft& cmatrix_fft::get_ffter(unsigned int m) {
     auto it = ffters.find(m);
     if(it != ffters.end()) return *(it->second);
     cmatrix_fft* f = new cmatrix_fft(m);
-    ffters.insert(std::pair<unsigned int, cmatrix_fft*>(m,f));
+    ffters.emplace(m,f);
     return *f;
 }
 

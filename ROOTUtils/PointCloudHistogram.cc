@@ -46,9 +46,9 @@ void PointCloudHistogram::Fill(const float* x, float v) {
     int idx;
     float dist;
     myTree->T->FindNearestNeighbors(x, 1, &idx, &dist);
-    map<int, float>::iterator it = bins.find(idx);
+    auto it = bins.find(idx);
     if(it != bins.end()) it->second += v;
-    else bins.insert(std::pair<int,float>(idx,v));
+    else bins.emplace(idx,v);
 }
 
 void PointCloudHistogram::project(const float* v, TGraph& g) const {

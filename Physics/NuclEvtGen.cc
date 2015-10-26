@@ -21,8 +21,7 @@ unsigned int PSelector::select(double* x) const {
 }
 
 void PSelector::scale(double s) {
-    for(vector<double>::iterator it = cumprob.begin(); it != cumprob.end(); it++)
-        (*it) *= s;
+    for(auto& p: cumprob) p *= s;
 }
 
 double PSelector::getProb(unsigned int n) const {
@@ -74,7 +73,7 @@ NucLevel::NucLevel(const Stringmap& m): fluxIn(0), fluxOut(0) {
 
 void NucLevel::display(bool) const {
     printf("[%i] A=%i Z=%i jpi=%s\t E = %.2f keV\t HL = %.3g s\t Flux in = %.3g, out = %.3g\n",
-    n,A,Z,jpi.c_str(),E,hl,fluxIn,fluxOut);
+           n,A,Z,jpi.c_str(),E,hl,fluxIn,fluxOut);
 }
 
 //-----------------------------------------
@@ -110,7 +109,7 @@ void DecayAtom::genAuger(vector<NucDecayEvent>& v) {
 
 void DecayAtom::display(bool) const {
     printf("%s %i: pAuger = %.3f, Eauger = %.2f, initCapt = %.3f\n",
-    BET->getName().c_str(),BET->getZ(),pAuger,Eauger,IMissing);
+           BET->getName().c_str(),BET->getZ(),pAuger,Eauger,IMissing);
 }
 
 //-----------------------------------------
@@ -129,13 +128,13 @@ ConversionGamma::ConversionGamma(NucLevel& f, NucLevel& t, const Stringmap& m): 
     for(unsigned int i=0; i<nshells; i++) {
         vector<string> v = split(m.getDefault("CE_"+c_to_str(BindingEnergyTable::shellnames[i]),""),"@");
         if(!v.size()) break;
-                                           float_err shprob(v[0]);
+        float_err shprob(v[0]);
         shells.addProb(shprob.x);
         shellUncert.push_back(shprob.err*Igamma);
         vector<double> ss;
         if(v.size()==1) ss.push_back(1.);
-                                           else ss = sToDoubles(v[1],":");
-                                           subshells.push_back(PSelector());
+        else ss = sToDoubles(v[1],":");
+        subshells.push_back(PSelector());
         for(unsigned int s=0; s<ss.size(); s++)
             subshells.back().addProb(ss[s]);
     }
@@ -175,8 +174,8 @@ void ConversionGamma::display(bool verbose) const {
     if(verbose) {
         for(unsigned int n=0; n<subshells.size(); n++) {
             printf("\t[%c] %.2fkeV\t%.3g%%\t%.3g%%\t",
-            BindingEnergyTable::shellnames[n],shellAverageE(n),
-            100.*shells.getProb(n),100.0*shells.getProb(n)*Itotal);
+                   BindingEnergyTable::shellnames[n],shellAverageE(n),
+                   100.*shells.getProb(n),100.0*shells.getProb(n)*Itotal);
             if(subshells[n].getN()>1) {
                 for(unsigned int i=0; i<subshells[n].getN(); i++) {
                     if(i) printf(":");
@@ -240,7 +239,7 @@ betaTF1((f.name+"-"+t.name+"_Beta").c_str(),this,&BetaDecayTrans::evalBeta,0,1,0
     betaTF1.SetRange(0,from.E-to.E);
     if(from.jpi==to.jpi) { BSG.M2_F = 1; BSG.M2_GT = 0; }
     else { BSG.M2_GT = 1; BSG.M2_F = 0; } // TODO not strictly true; need more general mechanism to fix
-        betaQuantiles = new TF1_Quantiles(betaTF1);
+    betaQuantiles = new TF1_Quantiles(betaTF1);
 }
 
 BetaDecayTrans::~BetaDecayTrans() {
@@ -274,104 +273,102 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     
     // load levels data
     vector<Stringmap> levs = Q.retrieve("level");
-    for(vector<Stringmap>::iterator it = levs.begin(); it != levs.end(); it++) {
-        levels.push_back(NucLevel(*it));
+    for(auto& l: levs) {
+        levels.push_back(NucLevel(l));
         transIn.push_back(vector<TransitionBase*>());
         transOut.push_back(vector<TransitionBase*>());
         levelDecays.push_back(PSelector());
     }
     std::sort(levels.begin(),levels.end(),sortLevels);
-    for(vector<NucLevel>::iterator it = levels.begin(); it != levels.end(); it++) {
-        smassert(levelIndex.find(it->name) == levelIndex.end());
-        it->n = it-levels.begin();
-        levelIndex.insert(std::make_pair(it->name,it->n));
+    int nlev = 0;
+    for(auto& l: levels) {
+        smassert(levelIndex.find(l.name) == levelIndex.end());
+        l.n = nlev++;
+        levelIndex.emplace(l.name, l.n);
     }
     
     // set up internal conversions
     vector<Stringmap> gammatrans = Q.retrieve("gamma");
-    for(vector<Stringmap>::iterator it = gammatrans.begin(); it != gammatrans.end(); it++) {
-        ConversionGamma* CG = new ConversionGamma(levels[levIndex(it->getDefault("from",""))],levels[levIndex(it->getDefault("to",""))],*it);
-        addTransition(CG);
+    for(auto& g: gammatrans) {
+        addTransition(new ConversionGamma(levels[levIndex(g.getDefault("from",""))],levels[levIndex(g.getDefault("to",""))],g));
     }
     if(Q.getDefault("norm","gamma","") == "groundstate") {
         double gsflux = 0;
-        for(vector<NucLevel>::iterator levit = levels.begin(); levit != levels.end(); levit++)
-            if(!levit->fluxOut)
-                gsflux += levit->fluxIn;
-            for(vector<TransitionBase*>::iterator transit = transitions.begin(); transit != transitions.end(); transit++)
-                (*transit)->scale(1./gsflux);
-            for(vector<NucLevel>::iterator levit = levels.begin(); levit != levels.end(); levit++)
-                levit->scale(1./gsflux);
-}
-
-// set up Augers
-for(vector<TransitionBase*>::iterator transit = transitions.begin(); transit != transitions.end(); transit++)
-    (*transit)->toAtom->ICEK += (*transit)->getPVacant(0)*(*transit)->Itotal;
-vector<Stringmap> augers = Q.retrieve("AugerK");
-for(vector<Stringmap>::iterator it = augers.begin(); it != augers.end(); it++) {
-    int Z = it->getDefault("Z",0);
-    if(!Z) {
-        SMExcept e("BadAugerZ");
-        e.insert("Z",Z);
-        throw(e);
+        for(auto& l: levels)
+            if(!l.fluxOut)
+                gsflux += l.fluxIn;
+            for(auto& t: transitions)
+                t->scale(1./gsflux);
+            for(auto& l: levels)
+                l.scale(1./gsflux);
     }
-    getAtom(Z)->load(*it);
-}
-
-// set up beta decays
-vector<Stringmap> betatrans = Q.retrieve("beta");
-for(vector<Stringmap>::iterator it = betatrans.begin(); it != betatrans.end(); it++) {
-    BetaDecayTrans* BD = new BetaDecayTrans(levels[levIndex(it->getDefault("from",""))],
-                                                                           levels[levIndex(it->getDefault("to",""))],
-                                                                           it->getDefault("positron",0),
-                                                                           it->getDefault("forbidden",0));
-    BD->Itotal = it->getDefault("I",0)/100.0;
-    if(it->count("M2_F") || it->count("M2_GT")) {
-        BD->BSG.M2_F = it->getDefault("M2_F",0);
-        BD->BSG.M2_GT = it->getDefault("M2_GT",0);
-}
-addTransition(BD);
-}
-
-// set up electron captures
-vector<Stringmap> ecapts = Q.retrieve("ecapt");
-for(vector<Stringmap>::iterator it = ecapts.begin(); it != ecapts.end(); it++) {
-    NucLevel& Lorig = levels[levIndex(it->getDefault("from",""))];
-    string to = it->getDefault("to","AUTO");
-    if(to == "AUTO") {
-        for(vector<NucLevel>::iterator Ldest = levels.begin(); Ldest != levels.end(); Ldest++) {
-            if(Ldest->A == Lorig.A && Ldest->Z+1 == Lorig.Z && Ldest->E < Lorig.E) {
-                double missingFlux = Ldest->fluxOut - Ldest->fluxIn;
-                if(missingFlux <= 0) continue;
-                                    ECapture* EC = new ECapture(Lorig,*Ldest);
-                EC->Itotal = missingFlux;
-                addTransition(EC);
-            }
+    
+    // set up Augers
+    for(auto& t: transitions)
+        t->toAtom->ICEK += t->getPVacant(0)*t->Itotal;
+    vector<Stringmap> augers = Q.retrieve("AugerK");
+    for(auto& a: augers) {
+        int Z = a.getDefault("Z",0);
+        if(!Z) {
+            SMExcept e("BadAugerZ");
+            e.insert("Z",Z);
+            throw(e);
         }
-} else {
-    NucLevel& Ldest = levels[levIndex(to)];
-    smassert(Ldest.A == Lorig.A && Ldest.Z+1 == Lorig.Z && Ldest.E < Lorig.E);
-    ECapture* EC = new ECapture(Lorig,Ldest);
-    EC->Itotal = it->getDefault("I",0.);
-    addTransition(EC);
-}
-}
-
-setCutoff(t);
+        getAtom(Z)->load(a);
+    }
+    
+    // set up beta decays
+    vector<Stringmap> betatrans = Q.retrieve("beta");
+    for(auto& bt: betatrans) {
+        BetaDecayTrans* BD = new BetaDecayTrans(levels[levIndex(bt.getDefault("from",""))],
+                                                levels[levIndex(bt.getDefault("to",""))],
+                                                bt.getDefault("positron",0),
+                                                bt.getDefault("forbidden",0));
+        BD->Itotal = bt.getDefault("I",0)/100.0;
+        if(bt.count("M2_F") || bt.count("M2_GT")) {
+            BD->BSG.M2_F = bt.getDefault("M2_F",0);
+            BD->BSG.M2_GT = bt.getDefault("M2_GT",0);
+        }
+        addTransition(BD);
+    }
+    
+    // set up electron captures
+    vector<Stringmap> ecapts = Q.retrieve("ecapt");
+    for(auto& ec: ecapts) {
+        NucLevel& Lorig = levels[levIndex(ec.getDefault("from",""))];
+        string to = ec.getDefault("to","AUTO");
+        if(to == "AUTO") {
+            for(auto& Ldest: levels) {
+                if(Ldest.A == Lorig.A && Ldest.Z+1 == Lorig.Z && Ldest.E < Lorig.E) {
+                    double missingFlux = Ldest.fluxOut - Ldest.fluxIn;
+                    if(missingFlux <= 0) continue;
+                    ECapture* EC = new ECapture(Lorig,Ldest);
+                    EC->Itotal = missingFlux;
+                    addTransition(EC);
+                }
+            }
+        } else {
+            NucLevel& Ldest = levels[levIndex(to)];
+            smassert(Ldest.A == Lorig.A && Ldest.Z+1 == Lorig.Z && Ldest.E < Lorig.E);
+            ECapture* EC = new ECapture(Lorig,Ldest);
+            EC->Itotal = ec.getDefault("I",0.);
+            addTransition(EC);
+        }
+    }
+    
+    setCutoff(t);
 }
 
 NucDecaySystem::~NucDecaySystem() {
-    for(vector<TransitionBase*>::iterator it = transitions.begin(); it != transitions.end(); it++)
-        delete(*it);
-    for(map<unsigned int,DecayAtom*>::iterator it = atoms.begin(); it != atoms.end(); it++)
-        delete(it->second);
+    for(auto& t: transitions) delete(t);
+    for(auto& kv: atoms) delete(kv.second);
 }
 
 DecayAtom* NucDecaySystem::getAtom(unsigned int Z) {
-    map<unsigned int,DecayAtom*>::iterator it = atoms.find(Z);
+    auto it = atoms.find(Z);
     if(it != atoms.end()) return it->second;
-                                    DecayAtom* A = new DecayAtom(BEL.getBindingTable(Z));
-    atoms.insert(std::pair<unsigned int,DecayAtom*>(Z,A));
+    DecayAtom* A = new DecayAtom(BEL.getBindingTable(Z));
+    atoms.emplace(Z,A);
     return A;
 }
 
@@ -448,8 +445,8 @@ void NucDecaySystem::genDecayChain(vector<NucDecayEvent>& v, double* rnd, unsign
     if(init)
         n = lStart.select(rnd);
     if(!levels[n].fluxOut || (!init && levels[n].hl > tcut)) return;
-                 
-                 TransitionBase* T = transOut[n][levelDecays[n].select(rnd)];
+    
+    TransitionBase* T = transOut[n][levelDecays[n].select(rnd)];
     T->run(v, rnd);
     if(rnd) rnd += T->getNDF(); // remove random numbers "consumed" by continuous processes
     unsigned int nAugerK = T->nVacant(0);
@@ -465,7 +462,7 @@ unsigned int NucDecaySystem::getNDF(unsigned int n) const {
         // maximum DF over all starting levels
         for(unsigned int i=0; i<levels.size(); i++) {
             if(!lStart.getProb(i)) continue;
-                 unsigned int lndf = getNDF(i);
+            unsigned int lndf = getNDF(i);
             ndf = lndf>ndf?lndf:ndf;
         }
     } else {
@@ -494,12 +491,11 @@ NucDecayLibrary::NucDecayLibrary(const std::string& datp, double t):
 datpath(datp), tcut(t), BEL(SMFile(datpath+"/ElectronBindingEnergy.txt")) { }
 
 NucDecayLibrary::~NucDecayLibrary() {
-    for(map<std::string,NucDecaySystem*>::iterator it = NDs.begin(); it != NDs.end(); it++)
-        delete(it->second);
+    for(auto& kv: NDs) delete(kv.second);
 }
 
 NucDecaySystem& NucDecayLibrary::getGenerator(const std::string& nm) {
-    map<std::string,NucDecaySystem*>::iterator it = NDs.find(nm);
+    auto it = NDs.find(nm);
     if(it != NDs.end()) return *(it->second);
     string fname = datpath+"/"+nm+".txt"; 
     if(!fileExists(fname)) {
@@ -507,20 +503,18 @@ NucDecaySystem& NucDecayLibrary::getGenerator(const std::string& nm) {
         e.insert("fname",fname);
         throw(e);
     }
-    std::pair<map<std::string,NucDecaySystem*>::iterator,bool> ret;
-    ret = NDs.insert(std::pair<std::string,NucDecaySystem*>(nm,new NucDecaySystem(SMFile(fname),BEL,tcut)));
-    return *(ret.first->second);
+    return *(NDs.emplace(nm, new NucDecaySystem(SMFile(fname),BEL,tcut)).first->second);
 }
 
 bool NucDecayLibrary::hasGenerator(const std::string& nm) {
     if(cantdothis.count(nm)) return false;
-                   try {
-                       getGenerator(nm);
-                       return true;
-                   } catch(...) {
-                       cantdothis.insert(nm);
-                   }
-                   return false;
+    try {
+        getGenerator(nm);
+        return true;
+    } catch(...) {
+        cantdothis.insert(nm);
+    }
+    return false;
 }
 
 //-----------------------------------------
@@ -541,7 +535,7 @@ GammaForest::GammaForest(const std::string& fname, double E2keV) {
             continue;
         vector<double> v = sToDoubles(s," ,\t");
         if(v.size() != 2) continue;
-                                           gammaE.push_back(v[0]*E2keV);
+        gammaE.push_back(v[0]*E2keV);
         gammaProb.addProb(v[1]);
     }
     fin.close();

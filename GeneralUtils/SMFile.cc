@@ -61,7 +61,7 @@ SMFile::SMFile(const string& fname, bool readit) {
 }
 
 void SMFile::insert(const string& s, const Stringmap& v) {
-    dat.insert(std::make_pair(s,v));
+    dat.emplace(s,v);
 }
 
 void SMFile::erase(const string& s) { dat.erase(s); }

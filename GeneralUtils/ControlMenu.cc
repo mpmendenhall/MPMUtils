@@ -143,7 +143,7 @@ void NameSelector::addChoice(string d, string nm, Selector_Option_Flags o, strin
     assert(nameMap.find(nm) == nameMap.end());
     if(!mname.size())
         mname = nm;
-    nameMap.insert(std::make_pair(nm,choiceNames.size()));
+    nameMap.emplace(nm,choiceNames.size());
     
     choiceNames.push_back(nm);
     choiceDescrips.push_back(d);
@@ -153,7 +153,7 @@ void NameSelector::addChoice(string d, string nm, Selector_Option_Flags o, strin
 }
 
 void NameSelector::addSynonym(string arg0, string syn) {
-    map<string,unsigned int>::iterator it = nameMap.find(arg0);
+    auto it = nameMap.find(arg0);
     assert(it != nameMap.end());
     NameSelector::addChoice(choiceDescrips[it->second],syn,
                             Selector_Option_Flags(oflags[it->second] | SELECTOR_SYNONYM | SELECTOR_HIDDEN),
@@ -206,29 +206,29 @@ void NameSelector::doIt() {
                 continue;
             
             // find matching selection name
-            map<string,unsigned int>::iterator it = nameMap.find(myArg);
+            auto it = nameMap.find(myArg);
             
             // if no direct match, apply soft matching when available
             if(it == nameMap.end() && softmatch) {
                 
                 // find soft matches
                 vector<map<string,unsigned int>::iterator> matches;
-                for(map<string,unsigned int>::iterator i = nameMap.begin(); i != nameMap.end(); i++)
-                    if(!(oflags[i->second] & SELECTOR_DISABLED) && softmatch(myArg,i->first))
-                        matches.push_back(i);
-                    
-                    // exactly one soft match is just right
-                    if(matches.size() == 1) {
-                        myArg = matches.back()->first;
-                        it = matches.back();
-                    }
-                    // too many ambiguous soft matches
-                    else if(matches.size() > 1) {
-                        printf("Error: ambiguous selection from:\n");
-                        for(unsigned int i=0; i<matches.size(); i++)
-                            printf("\t%s\n",matches[i]->first.c_str());
-                        continue;
-                    }
+                for(map<string,unsigned int>::iterator i = nameMap.begin(); i != nameMap.end(); i++) {
+                    if(!(oflags[i->second] & SELECTOR_DISABLED) && softmatch(myArg,i->first)) matches.push_back(i);
+                }
+                
+                // exactly one soft match is just right
+                if(matches.size() == 1) {
+                    myArg = matches.back()->first;
+                    it = matches.back();
+                }
+                // too many ambiguous soft matches
+                else if(matches.size() > 1) {
+                    printf("Error: ambiguous selection from:\n");
+                    for(unsigned int i=0; i<matches.size(); i++)
+                        printf("\t%s\n",matches[i]->first.c_str());
+                    continue;
+                }
             }
             
             if(it == nameMap.end() || (oflags[it->second] & SELECTOR_DISABLED)) {
@@ -266,8 +266,7 @@ void OptionsMenu::addChoice(NamedInteractor* M, string nm, Selector_Option_Flags
 
 void menutils_PrintQue(StreamInteractor* S) {
     printf("[ ");
-    for(deque<string>::iterator it = S->mydeque->begin(); it != S->mydeque->end(); it++)
-        printf("'%s' ",it->c_str());
+    for(auto const& s: *(S->mydeque)) printf("'%s' ", s.c_str());
     printf("]\n");
 }
 

@@ -89,7 +89,6 @@ public:
     ostream& latexForm(ostream& o) const;
     
     map<Vec<N,unsigned int>, T> terms;                     ///< terms of the polynomial
-    typename map< Vec<N,unsigned int> , T >::iterator it;  ///< iterator for terms
 };
 
 template<unsigned int N, typename T>
@@ -142,7 +141,6 @@ template<unsigned int N, typename T>
 Polynomial<N,T> Polynomial<N,T>::lowerTriangleTerms(unsigned int o) {
     Polynomial<N,T> lt = Polynomial<N,T>();
     Polynomial<N,T> t = Polynomial<N,T>::allTerms(o);
-    typename map< Vec<N,unsigned int> , T >::iterator it;
     for(auto const& kv: t.terms)
         if(kv.first.sum() <= o)
             lt.terms[kv.first] = 1.0;

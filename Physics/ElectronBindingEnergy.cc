@@ -58,7 +58,7 @@ void BindingEnergyTable::display() const {
 BindingEnergyLibrary::BindingEnergyLibrary(const SMFile& Q) {
     vector<Stringmap> v = Q.retrieve("binding");
     for(unsigned int i=0; i<v.size(); i++)
-        tables.insert(std::pair<unsigned int,BindingEnergyTable*>(v[i].getDefault("Z",0),new BindingEnergyTable(v[i])));
+        tables.emplace(v[i].getDefault("Z",0), new BindingEnergyTable(v[i]));
 }
 
 BindingEnergyLibrary::~BindingEnergyLibrary() {
