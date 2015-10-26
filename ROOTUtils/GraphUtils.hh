@@ -15,12 +15,23 @@
 #include <TCanvas.h>
 #include <vector>
 
+/// bin edges for log histograms
+vector<double> logbinedges(unsigned int nbins, double bmin, double bmax);
 /// logarithmically binned histogram
-TH1F* logHist(const string& nm, const string& descrip, unsigned int nbins, double bmin, double bmax);
+template<class TH1x = TH1F>
+TH1x* logHist(const string& nm, const string& descrip, unsigned int nbins, double bmin, double bmax) {
+    return new TH1x(nm.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data());
+}
 /// log-lin binned 2D histogram
-TH2F* loglinHist(const string& nm, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax);
+template<class TH2x = TH2F>
+TH2x* loglinHist(const string& nm, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax) {
+    return new TH2x(nm.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data(), nby, ymin, ymax);
+}
 /// log-log binned 2D histogram
-TH2F* loglogHist(const string& nm, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax);
+template<class TH2x = TH2F>
+TH2x* loglogHist(const string& nm, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax) {
+    return new TH2x(nm.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data(), nby, logbinedges(nby,ymin,ymax).data());
+}
 /// bin-to-bin derivative of histogram, with optional scale factor
 TGraphErrors* histoDeriv(const TH1* h, unsigned int dxi = 1, double s = 1.0);
 

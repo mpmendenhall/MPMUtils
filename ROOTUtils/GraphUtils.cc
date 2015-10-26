@@ -17,22 +17,6 @@ vector<double> logbinedges(unsigned int nbins, double bmin, double bmax) {
     return binEdges;
 }
 
-TH1F* logHist(const string& nm, const string& descrip, unsigned int nbins, double bmin, double bmax) {
-    vector<Double_t> binEdges = logbinedges(nbins,bmin,bmax);
-    return new TH1F(nm.c_str(), descrip.c_str(), nbins, binEdges.data());
-}
-
-TH2F* loglinHist(const string& nm, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax) {
-    vector<Double_t> binEdges = logbinedges(nbins,bmin,bmax);
-    return new TH2F(nm.c_str(), descrip.c_str(), nbins, binEdges.data(), nby, ymin, ymax);
-}
-
-TH2F* loglogHist(const string& nm, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax) {
-    vector<Double_t> binEdges = logbinedges(nbins,bmin,bmax);
-    vector<Double_t> binEdgesY = logbinedges(nby,ymin,ymax);
-    return new TH2F(nm.c_str(), descrip.c_str(), nbins, binEdges.data(), nby, binEdgesY.data());
-}
-
 void fill_interp(TH1* h, double x, double w) {
     if(!h) return;
     TAxis* Ax = h->GetXaxis();
