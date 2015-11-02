@@ -219,11 +219,13 @@ void setupSlideStyle(TStyle* S) {
     //S->SetLabelOffset(0.02, "X");
     S->SetPadBottomMargin(0.14);
     S->SetPadLeftMargin(0.15);
-    S->SetTitleSize(0.06,"xyz");
-    S->SetTitleOffset(1.0,"X");
-    S->SetTitleOffset(1.1,"Y");
-    S->SetTitleOffset(1.0,"Z");
-    S->SetTitleFontSize(0.08);
+    
+    S->SetTitleSize(0.05,"xyz");
+    S->SetTitleOffset(1.25,"z");
+    S->SetTitleOffset(1.2,"y");
+    S->SetTitleOffset(0.95,"x");
+    S->SetTitleBorderSize(0);
+    
     S->SetTitleW(1.0);
     S->SetTitleY(0.992);
     S->SetFillColor(0);
