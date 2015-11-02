@@ -83,10 +83,10 @@ LinEqSolver::LinEqSolver(size_t mm, size_t nn): m(mm), n(nn) {
 }
 
 LinEqSolver::~LinEqSolver() {
-    if(M) delete M;
-    if(x) delete x;
-    if(y) delete y;
-    if(r) delete r;
+    if(M) gsl_matrix_free(M);
+    if(x) gsl_vector_free(x);
+    if(y) gsl_vector_free(y);
+    if(r) gsl_vector_free(r);
 }
 
 void LinEqSolver::sety(size_t i, double v) {
@@ -101,7 +101,7 @@ void LinEqSolver::setM(size_t i, size_t j, double v) {
 
 void LinEqSolver::solve() {
     if(!(M && y && r)) return;
-    if(x) delete x;
+    if(x) gsl_vector_free(x);
     x = lsmin(M,y,r);
     M = NULL;
 }
