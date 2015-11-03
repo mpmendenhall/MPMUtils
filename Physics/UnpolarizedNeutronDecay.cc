@@ -124,7 +124,7 @@ void N3BodyUncorrelated::gen_evt_weighted() {
 double Gluck_beta_MC::z_VS() const {
     // (3.10)
     if(!omega) return 0;
-    double L = -SpenceL(2*beta/(1+beta)); // note, Gluck uses opposite sign convention for L than "normal"!
+    double L = SpenceL(2*beta/(1+beta));
     return alpha/M_PI * (3./2.*log(m_p/m_2) + 2*(N/beta-1)*log(2*omega/m_2)
                          +2*N/beta*(1-N) + 2/beta*L - 3./8.);
 }
@@ -430,3 +430,58 @@ double GM78_radiative_cxn(double E, double cos_thn) {
             + beta*cos_thn*(1 + phth2 - lambda*lambda*(1 + phth2)) )/r0;
 }
 
+double Gluck93_F_C(double E_2, double b) {
+    // (2.5)
+    const double R = 0.01/(4*m_e);
+    return 1 + alpha*M_PI/b + alpha*alpha*(11./4. - gamma_euler - log(2*b*E_2*R) + M_PI*M_PI/(3*b*b));
+}
+
+double Gluck93_Distribution::calc_W_0C(double E_2, double E_f) {
+    // (3.3) neutrino energy and proton-recoil-corrected endpoints
+    double E_1 = m_i - E_2 - E_f;
+    double E_2m = Delta - (Delta*Delta - m_2*m_2)/(2*m_i);
+    double E_1m = Delta - (Delta*Delta + m_2*m_2)/(2*m_i);
+    double E_fm = m_f + (Delta*Delta - m_2*m_2)/(2*m_i);
+    // (3.2) recoil-order corrected spectrum without Fermi function
+    double D_V = E_2*(E_2m-E_2) + E_1*(E_1m-E_1) - m_f*(E_fm-E_f);
+    double D_A = E_2*(E_2m-E_2) + E_1*(E_1m-E_1) + m_f*(E_fm-E_f);
+    double D_I = 2*(E_2*(E_2m-E_2)-E_1*(E_1m-E_1));
+    double W_0 = m_i * G2_V / (4*M_PI*M_PI*M_PI) * (D_V + lambda*lambda*D_A + lambda*(1+2*kappa)*D_I);
+    
+    double p_f = sqrt(E_f*E_f - m_f*m_f);
+    double v_f = p_f/E_f;
+    double c_f = 0; // TODO cos electron/proton angle = p_2.p_f / |p_2||p_f|
+    double beta_r = fabs(beta-(1-beta*beta)*v_f*c_f); // (3.4) electron-proton relative velocity
+    // (2.5)
+    double Fhat_C = Gluck93_F_C(E_2, beta_r);
+    
+    // (3.1)
+    return W_0C = W_0 * Fhat_C;
+}
+
+double Gluck93_Distribution::calc_Wenu_0Ca(double E_2, double c) {
+    calc_Wenu_0(E_2, c); // gets p_2, beta
+    
+    // (4.3)
+    double d = m_i - E_2;
+    double E_fc = (d*d + p_2*p_2 + m_f*m_f + 2*d*p_2*c)/(2*(d+p_2*c));
+    calc_W_0C(E_2, E_fc);
+    
+    // (4.4)
+    dEfc_dc = p_2*(E_2m - E_2)/m_i * (1 + 2*E_2/m_i*(1-beta*c));
+    
+    
+    double x = (E_2-m_2)/(E_2m-m_2);    // (2.6)
+    double r_enu = Gluck93_r_enu(x,c);  // from parametrized fit to Table V
+    double r_e = 100*Wilkinson_g_a2pi(E_2/m_2);
+    // (4.2)
+    return Wenu_0Ca = W_0C * dEfc_dc * (1 + 0.01*r_e + 0.01*r_enu);
+}
+
+double Gluck93_Distribution::calc_Wenu_0(double E_2, double c) {
+    // (2.5)
+    p_2 = sqrt(E_2*E_2 - m_2*m_2);
+    beta = p_2/E_2;
+    // (4.6)
+    return Wenu_0 = G2_V*(1+3*lambda*lambda)/(4*M_PI*M_PI*M_PI)*p_2*E_2*pow(E_2m-E_2,2)*(1+a0*beta*c);
+}

@@ -209,6 +209,38 @@ protected:
     void calc_rho();
 };
 
+/// Implementation of F. Gluck, Phys Rev D 47(7), pp.2840--2848, 1993
+class Gluck93_Distribution {
+public:
+    /// Constructor
+    Gluck93_Distribution() { }
+    
+    const double G_F = 1.1663787e-17;   ///< Fermi coupling constant, [/keV^2]
+    const double G2_V = G_F*G_F*0.94920; ///< |G_V|^2 = |V_ud G_F g_V|^2
+    const double m_i = m_n;             ///< initial nucleus mass
+    const double m_f = m_p;             ///< final nucleus mass
+    const double m_2 = m_e;             ///< mass of charged lepton
+    const double Delta = delta_mn_mp;   ///< decay energy m_i - m_f;
+    const double E_2m = Delta - (Delta*Delta-m_2*m_2)/(2*m_i);  ///< (2.3) recoil-corrected endpoint
+    const double kappa = delta_mu/2.;   ///< magnetic contribution
+    const double a0 = calc_a0();        ///< a_0 base asymmetry
+    
+    /// Calculate electron/(inferred)nu distribution with full corrections
+    double calc_Wenu_0Ca(double E_2, double c);
+    /// Calculate electron/proton phase space, including recoil-order but not radiative corrections
+    double calc_W_0C(double E_2, double E_f);
+    /// Calculate electron/nu phase space uncorrected
+    double calc_Wenu_0(double E_2, double c);
+    
+    double Wenu_0Ca;    ///< (4.2) electron/(inferred)nu phase space with all corrections
+    double Wenu_0;      ///< (4.6) zeroth-order approximated elecrton/nu distribution
+    double W_0C;        ///< (3.1) electron/proton phase space with Fermi function
+    double dEfc_dc;     ///< (4.4)
+    double p_2;         ///< | electron momentum |
+    double beta;        ///< electron velocity/c
+};
+
+
 /// Recoil, weak magnetism weight factor (1 + delta rwm)
 /// from Bilenkii et. al., JETP 37 (10), No. 6, 1960
 /// formula in equation (10), with 1+3*lambda^2 factored out

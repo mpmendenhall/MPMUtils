@@ -15,8 +15,10 @@
 
 // NOTE: functions of W are using Wilkinson's ``natural'' units for energy, W=(KE+m_e)/m_e
 
-/// Spence function L = - int_0^x ln(1-z)/z dz, approximated by N-term sum
-double SpenceL(double x);
+/// dilog function, L = -int_0^x ln(1-z)/z dz
+double dilog(double x);
+/// Spence function with positive sign convention, L = +int_0^x ln(1-z)/z dz
+inline double SpenceL(double x) { return -dilog(x); }
 
 //-------------- Spectrum corrections ------------------
 
