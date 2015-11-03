@@ -385,26 +385,32 @@ double Gluck_beta_MC::rwm_cxn() const {
 }
 
 double B59_rwm_cxn(double E, double cos_thn) {
+    // Expecting lambda = |lambda| sign convention
     
-    const double mu = 2.792847356-(-1.91304273);
+    const double mu = delta_mu;
     const double Delta = m_n-m_p;
+    const double M = m_n;
     
     const double beta = sqrt(1-m_e*m_e/(E*E));
     const double x = 1 + 3*lambda*lambda;
     const double c1 = 1 + lambda*lambda;
     const double c2 = 1 - lambda*lambda;
-    const double c3 = lambda + mu;
+    const double lpm = lambda + mu;
     const double c4 = 1 + lambda*lambda + 2*lambda*mu;
     
-    double A = ( 1 + (3 + 4*lambda*mu/x)*E/m_n
-                - c4/x * m_e*m_e/(m_n*E)
-                - 2*lambda*c3*Delta/m_p/x);
+    // note, compared to Bilenkii A(E), we've already factored out the spectrum shape,
+    // leaving 1+O(E/M) angle-independent shape correction term
+    double A = ( 1 + (3 + 4*lambda*mu/x)*E/M
+                - c4/x * m_e*m_e/(M*E)
+                - 2*lambda*lpm*Delta/M/x);
+    // angle-dependent terms
     double a0 = c2/x;
-    double a = a0 + ( 4*lambda*c1*c3*Delta/m_n
-                     +c2*c4*m_e*m_e/(m_n*E)
-                     -(8*lambda*c1*mu + 3*x*x)*E/m_n )/(x*x);
-    double b = -3*c2/x*E/m_n;
+    double a = a0 + ( 4*lambda*c1*lpm*Delta/M
+                     +c2*c4*m_e*m_e/(M*E)
+                     -(8*lambda*c1*mu + 3*x*x)*E/M )/(x*x);
+    double b = -3 * a0 * E/M;
     
+    // divide out 1+a0*beta*cos_thn zeroth-order angular dependence to produce correction factor
     return A*(1 + beta*a*cos_thn + beta*beta*b*cos_thn*cos_thn)/(1+beta*a0*cos_thn);
 }
 
@@ -436,7 +442,7 @@ double Gluck93_F_C(double E_2, double b) {
     return 1 + alpha*M_PI/b + alpha*alpha*(11./4. - gamma_euler - log(2*b*E_2*R) + M_PI*M_PI/(3*b*b));
 }
 
-double Gluck93_Distribution::calc_W_0C(double E_2, double E_f) {
+double Gluck93_Distribution::calc_W_0C(double E_2, double E_f, double c_f) {
     // (3.3) neutrino energy and proton-recoil-corrected endpoints
     double E_1 = m_i - E_2 - E_f;
     double E_2m = Delta - (Delta*Delta - m_2*m_2)/(2*m_i);
@@ -446,11 +452,12 @@ double Gluck93_Distribution::calc_W_0C(double E_2, double E_f) {
     double D_V = E_2*(E_2m-E_2) + E_1*(E_1m-E_1) - m_f*(E_fm-E_f);
     double D_A = E_2*(E_2m-E_2) + E_1*(E_1m-E_1) + m_f*(E_fm-E_f);
     double D_I = 2*(E_2*(E_2m-E_2)-E_1*(E_1m-E_1));
-    double W_0 = m_i * G2_V / (4*M_PI*M_PI*M_PI) * (D_V + lambda*lambda*D_A + lambda*(1+2*kappa)*D_I);
+    // note negative lambda sign convention!
+    double W_0 = m_i * G2_V / (4*M_PI*M_PI*M_PI) * (D_V + lambda*lambda*D_A - fabs(lambda)*(1+2*kappa)*D_I);
     
     double p_f = sqrt(E_f*E_f - m_f*m_f);
     double v_f = p_f/E_f;
-    double c_f = 0; // TODO cos electron/proton angle = p_2.p_f / |p_2||p_f|
+    //double c_f = +1; // TODO cos electron/proton angle = p_2.p_f / |p_2||p_f|
     double beta_r = fabs(beta-(1-beta*beta)*v_f*c_f); // (3.4) electron-proton relative velocity
     // (2.5)
     double Fhat_C = Gluck93_F_C(E_2, beta_r);
