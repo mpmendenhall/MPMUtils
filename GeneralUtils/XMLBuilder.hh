@@ -10,9 +10,8 @@
 #define XMLBUILDER_HH
 
 #include "RefCounter.hh"
+#include "StringManip.hh"
 
-#include <string>
-using std::string;
 #include <map>
 using std::map;
 #include <vector>
@@ -31,6 +30,10 @@ public:
     
     /// Add child node
     virtual void addChild(XMLBuilder* C) { assert(C); C->retain(); children.push_back(C); }
+    /// Add a tag attribute
+    virtual void addAttr(const string& nm, const string& val) { attrs[nm] = val; }
+    /// Add numerical attribute
+    virtual void addAttr(const string& nm, double val) { addAttr(nm, to_str(val)); }
     
     /// Write output
     virtual void write(ostream& o, unsigned int ndeep = 0);
@@ -73,6 +76,8 @@ public:
     virtual void addChild(XMLProvider* C) { assert(C); children.push_back(C); }
     /// Add a tag attribute
     virtual void addAttr(const string& nm, const string& val) { xattrs[nm] = val; }
+    /// Add numerical attribute
+    virtual void addAttr(const string& nm, double val) { addAttr(nm, to_str(val)); }
     
 protected:
     /// add class-specific XML data; subclass me!

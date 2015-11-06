@@ -178,8 +178,8 @@ protected:
     double npp_2[3];    ///< coordinate transform vector (5.10)
     double V_g;         ///< re-weighting function integral (5.15)
     
-    double w_avg = 1.10753e-30;         ///< average value of w, (5.23) and (5.16)
-    double Wavg_0VS = 7.80418e-10;      ///< average value of W_0VS (5.23)
+    double w_avg = 1.11164e-30;         ///< average value of w, (5.23) and (5.16)
+    double Wavg_0VS = 7.83328e-10;      ///< average value of W_0VS (5.23)
     double w_max = 0;           ///< maximum observed value of w
     double Wmax_0VS = 0;        ///< maximum observed value of W_0VS
     int64_t n_H = 0;            ///< number of hard brem events generated

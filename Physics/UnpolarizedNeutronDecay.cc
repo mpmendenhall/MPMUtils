@@ -234,9 +234,10 @@ void Gluck_beta_MC::propose_kinematics() {
     K = 0;
     evt_w = 1;
     
-    E_2 = m_2 + (Delta-m_2)*myR->u[0]; // (5.4)
-    p_2 = sqrt(E_2*E_2 - m_2*m_2);
+    E_2 = m_2 + (Delta-m_2)*myR->u[0];  // (5.4) electron energy
+    p_2 = sqrt(E_2*E_2 - m_2*m_2);      // electron momentum magnitude
     
+    // electron cos theta to axis... possibly pre-restricted range
     c_2_min = -1;
     if(pt2_max && p_2 > pt2_max)
         c_2_min = sqrt(1.-pt2_max*pt2_max/(p_2*p_2));
@@ -244,14 +245,14 @@ void Gluck_beta_MC::propose_kinematics() {
     c_2 = c_2_min + (1-c_2_min)*myR->u[2];
     //c_2 = -1 + 2*myR->u[2];
     
-    // (2.10)
+    // (2.10) neutrino energy by energy conservation (tweak later for photon emission)
     E_1 = E0_1 = Delta - E_2;
        
-    // (5.7)
+    // (5.7) isotropic neutrino direction (rel. to electron in "soft" case; world coordinates in "hard")
     c_1 = 2*myR->u[1] - 1;
     phi_1 = 2*M_PI*myR->u[3];
     phi_2 = 2*M_PI*myR->u[4];
-     
+    
     calc_beta_N();
     calc_n_2();
 }
@@ -268,7 +269,7 @@ void Gluck_beta_MC::calc_n_2() {
 
 void Gluck_beta_MC::gen_evt_weighted() {
     assert(myR);
-    myR->next(); // random seed
+    myR->next();
     
     if(P_H.q < myR->u[4]) {
         myR->u[4] = (myR->u[4]-P_H.q)/(1-P_H.q);
