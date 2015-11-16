@@ -140,6 +140,8 @@ public:
     double rwm_cxn() const;
     /// additional Coulomb correction weight factor
     double coulomb_cxn() const { return WilkinsonF0(1, E_2/m_e); }
+    /// test electron spectrum shape factor against Sirlin (alpha/2pi)*g (4.15)
+    double recalc_Sirlin_g_a2pi(double E_e);
     
     const double C_S = 0.001;           ///< hard photon production cutoff fraction 
     const double zeta;                  ///< spectrum weighting (2.13)

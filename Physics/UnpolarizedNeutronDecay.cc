@@ -219,6 +219,14 @@ double Gluck_beta_MC::calc_hard_brem() {
     return w;
 }
 
+double Gluck_beta_MC::recalc_Sirlin_g_a2pi(double E_e) {
+    E_2 = E_e;
+    E0_1 = Delta - E_2;
+    calc_beta_N();
+    // (4.15)
+    return z_VS() - alpha/M_PI * N * (1-beta*beta)/beta + z_H();
+}
+
 void Gluck_beta_MC::calc_beta_N() {
     // (2.10)
     beta = sqrt(1-m_2*m_2/(E_2*E_2));
@@ -242,8 +250,9 @@ void Gluck_beta_MC::propose_kinematics() {
     if(pt2_max && p_2 > pt2_max)
         c_2_min = sqrt(1.-pt2_max*pt2_max/(p_2*p_2));
     c_2_wt = (1-c_2_min)/2;
-    c_2 = c_2_min + (1-c_2_min)*myR->u[2];
-    //c_2 = -1 + 2*myR->u[2];
+    c_2 = c_2_min + (1-c_2_min)*myR->u[2]; //c_2 = -1 + 2*myR->u[2];
+    // electron azimuthal angle
+    phi_2 = 2*M_PI*myR->u[4];
     
     // (2.10) neutrino energy by energy conservation (tweak later for photon emission)
     E_1 = E0_1 = Delta - E_2;
@@ -251,7 +260,7 @@ void Gluck_beta_MC::propose_kinematics() {
     // (5.7) isotropic neutrino direction (rel. to electron in "soft" case; world coordinates in "hard")
     c_1 = 2*myR->u[1] - 1;
     phi_1 = 2*M_PI*myR->u[3];
-    phi_2 = 2*M_PI*myR->u[4];
+    
     
     calc_beta_N();
     calc_n_2();
