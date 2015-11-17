@@ -12,7 +12,7 @@ void NeutronDecayKinematics::calc_proton() {
     p_1 = E_1; // massless neutrino approximation
     mag_p_f = 0;
     for(int i=0; i<3; i++) {
-        p_f[i] = -n_1[i]*p_1 - n_2[i]*p_2 - K*n_gamma[i];
+        p_f[i] = -n_1[i]*p_1 - n_2[i]*p_2 - n_gamma[i]*K;
         mag_p_f += p_f[i]*p_f[i];
     }
     mag_p_f = sqrt(mag_p_f);
@@ -136,14 +136,24 @@ double Gluck_beta_MC::z_H() const {
     
 }
 
+void Gluck_beta_MC::vec_rel_n_2(double c, double phi, double* v) const {
+    // (5.11)
+    const double s = sqrt(1-c*c);
+    // (5.9)
+    double n_perp[3];
+    for(int i=0; i<3; i++) n_perp[i] = np_2[i]*cos(phi) + npp_2[i]*sin(phi);
+    // (5.8)
+    for(int i=0; i<3; i++) v[i] = n_2[i]*c + n_perp[i]*s;
+}
+
 double Gluck_beta_MC::calc_soft() {
-    // neutrino direction is relative to electron
+    // neutrino direction is relative to electron, so we can use c_1 below
     vec_rel_n_2(c_1, phi_1, n_1);
   
-    // (2.12) 
+    // (2.12) uncorrected phase space matrix element
     M_0 = 16 * G2_V * zeta * m*m * E0_1 * E_2 * (1 + a * beta * c_1); 
     
-    // (3.2)
+    // (3.2) 
     Mtilde = -alpha/M_PI * 16 * G2_V * (1-beta*beta)/beta * N * m*m * E0_1 * E_2 * zeta;
     
     // (3.9)
@@ -159,20 +169,10 @@ double Gluck_beta_MC::calc_soft() {
     return W_0VS;
 }
 
-void Gluck_beta_MC::vec_rel_n_2(double c, double phi, double* v) const {
-    // (5.11)
-    const double s = sqrt(1-c*c);
-    // (5.9)
-    double n_perp[3];
-    for(int i=0; i<3; i++) n_perp[i] = np_2[i]*cos(phi) + npp_2[i]*sin(phi);
-    // (5.8)
-    for(int i=0; i<3; i++) v[i] = n_2[i]*c + n_perp[i]*s;
-}
-    
 double Gluck_beta_MC::calc_hard_brem() {
     
     // (5.5) hard photon energy
-    K = omega * exp(-myR->u[5]*log(C_S));
+    K = omega * pow(C_S,-myR->u[5]);
     
     // (4.9) neutrino energy, corrected for hard photon
     E_1 = Delta - E_2 - K;
@@ -187,13 +187,15 @@ double Gluck_beta_MC::calc_hard_brem() {
     // neutrino direction in hard case is in fixed coordinate system
     // (5.11), (5.12) applied to neutrino direction
     n_from_angles(c_1, phi_1, n_1);
-   
+    // or do it relative to electron for consistency... shouldn't matter
+    //vec_rel_n_2(c_1, phi_1, n_1);
+    
     // (5.13) calculate momentum dot products
     const double p_1_dot_k = E_1 * K * dot3(n_1, n_gamma);
     const double p_2_dot_k = beta * E_2 * K * c_gamma;
     const double p_1_dot_p_2 = beta * E_1 * E_2 * dot3(n_1, n_2);
     // (4.8) four-vector momenta dot
-    const double p4_2_dot_k4 = E_2*K - p_2_dot_k; 
+    const double p4_2_dot_k4 = E_2*K - p_2_dot_k;
     
     // (5.3) approximate distribution function
     const double g = beta*E_2/(2*N*p4_2_dot_k4);
@@ -283,11 +285,13 @@ void Gluck_beta_MC::gen_evt_weighted() {
     if(P_H.q < myR->u[4]) {
         myR->u[4] = (myR->u[4]-P_H.q)/(1-P_H.q);
         propose_kinematics();
+        
         evt_w *= calc_soft()/Wavg_0VS * P_H.np_wt();
         evt_w0 /= Wavg_0VS;
     } else {
         myR->u[4] /= P_H.q;
         propose_kinematics();
+       
         evt_w *= calc_hard_brem()/w_avg * P_H.p_wt();
         evt_w0 = 0;
     }
