@@ -82,11 +82,14 @@ void N3BodyUncorrelated::gen_evt_weighted() {
     myR->next(); // random seed
     evt_w = 1;
     
-    // electron energy cubic interpolated from inverse CDF lookup table
-    double jf = myR->u[0]*(NPTS-1);
-    size_t j = size_t(jf);
-    jf -= j;
-    E_2 = m_2 + eval_cubic_interpl(jf, invcdf + j + 1);
+    if(use_KEe > 0) E_2 = use_KEe + m_2;
+    else {
+        // electron energy cubic interpolated from inverse CDF lookup table
+        double jf = myR->u[0]*(NPTS-1);
+        size_t j = size_t(jf);
+        jf -= j;
+        E_2 = m_2 + eval_cubic_interpl(jf, invcdf + j + 1);
+    }
     
     // electron momentum magnitude, velocity
     p_2 = sqrt(E_2*E_2 - m_2*m_2);
@@ -244,7 +247,8 @@ void Gluck_beta_MC::propose_kinematics() {
     K = 0;
     evt_w = 1;
     
-    E_2 = m_2 + (Delta-m_2)*myR->u[0];  // (5.4) electron energy
+    if(use_KEe > 0) E_2 = use_KEe + m_2;
+    else E_2 = m_2 + (Delta-m_2)*myR->u[0];  // (5.4) electron energy
     p_2 = sqrt(E_2*E_2 - m_2*m_2);      // electron momentum magnitude
     
     // electron cos theta to axis... possibly pre-restricted range

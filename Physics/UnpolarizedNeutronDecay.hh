@@ -53,6 +53,8 @@ public:
     /// recoil and weak magnetism correction weight
     double B59_rwm_cxn_wt() const;
     
+    double use_KEe = -1;///< generate electrons at this fixed kinetic energy if > 0
+    
     double E_2;         ///< electron total energy [keV]
     double p_2;         ///< electron momentum magnitude [keV/c]
     double n_2[3];      ///< electron unit direction
