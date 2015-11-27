@@ -16,14 +16,14 @@ if __name__=="__main__":
     superB = wr47b[-1]
     ugab = load_specfile("UGAB_Emission.txt")[0]
     ugab.name = "UG emission"
-    ug_tx = rescale_spectrum(pow_spectrum(load_specfile("UGAB_Li_BigBatch_Tx.txt")[0],7))
-    ug_tx.name = "UG Transmission"
+    ug_tx = rescale_spectrum(pow_spectrum(load_specfile("UGAB_Li_BigBatch_Tx.txt")[0],10))
+    ug_tx.name = "UG 10cm Transmission"
     
     flash = bbody_norm_spectrum(5400)
     flash.name = "5400K illuminant"
     whitepoint = LsRGB_Whitepoint(flash)
     
-    sensors = [sensRGB[2], wr47b[2], k5113[2]]
+    sensors = [sensRGB[2], wr47b[2]] #, k5113[2]]
     sensors = [product_spectrum([s,flash]) for s in sensors]
     for s in sensors:
         s.plotcolor = spectrum_sRGB(s,whitepoint)
@@ -31,17 +31,20 @@ if __name__=="__main__":
     sensors.append(rescale_spectrum(ugab))
     sensors.append(ug_tx)
     sensors[0].name = "Canon 5D blue"
+    sensors[0].plotcolor = (0.3, 0.3, 1)
     sensors[1].name = "Wratten 47b filtered"
-    sensors[2].name = "Kopp 5113 filtered"
+    sensors[1].plotcolor = (0, 0, 0.7)
+    sensors[2].plotcolor = (0.7,0,1)
+    #sensors[2].name = "Kopp 5113 filtered"
     
     for s in sensors[:4]:
         print "Transmission for",s.name,fdot(s,ug_tx)/spectrum_integral(s)
     
-    gSpectra = graph.graphxy(width=10,height=8,
+    gSpectra = graph.graphxy(width=12,height=8,
                             x=graph.axis.lin(title="wavelength [nm]",min=380,max=620),
                             y=graph.axis.lin(title="spectrum [arb. units]",min=0,max=1.1),
                             key = graph.key.key(pos="mr"))
     
-    plot_spectra_colors(sensors+[flash,], gSpectra=gSpectra, whitepoint = whitepoint)
+    plot_spectra_colors([flash,]+sensors, gSpectra=gSpectra, whitepoint = whitepoint)
     gSpectra.writetofile(bpath+"/sensors.pdf") # spectral sensitivity with illuminant
     

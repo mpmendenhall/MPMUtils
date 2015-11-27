@@ -52,8 +52,8 @@ public:
     double Gluck93_radcxn_wt() const;
     /// recoil and weak magnetism correction weight
     double B59_rwm_cxn_wt() const;
-    
-    double use_KEe = -1;///< generate electrons at this fixed kinetic energy if > 0
+    /// set fixed electron kinetic energy
+    virtual void set_KEe(double k) { use_KEe = k; }
     
     double E_2;         ///< electron total energy [keV]
     double p_2;         ///< electron momentum magnitude [keV/c]
@@ -83,6 +83,7 @@ public:
 protected:
     
     NKine_Rndm_Src* myR;        ///< random number source
+    double use_KEe = -1;        ///< generate electrons at this fixed kinetic energy if > 0
     
     /// calculate proton kinematics from electron, neutrino, gamma
     void calc_proton();
@@ -250,6 +251,7 @@ public:
 /// formula in equation (10), with 1+3*lambda^2 factored out
 /// and also dividing out (1+beta*a0*cth) to avoid double-counting 'a' contribution.
 /// lambda = |lambda| > 0 sign convention.
+/// E is electron total energy in keV
 double B59_rwm_cxn(double E, double cos_thn);
 
 /// Radiative correction according to Garcia, Maya, Phys. Rev. D, 1978 (irrelevant for lab (proton) observables)

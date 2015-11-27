@@ -312,7 +312,7 @@ void Gluck_beta_MC::calc_rho() {
     const double C = G2_V * zeta / (2*pow(M_PI,3));
     for(int i=0; i<=npts; i++) {
         
-        E_2 = m_2 + i*(Delta-m_2)/npts;
+        E_2 = use_KEe >= 0? use_KEe + m_2 : m_2 + i*(Delta-m_2)/npts;
         E0_1 = Delta - E_2;
         calc_beta_N();
         
@@ -350,6 +350,7 @@ void Gluck_beta_MC::calc_rho() {
     
     printf("\trho_0 = %g, rho_VS = %g, rho_H = %g => P_H = %g\n", rho_0, rho_VS, rho_H, P_H.p);
     printf("\tr_rho = %g (Gluck: 1.503),\tr_H = %g (Gluck: 0.847)\n", r_rho, r_H);
+    printf("\tw_avg = %g\tWavg_0VS = %g\n", w_avg, Wavg_0VS);
 }
 
 void Gluck_beta_MC::test_calc_P_H(size_t n_sim) {
