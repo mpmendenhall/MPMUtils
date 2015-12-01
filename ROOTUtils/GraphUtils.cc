@@ -202,8 +202,8 @@ void accumPoints(TGraphErrors& a, const TGraphErrors& b, bool errorWeight, bool 
     }
 }
 
-TH1F* cumulativeHist(const TH1F& h, bool normalize) {
-    TH1F* c = new TH1F(h);
+TH1* cumulativeHist(const TH1& h, bool normalize) {
+    TH1* c = (TH1*)h.Clone((h.GetName()+string("_cum")).c_str());
     int n = h.GetNbinsX()-2;
     float ecum2 = 0;
     c->SetBinContent(0,0);
@@ -332,8 +332,8 @@ TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut, double n_max) {
 }
 
 TGraph* matchHistoShapes(const TH1F& h1, const TH1F& h2) {
-    TH1F* c1 = cumulativeHist(h1,true);
-    TH1F* c2 = cumulativeHist(h2,true);
+    TH1* c1 = cumulativeHist(h1,true);
+    TH1* c2 = cumulativeHist(h2,true);
     TGraph* c2g = TH1toTGraph(*c2);
     delete(c2);
     TGraph* c2i = invertGraph(c2g);
