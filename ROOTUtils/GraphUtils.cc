@@ -202,19 +202,29 @@ void accumPoints(TGraphErrors& a, const TGraphErrors& b, bool errorWeight, bool 
     }
 }
 
-TH1* cumulativeHist(const TH1& h, bool normalize) {
+TH1* cumulativeHist(const TH1& h, bool normalize, bool reverse) {
     TH1* c = (TH1*)h.Clone((h.GetName()+string("_cum")).c_str());
-    int n = h.GetNbinsX()-2;
+    int n = h.GetNbinsX();
     float ecum2 = 0;
-    c->SetBinContent(0,0);
-    c->SetBinError(0,0);
-    for(int i=1; i<=n+1; i++) {
-        c->SetBinContent(i,c->GetBinContent(i-1)+h.GetBinContent(i));
-        ecum2 += h.GetBinError(i);
-        c->SetBinError(i,sqrt(ecum2));
+    if(reverse) {
+        //c->SetBinContent(n+1,0);
+        //c->SetBinError(n+1,0);
+        for(int i=n; i>=0; i--) {
+            c->SetBinContent(i,c->GetBinContent(i+1)+h.GetBinContent(i));
+            ecum2 += pow(h.GetBinError(i),2);
+            c->SetBinError(i,sqrt(ecum2));
+        }
+    } else {
+        //c->SetBinContent(0,0);
+        //c->SetBinError(0,0);
+        for(int i=1; i<=n+1; i++) {
+            c->SetBinContent(i,c->GetBinContent(i-1)+h.GetBinContent(i));
+            ecum2 += pow(h.GetBinError(i),2);
+            c->SetBinError(i,sqrt(ecum2));
+        }
     }
-    if(normalize)
-        c->Scale(1.0/c->GetBinContent(n));
+    
+    if(normalize) c->Scale(1.0/c->GetBinContent(reverse?1:n));
     return c;
 }
 

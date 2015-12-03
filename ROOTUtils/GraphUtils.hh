@@ -52,7 +52,7 @@ TGraphErrors* TH1toTGraph(const TH1& h);
 TGraphErrors* TProf2TGraph(const TProfile& P, unsigned int minpts = 0);
 
 /// make cumulative histogram
-TH1* cumulativeHist(const TH1& h, bool normalize = false);
+TH1* cumulativeHist(const TH1& h, bool normalize = false, bool reverse = false);
 
 /// Divide out histogram bin width, for differential spectrum (with optional extra scale factor)
 void normalize_to_bin_width(TH1* f, double xscale = 1.);
