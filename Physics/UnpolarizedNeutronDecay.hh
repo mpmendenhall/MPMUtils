@@ -260,7 +260,6 @@ double GM78_radiative_cxn(double E, double cos_thn);
 /// Lab-observable radiative correction r_{e\nu}
 /// Parametrized fit to table in Gluck, Phys. Rev. D 47 (1993), 2840-2848
 /// x in [0,1] is rescaled electron kinetic energy; c is "proton inferred" \cos \theta_{e\nu}
-inline double Gluck93_r_enu(double x, double c) { return 0.002 + 0.014*x + (-0.009+0.179*x)*c; }
-
+inline double Gluck93_r_enu(double x, double c) { return 0.0024 + 0.0144*x - 0.0092*c + 0.1791*x*c; }
 
 #endif
