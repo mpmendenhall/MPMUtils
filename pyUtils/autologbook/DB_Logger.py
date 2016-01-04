@@ -3,6 +3,9 @@
 
 from sqlite3_RBU import *
 import time
+from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCRequestHandler
+import os
 
 class DB_Reader:
     """Base class for reading DB file"""
@@ -33,7 +36,10 @@ class DB_Logger(DB_Reader, RBU_cloner):
         """Initialize with name of database to open"""
         DB_Reader.__init__(self, None, conn if conn is not None else sqlite3.connect(dbname))
         RBU_cloner.__init__(self, self.conn.cursor())
-
+        os.system("mkdir -p RBU_Data/")
+        self.rbu_outname = "RBU_Data/"+dbname.split(".")[0]+"_rbu_%i.db"
+        self.t_prev_update = 0 #time.time()
+        
     def __del__(self):
         """Close DB connection on deletion"""
         if self.conn:
@@ -65,21 +71,39 @@ class DB_Logger(DB_Reader, RBU_cloner):
     def log_readout_hook(self, tid, value, t):
         """Hook for subclass to check readout values"""
         pass
+    
+    def get_updates(self):
+        """Return filename, if available, of RBU updates info"""
+        t = time.time()
+        if t > self.t_prev_update + 60:
+            self.t_prev_update = t
+            self.restart_stuffer()
+            return self.rbu_prevName
+        else:
+            return None
 
 if __name__=="__main__":
+    # set up instruments, readouts
     D = DB_Logger("test.db")
     D.create_instrument("funcgen", "test function generator", "ACME Foobar1000", "0001")
     r0 = D.create_readout("5min", "funcgen", "5-minute-period wave", None)
     r1 = D.create_readout("12h", "funcgen", "12-hour-period wave", None)
     D.conn.commit()
+    D.restart_stuffer()
+    
+    # xmlrpc web interface for data updates
+    class RequestHandler(SimpleXMLRPCRequestHandler):
+        rpc_paths = ('/RPC2',)
+    server = SimpleXMLRPCServer(("localhost", 8000), requestHandler=RequestHandler, allow_none=True)
+    #server.register_introspection_functions()
+    server.register_function(D.get_updates, 'update')
+    serverthread =  threading.Thread(target = server.serve_forever)
+    serverthread.start()
     
     from math import *
     t0 = 0
     while 1:
         t = time.time()
-        if t > t0 + 10:
-            D.restart_stuffer()
-            t0 = t
         v0 = sin(2*pi*t/300)
         v1 = sin(2*pi*t/(12*3600))
         D.log_readout(r0, v0, t)

@@ -44,6 +44,7 @@ class RBU_cloner:
         self.curs = curs
         
         self.rbu_outname = "test_rbu_%i.db"
+        self.rbu_prevName = None        # name of previously completed RBU file
         self.rbu_q = queue.Queue()
         self.rbu_stuffer_thread = None
         self.stuffer_lock = threading.Lock()
@@ -163,6 +164,7 @@ class RBU_cloner:
         print("Stuffer thread stopping.") 
         rbu_conn.commit()
         rbu_conn.close()
+        self.rbu_prevName = fname
     
     def stop_stuffer(self):
         """Stop RBU stuffer thread and close out file"""
