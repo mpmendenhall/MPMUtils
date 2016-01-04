@@ -1,9 +1,12 @@
 #!/usr/bin/python3
+# should work in either python2 or 3
+
 import sqlite3
 
 class RBU_table_data:
 	"""Information on RBU-cloned table"""
 	def __init__(self,tname,curs):
+		"""Initialize from table name and cursor to target DB"""
 		self.tname = tname
 
 		# load column information
@@ -11,19 +14,21 @@ class RBU_table_data:
 		self.cols = [[c[1], c[2].upper().replace("UNIQUE","")] for c in curs.fetchall()]
 		self.colnames = [c[0] for c in self.cols]
 
-		# identify primary key
+		# identify primary key (can't handle anything fancy...)
 		self.primary = None
 		for c in self.cols:
-			if "PRIMARY KEY" in c[1].upper():
+			if "PRIMARY KEY" in c[1]:
 				self.primary = c[0]
-		if not self.primary:
+				c[1] = c[1].replace("PRIMARY KEY", "")
+				break
+		if self.primary is None:
 			self.primary = "rowid"
 
 	def setup_rbu(self, rbu_curs):
 		"""Create RBU table"""
 		print("Setting up table '%s' in RBU"%self.tname)
 		rbucols = ["%s %s"%(c[0],c[1]) if c[1] else c[0] for c in self.cols]
-		if not self.primary:
+		if self.primary == "rowid":
 			rbucols.append("rbu_rowid")
 		rbucols.append("rbu_control")
 		tcmd = "CREATE TABLE data_%s ("%self.tname + ", ".join(rbucols) + ")"
@@ -78,7 +83,7 @@ class RBU_cloner:
 		self.setup_table(tname)
 
 		# determine primary key for affected rows
-		pkey = self.tables[tname].primkey();
+		pkey = self.tables[tname].primary
 		self.curs.execute("SELECT %s FROM %s WHERE %s"%(pkey, tname, whereclause))
 		rws = [r[0] for r in self.curs.fetchall()]
 
@@ -102,7 +107,7 @@ class RBU_cloner:
 		self.setup_table(tname)
 
 		# determine primary key for affected rows
-		pkey = self.tables[tname].primkey();
+		pkey = self.tables[tname].primary
 		self.curs.execute("SELECT %s FROM %s WHERE %s"%(pkey, tname, whereclause))
 		rws = [r[0] for r in self.curs.fetchall()]
 
