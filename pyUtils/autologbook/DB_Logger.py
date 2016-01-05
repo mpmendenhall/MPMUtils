@@ -27,6 +27,7 @@ class DB_Reader:
     """Base class for reading DB file"""
     def __init__(self, dbname, conn = None):
             """Initialize with name of database to open; defaults to read-only if conn not supplied"""
+            self.dbname = dbname
             self.conn = conn if conn is not None else sqlite3.connect("file:%s?mode=ro"%dbname, uri=True)
             self.curs = self.conn.cursor()
     
@@ -56,7 +57,7 @@ class DB_Logger(DB_Reader, RBU_cloner):
 
     def __init__(self, dbname, conn = None):
         """Initialize with name of database to open"""
-        DB_Reader.__init__(self, None, conn if conn is not None else sqlite3.connect(dbname))
+        DB_Reader.__init__(self, dbname, conn if conn is not None else sqlite3.connect(dbname))
         RBU_cloner.__init__(self, self.conn.cursor())
         
         self.instruments = {}   # cache of instrument information
@@ -127,6 +128,27 @@ class DB_Logger(DB_Reader, RBU_cloner):
             rnames[str(rid)] = (self.readouts[rid].name, self.instruments[self.readouts[rid].instrument_id].name, self.readouts[rid].units)
         return rnames
     
+    def get_datapoints(self, rid, t0, t1):
+        """Get datapoints for specified readout ID in time stamp range"""
+        self.servcurs.execute("SELECT time,value FROM readings WHERE type_id = ? AND time >= ? AND time <= ? ORDER BY time LIMIT 1000", (int(rid), t0, t1))
+        return self.servcurs.fetchall()
+    
+    def launch_dataserver(self):
+        # server thread interface to DB
+        self.servconn = sqlite3.connect("file:%s?mode=ro"%self.dbname, uri=True)
+        self.servcurs = self.servconn.cursor()
+        
+        # xmlrpc web interface for data updates
+        class RequestHandler(SimpleXMLRPCRequestHandler):
+            rpc_paths = ('/RPC2',)
+        server = SimpleXMLRPCServer(("localhost", 8000), requestHandler=RequestHandler, allow_none=True)
+        #server.register_introspection_functions()
+        server.register_function(D.get_updates, 'update')
+        server.register_function(D.get_newest, 'newest')
+        server.register_function(D.get_reading_names, 'reading_names')
+        server.register_function(D.get_datapoints, 'datapoints')
+        server.serve_forever()
+    
 if __name__=="__main__":
     # set up instruments, readouts
     D = DB_Logger("test.db")
@@ -136,15 +158,7 @@ if __name__=="__main__":
     D.conn.commit()
     D.restart_stuffer()
     
-    # xmlrpc web interface for data updates
-    class RequestHandler(SimpleXMLRPCRequestHandler):
-        rpc_paths = ('/RPC2',)
-    server = SimpleXMLRPCServer(("localhost", 8000), requestHandler=RequestHandler, allow_none=True)
-    #server.register_introspection_functions()
-    server.register_function(D.get_updates, 'update')
-    server.register_function(D.get_newest, 'newest')
-    server.register_function(D.get_reading_names, 'reading_names')
-    serverthread =  threading.Thread(target = server.serve_forever)
+    serverthread =  threading.Thread(target = D.launch_dataserver)
     serverthread.start()
     
     from math import *
