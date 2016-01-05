@@ -130,7 +130,7 @@ class DB_Logger(DB_Reader, RBU_cloner):
     
     def get_datapoints(self, rid, t0, t1):
         """Get datapoints for specified readout ID in time stamp range"""
-        self.servcurs.execute("SELECT time,value FROM readings WHERE type_id = ? AND time >= ? AND time <= ? ORDER BY time LIMIT 1000", (int(rid), t0, t1))
+        self.servcurs.execute("SELECT time,value FROM readings WHERE type_id = ? AND time >= ? AND time <= ? ORDER BY time LIMIT 2000", (int(rid), t0, t1))
         return self.servcurs.fetchall()
     
     def launch_dataserver(self):

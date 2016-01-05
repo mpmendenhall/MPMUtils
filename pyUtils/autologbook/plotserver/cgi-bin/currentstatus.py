@@ -16,12 +16,12 @@ class WebChecklist:
     
     def makeChecklistTable(self):
         t0 = time.time()
-        trows = [{"class":"unknown", "data":["Device","Value","Unit","Last updated"]},]
+        trows = [{"class":"tblhead", "data":["Device","Value","Unit","Last updated"]},]
 
         rlist = list(self.rnames.keys())
         rlist.sort()
         for i in rlist:
-            rdat = [ self.rnames[i][1] + ":" + self.rnames[i][0], "???", self.rnames[i][2], "---", "..." ]
+            rdat = [ self.rnames[i][1] + ":" + self.rnames[i][0], "???", self.rnames[i][2], "---", '<a href="/cgi-bin/plottrace.py?rid=%s">plot</a>'%i]
             cls = "good"
             if i in self.readings:
                 rdat[1] = self.readings[i][1]

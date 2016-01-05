@@ -11,6 +11,11 @@ body {
     font-family: serif;
 }
 
+.tblhead {
+    background-color: rgb(230,230,255);
+    font-weight: bold;
+}
+
 .error {
      background-color: rgb(255,100,100);
 }
