@@ -2,10 +2,11 @@ body {
     margin:0px 0px 0px 140px;
     padding: 0;
     background-color: rgb(200,200,255);
-    /* background-image: url(UCNA_Logo.png);
+    background-image: url(logo.svg);
     background-position: 10px 10px;
+    background-size: 120px 120px;
     background-attachment: fixed;
-    background-repeat: no-repeat; */
+    background-repeat: no-repeat;
 
     color: black;
     font-family: serif;

@@ -22,7 +22,10 @@ class readout_info:
         self.descrip = ds
         self.units = un
         self.instrument_id = iid
-        
+       
+        self.time = None
+        self.val = None
+         
 class DB_Reader:
     """Base class for reading DB file"""
     def __init__(self, dbname, conn = None):
@@ -100,7 +103,8 @@ class DB_Logger(DB_Reader, RBU_cloner):
         if t is None:
             t = time.time()
         self.insert("readings", {"type_id":tid, "time":t, "value":value})
-        self.newest_readings[str(tid)] = (t,value)
+        self.readouts[tid].time = t
+        self.readouts[tid].val = value
         self.log_readout_hook(tid, value, t)
         
     def log_readout_hook(self, tid, value, t):
@@ -119,19 +123,21 @@ class DB_Logger(DB_Reader, RBU_cloner):
 
     def get_newest(self):
         """Return newest readings for xmlrpc interface"""
-        return self.newest_readings
-    
-    def get_reading_names(self):
-        """Return (instrument, readout) names for each readout device"""
-        rnames = {}
+        rdout = {}
         for rid in self.readouts:
-            rnames[str(rid)] = (self.readouts[rid].name, self.instruments[self.readouts[rid].instrument_id].name, self.readouts[rid].units)
-        return rnames
+            rdout[str(rid)] = self.readouts[rid]
+        return rdout
     
     def get_datapoints(self, rid, t0, t1):
         """Get datapoints for specified readout ID in time stamp range"""
         self.servcurs.execute("SELECT time,value FROM readings WHERE type_id = ? AND time >= ? AND time <= ? ORDER BY time LIMIT 2000", (int(rid), t0, t1))
         return self.servcurs.fetchall()
+    
+    def get_channel_info(self, rid):
+        """Get information on one channel"""
+        if rid not in self.readouts:
+            return None
+        
     
     def launch_dataserver(self):
         # server thread interface to DB
@@ -145,7 +151,6 @@ class DB_Logger(DB_Reader, RBU_cloner):
         #server.register_introspection_functions()
         server.register_function(D.get_updates, 'update')
         server.register_function(D.get_newest, 'newest')
-        server.register_function(D.get_reading_names, 'reading_names')
         server.register_function(D.get_datapoints, 'datapoints')
         server.serve_forever()
     
