@@ -7,6 +7,22 @@ from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 import os
 
+class instr_info:
+    def __init__(self, rid, nm, ds, dn, sn):
+        self.rid = rid
+        self.name = nm
+        self.descrip = ds
+        self.dev_name = dn
+        self.sn = sn
+
+class readout_info:
+    def __init__(self, rid, nm, ds, un, iid):
+        self.rid = rid
+        self.name = nm
+        self.descrip = ds
+        self.units = un
+        self.instrument_id = iid
+        
 class DB_Reader:
     """Base class for reading DB file"""
     def __init__(self, dbname, conn = None):
@@ -18,16 +34,22 @@ class DB_Reader:
         """Get instrument identifier by name"""
         self.curs.execute("SELECT rowid,name,descrip,dev_name,serial FROM instrument_types WHERE name = ?", (name,))
         r = self.curs.fetchall()
-        return r[0] if len(r) == 1 else None
+        return instr_info(*r[0]) if len(r) == 1 else None
     
-    def get_readout_type(self, name, inst_name = None):
+    def get_readout_id(self, name, inst_name = None):
         """Get identifier for readout by name and optional instrument name"""
         if inst_name is None:
             self.curs.execute("SELECT rowid FROM readout_types WHERE name = ?", (name,))
         else:
             self.curs.execute("SELECT readout_types.rowid FROM readout_types JOIN instrument_types ON instrument_id = instrument_types.rowid WHERE readout_types.name = ? AND instrument_types.name = ?", (name, inst_name))
         r = self.curs.fetchall()
-        return r[0][0] if len(r) == 1 else None 
+        return r[0][0] if len(r) == 1 else None
+    
+    def get_readout_info(self, rid):
+        """Get readout information by rowid"""
+        self.curs.execute("SELECT rowid,name,descrip,units,instrument_id FROM readout_types WHERE rowid = ?", (rid,))
+        r = self.curs.fetchall()
+        return readout_info(*r[0]) if len(r) == 1 else None
     
 class DB_Logger(DB_Reader, RBU_cloner):
     """Base class for writing data log"""
@@ -36,9 +58,15 @@ class DB_Logger(DB_Reader, RBU_cloner):
         """Initialize with name of database to open"""
         DB_Reader.__init__(self, None, conn if conn is not None else sqlite3.connect(dbname))
         RBU_cloner.__init__(self, self.conn.cursor())
+        
+        self.instruments = {}   # cache of instrument information
+        self.readouts = {}      # cache of readout information
+        
         os.system("mkdir -p RBU_Data/")
         self.rbu_outname = "RBU_Data/"+dbname.split(".")[0]+"_rbu_%i.db"
-        self.t_prev_update = 0 #time.time()
+        self.t_prev_update = 0          # timestamp of last update
+        self.update_timeout = 60        # timeout [s] to push new updates to remote
+        self.newest_readings = {}       # most recent readings (time,value), listed by readout ID
         
     def __del__(self):
         """Close DB connection on deletion"""
@@ -50,22 +78,28 @@ class DB_Logger(DB_Reader, RBU_cloner):
     def create_instrument(self, nm, descrip, devnm, sn, overwrite = False):
         """Assure instrument entry exists, creating/updating as needed"""
         self.curs.execute("INSERT OR " + ("REPLACE" if overwrite else "IGNORE") + " INTO instrument_types(name,descrip,dev_name,serial) VALUES (?,?,?,?)", (nm,descrip,devnm,sn))
+        inst = self.get_inst_type(nm)
+        self.instruments[inst.rid] = inst
         
     def create_readout(self, name, inst_name, descrip, units, overwrite = False):
         """Assure a readout exists, creating as necessary; return readout ID"""
         inst = self.get_inst_type(inst_name)
         if inst is None:
             return None
-        self.curs.execute("INSERT OR " + ("REPLACE" if overwrite else "IGNORE") + " INTO readout_types(name,descrip,units,instrument_id) VALUES (?,?,?,?)", (name,descrip,units,inst[0]))
-        self.curs.execute("SELECT rowid FROM readout_types WHERE name = ? AND instrument_id = ?", (name,inst[0]))
+        self.curs.execute("INSERT OR " + ("REPLACE" if overwrite else "IGNORE") + " INTO readout_types(name,descrip,units,instrument_id) VALUES (?,?,?,?)", (name,descrip,units,inst.rid))
+        self.curs.execute("SELECT rowid FROM readout_types WHERE name = ? AND instrument_id = ?", (name,inst.rid))
         r = self.curs.fetchall()
-        return r[0][0] if len(r) == 1 else None
+        rid = r[0][0] if len(r) == 1 else None
+        if rid is not None:
+            self.readouts[rid] = self.get_readout_info(rid)
+        return rid
     
     def log_readout(self, tid, value, t = None):
         """Log reading, using current time for timestamp if not specified"""
         if t is None:
             t = time.time()
         self.insert("readings", {"type_id":tid, "time":t, "value":value})
+        self.newest_readings[str(tid)] = (t,value)
         self.log_readout_hook(tid, value, t)
         
     def log_readout_hook(self, tid, value, t):
@@ -82,6 +116,17 @@ class DB_Logger(DB_Reader, RBU_cloner):
         else:
             return None
 
+    def get_newest(self):
+        """Return newest readings for xmlrpc interface"""
+        return self.newest_readings
+    
+    def get_reading_names(self):
+        """Return (instrument, readout) names for each readout device"""
+        rnames = {}
+        for rid in self.readouts:
+            rnames[str(rid)] = (self.readouts[rid].name, self.instruments[self.readouts[rid].instrument_id].name, self.readouts[rid].units)
+        return rnames
+    
 if __name__=="__main__":
     # set up instruments, readouts
     D = DB_Logger("test.db")
@@ -97,6 +142,8 @@ if __name__=="__main__":
     server = SimpleXMLRPCServer(("localhost", 8000), requestHandler=RequestHandler, allow_none=True)
     #server.register_introspection_functions()
     server.register_function(D.get_updates, 'update')
+    server.register_function(D.get_newest, 'newest')
+    server.register_function(D.get_reading_names, 'reading_names')
     serverthread =  threading.Thread(target = server.serve_forever)
     serverthread.start()
     
