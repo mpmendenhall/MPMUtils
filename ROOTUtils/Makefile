@@ -8,7 +8,7 @@ SHELL = /bin/sh
 # compiler command to use
 CXXFLAGS = -std=c++11 -O3 -fPIC `root-config --cflags` -pedantic -Wall -Wextra -I. -I../GeneralUtils/
 
-objects = EnumerationFitter.o GraphicsUtils.o GraphUtils.o HistogramSequenceFitter.o \
+objects = EnumerationFitter.o GraphicsUtils.o GraphUtils.o HistogramSequenceFitter.o IterRangeFitter.o \
 	LinHistCombo.o MultiGaus.o OutputManager.o PluginSaver.o PointCloudHistogram.o \
 	TChainScanner.o TObjCollector.o TSQLHelper.o SegmentSaver.o SplineFit.o
 
