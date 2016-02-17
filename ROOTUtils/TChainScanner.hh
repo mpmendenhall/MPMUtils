@@ -35,7 +35,7 @@ public:
     /// constructor
     TChainScanner(const string& treeName);
     /// destructor
-    virtual ~TChainScanner() { delete(Tch); }
+    virtual ~TChainScanner() { delete Tch; }
     
     /// add a file to the TChain
     virtual int addFile(const string& filename);

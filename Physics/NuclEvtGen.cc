@@ -360,8 +360,8 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
 }
 
 NucDecaySystem::~NucDecaySystem() {
-    for(auto& t: transitions) delete(t);
-    for(auto& kv: atoms) delete(kv.second);
+    for(auto& t: transitions) delete t;
+    for(auto& kv: atoms) delete kv.second;
 }
 
 DecayAtom* NucDecaySystem::getAtom(unsigned int Z) {
@@ -491,7 +491,7 @@ NucDecayLibrary::NucDecayLibrary(const std::string& datp, double t):
 datpath(datp), tcut(t), BEL(SMFile(datpath+"/ElectronBindingEnergy.txt")) { }
 
 NucDecayLibrary::~NucDecayLibrary() {
-    for(auto& kv: NDs) delete(kv.second);
+    for(auto& kv: NDs) delete kv.second;
 }
 
 NucDecaySystem& NucDecayLibrary::getGenerator(const std::string& nm) {

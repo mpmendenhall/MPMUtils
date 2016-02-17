@@ -258,12 +258,12 @@ public:
     }
     
     /// destructor
-    ~LAPACKE_Matrix_SVD() { if(PsI) delete PsI; }
+    ~LAPACKE_Matrix_SVD() { delete PsI; }
     
     /// Calculate pseudo-inverse, discarding singular values <= epsilon
     const VarMat<CT>& calc_pseudo_inverse(T epsilon = 0) {
         if(PsI && PsI_epsilon==epsilon) return *PsI;
-        if(PsI) delete PsI;
+        delete PsI;
         PsI_epsilon = epsilon;
         
         // U * (S^-1)

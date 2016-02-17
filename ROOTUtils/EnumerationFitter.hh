@@ -40,7 +40,7 @@ public:
     /// constructor
     EnumerationFitter(): fitter(NULL) {}
     /// destructor
-    ~EnumerationFitter() { if(!fitter) delete fitter; }
+    ~EnumerationFitter() { delete fitter; }
     /// add a fit terms set
     void addTerm(const vector<double>& t);
     /// fit evaluation from sum of terms

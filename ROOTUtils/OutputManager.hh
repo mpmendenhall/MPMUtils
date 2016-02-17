@@ -48,7 +48,7 @@ public:
     virtual ~OutputManager() {
         clearItems();
         if(rootOut) rootOut->Close();
-        if(defaultCanvas && !parent) delete(defaultCanvas); 
+        if(!parent) delete defaultCanvas; 
     }
     
     /// generate a TH1F registered with this runs output objects list

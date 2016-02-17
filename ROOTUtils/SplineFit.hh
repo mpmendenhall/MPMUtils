@@ -14,7 +14,7 @@ public:
     /// Constructor
     SplineFit() { }
     /// Destructor
-    virtual ~SplineFit() { if(myFitter) delete myFitter; }
+    virtual ~SplineFit() { delete myFitter; }
     
     /// set spline x positions
     void setX(const double* x, size_t n);

@@ -345,15 +345,15 @@ TGraph* matchHistoShapes(const TH1F& h1, const TH1F& h2) {
     TH1* c1 = cumulativeHist(h1,true);
     TH1* c2 = cumulativeHist(h2,true);
     TGraph* c2g = TH1toTGraph(*c2);
-    delete(c2);
+    delete c2;
     TGraph* c2i = invertGraph(c2g);
-    delete(c2g);
+    delete c2g;
     int n = h1.GetNbinsX()-2;
     TGraph* T = new TGraph(n);
     for(int i=1; i<=n; i++)
         T->SetPoint(i-1,c1->GetBinCenter(i),c2i->Eval(c1->GetBinContent(i)));
-    delete(c1);
-    delete(c2i);
+    delete c1;
+    delete c2i;
     return T;
 }
 
@@ -383,17 +383,13 @@ TGraph* derivative(TGraph& g) {
 void transformAxis(TGraph& g, TGraph& T, bool useJacobean) {
     double x,y,j;
     j = 1.0;
-    TGraph* d = NULL;
-    if(useJacobean)
-        d = derivative(T);
+    TGraph* d = useJacobean? derivative(T) : NULL;
     for(int i=0; i<g.GetN(); i++) {
         g.GetPoint(i,x,y);
-        if(useJacobean)
-            j=d->Eval(x);
+        if(d) j = d->Eval(x);
         g.SetPoint(i,T.Eval(x),j*y);
     }
-    if(useJacobean)
-        delete(d);
+    delete d;
 }
 
 TGraphErrors* interpolate(TGraphErrors& tg, float dx) {

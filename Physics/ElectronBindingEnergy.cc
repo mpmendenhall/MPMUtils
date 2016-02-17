@@ -62,8 +62,7 @@ BindingEnergyLibrary::BindingEnergyLibrary(const SMFile& Q) {
 }
 
 BindingEnergyLibrary::~BindingEnergyLibrary() {
-    for(map<unsigned int,BindingEnergyTable*>::const_iterator it = tables.begin(); it != tables.end(); it++)
-        delete(it->second);
+    for(auto& kv: tables.begin()) delete kv.second;
 }
 
 const BindingEnergyTable* BindingEnergyLibrary::getBindingTable(unsigned int Z) const {

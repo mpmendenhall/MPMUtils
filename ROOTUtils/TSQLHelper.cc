@@ -57,7 +57,7 @@ TSQLHelper::TSQLHelper(const std::string& dbnm,
 }
 
 void TSQLHelper::execute() {
-    if(res) delete(res);
+    delete res;
     res = NULL;
     if(!db->Exec(query)) {
         SMExcept e("DBExecFail");
@@ -70,7 +70,7 @@ void TSQLHelper::Query() {
     if(!db) {
         res = NULL;
     } else {
-        if(res) delete(res);
+        delete res;
         res = db->Query(query);
         if(db->GetErrorCode()) {
             SMExcept e("DBQueryFail");
@@ -110,7 +110,7 @@ int TSQLHelper::getInsertID() {
     if(!r)
         throw(SMExcept("failedInsert"));
     int rid = fieldAsInt(r,0);
-    delete(r);
+    delete r;
     if(!rid)
         throw(SMExcept("failedInsert"));
     return rid;
@@ -122,7 +122,7 @@ void TSQLHelper::printResult() {
         printf("----------------\n");
         for(int i=0; i<res->GetFieldCount(); i++)
             printf("%s:\t%s\n",res->GetFieldName(i),fieldAsString(row,i,"NULL").c_str());
-        delete(row);
+        delete row;
     }
 }
 

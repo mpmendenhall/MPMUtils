@@ -32,7 +32,7 @@
 unsigned int LinHistCombo::nFitters = 0;
 
 TF1* LinHistCombo::getFitter() {
-    if(myFit && myFit->GetNpar() != (int)terms.size()) { delete(myFit); myFit = NULL; }
+    if(myFit && myFit->GetNpar() != (int)terms.size()) { delete myFit; myFit = NULL; }
     if(!myFit) myFit = new TF1(("fCombo"+to_str(nFitters++)).c_str(), this, &LinHistCombo::Evaluate,0,1,terms.size());
     return myFit;
 }

@@ -130,7 +130,7 @@ OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalcula
 SegmentSaver::~SegmentSaver() {
     if(fIn) {
         fIn->Close();
-        delete(fIn);
+        delete fIn;
     }
 }
 
@@ -189,7 +189,7 @@ size_t SegmentSaver::addFiles(const vector<string>& inflnames) {
         if(!fileExists(f)) continue;
         SegmentSaver* subRA = makeAnalyzer("", f);
         addSegment(*subRA);
-        delete(subRA);
+        delete subRA;
         nMerged++;
     }
     return nMerged;

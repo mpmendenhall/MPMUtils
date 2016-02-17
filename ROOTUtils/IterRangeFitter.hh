@@ -17,7 +17,7 @@ public:
     /// Constructor
     IterRangeFitter() { }
     /// Destructor
-    virtual ~IterRangeFitter() { if(myF) delete myF; }
+    virtual ~IterRangeFitter() { delete myF; }
 
     /// perform fit until range converges
     void doFit(TH1* h, const char* opt = "R");

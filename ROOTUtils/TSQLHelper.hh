@@ -49,7 +49,7 @@ public:
               unsigned int ntries = 3);
     
     /// destructor
-    virtual ~TSQLHelper() { if(res) delete(res); if(db) db->Close(); }
+    virtual ~TSQLHelper() { delete res; if(db) db->Close(); }
     
     /// get name of DB in use
     string getDBName() const { return dbName; }

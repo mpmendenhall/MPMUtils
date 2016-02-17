@@ -40,7 +40,7 @@ public:
     /// constructor
     LinHistCombo(): interpolate(true), myFit(NULL) {}
     /// destructor
-    ~LinHistCombo() { if(myFit) delete(myFit); }
+    ~LinHistCombo() { delete myFit; }
     /// add a fit term
     void addTerm(TH1* h) { terms.push_back(h); }
     /// get fitter

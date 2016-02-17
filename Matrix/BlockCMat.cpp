@@ -66,9 +66,9 @@ BlockCMat_SVD::BlockCMat_SVD(const BlockCMat& BC): M(BC.nRows()), N(BC.nCols()),
 }
 
 BlockCMat_SVD::~BlockCMat_SVD() {
-    if(PsI) delete PsI;
+    delete PsI;
     #ifdef WITH_LAPACKE
-    for(unsigned int i=0; i<block_SVDs.size(); i++) delete(block_SVDs[i]);
+    for(unsigned int i=0; i<block_SVDs.size(); i++) delete block_SVDs[i];
     #endif
 }
 
@@ -122,7 +122,7 @@ VarVec<double> BlockCMat_SVD::getRightSVec(unsigned int i) const {
 const BlockCMat& BlockCMat_SVD::calc_pseudo_inverse(double epsilon) {
     #ifdef WITH_LAPACKE
     if(PsI && PsI_epsilon==epsilon) return *PsI;
-    if(PsI) delete PsI;
+    delete PsI;
     PsI_epsilon = epsilon;
     
     PsI = new BlockCMat(M, N, Mc);

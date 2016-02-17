@@ -11,7 +11,7 @@ TLS_Solver::TLS_Solver(size_t nn, size_t mm): n(nn), B(mm,n), mu(n), v(n) {
 }
 
 TLS_Solver::~TLS_Solver() {
-    if(mySVD) delete mySVD;
+    delete mySVD;
 }
 
 void TLS_Solver::solve() {
@@ -22,7 +22,7 @@ void TLS_Solver::solve() {
             B(mm,nn) -= mu[nn];
             
     // SVD
-    if(mySVD) delete mySVD;
+    delete mySVD;
     VarMat<double> BB = B;
     mySVD = new LAPACKE_Matrix_SVD<double,double>(BB);
     v = mySVD->getRightSVec(0);

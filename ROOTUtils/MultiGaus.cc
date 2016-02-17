@@ -27,8 +27,8 @@
 #include "SMExcept.hh"
 
 MultiGaus::~MultiGaus() { 
-    delete(iguess);
-    delete(myTF1);
+    delete iguess;
+    delete myTF1;
 }
 
 void MultiGaus::setParameter(unsigned int n, double p) {

@@ -19,7 +19,7 @@ void TObjCollector::writeItems() {
 void TObjCollector::clearItems() {
     for(auto i: namedItems) delete i;
     namedItems.clear();
-    for(auto const& kv: anonItems) delete(kv.second);
+    for(auto const& kv: anonItems) delete kv.second;
     anonItems.clear();
     for(auto i: deleteItems) delete i;
     deleteItems.clear();
