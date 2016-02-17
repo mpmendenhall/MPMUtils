@@ -18,7 +18,7 @@
  *
  */
 
-/// \file "Polynomial.hh" \brief Templatized polynomial manipulation
+/// \file "Polynomial.hh" Templatized polynomial manipulation
 #ifndef POLYNOMIAL_HH
 /// Make sure this header is only loaded once
 #define POLYNOMIAL_HH

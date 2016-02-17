@@ -1,4 +1,4 @@
-/// \file GraphUtils.hh \brief ROOT graph/histogram manipulation utilities
+/// \file GraphUtils.hh ROOT graph/histogram manipulation utilities
 #ifndef GRAPHUTILS_HH
 #define GRAPHUTILS_HH
 

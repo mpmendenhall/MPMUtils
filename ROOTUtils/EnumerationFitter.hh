@@ -1,4 +1,4 @@
-/// \file EnumerationFitter.hh \brief Least-squares fit to enumerated values
+/// \file EnumerationFitter.hh Least-squares fit to enumerated values
 /* 
  * EnumerationFitter.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

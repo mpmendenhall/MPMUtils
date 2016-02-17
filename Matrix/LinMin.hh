@@ -1,4 +1,4 @@
-/// \file "LinMin.hh" \brief Least-squares linear polynomial fits
+/// \file "LinMin.hh" Least-squares linear polynomial fits
 /* 
  * LinMin.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

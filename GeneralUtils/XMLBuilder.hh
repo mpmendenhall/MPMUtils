@@ -1,4 +1,4 @@
-/// \file XMLBuilder.hh \brief Simple XML output class
+/// \file XMLBuilder.hh Simple XML output class
 
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of

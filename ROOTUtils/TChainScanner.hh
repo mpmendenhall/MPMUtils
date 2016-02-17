@@ -1,4 +1,4 @@
-/// \file TChainScanner.hh \brief Utility for scanning data spread over many .root input files
+/// \file TChainScanner.hh Utility for scanning data spread over many .root input files
 /* 
  * TChainScanner.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

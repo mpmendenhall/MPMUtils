@@ -1,4 +1,4 @@
-/// \file SegmentSaver.hh \brief Mechanism for loading pre-defined histograms from file
+/// \file SegmentSaver.hh Mechanism for loading pre-defined histograms from file
 /* 
  * SegmentSaver.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

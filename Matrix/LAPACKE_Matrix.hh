@@ -1,4 +1,4 @@
-/// \file LAPACKE_Matrix.hh \brief Convenience interface to LAPACK matrix operations
+/// \file LAPACKE_Matrix.hh Convenience interface to LAPACK matrix operations
 /* 
  * LAPACKE_Matrix.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

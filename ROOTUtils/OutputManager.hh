@@ -1,4 +1,4 @@
-/// \file OutputManager.hh \brief Convenience class for bundling ROOT output into a directory
+/// \file OutputManager.hh Convenience class for bundling ROOT output into a directory
 /* 
  * OutputManager.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

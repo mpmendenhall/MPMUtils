@@ -1,4 +1,4 @@
-/// \file MultiGaus.hh \brief Multiple-Gaussian-peak fitter
+/// \file MultiGaus.hh Multiple-Gaussian-peak fitter
 /* 
  * MultiGaus.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

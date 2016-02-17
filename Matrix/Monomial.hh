@@ -18,7 +18,7 @@
  *
  */
 
-/// \file "Monomial.hh" \brief Templatized monomial term for a polynomial
+/// \file "Monomial.hh" Templatized monomial term for a polynomial
 #ifndef MONOMIAL_HH
 /// Make sure this header is only loaded once
 #define MONOMIAL_HH

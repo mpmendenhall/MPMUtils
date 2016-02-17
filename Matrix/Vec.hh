@@ -18,7 +18,7 @@
  *
  */
 
-/// \file Vec.hh \brief Templatized fixed-length array class with mathematical operations
+/// \file Vec.hh Templatized fixed-length array class with mathematical operations
 #ifndef VEC_HH
 /// Make sure this header is only loaded once
 #define VEC_HH

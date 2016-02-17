@@ -18,7 +18,7 @@
  *
  */
 
-/// \file Matrix.hh \brief Templatized fixed-size matrix class
+/// \file Matrix.hh Templatized fixed-size matrix class
 #ifndef MATRIX_HH
 /// Make sure this header is only loaded once
 #define MATRIX_HH

@@ -1,4 +1,4 @@
-/// \file ControlMenu.hh \brief interactive text-based menu interface
+/// \file ControlMenu.hh interactive text-based menu interface
 /* 
  * ControlMenu.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

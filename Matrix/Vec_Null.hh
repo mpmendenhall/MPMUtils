@@ -18,7 +18,7 @@
  *
  */
 
-/// \file Vec_Null.hh \brief Special case for 0-element vectors
+/// \file Vec_Null.hh Special case for 0-element vectors
 #ifndef VEC_NULL_HH
 /// Make sure this header is only loaded once
 #define VEC_NULL_HH

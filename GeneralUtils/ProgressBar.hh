@@ -1,4 +1,4 @@
-/// \file ProgressBar.hh \brief text-based progress bar
+/// \file ProgressBar.hh text-based progress bar
 /* 
  * ProgressBar.hh, part of the MPMUtils package
  * Copyright (c) 2007-2014 Michael P. Mendenhall
@@ -19,7 +19,7 @@
  *
  */
 
-/// \file ProgressBar.hh \brief Text output progress bar
+/// \file ProgressBar.hh Text output progress bar
 #ifndef PROGRESSBAR_HH
 /// Make sure this header is only loaded once
 #define PROGRESSBAR_HH

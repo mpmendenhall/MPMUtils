@@ -18,7 +18,7 @@
  *
  */
 
-/// \file "BlockCMat.hh" \brief Block Circulant matrices, combining Circulant FFTW with internal LAPACKE matrix calculations
+/// \file "BlockCMat.hh" Block Circulant matrices, combining Circulant FFTW with internal LAPACKE matrix calculations
 #ifndef BLOCKCMAT_HH
 /// Make sure this header is only loaded once
 #define BLOCKCMAT_HH

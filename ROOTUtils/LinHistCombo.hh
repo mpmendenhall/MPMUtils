@@ -1,4 +1,4 @@
-/// \file LinHistCombo.hh \brief Least-squares fitter for linear combinations of histograms
+/// \file LinHistCombo.hh Least-squares fitter for linear combinations of histograms
 /* 
  * LinHistCombo.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

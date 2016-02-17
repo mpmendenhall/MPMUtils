@@ -1,4 +1,4 @@
-/// \file SMExcept.hh \brief exception class
+/// \file SMExcept.hh exception class
 /* 
  * SMExcept.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

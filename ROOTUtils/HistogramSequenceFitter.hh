@@ -1,4 +1,4 @@
-/// \file HistogramSequenceFitter.hh \brief Time-varying histogram sequence fitter
+/// \file HistogramSequenceFitter.hh Time-varying histogram sequence fitter
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).

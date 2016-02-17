@@ -1,4 +1,4 @@
-/// \file AxisEnum.hh \brief enumeration for specifying/iterating over (x,y,z,...) axes
+/// \file AxisEnum.hh enumeration for specifying/iterating over (x,y,z,...) axes
 #ifndef AXISENUM_HH
 #define AXISENUM_HH
 

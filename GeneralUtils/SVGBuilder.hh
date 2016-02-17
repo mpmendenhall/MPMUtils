@@ -1,4 +1,4 @@
-/// \file SVGBuilder.hh \brief Scalable Vector Graphics XML tags
+/// \file SVGBuilder.hh Scalable Vector Graphics XML tags
 
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
