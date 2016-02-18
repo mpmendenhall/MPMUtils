@@ -61,22 +61,13 @@ BindingEnergyLibrary::BindingEnergyLibrary(const SMFile& Q) {
         tables.emplace(v[i].getDefault("Z",0), new BindingEnergyTable(v[i]));
 }
 
-BindingEnergyLibrary::~BindingEnergyLibrary() {
-    for(auto& kv: tables.begin()) delete kv.second;
-}
-
 const BindingEnergyTable* BindingEnergyLibrary::getBindingTable(unsigned int Z) const {
-    map<unsigned int,BindingEnergyTable*>::const_iterator it =  tables.find(Z);
+    auto it =  tables.find(Z);
     if(it==tables.end()) {
         SMExcept e("MissingElement");
         e.insert("Z",Z);
         throw(e);
     }
     return it->second;
-}
-
-void BindingEnergyLibrary::display() const {
-    for(map<unsigned int,BindingEnergyTable*>::const_iterator it = tables.begin(); it != tables.end(); it++)
-        it->second->display();
 }
 
