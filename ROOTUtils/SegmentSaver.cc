@@ -29,29 +29,28 @@ void resetZaxis(TH1* o) {
     if(a) o->GetListOfFunctions()->Remove(a);
 }
 
-TH1* SegmentSaver::tryLoad(const string& hname) {
+TObject* SegmentSaver::tryLoad(const string& oname) {
     if(!fIn) return NULL;
-    TH1* h = NULL;
-    fIn->GetObject(hname.c_str(),h);
-    if(!h) {
+    TObject* o = NULL;
+    fIn->GetObject(oname.c_str(),o);
+    if(!o) {
         if(ignoreMissingHistos) {
-            printf("Warning: missing histogram '%s' in '%s'\n",hname.c_str(),inflname.c_str());
+            printf("Warning: missing object '%s' in '%s'\n",oname.c_str(),inflname.c_str());
         } else {
             SMExcept e("fileStructureMismatch");
             e.insert("fileName",inflname);
-            e.insert("objectName",hname);
+            e.insert("objectName",oname);
             throw(e);
         }
     } else {
-        resetZaxis(h);
-        addObject(h);
+        addWithName(o, oname);
     }
-    return h;
+    return o;
 }
 
 TH1* SegmentSaver::registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax) {
     smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
-    TH1* h = tryLoad(hname);
+    TH1* h = dynamic_cast<TH1*>(tryLoad(hname));
     if(!h) h = registeredTH1F(hname,title,nbins,xmin,xmax);
     saveHists.emplace(hname,h);
     return h;
@@ -60,15 +59,17 @@ TH1* SegmentSaver::registerSavedHist(const string& hname, const string& title,un
 TH2* SegmentSaver::registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax) {
     smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
     TH2* h = dynamic_cast<TH2*>(tryLoad(hname));
-    if(!h) h = registeredTH2F(hname,title,nbinsx,xmin,xmax,nbinsy,ymin,ymax);
+    if(h) resetZaxis(h);
+    else h = registeredTH2F(hname,title,nbinsx,xmin,xmax,nbinsy,ymin,ymax);
     saveHists.emplace(hname,h);
     return h;
 }
 
 TH1* SegmentSaver::registerSavedHist(const string& hname, const TH1& hTemplate) {
     smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
-    TH1* h = tryLoad(hname);
-    if(!h) {
+    TH1* h = dynamic_cast<TH1*>(tryLoad(hname));
+    if(h) resetZaxis(h);
+    else {
         h = (TH1*)addObject((TH1*)hTemplate.Clone(hname.c_str()));
         h->Reset();
     }
@@ -77,43 +78,18 @@ TH1* SegmentSaver::registerSavedHist(const string& hname, const TH1& hTemplate) 
 }
 
 TVectorD* SegmentSaver::registerNamedVector(const string& vname, size_t nels) {
-    if(fIn) { 
-        TVectorD* V = NULL;
-        fIn->GetObject(vname.c_str(),V);
-        if(!V) {
-            if(ignoreMissingHistos) {
-                printf("Warning: missing vector '%s' in '%s'\n",vname.c_str(),inflname.c_str());
-            } else {
-                SMExcept e("fileStructureMismatch");
-                e.insert("fileName",inflname);
-                e.insert("objectName",vname);
-                throw(e);
-            }
-        } else {
-            return (TVectorD*)addWithName(V, vname);
-        }
-    }
-    return (TVectorD*)addWithName(new TVectorD(nels), vname);
+    TVectorD* V = dynamic_cast<TVectorD*>(tryLoad(vname));
+    return V? V : (TVectorD*)addWithName(new TVectorD(nels), vname);
 }
 
 TObjString* SegmentSaver::registerAttrString(const string& nm, const string& val) {
-    if(fIn) { 
-        TObjString* s = NULL;
-        fIn->GetObject(nm.c_str(),s);
-        if(!s) {
-            if(ignoreMissingHistos) {
-                printf("Warning: missing string '%s' in '%s'\n",nm.c_str(),inflname.c_str());
-            } else {
-                SMExcept e("fileStructureMismatch");
-                e.insert("fileName",inflname);
-                e.insert("objectName",nm);
-                throw(e);
-            }
-        } else {
-            return (TObjString*)addWithName(s, nm);
-        }
-    }
-    return (TObjString*)addWithName(new TObjString(val.c_str()), nm);
+    TObjString* s = dynamic_cast<TObjString*>(tryLoad(nm));
+    return s? s : (TObjString*)addWithName(new TObjString(val.c_str()), nm);
+}
+
+TObject* SegmentSaver::registerObject(const string& onm, const TObject& oTemplate) {
+    TObject* o = tryLoad(onm);
+    return o? o : oTemplate.Clone(onm.c_str());
 }
 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):

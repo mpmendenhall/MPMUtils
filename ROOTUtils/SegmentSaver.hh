@@ -59,6 +59,8 @@ public:
     TVectorD* registerNamedVector(const string& vname, size_t nels = 0);
     /// generate or restore from file a named attribute string
     TObjString* registerAttrString(const string& nm, const string& val);
+    /// clone or restore from file a template TObject
+    TObject* registerObject(const string& onm, const TObject& oTemplate);
     
     /// get core histogram by name
     TH1* getSavedHist(const string& hname);
@@ -100,8 +102,8 @@ public:
     
 protected:
     
-    /// attempt to load histogram from input file
-    TH1* tryLoad(const string& hname);
+    /// attempt to load named object from file, registering and returning if successful
+    TObject* tryLoad(const string& oname);
     
     map<string,TH1*> saveHists; ///< saved histograms
     double inflAge;             ///< age of input file [s]; 0 for brand-new files
