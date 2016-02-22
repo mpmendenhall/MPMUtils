@@ -2,6 +2,7 @@
 
 #ifdef __CLING__
 
+#pragma link C++ class TRateCategories+;
 #pragma link C++ class TRatechart+;
 #pragma link C++ class TStripchart+;
 

@@ -21,15 +21,15 @@ void TRatechart::Append(const TRatechart& C) {
     for(auto const& a: C.fPts) AddPoint(a[0], a[1]);
 }
 
-TGraphErrors* TRatechart::MakeGraph(bool per_dt) const {
+TGraphErrors* TRatechart::MakeGraph(bool per_dt, Double_t xscale) const {
     TGraphErrors* g = new TGraphErrors(fDat.size());
     for(size_t i=0; i<fDat.size(); i++) {
         auto const& P = fDat[i];
         double y = P.fW;
         double dy = sqrt(y);
         if(per_dt) { y /= fDxMax; dy /= fDxMax; }
-        g->SetPoint(i,P.fX,y);
-        g->SetPointError(i,sqrt(P.fXX),dy);
+        g->SetPoint(i,P.fX,y*xscale);
+        g->SetPointError(i,sqrt(P.fXX),dy*xscale);
     }
     return g;
 }

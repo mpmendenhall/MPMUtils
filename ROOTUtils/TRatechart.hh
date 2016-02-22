@@ -41,7 +41,7 @@ public:
     const vector<SummaryPt>& GetData() const { return fDat; }
     
     /// Convert contents to TGraphErrors for display
-    TGraphErrors* MakeGraph(bool per_dt = true) const;
+    TGraphErrors* MakeGraph(bool per_dt = true, Double_t xscale = 1.0) const;
     
     /// Summarize window contents to datapoint
     void SummarizeWindow();
