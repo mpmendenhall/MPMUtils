@@ -89,7 +89,7 @@ TObjString* SegmentSaver::registerAttrString(const string& nm, const string& val
 
 TObject* SegmentSaver::registerObject(const string& onm, const TObject& oTemplate) {
     TObject* o = tryLoad(onm);
-    return o? o : oTemplate.Clone(onm.c_str());
+    return o? o : addWithName(oTemplate.Clone(onm.c_str()), onm);
 }
 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
