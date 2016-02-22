@@ -12,8 +12,8 @@ objects = EnumerationFitter.o GraphicsUtils.o GraphUtils.o HistogramSequenceFitt
 	LinHistCombo.o MultiGaus.o OutputManager.o PluginSaver.o PointCloudHistogram.o \
 	SegmentSaver.o SplineFit.o TChainScanner.o TObjCollector.o TSQLHelper.o mpmrootdict.o
 # ROOT TObject-derived linkdef'd objects and header files
-ldefobjs = TRateCategories.o TRatechart.o TStripchart.o 
-ldefincs = TRateCategories.hh TRatechart.hh TStripchart.hh
+ldefobjs = TDynamicHistogram.o TRateCategories.o TRatechart.o TStripchart.o 
+ldefincs = TDynamicHistogram.hh TDynamicLogHistogram.hh TRateCategories.hh TRatechart.hh TStripchart.hh
 
 all: libMPMROOTUtils.a libMPMROOTUtils.so
 
