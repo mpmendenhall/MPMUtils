@@ -10,7 +10,7 @@ CXXFLAGS = -std=c++11 -O3 -fPIC `root-config --cflags` -pedantic -Wall -Wextra -
 
 objects = EnumerationFitter.o GraphicsUtils.o GraphUtils.o HistogramSequenceFitter.o IterRangeFitter.o \
 	LinHistCombo.o MultiGaus.o OutputManager.o PluginSaver.o PointCloudHistogram.o \
-	SegmentSaver.o SplineFit.o TChainScanner.o TObjCollector.o TSQLHelper.o TStripchart.o mpmrootdict.o
+	SegmentSaver.o SplineFit.o TChainScanner.o TObjCollector.o TSQLHelper.o TRatechart.o TStripchart.o mpmrootdict.o
 
 all: libMPMROOTUtils.a libMPMROOTUtils.so
 
@@ -18,8 +18,8 @@ libMPMROOTUtils.a: $(objects)
 	ar rs  libMPMROOTUtils.a $(objects)
 libMPMROOTUtils.so: $(objects)
 	$(CXX) -shared -fPIC -o libMPMROOTUtils.so $(objects) -L ../GeneralUtils/ -lMPMGeneralUtils `root-config --glibs` -lMathMore
-mpmrootdict.o: TStripchart.o TStripchart.hh
-	rootcling -f mpmrootdict.cxx -c TStripchart.hh
+mpmrootdict.o: LinkDef.h TRatechart.o TRatechart.hh TStripchart.o TStripchart.hh
+	rootcling -f mpmrootdict.cxx -c TRatechart.hh TStripchart.hh
 	$(CXX) $(CXXFLAGS) -c mpmrootdict.cxx -o mpmrootdict.o
 
 .PHONY: clean

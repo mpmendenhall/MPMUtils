@@ -40,7 +40,7 @@ void TStripchart::SummarizeWindow() {
     fPts.clear();
 }
 
-void TStripchart::Append(const TStripchart C) {
+void TStripchart::Append(const TStripchart& C) {
     SummarizeWindow();
     fDat.insert(fDat.end(), C.fDat.begin(), C.fDat.end());
     for(auto const& a: C.fPts) AddPoint(a[0], a[1], a[2]);
