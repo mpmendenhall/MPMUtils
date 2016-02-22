@@ -8,8 +8,7 @@
 #include "TRatechart.hh"
 
 void TRatechart::AddPoint(Double_t x, Double_t w)  {
-    if(fPts.size() && !(fPts[0][0] <= x)) SummarizeWindow();
-    else if(fPts.size() && x > fPts[0][0] + fDxMax) SummarizeWindow();
+    if(fPts.size() && !(fabs(x - fPts[0][0]) <= fDxMax)) SummarizeWindow();
     fSw += w;
     array<Double_t,2> a = { {x,w} };
     fPts.push_back(a);

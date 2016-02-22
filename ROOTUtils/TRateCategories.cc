@@ -8,8 +8,7 @@
 #include "TRateCategories.hh"
 
 void TRateCategories::AddPoint(Int_t c, Double_t x, Double_t w) {
-    if(fPts.size() && !(fPts[0].x <= x)) SummarizeWindow();
-    else if(fPts.size() && x > fPts[0].x + fDxMax) SummarizeWindow();
+    if(fPts.size() && !(fabs(x - fPts[0].x) <= fDxMax)) SummarizeWindow();
     DataPt P;
     P.c = c;
     P.x = x;

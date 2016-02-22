@@ -8,11 +8,9 @@
 #include "TStripchart.hh"
 
 void TStripchart::AddPoint(Double_t x, Double_t y, Double_t w) {
-    if(fPts.size() && !(fPts[0][0] <= x)) SummarizeWindow();
-    else if(fPts.size() && x > fPts[0][0] + fDxMax) SummarizeWindow();
-    
+    if(fPts.size() && !(fabs(x - fPts[0][0]) <= fDxMax)) SummarizeWindow();
     fSw += w;
-    array<Double_t,3> a = {x,y,w};
+    array<Double_t,3> a = { {x,y,w} };
     fPts.push_back(a);
 }
 
