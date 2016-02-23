@@ -23,6 +23,7 @@
 #define SEGMENTSAVER_HH
 
 #include "OutputManager.hh"
+#include "TCumulative.hh"
 #include <TH1.h>
 #include <TVectorT.h>
 #include <TObjString.h>
@@ -34,7 +35,7 @@
 using std::map;
 using std::string;
 
-/// class for saving, retrieving, and summing histograms from file
+/// class for saving, retrieving, and summing data from file
 class SegmentSaver: public OutputManager {
 public:
     /// constructor, optionally with input filename
@@ -52,9 +53,11 @@ public:
     TH2* registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax);
     /// generate or restore from file a saved histogram from a template
     TH1* registerSavedHist(const string& hname, const TH1& hTemplate);
-    /// display list of saved histograms
+    /// display list of saved histograms and cumulatives
     void displaySavedHists() const;
 
+    /// clone or restore from file a cumulative object
+    TCumulative* registerCumulative(const string& onm, const TCumulative& cTemplate);
     /// generate or restore from file a named TVectorD
     TVectorD* registerNamedVector(const string& vname, size_t nels = 0);
     /// generate or restore from file a named attribute string
@@ -64,8 +67,10 @@ public:
     
     /// get core histogram by name
     TH1* getSavedHist(const string& hname);
-    /// get core histogram by name, const version
+    /// get saved histogram by name, const version
     const TH1* getSavedHist(const string& hname) const;
+    /// get cumulative data by name, const
+    const TCumulative* getCumulative(const string& cname) const;
     /// get full histograms listing
     const map<string,TH1*>& getHists() const { return saveHists; }
     /// zero out all saved histograms
@@ -75,8 +80,8 @@ public:
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
     virtual void normalize() { }
     
-    /// add histograms from another SegmentSaver of the same type
-    virtual void addSegment(const SegmentSaver& S);
+    /// add histograms, cumulatives from another SegmentSaver of the same type
+    virtual void addSegment(const SegmentSaver& S, double sc = 1.);
     /// check if this is equivalent layout to another SegmentSaver
     virtual bool isEquivalent(const SegmentSaver& S, bool throwit = false) const;
     /// load and add a list of segment files; return number loaded
@@ -105,8 +110,9 @@ protected:
     /// attempt to load named object from file, registering and returning if successful
     TObject* tryLoad(const string& oname);
     
-    map<string,TH1*> saveHists; ///< saved histograms
-    double inflAge;             ///< age of input file [s]; 0 for brand-new files
+    map<string,TH1*> saveHists;         ///< saved cumulative histograms
+    map<string,TCumulative*> cumDat;    ///< non-TH1-derived cumulative datatypes
+    double inflAge;                     ///< age of input file [s]; 0 for brand-new files
 };
 
 /// utility function to remove color axis data, to force re-draw with current dimensions

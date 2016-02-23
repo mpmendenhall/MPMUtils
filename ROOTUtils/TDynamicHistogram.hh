@@ -8,18 +8,18 @@
 #ifndef TDYNAMICHISTOGRAM_HH
 #define TDYNAMICHISTOGRAM_HH
 
-#include <TNamed.h>
+#include "TCumulative.hh"
 #include <TGraphErrors.h>
 
 #include <map>
 using std::map;
 
 /// Histogram with dynamic (sparse) binning
-class TDynamicHistogram: public TNamed {
+class TDynamicHistogram: public TCumulative {
 public:
     /// Constructor
     TDynamicHistogram(const TString& nme = "", const TString& ttl = "", Int_t n = 1, Double_t x0 = 0, Double_t x1 = 1):
-    TNamed(nme,ttl), fN(n), fX0(x0), fX1(x1) { }
+    TCumulative(nme,ttl), fN(n), fX0(x0), fX1(x1) { }
     /// Destructor
     virtual ~TDynamicHistogram() { }
 
@@ -46,6 +46,11 @@ public:
     /// get representation as a TGraphErrors
     TGraphErrors* MakeGraph() const;
     
+    /// Scale contents by factor
+    virtual void _Scale(Double_t s) { Scale(s); }
+    /// add another histogram, assuming same binning convention or re-calculating bins
+    virtual void _Add(const CumulativeData* CD, Double_t s = 1.);
+    
 protected:
     
     map<Int_t, BinData> fDat;   ///< histogram data
@@ -53,7 +58,7 @@ protected:
     Double_t fX0;               ///< beginning of prototype interval
     Double_t fX1;               ///< end of prototype interval
     
-    ClassDef(TDynamicHistogram,1);
+    ClassDef(TDynamicHistogram,2);
 };
 
 #endif

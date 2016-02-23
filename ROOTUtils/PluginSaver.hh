@@ -37,7 +37,7 @@ public:
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
     virtual void normalize() override;
     /// add histograms from another SegmentSaver of the same type
-    virtual void addSegment(const SegmentSaver& S) override;
+    virtual void addSegment(const SegmentSaver& S, double sc = 1.) override;
     /// virtual routine for generating output plots
     virtual void makePlots() override;
     /// virtual routine for generating calculated hists

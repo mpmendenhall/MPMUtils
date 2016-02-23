@@ -2,6 +2,7 @@
 
 #ifdef __CLING__
 
+#pragma link C++ class TCumulative+;
 #pragma link C++ class TDynamicHistogram+;
 #pragma link C++ class TDynamicLogHistogram+;
 #pragma link C++ class TRateCategories+;

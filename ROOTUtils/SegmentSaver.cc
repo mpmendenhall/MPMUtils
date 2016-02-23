@@ -92,6 +92,16 @@ TObject* SegmentSaver::registerObject(const string& onm, const TObject& oTemplat
     return o? o : addWithName(oTemplate.Clone(onm.c_str()), onm);
 }
 
+TCumulative* SegmentSaver::registerCumulative(const string& onm, const TCumulative& cTemplate) {
+    TCumulative* c = dynamic_cast<TCumulative*>(tryLoad(onm));
+    if(!c) {
+        c = (TCumulative*)addObject((TNamed*)cTemplate.Clone(onm.c_str()));
+        c->_Clear();
+    }
+    cumDat.emplace(onm,c);
+    return c;
+}
+
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
 OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalculated(false), inflAge(0) {
     // open file to load existing data
@@ -126,8 +136,19 @@ const TH1* SegmentSaver::getSavedHist(const string& hname) const {
     return it->second;
 }
 
+const TCumulative* SegmentSaver::getCumulative(const string& cname) const {
+    auto it = cumDat.find(cname);
+    if(it == cumDat.end()) {
+        SMExcept e("missing_cumulative");
+        e.insert("name", cname);
+        throw e;
+    }
+    return it->second;
+}
+
 void SegmentSaver::zeroSavedHists() {
     for(auto& kv: saveHists) kv.second->Reset();
+    for(auto& kv: cumDat) kv.second->_Clear();
 }
 
 void SegmentSaver::scaleData(double s) {
@@ -138,6 +159,7 @@ void SegmentSaver::scaleData(double s) {
             kv.second->Scale(s);
         }
     }
+    for(auto& kv: cumDat) kv.second->_Scale(s);
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
@@ -151,12 +173,23 @@ bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
             return false;
         }
     }
+    for(auto& kv: cumDat) {
+        if(!S.cumDat.count(kv.first)) {
+            if(throwit) {
+                SMExcept e("mismatched_cumulative");
+                e.insert("name", kv.first);
+                throw e;
+            }
+            return false;
+        }
+    }
     return true;
 }
 
-void SegmentSaver::addSegment(const SegmentSaver& S) {
+void SegmentSaver::addSegment(const SegmentSaver& S, double sc) {
     isEquivalent(S, true);
-    for(auto& kv: saveHists) kv.second->Add(S.getSavedHist(kv.first));        
+    for(auto& kv: saveHists) kv.second->Add(S.getSavedHist(kv.first), sc);
+    for(auto& kv: cumDat) kv.second->_Add(S.getCumulative(kv.first), sc);
 }
 
 size_t SegmentSaver::addFiles(const vector<string>& inflnames) {
@@ -172,6 +205,7 @@ size_t SegmentSaver::addFiles(const vector<string>& inflnames) {
 }
 
 void SegmentSaver::displaySavedHists() const {
-    for(auto& kv: saveHists) printf("\t'%s'\n", kv.first.c_str());
+    for(auto& kv: saveHists) printf("\thistogram '%s'\n", kv.first.c_str());
+    for(auto& kv: cumDat) printf("\tcumulative '%s'\n", kv.first.c_str());
 }
 

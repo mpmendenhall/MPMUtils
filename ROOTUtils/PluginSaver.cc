@@ -75,13 +75,13 @@ void PluginSaver::normalize() {
             kv.second->thePlugin->normalize();
 }
 
-void PluginSaver::addSegment(const SegmentSaver& S) {
+void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
     SegmentSaver::addSegment(S);
     const PluginSaver& PS = dynamic_cast<const PluginSaver&>(S);
     for(auto& kv: myBuilders) {
         if(kv.second->thePlugin) {
             SegmentSaver* Si = PS.getPlugin(kv.first);
-            if(Si) kv.second->thePlugin->addSegment(*Si);
+            if(Si) kv.second->thePlugin->addSegment(*Si,sc);
             else printf("Warning: PluginSaver::addSegment missing matching plugin for '%s'\n", kv.first.c_str());
         }
     }
