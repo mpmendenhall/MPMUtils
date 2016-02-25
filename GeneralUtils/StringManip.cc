@@ -132,8 +132,7 @@ vector< vector<double> > readArray(ifstream& fin, unsigned int minitems, const s
 }
 
 string dropLast(const string& str, const string splitchars) {
-    vector<string> v = split(str,splitchars);
-    return str.substr(0, str.size() - v.back().size() - 1);
+    return str.substr(0, str.find_last_of(splitchars));
 }
 
 string loadFileString(const string& fname) {
