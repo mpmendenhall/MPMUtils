@@ -27,7 +27,7 @@ void TDynamicHistogram::Add(const TDynamicHistogram& h, Double_t s, Bool_t rebin
         for(auto const& kv: d) {
             Int_t b = h.BinCenter(kv.first);
             fDat[b].sw += s*kv.second.sw;
-            fDat[b].sww += s*kv.second.sww;
+            fDat[b].sww += s*s*kv.second.sww;
         }
     } else {
         for(auto const& kv: d) {
@@ -37,8 +37,17 @@ void TDynamicHistogram::Add(const TDynamicHistogram& h, Double_t s, Bool_t rebin
     }
 }
 
+void TDynamicHistogram::normalize_to_bin_width(Double_t sc) {
+    for(auto& kv: fDat) {
+        Double_t bw = BinLoEdge(kv.first+1)-BinLoEdge(kv.first);
+        kv.second.sw *= sc/bw;
+        kv.second.sww *= sc*sc/(bw*bw);
+    }
+}
+
 TGraphErrors* TDynamicHistogram::MakeGraph() const {
     TGraphErrors* g = new TGraphErrors(fDat.size());
+    g->SetTitle(fTitle);
     Int_t n = 0;
     for(auto const& kv: fDat) {
         g->SetPoint(n, BinCenter(kv.first), kv.second.sw);

@@ -45,6 +45,8 @@ public:
     virtual Double_t BinCenter(Int_t n) const { return ((fN-n-0.5)*fX0 + (n+0.5)*fX1)/fN; }
     /// get representation as a TGraphErrors
     TGraphErrors* MakeGraph() const;
+    /// divide bins by width and optional additional scaling
+    virtual void normalize_to_bin_width(Double_t sc = 1.);
     
     /// Scale contents by factor
     virtual void _Scale(Double_t s) { Scale(s); }
