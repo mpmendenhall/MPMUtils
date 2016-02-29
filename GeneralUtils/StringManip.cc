@@ -22,6 +22,7 @@
 #include "StringManip.hh"
 #include <stdlib.h>
 #include <fstream>
+#include <time.h>
 
 string itosRN(int i) {
     if(!i) return "0";
@@ -147,4 +148,11 @@ string loadFileString(const string& fname) {
         return contents;
     }
     return "";
+}
+
+string displayTime(double t, const string& fmt) {
+    time_t tt = t;
+    char buf[1024];
+    strftime(buf,sizeof(buf),fmt.c_str(),localtime(&tt));
+    return buf;
 }

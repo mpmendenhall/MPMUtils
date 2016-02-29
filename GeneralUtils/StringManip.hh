@@ -92,6 +92,9 @@ string strip(const string& str, const string stripchars = " \t\r\n");
 /// drop last segment after splitting character
 string dropLast(const string& str, const string splitchars);
 
+/// display formatted time from timestamp
+string displayTime(double t, const string& fmt = "%a %b %d %H:%M:%S %Y");
+
 /// lowercase alphabet
 const string alpha_lower = "abcdefghijklmnopqrstuvwxyz";
 /// uppercase alphabet
