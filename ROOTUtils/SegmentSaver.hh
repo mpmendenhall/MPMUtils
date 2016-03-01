@@ -102,6 +102,7 @@ public:
     virtual void compare(const vector<SegmentSaver*>&) { }
     
     TFile* fIn;                 ///< input file to read in histograms from
+    TDirectory* dirIn = NULL;   ///< particular sub-directory for reading histograms
     string inflname;            ///< where to look for input file
     bool isCalculated;          ///< flag for whether calculation step has been completed
     

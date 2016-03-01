@@ -8,12 +8,13 @@
 #include "TObjCollector.hh"
 #include <cassert>
 
-void TObjCollector::writeItems() {
-    //printf("Saving registered objects...");
-    //fflush(stdout);
+TDirectory* TObjCollector::writeItems(TDirectory* d) {
+    if(!d) d = gDirectory;
+    assert(d);
+    d->cd();
     for(auto i: namedItems) i->Write();
     for(auto const& kv: anonItems) kv.second->Write(kv.first.c_str());
-    //printf(" Done.\n");
+    return d;
 }
 
 void TObjCollector::clearItems() {

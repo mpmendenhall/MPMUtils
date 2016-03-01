@@ -21,13 +21,16 @@
 
 #include "OutputManager.hh"
 #include "PathUtils.hh"
+#include <TFile.h>
+#include <TDirectory.h>
 #include <TH1.h>
 #include <TStyle.h>
+#include <cassert>
 
 bool OutputManager::squelchAllPrinting = false;
 
 OutputManager::OutputManager(string nm, string bp):
-rootOut(NULL), defaultCanvas(new TCanvas()),
+defaultCanvas(new TCanvas()),
 parent(NULL), name(nm) {
     TH1::AddDirectory(kFALSE);
     // set up output canvas
@@ -39,7 +42,7 @@ parent(NULL), name(nm) {
 }
 
 OutputManager::OutputManager(string nm, OutputManager* pnt):
-rootOut(NULL), defaultCanvas(NULL), parent(pnt), name(nm) {
+defaultCanvas(NULL), parent(pnt), name(nm) {
     TH1::AddDirectory(kFALSE);
     if(parent) {
         defaultCanvas = parent->defaultCanvas;
@@ -47,39 +50,42 @@ rootOut(NULL), defaultCanvas(NULL), parent(pnt), name(nm) {
     }
 }
 
-void OutputManager::openOutfile() {
-    if(rootOut) { rootOut->Close(); }
-    makePath(rootPath);
-    rootOut = new TFile((rootPath+"/"+name+".root").c_str(),"RECREATE");
-    rootOut->cd();
+TDirectory* OutputManager::writeItems(TDirectory* d) {
+    if(!d) d = gDirectory;
+    else d = d->mkdir(name.c_str());
+    assert(d);
+    return TObjCollector::writeItems(d);
 }
 
-void OutputManager::writeROOT() {
+void OutputManager::writeROOT(TDirectory* parentDir) {
     printf("\n--------- Building output .root file... ----------\n");
-    if(!rootOut) openOutfile();
-    rootOut->cd();
-    writeItems();
+    TFile* rootOut = NULL;
+    if(parentDir) writeItems(parentDir);
+    else {
+        makePath(rootPath);
+        string outfname = rootPath+"/"+name+".root";
+        printf("Writing to '%s'\n", outfname.c_str());
+        rootOut = new TFile(outfname.c_str(),"RECREATE");
+        rootOut->cd();
+        writeItems(NULL);
+    }
     clearItems();
-    rootOut->Close();
-    rootOut = NULL;
+    delete rootOut;
     printf("---------          Done.          ----------\n");
 }
 
 
 TH1F* OutputManager::registeredTH1F(string hname, string htitle, unsigned int nbins, float x0, float x1) {
-    if(rootOut) rootOut->cd();
     TH1F* h = new TH1F(hname.c_str(),htitle.c_str(),nbins,x0,x1);
     return (TH1F*)addObject(h);
 }
 
 TH1D* OutputManager::registeredTH1D(string hname, string htitle, unsigned int nbins, float x0, float x1) {
-    if(rootOut) rootOut->cd();
     TH1D* h = new TH1D(hname.c_str(),htitle.c_str(),nbins,x0,x1);
     return (TH1D*)addObject(h);
 }
 
 TH2F* OutputManager::registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1) {
-    if(rootOut) rootOut->cd();
     return (TH2F*)addObject(new TH2F(hname.c_str(),htitle.c_str(),nbinsx,x0,x1,nbinsy,y0,y1));
 }
 

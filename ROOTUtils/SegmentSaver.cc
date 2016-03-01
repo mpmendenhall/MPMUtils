@@ -24,15 +24,37 @@
 #include "SMExcept.hh"
 #include <TString.h>
 
+SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
+OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalculated(false), inflAge(0) {
+    // open file to load existing data
+    fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : NULL;
+    smassert(!fIn || !fIn->IsZombie(),"unreadable_file");
+    if(fIn) {
+        dirIn = fIn->GetDirectory("");
+        inflAge = fileAge(inflname);
+        printf("Loading data from %s [%.1f hours old]...\n",inflname.c_str(),inflAge/3600.);
+    }
+    auto PSS = dynamic_cast<SegmentSaver*>(pnt);
+    if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(nm.c_str());
+}
+
+SegmentSaver::~SegmentSaver() {
+    if(fIn) {
+        fIn->Close();
+        delete fIn;
+    }
+}
+
 void resetZaxis(TH1* o) {
     TObject* a = o->GetListOfFunctions()->FindObject("palette");
     if(a) o->GetListOfFunctions()->Remove(a);
 }
 
 TObject* SegmentSaver::tryLoad(const string& oname) {
-    if(!fIn) return NULL;
+    if(!fIn && !dirIn) return NULL;
     TObject* o = NULL;
-    fIn->GetObject(oname.c_str(),o);
+    if(dirIn) dirIn->GetObject(oname.c_str(),o);   // first try in my directory
+    if(!o && fIn) fIn->GetObject(oname.c_str(),o); // fall back to file base for backwards compatibility
     if(!o) {
         if(ignoreMissingHistos) {
             printf("Warning: missing object '%s' in '%s'\n",oname.c_str(),inflname.c_str());
@@ -100,24 +122,6 @@ TCumulative* SegmentSaver::registerCumulative(const string& onm, const TCumulati
     }
     cumDat.emplace(onm,c);
     return c;
-}
-
-SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
-OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalculated(false), inflAge(0) {
-    // open file to load existing data
-    fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")):NULL;
-    smassert(!fIn || !fIn->IsZombie(),"unreadable_file");
-    if(fIn) {
-        inflAge = fileAge(inflname);
-        printf("Loading data from %s [%.1f hours old]...\n",inflname.c_str(),inflAge/3600.);
-    }
-}
-
-SegmentSaver::~SegmentSaver() {
-    if(fIn) {
-        fIn->Close();
-        delete fIn;
-    }
 }
 
 TH1* SegmentSaver::getSavedHist(const string& hname) {

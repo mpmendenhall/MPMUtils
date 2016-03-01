@@ -8,9 +8,9 @@
 #ifndef TOBJCOLLECTOR_HH
 #define TOBJCOLLECTOR_HH
 
-#include <TFile.h>
 #include <TObject.h>
 #include <TNamed.h>
+#include <TDirectory.h>
 
 #include <string>
 using std::string;
@@ -25,8 +25,8 @@ public:
     /// destructor
     virtual ~TObjCollector() { clearItems(); }
     
-    /// write items to file
-    virtual void writeItems();
+    /// write items to currently open directory, or specified; return directory written to
+    virtual TDirectory* writeItems(TDirectory* d = NULL);
     /// clear (delete) items
     virtual void clearItems();
     /// register a named ROOT object for output (and eventual deletion)

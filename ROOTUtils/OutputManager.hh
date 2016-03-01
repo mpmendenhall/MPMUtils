@@ -47,7 +47,6 @@ public:
     /// destructor
     virtual ~OutputManager() {
         clearItems();
-        if(rootOut) rootOut->Close();
         if(!parent) delete defaultCanvas; 
     }
     
@@ -59,20 +58,19 @@ public:
     TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
     /// print current canvas
     virtual void printCanvas(string fname, string suffix=".pdf") const;
-        
-    /// open output ROOT file for writing
-    virtual void openOutfile();
-    /// write output ROOT file; WARNING: THIS DELETES ALL REGISTERED ITEMS; do last if you reference these!
-    void writeROOT();
     
-    TFile* rootOut;             ///< ROOT file output
-    TCanvas* defaultCanvas;     ///< canvas for drawing plots
-    OutputManager* parent;      ///< parent output manager
-    string basePath;            ///< general output path
-    string plotPath;            ///< specific output path for plots
-    string dataPath;            ///< specific output path for output data
-    string rootPath;            ///< specific output path for ROOT files
-    string name;                ///< name for this subsystem
+    /// write items to currently open directory, or specified
+    TDirectory* writeItems(TDirectory* d = NULL) override;
+    /// write output ROOT file, or to new directory within parent; WARNING: THIS DELETES ALL REGISTERED ITEMS; do last if you reference these!
+    void writeROOT(TDirectory* parentDir = NULL);
+    
+    TCanvas* defaultCanvas;             ///< canvas for drawing plots
+    OutputManager* parent = NULL;       ///< parent output manager
+    string basePath;                    ///< general output path
+    string plotPath;                    ///< specific output path for plots
+    string dataPath;                    ///< specific output path for output data
+    string rootPath;                    ///< specific output path for ROOT files
+    string name;                        ///< name for this subsystem
     
     static bool squelchAllPrinting;     ///< whether to cancel all printCanvas output
 };

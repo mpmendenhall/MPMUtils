@@ -122,12 +122,13 @@ void PluginSaver::calculateResults() {
             kv.second->thePlugin->calculateResults();
 }
 
-void PluginSaver::writeItems() {
-    SegmentSaver::writeItems();
+TDirectory* PluginSaver::writeItems(TDirectory* d) {
+    d = SegmentSaver::writeItems(d);
     printf("Writing plugins '%s'\n", filePlugins->String().Data());
     for(auto& kv: myBuilders)
         if(kv.second->thePlugin)
-            kv.second->thePlugin->writeItems();
+            kv.second->thePlugin->writeItems(d);
+    return d;
 }
 
 void PluginSaver::clearItems() {
