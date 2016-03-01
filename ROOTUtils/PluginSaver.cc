@@ -30,7 +30,7 @@ void PluginSaver::buildPlugins() {
                 printf("Plugin '%s' missing from input file; skipped.\n", pnm.c_str());
                 continue;
             }
-            PB->second->makePlugin(this, inflname);
+            PB->second->makePlugin(this);
         }
     } else {
         /// construct all plugins

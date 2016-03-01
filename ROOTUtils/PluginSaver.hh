@@ -14,7 +14,7 @@
 class PluginBuilder {
 public:
     /// instantiate plugin SegmentSaver
-    virtual void makePlugin(OutputManager* pnt, const string& inflName = "") = 0;
+    virtual void makePlugin(SegmentSaver* pnt) = 0;
     
     SegmentSaver* thePlugin = NULL;     ///< instantiated plugin (not memory managed here)
 };

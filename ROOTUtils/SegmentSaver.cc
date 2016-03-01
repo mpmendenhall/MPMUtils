@@ -33,9 +33,13 @@ OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalcula
         dirIn = fIn->GetDirectory("");
         inflAge = fileAge(inflname);
         printf("Loading data from %s [%.1f hours old]...\n",inflname.c_str(),inflAge/3600.);
+    } else { // try sub-directory of parent if file not specified
+        auto PSS = dynamic_cast<SegmentSaver*>(pnt);
+        if(PSS && PSS->dirIn) {
+            dirIn = PSS->dirIn->GetDirectory(nm.c_str());
+            if(!dirIn) dirIn = PSS->dirIn; // fallback for backwards compatibility prior to subdirectories
+        }
     }
-    auto PSS = dynamic_cast<SegmentSaver*>(pnt);
-    if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(nm.c_str());
 }
 
 SegmentSaver::~SegmentSaver() {
