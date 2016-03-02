@@ -24,6 +24,12 @@ public:
     virtual void _Add(const CumulativeData* CD, Double_t s = 1.) = 0;
     /// clear data contents
     virtual void _Clear() { _Scale(0); }
+    /// inline sum
+    CumulativeData& operator+=(const CumulativeData& rhs) { _Add(&rhs); return *this; }
+    /// inline product
+    CumulativeData& operator*=(Double_t s) { _Scale(s); return *this; }
+    
+    ClassDef(CumulativeData,1);
 };
 
 #endif
