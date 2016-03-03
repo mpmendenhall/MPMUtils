@@ -21,7 +21,7 @@ public:
     
     /// Scale contents by factor
     virtual void _Scale(Double_t s) { for(auto& kv: fDat) kv.second *= s; }
-    /// add another histogram, assuming same binning convention or re-calculating bins
+    /// Add another object of the same type
     virtual void _Add(const CumulativeData* CD, Double_t s = 1.) {
         auto m2 = dynamic_cast<const TCumulativeMap<K_,V_>*>(CD);
         if(!m2) return;
