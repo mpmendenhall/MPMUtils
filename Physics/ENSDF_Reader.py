@@ -6,9 +6,13 @@ class ENSDF_Number:
     def __init__(self, vs, dvs, u = None):
         self.vs = vs.strip()    # value, string format
         self.dvs = dvs.strip()  # uncertainty, string formay
-        self.uvals = {"M":60., "S":1., "US":1e-6, "PS":1e-12, "keV":1, "%":0.01, None:1}
+        self.uvals = {"Y":365.25636*24*3600, "D": 24*3600, "H":3600,
+                      "M":60., "S":1., "MS":1e-3, "US":1e-6, "PS":1e-12,
+                      "FS":1e-15, "AS":1e-18,
+                      "EV": 1e-3, "KEV":1., "MEV":1e3,
+                      "%":0.01, None:1}
         self.unit = u
-        assert u in self.uvals
+        assert u is None or u.upper() in self.uvals
         self.v = self.dv = None
 
         if self.vs:
@@ -20,7 +24,7 @@ class ENSDF_Number:
                 self.unit = vparts[1]
             
     def tofloat(self):
-        return self.v * self.uvals[self.unit] if self.v is not None else None
+        return self.v * self.uvals[self.unit.upper() if self.unit is not None else None] if self.v is not None else None
         
     def __repr__(self):
         s = ""
@@ -49,6 +53,7 @@ def to_ENSDF_Number(s):
 
 class ENSDF_Record:
     def __init__(self,l):
+        print(l)
         self.l = l.strip()
         self.NUCID = l[:5]      # nucleus ID
         self.CONT = l[5:6]      # continuation marker
@@ -56,8 +61,8 @@ class ENSDF_Record:
         assert self.C in " CDTctP" or not self.C
         self.RTYPE = l[7:8]     # record type
         self.num = l[8:9].strip()       # multi-parent identifier
-        self.continuation = None        # continuation data
-        self.comment = None             # comment
+        self.xvals = {}                 # extra values from continuation
+        self.comments = []              # comments entries
         
     def __repr__(self):
         return "<Record %s>"%self.l
@@ -65,14 +70,29 @@ class ENSDF_Record:
     def parent_id(self):
         return (self.NUCID, self.num)
     
-    def cont_repr(self):
-        s = "%s"%self.continuation if self.continuation else ""
-        s += " // %s"%self.comment if self.comment else ""
-        return s
+    def xvals_repr(self):
+        s = ""
+        if not self.xvals:
+            return s
+        s += "{"
+        for k in self.xvals:
+            for v in self.xvals[k]:
+                s += " %s "%k + "%s %s"%v
+        return s + " }"
     
-    def display(self):
-        print(self)
+    def display(self, d = 0):
+        print("\t"*d + str(self))
+        xvr = self.xvals_repr()
+        if xvr:
+            print("\t"*d + xvr)
+        for c in self.comments:
+            c.display(d)
 
+    def addContinuation(self, C):
+        for k in C.vals:
+            l = self.xvals.setdefault(k,[])
+            l += C.vals[k]
+    
 class ENSDF_End_Record:
      def __init__(self,l):
          ENSDF_Record.__init__(self,l)
@@ -83,9 +103,11 @@ class ENSDF_Continuation_Record(ENSDF_Record):
     def __init__(self,l):
         ENSDF_Record.__init__(self,l)
         assert self.RTYPE in "LBEGH "
+        assert self.CONT.isalnum() and self.CONT != "1"
         assert self.C in "ct " and not self.num
         self.vals = {}
         if self.C != " ": # comment-type continuation
+            self.CTEXT = l[9:].strip()
             return
         
         ops = ["=","<",">","<=",">=","~"]
@@ -98,11 +120,9 @@ class ENSDF_Continuation_Record(ENSDF_Record):
                 if len(ss) == 2:
                     self.vals.setdefault(ss[0],[]).append((o,to_ENSDF_Number(ss[1])))
                     break
-                
-    def merge(self, C):
-        for k in C.vals:
-            l = self.vals.setdefault(k,[])
-            l += C.vals[k]
+   
+    def addContinuation(self, C):
+        assert False
         
     def __repr__(self):
         s = "<Cont"
@@ -110,16 +130,48 @@ class ENSDF_Continuation_Record(ENSDF_Record):
             s += " "+k
             for v in self.vals[k]:
                 s += " %s %s"%v
+        if not self.vals:
+            s += " " + self.l
         return s+">"
     
 class ENSDF_Comment_Record(ENSDF_Record):
     def __init__(self,l):
         ENSDF_Record.__init__(self,l)
-        self.RTYPE = ""
-        self.text = l[7:]
+        self.PSYM = l[8:9]
+        
+        self.CTEXT = l[9:80]
+        
+        # possible symbol for record comments
+        self.SYM = None
+        if not self.PSYM == self.RTYPE == " " and "$" in self.CTEXT:
+            ts = self.CTEXT.split("$")
+            self.SYM = ts[0]
+            self.CTEXT = ts[1]
+            
+    def addContinuation(self, C):
+        self.CTEXT += "\n" + C.CTEXT
+        
     def __repr__(self):
-        return "<Comment:%s>"%(self.text)
+        s = "//"
+        if self.SYM:
+            s += " [%s] "%self.SYM
+        else:
+            s += "*"
+        return s + self.CTEXT.replace("\n"," ")
     
+    def display(self, d=0):
+        s = ""
+        for (n,l) in enumerate(self.CTEXT.split("\n")):
+            s += "\t"*d + "//"
+            if not n and self.SYM:
+                s += " [%s] "%self.SYM
+            elif not n:
+                s += "*"
+            else:
+                s += " "
+            s += l + "\n"
+        print(s[:-1])
+        
 class ENSDF_Identification_Record(ENSDF_Record):
     def __init__(self,l):
         ENSDF_Record.__init__(self,l)
@@ -128,6 +180,7 @@ class ENSDF_Identification_Record(ENSDF_Record):
         self.DSREF = l[39:65].strip()   # References to supporting publications
         self.PUB = l[65:74].strip()     # Publication information
         self.DATE = l[74:80].strip()    # Date of entry into ENSDF database
+        
     def __repr__(self):
         return "<Identification: %s(%s) Ref = %s, Pub = %s, Date = %s>"%(self.NUCID, self.DSID, self.DSREF, self.PUB, self.DATE)
 
@@ -136,6 +189,34 @@ class ENSDF_History_Record(ENSDF_Record):
         ENSDF_Record.__init__(self,l)
     def __repr__(self):
         return "<History %s>"%self.l
+
+class ENSDF_QValue_Record(ENSDF_Record):
+    def __init__(self,l):
+        ENSDF_Record.__init__(self,l)
+        assert self.C == " " and not self.num
+        # Total energy available for beta- decay, keV
+        self.Qm = ENSDF_Number(l[9:19],l[19:21],"keV")
+        # Neutron separation energy, keV
+        self.SN = ENSDF_Number(l[21:29],l[29:31],"keV")
+        # Proton separation energy, keV
+        self.SP = ENSDF_Number(l[31:39],l[39:41],"keV")
+        # Total energy available for alpha decay, keV
+        self.QA = ENSDF_Number(l[41:49],l[49:55],"keV")
+        self.QREF = l[55:80] # Reference citations
+        
+    def __repr__(self):
+        return "<QValue %s>"%self.l
+
+class ENSDF_XRef_Record(ENSDF_Record):
+    def __init__(self,l):
+        ENSDF_Record.__init__(self,l)
+        assert self.C == " "
+        self.DSSYM = self.num # unique identifier for the dataset
+        # Dataset ID, must match one of the DSIDs used
+        self.DSID = l[9:39].strip()
+       
+    def __repr__(self):
+        return "<XRef [%s] %s>"%(self.DSSYM, self.DSID)
     
 class ENSDF_Parent_Record(ENSDF_Record):
     def __init__(self,l):
@@ -151,10 +232,11 @@ class ENSDF_Parent_Record(ENSDF_Record):
     def __repr__(self):
         return "<Parent%s %s: E = %s, Q = %s, T = %s>"%(self.num, self.NUCID, self.E, self.QP, self.T)
 
-    def display(self):
-        print(self)
+    def display(self, d = 0):
+        ENSDF_Record.display(self,d)
         for kn in self.norms:
-            print("\t",self.norms[kn])
+            for n in self.norms[kn]:
+                n.display(d+1)
             
 class ENSDF_Normalization_Record(ENSDF_Record):
     def __init__(self,l):
@@ -175,6 +257,23 @@ class ENSDF_Normalization_Record(ENSDF_Record):
     def __repr__(self):
         return "<Normalization %s%s: NR = %s, NT = %s, BR = %s, NB = %s, NP = %s>"%(self.NUCID, self.num, self.NR, self.NT, self.BR, self.NB, self.NP)
 
+class ENSDF_ProdNorm_Record(ENSDF_Record):
+    def __init__(self,l):
+        ENSDF_Record.__init__(self,l)
+        assert self.C == "P" and not self.num
+        
+        # Multiplier for rel. photon intensity to per 100 parent decays
+        self.NRxBR = ENSDF_Number(l[9:19],l[19:21])
+        # Multiplier for rel. total transition intensity to per 100 parent decays 
+        self.NTxBR = ENSDF_Number(l[21:29],l[29:31])
+        # Multiplier for relative beta-, EC to intensities per 100 decays in branch
+        self.NBxBR = ENSDF_Number(l[41:49],l[49:51])
+        # Multiplier from delayed-transition intensity to precursor decays
+        self.NP = ENSDF_Number(l[55:62],l[62:64])
+        self.COMM = l[77:78]    # blank or 'C' to show comment from continuation records
+        
+    def __repr__(self):
+        return "<ProdNorm %s: NRxBR = %s, NTxBR = %s, NBxBR = %s, NP = %s>"%(self.NUCID, self.NRxBR, self.NTxBR, self.NBxBR, self.NP)
 
 class ENSDF_Level_Record(ENSDF_Record):
     def __init__(self,l):
@@ -199,17 +298,17 @@ class ENSDF_Level_Record(ENSDF_Record):
         s = "<Level %s: E = %s"%(self.NUCID, self.E)
         if self.J:
              s += " (J=%s)"%self.J
-        return s+" lifetime %s>"%self.T + self.cont_repr()
+        return s+" lifetime %s>"%self.T
     
     def level_id(self):
         return (self.NUCID, self.E.tofloat())
     
-    def display(self):
-        print(self)
+    def display(self, d=0):
+        ENSDF_Record.display(self,d)
         for f in self.feeders:
-            print("\tfrom ",f)
+            f.display(d+1)
         for g in self.gammas:
-            print("\t",g)
+            g.display(d+1)
         
 class ENSDF_Beta_Record(ENSDF_Record):
     def __init__(self,l):
@@ -231,7 +330,7 @@ class ENSDF_Beta_Record(ENSDF_Record):
         s = "<Beta %s:"%(self.NUCID)
         if self.E.v:
             s += " E = %s"%self.E
-        return s + " Branch = %s>"%self.IB + self.cont_repr()
+        return s + " Branch = %s>"%self.IB
 
 class ENSDF_EC_Record(ENSDF_Record):
     def __init__(self,l):
@@ -257,7 +356,7 @@ class ENSDF_EC_Record(ENSDF_Record):
         s = "<Ecapt %s:"%(self.NUCID)
         if self.E.v:
             s += " E = %s"%self.E
-        return s + " Total Intensity = %s>"%self.TI  + self.cont_repr()
+        return s + " Total Intensity = %s>"%self.TI
 
 
 class ENSDF_Alpha_Record(ENSDF_Record):
@@ -279,10 +378,32 @@ class ENSDF_Alpha_Record(ENSDF_Record):
         self.Q = l[79:80]               # questionable decay marker
         
     def __repr__(self):
-        s = "<Alpha %s: E = %s Intensity = %s Hindrance = %s>"%(self.NUCID, self.E, self.IA, self.HF)
-        return s + self.cont_repr()
+        return "<Alpha %s: E = %s Intensity = %s Hindrance = %s>"%(self.NUCID, self.E, self.IA, self.HF)
 
-
+class ENSDF_DParticle_Record(ENSDF_Record):
+    def __init__(self,l):
+        ENSDF_Record.__init__(self,l)
+        assert self.C == " "
+        self.Particle = self.num # symbol for delayed particle
+        
+        # energy for delayed particle [keV]
+        self.E = ENSDF_Number(l[9:19], l[19:21], "keV")
+        # intensity as percent of total delayed particle emissions
+        self.IP = ENSDF_Number(l[21:29], l[29:31], "%")
+        # energy of level in "intermediate" nuclide
+        self.EI = ENSDF_Number(l[31:39], "", "keV")
+        # width of transition in keV
+        self.T = ENSDF_Number(l[39:49], l[49:55], "keV")
+        # angular momentum transfer of emitted particle
+        self.L = l[55:64].strip()
+        
+        self.C_ = l[76:77].strip()      # comment flag
+        self.COIN = l[77:78].strip()    # confirmed by coincidence?
+        self.Q = l[79:80]               # questionable or unobserved placement
+       
+    def __repr__(self):
+        return "<Delayed %s: E = %s, Intensity = %s, T = %s>"%(self.Particle, self.EI, self.IP, self.T)  
+    
 class ENSDF_Gamma_Record(ENSDF_Record):
     def __init__(self,l):
         ENSDF_Record.__init__(self,l)
@@ -314,66 +435,56 @@ class ENSDF_Gamma_Record(ENSDF_Record):
         if self.goesto:
             s += " to (%s,%g)"%self.goesto
         s += " E = %s"%self.E
-        return s + " Rel. photon intensity = %s>"%self.RI  + self.cont_repr()       
+        return s + " Rel. photon intensity = %s>"%self.RI     
         
-        
-        
-        
-def parse_record(l):
-    """Identify and return correct record type from text line"""
-    
-    if not l.strip():
-        return ENSDF_End_Record(l)
-    
-    if len(l) < 7:
-           return None
-    
-    if l[5] != " ":
-        return ENSDF_Continuation_Record(l)
-    if l[6] != " ":
-        return ENSDF_Comment_Record(l)
-
-    if len(l) < 8:
-           return None
+class ENSDF_Reference_Record(ENSDF_Record):
+    def __init__(self,l):
+        ENSDF_Record.__init__(self,l)
+        assert l[3:7] == "    " and self.num == " "
+        self.MASS = int(l[0:3].strip()) # mass number
+        self.KEYNUM = l[9:17].strip() # reference key number
+        self.REFERENCE = l[17:80].strip() # abbreviated reference
        
-    if l[7] == "H":
-        return ENSDF_History_Record(l)
-    if l[7] == "P":
-        return ENSDF_Parent_Record(l)
-    if l[7] == "N":
-        return ENSDF_Normalization_Record(l)
-    if l[7] == "L":
-        return ENSDF_Level_Record(l)
-    if l[7] == "B":
-        return ENSDF_Beta_Record(l)
-    if l[7] == "E":
-        return ENSDF_EC_Record(l)
-    if l[7] == "A":
-        return ENSDF_Alpha_Record(l)
-    if l[7] == "G":
-        return ENSDF_Gamma_Record(l)
+    def __repr__(self):
+        return "<Reference [%i] %s %s>"%(self.MASS, self.KEYNUM, self.REFERENCE)
     
-    return ENSDF_Record(l)
-
 class ENSDF_Reader:
     def __init__(self, fname):
+        
+        self.rectypes = {
+            "H": ENSDF_History_Record,
+            "Q": ENSDF_QValue_Record,
+            "X": ENSDF_XRef_Record,
+            "P": ENSDF_Parent_Record,
+            "N": ENSDF_Normalization_Record,
+            "L": ENSDF_Level_Record,
+            "B": ENSDF_Beta_Record,
+            "E": ENSDF_EC_Record,
+            "A": ENSDF_Alpha_Record,
+            "D": ENSDF_DParticle_Record,
+            "G": ENSDF_Gamma_Record,
+            "R": ENSDF_Reference_Record }
+        
         self.lines = [ l[:-1] for l in open(fname,"r").readlines()]
         
         currentLevel = None
-        prevMain = None
+        prevRec = None          # previous record for continuation
+        prevMain = None         # previous non-comment record
         
         self.IDrecord = ENSDF_Identification_Record(self.lines[0])
-        self.topcomments = []   # unassigned top-level comments
         self.history = []       # reverse-chrnological-order file history
+        self.qvalue = None
         self.parents = { }      # parent records (probably only 1; at most 2)
+        self.topcomments = []   # general comments referring to whole dataset
         self.levels = { }       # levels in decay scheme, indexed by (NUCID, E)
         norms = { }             # normalization records (attached to parents)
         unassigned = [ ]        # radiation unassigned to level structure
-        self.unknown = []       # unclassified records
+        self.refs = { }         # reference entries in special dataset
+        self.unknown = [ ]      # unclassified records
         
         for l in self.lines[1:]:
             #print(l)
-            r = parse_record(l)
+            r = self.parse_record(l)
             if not r:
                 print("Unparsed line '%s'"%l)
                 continue
@@ -383,31 +494,32 @@ class ENSDF_Reader:
                 break
             
             # check for continuations
-            if r.CONT != " " and r.RTYPE != "":
-                assert prevMain
-                if prevMain.continuation is None:
-                    prevMain.continuation = r
-                else:
-                    prevMain.continuation.merge(r)
+            if r.CONT != " ": # and r.RTYPE != "":
+                assert prevRec
+                prevRec.addContinuation(r)
                 continue
             
+            prevRec = r
+            
             # check for comments
-            if r.C != " ":
+            if r.C != " " and not (r.RTYPE == "N" and r.C == "P"):
                 if prevMain:
-                    prevMain.comment = r
+                    prevMain.comments.append(r)
                 else:
                     self.topcomments.append(r)
-                prevMain = r
                 continue
                 
             prevMain = r
             
             if r.RTYPE == "H":
                 self.history.append(r)
+            elif r.RTYPE == "Q":
+                assert not self.qvalue
+                self.qvalue = r
             elif r.RTYPE == "P":
                 self.parents[r.parent_id()] = r
             elif r.RTYPE == "N":
-                norms[r.parent_id()] = r
+                norms.setdefault(r.parent_id(),[]).append(r)
             elif r.RTYPE == "L":
                 currentLevel = r
                 assert r.level_id() not in self.levels
@@ -420,6 +532,8 @@ class ENSDF_Reader:
                         currentLevel.feeders.append(r)
                 else:
                     unassigned.append(r)
+            elif r.RTYPE == "R":
+                self.refs[r.KEYNUM] = r
             else:
                 # unprocessed record
                 self.unknown.append(r)
@@ -435,6 +549,9 @@ class ENSDF_Reader:
         for h in self.history:
             h.display()
     
+        if self.qvalue:
+            self.qvalue.display()
+            
         # associate normalizations with parents
         for kn in norms:
             for kp in self.parents:
@@ -464,7 +581,25 @@ class ENSDF_Reader:
         for r in self.unknown:
             r.display()
         
+    def parse_record(self,l):
+        if not l.strip():
+            return ENSDF_End_Record(l)
         
+        if len(l) < 7:
+            return None
+        
+        if l[5] != " ":
+            return ENSDF_Continuation_Record(l)
+        if l[6] in "CDTct":
+            return ENSDF_Comment_Record(l)
+
+        if len(l) < 8:
+            return None
+        
+        if l[6:8] == "PN":
+            return ENSDF_ProdNorm_Record(l)
+        return self.rectypes.get(l[7], ENSDF_Record)(l)
+
     def nearest_level(self, nucid, E):
         nuclevs = [l[1] for l in self.levidx if l[0] == nucid]
         if not len(nuclevs):
