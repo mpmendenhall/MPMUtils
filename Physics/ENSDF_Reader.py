@@ -16,12 +16,29 @@ class ENSDF_Number:
         self.v = self.dv = None
 
         if self.vs:
-            vparts = self.vs.split()
-            assert 1 <= len(vparts) <= 2
-            self.v = float(vparts[0])
-            if len(vparts) == 2:
-                assert u is None
-                self.unit = vparts[1]
+            try:
+                vparts = self.vs.split()
+                assert 1 <= len(vparts) <= 2
+                self.vs = vparts[0]
+                self.v = float(vparts[0])
+                if len(vparts) == 2:
+                    assert u is None
+                    self.unit = vparts[1]
+            except:
+                pass
+            
+        if self.dvs and self.dvs.isdigit():
+            newdvs = list(self.vs)
+            i = self.vs.find("E")-1
+            if i < 0:
+                i = len(newdvs)-1
+            j = len(self.dvs)-1
+            while i >= 0:
+                if newdvs[i].isdigit():
+                    newdvs[i] = self.dvs[j] if j >= 0 else '0'
+                    j -= 1
+                i -= 1
+            self.dv = float(''.join(newdvs))
             
     def tofloat(self):
         return self.v * self.uvals[self.unit.upper() if self.unit is not None else None] if self.v is not None else None
@@ -33,8 +50,10 @@ class ENSDF_Number:
             if self.dv is not None:
                 s += " ~ %g"%self.dv
         else:
-            s = "%s(%s)"%(self.vs, self.dvs)
-            if s == "()":
+            s = self.vs
+            if self.dvs:
+                s += "(%s)"%self.dvs
+            if not self.vs and not self.dvs:
                 s = "?"
         if self.unit is not None:
             s += " " + self.unit
@@ -60,6 +79,7 @@ class ENSDF_Record:
         self.C = l[6:7]         # comment marker
         assert self.C in " CDTctP" or not self.C
         self.RTYPE = l[7:8]     # record type
+        self.CRTYPE = l[6:8]    # record type with comment flag, for continuations
         self.num = l[8:9].strip()       # multi-parent identifier
         self.xvals = {}                 # extra values from continuation
         self.comments = []              # comments entries
@@ -92,6 +112,10 @@ class ENSDF_Record:
         for k in C.vals:
             l = self.xvals.setdefault(k,[])
             l += C.vals[k]
+            
+    def complete(self):
+        """Finish instantiation after all continuations added"""
+        pass
     
 class ENSDF_End_Record:
      def __init__(self,l):
@@ -102,13 +126,16 @@ class ENSDF_End_Record:
 class ENSDF_Continuation_Record(ENSDF_Record):
     def __init__(self,l):
         ENSDF_Record.__init__(self,l)
-        assert self.RTYPE in "LBEGH "
+        assert self.RTYPE in "LBEGH " or self.C != " "
         assert self.CONT.isalnum() and self.CONT != "1"
-        assert self.C in "ct " and not self.num
+        assert self.C in "CDTct " and not self.num
         self.vals = {}
-        if self.C != " ": # comment-type continuation
+        
+        if self.C != " " or self.RTYPE=="H": # text-type continuation
             self.CTEXT = l[9:].strip()
             return
+        
+        
         
         ops = ["=","<",">","<=",">=","~"]
         for s in l[9:80].split("$"):
@@ -137,11 +164,10 @@ class ENSDF_Continuation_Record(ENSDF_Record):
 class ENSDF_Comment_Record(ENSDF_Record):
     def __init__(self,l):
         ENSDF_Record.__init__(self,l)
-        self.PSYM = l[8:9]
+        self.PSYM = l[8:9]      # blank or symbol for comment on delayed particle
+        self.CTEXT = l[9:80].strip() # comment text body
         
-        self.CTEXT = l[9:80]
-        
-        # possible symbol for record comments
+        # check for possible symbol comment refers to
         self.SYM = None
         if not self.PSYM == self.RTYPE == " " and "$" in self.CTEXT:
             ts = self.CTEXT.split("$")
@@ -156,7 +182,7 @@ class ENSDF_Comment_Record(ENSDF_Record):
         if self.SYM:
             s += " [%s] "%self.SYM
         else:
-            s += "*"
+            s += "* "
         return s + self.CTEXT.replace("\n"," ")
     
     def display(self, d=0):
@@ -164,11 +190,11 @@ class ENSDF_Comment_Record(ENSDF_Record):
         for (n,l) in enumerate(self.CTEXT.split("\n")):
             s += "\t"*d + "//"
             if not n and self.SYM:
-                s += " [%s] "%self.SYM
+                s += "- [%s] "%self.SYM
             elif not n:
-                s += "*"
+                s += "- "
             else:
-                s += " "
+                s += "  "
             s += l + "\n"
         print(s[:-1])
         
@@ -187,8 +213,22 @@ class ENSDF_Identification_Record(ENSDF_Record):
 class ENSDF_History_Record(ENSDF_Record):
     def __init__(self,l):
         ENSDF_Record.__init__(self,l)
+        assert self.C == " " and not self.num
+        self.HIST = l[9:80]
+        
     def __repr__(self):
-        return "<History %s>"%self.l
+        return "<History %s>"%self.NUCID
+    
+    def addContinuation(self, C):
+        self.HIST += " " + C.CTEXT
+    
+    def complete(self):
+        for h in self.HIST.split("$"):
+            g = h.split("=")
+            if len(g) != 2:
+                continue
+            self.xvals.setdefault(g[0].strip(),[]).append(("=",g[1].strip()))
+            
 
 class ENSDF_QValue_Record(ENSDF_Record):
     def __init__(self,l):
@@ -468,7 +508,7 @@ class ENSDF_Reader:
         self.lines = [ l[:-1] for l in open(fname,"r").readlines()]
         
         currentLevel = None
-        prevRec = None          # previous record for continuation
+        prevRec = { }           # previous records of each type for continuation
         prevMain = None         # previous non-comment record
         
         self.IDrecord = ENSDF_Identification_Record(self.lines[0])
@@ -478,7 +518,7 @@ class ENSDF_Reader:
         self.topcomments = []   # general comments referring to whole dataset
         self.levels = { }       # levels in decay scheme, indexed by (NUCID, E)
         norms = { }             # normalization records (attached to parents)
-        unassigned = [ ]        # radiation unassigned to level structure
+        self.unassigned = [ ]   # radiation unassigned to level structure
         self.refs = { }         # reference entries in special dataset
         self.unknown = [ ]      # unclassified records
         
@@ -494,12 +534,14 @@ class ENSDF_Reader:
                 break
             
             # check for continuations
-            if r.CONT != " ": # and r.RTYPE != "":
-                assert prevRec
-                prevRec.addContinuation(r)
+            if r.CONT != " ":
+                assert prevRec[r.CRTYPE]
+                prevRec[r.CRTYPE].addContinuation(r)
                 continue
             
-            prevRec = r
+            if r.CRTYPE in prevRec:
+                prevRec[r.CRTYPE].complete()
+            prevRec[r.CRTYPE] = r
             
             # check for comments
             if r.C != " " and not (r.RTYPE == "N" and r.C == "P"):
@@ -531,7 +573,7 @@ class ENSDF_Reader:
                     else:
                         currentLevel.feeders.append(r)
                 else:
-                    unassigned.append(r)
+                    self.unassigned.append(r)
             elif r.RTYPE == "R":
                 self.refs[r.KEYNUM] = r
             else:
@@ -539,6 +581,9 @@ class ENSDF_Reader:
                 self.unknown.append(r)
                 print(r)
         
+        for r in prevRec.values():
+            r.complete()
+                
         print("\n\n---------------------------");
         
         self.IDrecord.display()
@@ -578,6 +623,8 @@ class ENSDF_Reader:
         
         # additional uncategorized records
         print("---------------------------");
+        for r in self.unassigned:
+            r.display()
         for r in self.unknown:
             r.display()
         
@@ -620,5 +667,10 @@ class ENSDF_Reader:
         
         
 if __name__=="__main__":
-    ENSDF_Reader("/home/mpmendenhall/Documents/PROSPECT/RefPapers/ENSDF/ENSDF_214Bi-214Po.txt")
+    basedir = "/home/mpmendenhall/Documents/PROSPECT/RefPapers/ENSDF/"
+    #ENSDF_Reader(basedir + "ENSDF_214Bi-214Po.txt")
+    #ENSDF_Reader(basedir + "ENSDF_214Bi-210Tl.txt")
+    #ENSDF_Reader(basedir + "ENSDF_210Tl-210Pb.txt")
+    ENSDF_Reader(basedir + "ENSDF_214Po-210Pb.txt")
+    #ENSDF_Reader(basedir + "ENSDF_Co60.txt")
     
