@@ -69,7 +69,9 @@ class KVMap:
     def toString(self):
         """convert to string"""
         outstr = ""
-        for k in self.dat:
+        kk = list(self.dat.keys())
+        kk.sort()
+        for k in kk:
             for i in self.dat[k]:
                 outstr += str(k)+" = "+str(i)+"\t"
         return outstr[:-1]
@@ -83,7 +85,7 @@ class SMFile(KVMap):
         
         if fname is not None:
             if not os.path.exists(fname):
-                print "No such file",fname
+                print("No such file",fname)
                 return
             for l in [z.split(':') for z in open(fname).readlines()]:
                 if len(l) < 2:
@@ -125,7 +127,7 @@ class SMFile(KVMap):
     def toString(self):
         """convert to string"""
         outstr = ""
-        dkeys = self.dat.keys()
+        dkeys = list(self.dat.keys())
         dkeys.sort()
         for k in dkeys:
             for i in self.dat[k]:
