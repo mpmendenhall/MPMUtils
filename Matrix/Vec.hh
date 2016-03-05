@@ -27,33 +27,22 @@
 #include <math.h>
 #include <cassert>
 #include <iostream>
+#include <array>
 #include <vector>
 
 using std::ostream;
 using std::vector;
+using std::array;
 
 /// Fixed-length vector arithmetic class
 template<unsigned int N, typename T>
-class Vec {
+class Vec: public array<T,N> {
 public:
     
     /// default constructor for zero vector
-    Vec() { for(unsigned int i=0; i<N; i++) x[i] = T(); }
-    /// constructor for 1-vectors
-    Vec(T x0) { assert(N==1); x[0] = x0; }
-    /// constructor for 2-vectors
-    Vec(T x0, T x1) { assert(N==2); x[0] = x0; x[1] = x1; }
-    /// constructor for 3-vectors
-    Vec(T x0, T x1, T x2) { assert(N==3); x[0] = x0; x[1] = x1; x[2] = x2; }
-    /// constructor for 4-vectors
-    Vec(T x0, T x1, T x2, T x3) { assert(N==4); x[0] = x0; x[1] = x1; x[2] = x2; x[3] = x3; }
-    /// constructor for 7-vectors (for, e.g., SI unit system)
-    Vec(T x0, T x1, T x2, T x3, T x4, T x5, T x6 ) {
-        assert(N==7);
-        x[0] = x0; x[1] = x1; x[2] = x2;
-        x[3] = x3; x[4] = x4; x[5] = x5;
-        x[6] = x6;
-    }
+    Vec() { }
+    /// constructor from std::array
+    Vec(const array<T,N>& a): array<T,N>(a) { }
     
     static Vec<N,T> basis(unsigned int n) { Vec<N,T> v = Vec<N,T>(); v[n] = 1; return v; }
     
@@ -61,15 +50,15 @@ public:
     void display(const char* suffix = "\n") const;
     
     /// dot product with another vector
-    T dot(const Vec<N,T>& v) const { T s = x[0]*v[0]; for(unsigned int i=1; i<N; i++) s+=x[i]*v[i]; return s; }
+    T dot(const Vec<N,T>& v) const { T s = (*this)[0]*v[0]; for(unsigned int i=1; i<N; i++) s+=(*this)[i]*v[i]; return s; }
     /// square magnitude \f$ v \cdot v \f$
     T mag2() const { return dot(*this); }
     /// magnitude \f$ \sqrt{v\cdot v} \f$
     T mag() const { return sqrt(mag2()); }
     /// sum of vector elements
-    T sum() const { T s = x[0]; for(unsigned int i=1; i<N; i++) s += x[i]; return s; }
+    T sum() const { T s = (*this)[0]; for(unsigned int i=1; i<N; i++) s += (*this)[i]; return s; }
     /// product of vector elements
-    T prod() const { T s = x[0]; for(unsigned int i=1; i<N; i++) s *= x[i]; return s; }
+    T prod() const { T s = (*this)[0]; for(unsigned int i=1; i<N; i++) s *= (*this)[i]; return s; }
     
     /// this vector, normalized to magnitude 1
     Vec<N,T> normalized() const { return (*this)/mag(); }
@@ -79,11 +68,6 @@ public:
     Vec<N,T> orthoProj(const Vec<N,T>& v) const { return (*this)-paraProj(v); }
     /// angle with another vector
     T angle(const Vec<N,T> v) const { return acos(dot(v)/sqrt(mag2()*v.mag2())); }
-    
-    /// mutable element access operator
-    T& operator[](unsigned int i) { assert(i<N); return x[i]; }
-    /// immutable element access operator
-    const T& operator[](unsigned int i) const { assert(i<N); return x[i]; }
     
     /// unary minus operator
     const Vec<N,T> operator-() const;
@@ -134,78 +118,65 @@ public:
     bool operator>=(const Vec<N,T>& rhs) const;
     
     /// write in binray form to a file
-    void writeBinary(ostream& o) const { o.write((char*)x,N*sizeof(T)); }
+    void writeBinary(ostream& o) const { o.write((char*)this->data(),N*sizeof(T)); }
     /// read a Vec from a file
     static Vec<N,T> readBinary(std::istream& s) { Vec<N,T> v; v.loadBinaryData(s); return v; }
     /// read in binary form from a file
-    Vec<N,T>& loadBinaryData(std::istream& s) { s.read((char*)x,N*sizeof(T)); return *this; }
-    
-    
-protected:
-        T x[N]; ///< vector elements
+    Vec<N,T>& loadBinaryData(std::istream& s) { s.read((char*)this->data(),N*sizeof(T)); return *this; }
 };
     
 template<unsigned int N, typename T>
 const Vec<N,T> Vec<N,T>::operator-() const {
     Vec<N,T> v = *this;
-    for(unsigned int i=0; i<N; i++)
-        v[i] *= -1.0;
+    for(unsigned int i=0; i<N; i++) v[i] *= -1.0;
     return v;
 }
 
 template<unsigned int N, typename T>
 Vec<N,T>& Vec<N,T>::operator+=(const Vec<N,T>& rhs) {
-    for(unsigned int i=0; i<N; i++)
-        x[i] += rhs[i];
+    for(unsigned int i=0; i<N; i++) (*this)[i] += rhs[i];
     return *this;
 }
 
 template<unsigned int N, typename T>
 Vec<N,T>& Vec<N,T>::operator-=(const Vec<N,T>& rhs) {
-    for(unsigned int i=0; i<N; i++)
-        x[i] -= rhs[i];
+    for(unsigned int i=0; i<N; i++) (*this)[i] -= rhs[i];
     return *this;
 }
 
 template<unsigned int N, typename T>
 Vec<N,T>& Vec<N,T>::operator+=(const T& c) {
-    for(unsigned int i=0; i<N; i++)
-        x[i] += c;
+    for(auto& x: *this) x += c;
     return *this;
 }
 
 template<unsigned int N, typename T>
 Vec<N,T>& Vec<N,T>::operator-=(const T& c) {
-    for(unsigned int i=0; i<N; i++)
-        x[i] -= c;
+    for(auto& x: *this) x -= c;
     return *this;
 }
 
 template<unsigned int N, typename T>
 Vec<N,T>& Vec<N,T>::operator*=(T c) {
-    for(unsigned int i=0; i<N; i++)
-        x[i] *= c;
+    for(auto& x: *this) x *= c;
     return *this;
 }
 
 template<unsigned int N, typename T>
 Vec<N,T>& Vec<N,T>::operator*=(const Vec<N,T>& other) {
-    for(unsigned int i=0; i<N; i++)
-        x[i] *= other[i];
+    for(unsigned int i=0; i<N; i++) (*this)[i] *= other[i];
     return *this;
 }
 
 template<unsigned int N, typename T>
 Vec<N,T>& Vec<N,T>::operator/=(T c) {
-    for(unsigned int i=0; i<N; i++)
-        x[i] /= c;
+    for(auto& x: *this) x /= c;
     return *this;
 }
 
 template<unsigned int N, typename T>
 Vec<N,T>& Vec<N,T>::operator/=(const Vec<N,T>& other) {
-    for(unsigned int i=0; i<N; i++)
-        x[i] /= other[i];
+    for(unsigned int i=0; i<N; i++) (*this)[i] /= other[i];
     return *this;
 }
 
@@ -253,10 +224,8 @@ const Vec<N,T> Vec<N,T>::operator/(const Vec<N,T>& other) const {
 
 template<unsigned int N, typename T>
 bool Vec<N,T>::operator==(const Vec<N,T>& rhs) const {
-    for(unsigned int i=0; i<N; i++)
-        if(x[i] != rhs.x[i])
-            return false;
-        return true;
+    for(unsigned int i=0; i<N; i++) if((*this)[i] != rhs[i]) return false;
+    return true;
 }
 
 template<unsigned int N, typename T>
@@ -267,10 +236,8 @@ bool Vec<N,T>::operator!=(const Vec<N,T>& rhs) const {
 template<unsigned int N, typename T>
 bool Vec<N,T>::operator<(const Vec<N,T>& rhs) const {
     for(unsigned int i=0; i<N; i++) {
-        if(x[i] < rhs.x[i])
-            return true;
-        if(x[i] > rhs.x[i])
-            return false;
+        if((*this)[i] < rhs[i]) return true;
+        if((*this)[i] > rhs[i]) return false;
     }
     return false;
 }
@@ -278,10 +245,8 @@ bool Vec<N,T>::operator<(const Vec<N,T>& rhs) const {
 template<unsigned int N, typename T>
 bool Vec<N,T>::operator<=(const Vec<N,T>& rhs) const {
     for(unsigned int i=0; i<N; i++) {
-        if(x[i] < rhs.x[i])
-            return true;
-        if(x[i] > rhs.x[i])
-            return false;
+        if((*this)[i] < rhs[i]) return true;
+        if((*this)[i] > rhs[i]) return false;
     }
     return true;
 }
@@ -289,10 +254,8 @@ bool Vec<N,T>::operator<=(const Vec<N,T>& rhs) const {
 template<unsigned int N, typename T>
 bool Vec<N,T>::operator>(const Vec<N,T>& rhs) const {
     for(unsigned int i=0; i<N; i++) {
-        if(x[i] > rhs.x[i])
-            return true;
-        if(x[i] < rhs.x[i])
-            return false;
+        if((*this)[i] > rhs[i]) return true;
+        if((*this)[i] < rhs[i]) return false;
     }
     return false;
 }
@@ -300,10 +263,8 @@ bool Vec<N,T>::operator>(const Vec<N,T>& rhs) const {
 template<unsigned int N, typename T>
 bool Vec<N,T>::operator>=(const Vec<N,T>& rhs) const {
     for(unsigned int i=0; i<N; i++) {
-        if(x[i] > rhs.x[i])
-            return true;
-        if(x[i] < rhs.x[i])
-            return false;
+        if((*this)[i] > rhs[i]) return true;
+        if((*this)[i] < rhs[i]) return false;
     }
     return true;
 }
