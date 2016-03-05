@@ -23,16 +23,16 @@
 /// Make sure this header is only loaded once
 #define VEC_NULL_HH
 
+#include "Vec.hh"
+#include <cassert>
+
 /// Special 0 case
 template<typename T>
-class Vec<0,T> {
+class Vec<0,T>: public array<T,0> {
 public:
     
     /// default constructor for zero vector
     Vec() { }
-    
-    /// print to stdout
-    void display(const char* suffix = "\n") const { printf("< >%s",suffix); };
     
     /// dot product with another vector
     T dot(const Vec<0,T>) const { return T(); }
@@ -55,9 +55,9 @@ public:
     T angle(const Vec<0,T>) const { return T(); }
     
     /// mutable element access operator
-    T& operator[](unsigned int) { assert(false); }
+    T& operator[](size_t) { assert(false); }
     /// immutable element access operator
-    T operator[](unsigned int) const { assert(false); }
+    T operator[](size_t) const { assert(false); }
     
     /// unary minus operator
     const Vec<0,T> operator-() const { return Vec<0,T>(); }
@@ -89,19 +89,6 @@ public:
     const Vec<0,T> operator/(T) const { return Vec<0,T>(); }
     /// elementwise division operator
     const Vec<0,T> operator/(const Vec<0,T>&) const { return Vec<0,T>(); }
-    
-    /// equality operator
-    bool operator==(const Vec<0,T>&) const { return true; }
-    /// inequality operator
-    bool operator!=(const Vec<0,T>&) const { return false; }
-    /// dictionary-order comparison operator
-    bool operator<(const Vec<0,T>&) const { return false; }
-    /// dictionary-order comparison operator
-    bool operator<=(const Vec<0,T>&) const { return true; }
-    /// dictionary-order comparison operator
-    bool operator>(const Vec<0,T>&) const { return false; }
-    /// dictionary-order comparison operator
-    bool operator>=(const Vec<0,T>&) const { return true; }
 };
     
 #endif

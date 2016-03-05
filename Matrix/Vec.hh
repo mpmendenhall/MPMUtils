@@ -1,6 +1,6 @@
 /* 
  * Vec.hh, part of the MPMUtils package.
- * Copyright (c) 2007-2014 Michael P. Mendenhall
+ * Copyright (c) 2007-2016 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include <cassert>
 #include <iostream>
 #include <array>
 #include <vector>
@@ -35,30 +34,27 @@ using std::vector;
 using std::array;
 
 /// Fixed-length vector arithmetic class
-template<unsigned int N, typename T>
+template<size_t N, typename T>
 class Vec: public array<T,N> {
 public:
     
-    /// default constructor for zero vector
+    /// Default constructor for zero-filled vector
     Vec() { }
-    /// constructor from std::array
+    /// Constructor from std::array
     Vec(const array<T,N>& a): array<T,N>(a) { }
-    
-    static Vec<N,T> basis(unsigned int n) { Vec<N,T> v = Vec<N,T>(); v[n] = 1; return v; }
-    
-    /// print to stdout
-    void display(const char* suffix = "\n") const;
+    /// Construct a basis vector with 1 in the n^th spot
+    static Vec<N,T> basis(size_t n) { Vec<N,T> v = Vec<N,T>(); v[n] = 1; return v; }
     
     /// dot product with another vector
-    T dot(const Vec<N,T>& v) const { T s = (*this)[0]*v[0]; for(unsigned int i=1; i<N; i++) s+=(*this)[i]*v[i]; return s; }
+    T dot(const Vec<N,T>& v) const { T s = (*this)[0]*v[0]; for(size_t i=1; i<N; i++) s+=(*this)[i]*v[i]; return s; }
     /// square magnitude \f$ v \cdot v \f$
     T mag2() const { return dot(*this); }
     /// magnitude \f$ \sqrt{v\cdot v} \f$
     T mag() const { return sqrt(mag2()); }
     /// sum of vector elements
-    T sum() const { T s = (*this)[0]; for(unsigned int i=1; i<N; i++) s += (*this)[i]; return s; }
+    T sum() const { T s = (*this)[0]; for(size_t i=1; i<N; i++) s += (*this)[i]; return s; }
     /// product of vector elements
-    T prod() const { T s = (*this)[0]; for(unsigned int i=1; i<N; i++) s *= (*this)[i]; return s; }
+    T prod() const { T s = (*this)[0]; for(size_t i=1; i<N; i++) s *= (*this)[i]; return s; }
     
     /// this vector, normalized to magnitude 1
     Vec<N,T> normalized() const { return (*this)/mag(); }
@@ -70,53 +66,40 @@ public:
     T angle(const Vec<N,T> v) const { return acos(dot(v)/sqrt(mag2()*v.mag2())); }
     
     /// unary minus operator
-    const Vec<N,T> operator-() const;
+    const Vec<N,T> operator-() const { auto v = *this; for(size_t i=0; i<N; i++) v[i] = -v[i]; return v; }
     
     /// inplace addition
-    Vec<N,T>& operator+=(const Vec<N,T>& rhs);
+    Vec<N,T>& operator+=(const Vec<N,T>& rhs) { for(size_t i=0; i<N; i++) (*this)[i] += rhs[i]; return *this; }
     /// inplace addition of a constant
-    Vec<N,T>& operator+=(const T& c);
+    Vec<N,T>& operator+=(const T& c) { for(auto& x: *this) x += c; return *this; }
     /// inplace subtraction
-    Vec<N,T>& operator-=(const Vec<N,T>& rhs);
+    Vec<N,T>& operator-=(const Vec<N,T>& rhs) { for(size_t i=0; i<N; i++) (*this)[i] -= rhs[i]; return *this; }
     /// inplace subtraction of a constant
-    Vec<N,T>& operator-=(const T& c);
+    Vec<N,T>& operator-=(const T& c) { for(auto& x: *this) x -= c; return *this; }
     
     /// inplace multiplication
-    Vec<N,T>& operator*=(T c);
+    Vec<N,T>& operator*=(const T& c) { for(auto& x: *this) x *= c; return *this; }
     /// inplace elementwise multiplication
-    Vec<N,T>& operator*=(const Vec<N,T>& other);
+    Vec<N,T>& operator*=(const Vec<N,T>& other) { for(size_t i=0; i<N; i++) (*this)[i] *= other[i]; return *this; }
     /// inplace division
-    Vec<N,T>& operator/=(T c);
+    Vec<N,T>& operator/=(const T& c) { for(auto& x: *this) x /= c; return *this; }
     /// inplace elementwise division
-    Vec<N,T>& operator/=(const Vec<N,T>& other);
+    Vec<N,T>& operator/=(const Vec<N,T>& other) { for(size_t i=0; i<N; i++) (*this)[i] /= other[i]; return *this; }
     
     /// addition operator
-    const Vec<N,T> operator+(const Vec<N,T>& other) const;
+    const Vec<N,T> operator+(const Vec<N,T>& other) const { auto result = *this; result += other; return result; }
     /// subtraction operator
-    const Vec<N,T> operator-(const Vec<N,T>& other) const;
+    const Vec<N,T> operator-(const Vec<N,T>& other) const { auto result = *this; result -= other; return result; }
     
     /// multiplication operator
-    const Vec<N,T> operator*(T c) const;
+    const Vec<N,T> operator*(const T& c) const { auto result = *this; result *= c; return result; }
     /// elementwise multiplication operator
-    const Vec<N,T> operator*(const Vec<N,T>& other) const;
+    const Vec<N,T> operator*(const Vec<N,T>& other) const { auto result = *this; result *= other; return result; }
     /// division operator
-    const Vec<N,T> operator/(T c) const;
+    const Vec<N,T> operator/(const T& c) const { auto result = *this; result /= c; return result; }
     /// elementwise division operator
-    const Vec<N,T> operator/(const Vec<N,T>& other) const;
-    
-    /// equality operator
-    bool operator==(const Vec<N,T>& rhs) const;
-    /// inequality operator
-    bool operator!=(const Vec<N,T>& rhs) const;
-    /// dictionary-order comparison operator
-    bool operator<(const Vec<N,T>& rhs) const;
-    /// dictionary-order comparison operator
-    bool operator<=(const Vec<N,T>& rhs) const;
-    /// dictionary-order comparison operator
-    bool operator>(const Vec<N,T>& rhs) const;
-    /// dictionary-order comparison operator
-    bool operator>=(const Vec<N,T>& rhs) const;
-    
+    const Vec<N,T> operator/(const Vec<N,T>& other) const { auto result = *this; result /= other; return result; }
+        
     /// write in binray form to a file
     void writeBinary(ostream& o) const { o.write((char*)this->data(),N*sizeof(T)); }
     /// read a Vec from a file
@@ -124,169 +107,18 @@ public:
     /// read in binary form from a file
     Vec<N,T>& loadBinaryData(std::istream& s) { s.read((char*)this->data(),N*sizeof(T)); return *this; }
 };
-    
-template<unsigned int N, typename T>
-const Vec<N,T> Vec<N,T>::operator-() const {
-    Vec<N,T> v = *this;
-    for(unsigned int i=0; i<N; i++) v[i] *= -1.0;
-    return v;
-}
-
-template<unsigned int N, typename T>
-Vec<N,T>& Vec<N,T>::operator+=(const Vec<N,T>& rhs) {
-    for(unsigned int i=0; i<N; i++) (*this)[i] += rhs[i];
-    return *this;
-}
-
-template<unsigned int N, typename T>
-Vec<N,T>& Vec<N,T>::operator-=(const Vec<N,T>& rhs) {
-    for(unsigned int i=0; i<N; i++) (*this)[i] -= rhs[i];
-    return *this;
-}
-
-template<unsigned int N, typename T>
-Vec<N,T>& Vec<N,T>::operator+=(const T& c) {
-    for(auto& x: *this) x += c;
-    return *this;
-}
-
-template<unsigned int N, typename T>
-Vec<N,T>& Vec<N,T>::operator-=(const T& c) {
-    for(auto& x: *this) x -= c;
-    return *this;
-}
-
-template<unsigned int N, typename T>
-Vec<N,T>& Vec<N,T>::operator*=(T c) {
-    for(auto& x: *this) x *= c;
-    return *this;
-}
-
-template<unsigned int N, typename T>
-Vec<N,T>& Vec<N,T>::operator*=(const Vec<N,T>& other) {
-    for(unsigned int i=0; i<N; i++) (*this)[i] *= other[i];
-    return *this;
-}
-
-template<unsigned int N, typename T>
-Vec<N,T>& Vec<N,T>::operator/=(T c) {
-    for(auto& x: *this) x /= c;
-    return *this;
-}
-
-template<unsigned int N, typename T>
-Vec<N,T>& Vec<N,T>::operator/=(const Vec<N,T>& other) {
-    for(unsigned int i=0; i<N; i++) (*this)[i] /= other[i];
-    return *this;
-}
-
-template<unsigned int N, typename T>
-const Vec<N,T> Vec<N,T>::operator+(const Vec<N,T>& other) const {
-    Vec<N,T> result = *this;
-    result += other;
-    return result;
-}
-
-template<unsigned int N, typename T>
-const Vec<N,T> Vec<N,T>::operator-(const Vec<N,T>& other) const {
-    Vec<N,T> result = *this;
-    result -= other;
-    return result;
-}
-
-template<unsigned int N, typename T>
-const Vec<N,T> Vec<N,T>::operator*(T c) const {
-    Vec<N,T> result = *this;
-    result *= c;
-    return result;
-}
-
-template<unsigned int N, typename T>
-const Vec<N,T> Vec<N,T>::operator*(const Vec<N,T>& other) const {
-    Vec<N,T> result = *this;
-    result *= other;
-    return result;
-}
-
-template<unsigned int N, typename T>
-const Vec<N,T> Vec<N,T>::operator/(T c) const {
-    Vec<N,T> result = *this;
-    result /= c;
-    return result;
-}
-
-template<unsigned int N, typename T>
-const Vec<N,T> Vec<N,T>::operator/(const Vec<N,T>& other) const {
-    Vec<N,T> result = *this;
-    result /= other;
-    return result;
-}
-
-template<unsigned int N, typename T>
-bool Vec<N,T>::operator==(const Vec<N,T>& rhs) const {
-    for(unsigned int i=0; i<N; i++) if((*this)[i] != rhs[i]) return false;
-    return true;
-}
-
-template<unsigned int N, typename T>
-bool Vec<N,T>::operator!=(const Vec<N,T>& rhs) const {
-    return !(*this == rhs);
-}
-
-template<unsigned int N, typename T>
-bool Vec<N,T>::operator<(const Vec<N,T>& rhs) const {
-    for(unsigned int i=0; i<N; i++) {
-        if((*this)[i] < rhs[i]) return true;
-        if((*this)[i] > rhs[i]) return false;
-    }
-    return false;
-}
-
-template<unsigned int N, typename T>
-bool Vec<N,T>::operator<=(const Vec<N,T>& rhs) const {
-    for(unsigned int i=0; i<N; i++) {
-        if((*this)[i] < rhs[i]) return true;
-        if((*this)[i] > rhs[i]) return false;
-    }
-    return true;
-}
-
-template<unsigned int N, typename T>
-bool Vec<N,T>::operator>(const Vec<N,T>& rhs) const {
-    for(unsigned int i=0; i<N; i++) {
-        if((*this)[i] > rhs[i]) return true;
-        if((*this)[i] < rhs[i]) return false;
-    }
-    return false;
-}
-
-template<unsigned int N, typename T>
-bool Vec<N,T>::operator>=(const Vec<N,T>& rhs) const {
-    for(unsigned int i=0; i<N; i++) {
-        if((*this)[i] > rhs[i]) return true;
-        if((*this)[i] < rhs[i]) return false;
-    }
-    return true;
-}
 
 /// string output representation for vectors
-template<unsigned int N, typename T>
+template<size_t N, typename T>
 ostream& operator<<(ostream& o, const Vec<N,T>& v) {
     o << "<\t";
-    for(unsigned int i=0; i<N; i++) {
+    for(size_t i=0; i<N; i++) {
         if(i) o << ",\t";
         o << v[i];
     }
     o << "\t>";
     return o;
 }
-
-
-template<unsigned int N, typename T>
-void Vec<N,T>::display(const char* suffix) const {
-    std::cout << *this << suffix;
-}
-
 
 /// cross product of 2-vectors
 template<typename T>
@@ -329,10 +161,10 @@ Vec<2,T> polarVec(T r, T th) {
 }
 
 /// Vec to vector<double>
-template<unsigned int N, typename T>
+template<size_t N, typename T>
 vector<double> vec2doublevec(const Vec<N,T>& v) {
     vector<double> dv(N);
-    for(unsigned int i=0; i<N; i++) dv[i] = (double)v[i];
+    for(size_t i=0; i<N; i++) dv[i] = (double)v[i];
     return dv;
 }
 
