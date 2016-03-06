@@ -39,7 +39,7 @@ class Vec: public array<T,N> {
 public:
     
     /// Default constructor for zero-filled vector
-    Vec() { }
+    Vec() { this->fill(T()); }
     /// Constructor from std::array
     Vec(const array<T,N>& a): array<T,N>(a) { }
     /// Construct a basis vector with 1 in the n^th spot
@@ -87,18 +87,18 @@ public:
     Vec<N,T>& operator/=(const Vec<N,T>& other) { for(size_t i=0; i<N; i++) (*this)[i] /= other[i]; return *this; }
     
     /// addition operator
-    const Vec<N,T> operator+(const Vec<N,T>& other) const { auto result = *this; result += other; return result; }
+    const Vec<N,T> operator+(const Vec<N,T>& other) const { auto result = *this; return (result += other); }
     /// subtraction operator
-    const Vec<N,T> operator-(const Vec<N,T>& other) const { auto result = *this; result -= other; return result; }
+    const Vec<N,T> operator-(const Vec<N,T>& other) const { auto result = *this; return (result -= other); }
     
     /// multiplication operator
-    const Vec<N,T> operator*(const T& c) const { auto result = *this; result *= c; return result; }
+    const Vec<N,T> operator*(const T& c) const { auto result = *this; return (result *= c); }
     /// elementwise multiplication operator
-    const Vec<N,T> operator*(const Vec<N,T>& other) const { auto result = *this; result *= other; return result; }
+    const Vec<N,T> operator*(const Vec<N,T>& other) const { auto result = *this; return (result *= other); }
     /// division operator
-    const Vec<N,T> operator/(const T& c) const { auto result = *this; result /= c; return result; }
+    const Vec<N,T> operator/(const T& c) const { auto result = *this; return (result /= c); }
     /// elementwise division operator
-    const Vec<N,T> operator/(const Vec<N,T>& other) const { auto result = *this; result /= other; return result; }
+    const Vec<N,T> operator/(const Vec<N,T>& other) const { auto result = *this; return (result /= other); }
         
     /// write in binray form to a file
     void writeBinary(ostream& o) const { o.write((char*)this->data(),N*sizeof(T)); }

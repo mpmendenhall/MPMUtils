@@ -1,6 +1,6 @@
 /* 
  * Matrix.hh, part of the MPMUtils package.
- * Copyright (c) 2007-2014 Michael P. Mendenhall
+ * Copyright (c) 2007-2016 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,19 +30,14 @@
 /**
  * Not particularly optimized or clever, but convenient for smallish matrices
  * or matrices of unusual special types (e.g. a matrix of circulant matrices)
- * template<unsigned int M, unsigned int N, typename T>
  */
 template<unsigned int M, unsigned int N, typename T>
 class Matrix {
 public:
-    /// constructor
+    /// Constructor
     Matrix(): vv(Vec<M*N,T>()) { }
-    
-    /// constructor from vector
-    Matrix(const Vec<M*N,T>& v): vv(v) {}
-    
-    /// destructor
-    ~Matrix() {}
+    /// Constructor from vector
+    Matrix(const Vec<M*N,T>& v): vv(v) { }
     
     /// generate a random-filled matrix
     static Matrix<M,N,T> random();
@@ -72,21 +67,21 @@ public:
     const Matrix<M,N,T> operator-() const;
     
     /// inplace multiplication by a constant
-    void operator*=(const T& c) { vv *= c; }
+    Matrix<N,M,T>& operator*=(const T& c) { vv *= c; return *this; }
     /// multiplication by a constant
-    const Matrix<M,N,T> operator*(const T& c) const;
+    const Matrix<M,N,T> operator*(const T& c) const { auto foo = *this; return (foo *= c); }
     /// inplace division by a constant
-    void operator/=(const T& c) { vv /= c; }
+    Matrix<N,M,T>& operator/=(const T& c) { vv /= c; return *this; }
     /// division by a constant
-    const Matrix<M,N,T> operator/(const T& c) const;
+    const Matrix<M,N,T> operator/(const T& c) const { auto foo = *this; return (foo /= c); }
     /// inplace addition of a matrix
-    void operator+=(const Matrix<M,N,T>& rhs) { vv += rhs.getData(); }
+    Matrix<N,M,T>& operator+=(const Matrix<M,N,T>& rhs) { vv += rhs.getData(); return *this; }
     /// addition of a matrix
-    const Matrix<M,N,T> operator+(const Matrix<M,N,T>& rhs) const;
+    const Matrix<M,N,T> operator+(const Matrix<M,N,T>& rhs) const { auto foo = *this; return (foo += rhs); }
     /// inplace subtraction of a matrix
-    void operator-=(const Matrix<M,N,T>& rhs) { vv -= rhs.getData(); }
+    Matrix<N,M,T>& operator-=(const Matrix<M,N,T>& rhs) { vv -= rhs.getData(); return *this; }
     /// subtraction of a matrix
-    const Matrix<M,N,T> operator-(const Matrix<M,N,T>& rhs) const;
+    const Matrix<M,N,T> operator-(const Matrix<M,N,T>& rhs) const { auto foo = *this; return (foo -= rhs); }
     
     /// matrix multiplication
     template<unsigned int L>
@@ -157,7 +152,6 @@ Vec<M,T> Matrix<M,N,T>::col(unsigned int i) const {
     return v;
 }
 
-
 template<unsigned int M, unsigned int N, typename T>
 const Matrix<M,N,T> Matrix<M,N,T>::operator-() const {
     Matrix<M,N,T> foo; 
@@ -167,38 +161,9 @@ const Matrix<M,N,T> Matrix<M,N,T>::operator-() const {
 }
 
 template<unsigned int M, unsigned int N, typename T>
-const Matrix<M,N,T> Matrix<M,N,T>::operator*(const T& c) const {
-    Matrix<M,N,T> foo = *this;
-    foo *= c;
-    return foo;
-}
-
-template<unsigned int M, unsigned int N, typename T>
-const Matrix<M,N,T> Matrix<M,N,T>::operator/(const T& c) const {
-    Matrix<M,N,T> foo = *this;
-    foo /= c;
-    return foo;
-}
-
-template<unsigned int M, unsigned int N, typename T>
-const Matrix<M,N,T> Matrix<M,N,T>::operator+(const Matrix<M,N,T>& rhs) const {
-    Matrix<M,N,T> foo = *this;
-    foo += rhs;
-    return foo;
-}
-
-
-template<unsigned int M, unsigned int N, typename T>
-const Matrix<M,N,T> Matrix<M,N,T>::operator-(const Matrix<M,N,T>& rhs) const {
-    Matrix<M,N,T> foo = *this;
-    foo -= rhs;
-    return foo;
-}
-
-template<unsigned int M, unsigned int N, typename T>
 template<unsigned int L>
 const Matrix<M,L,T> Matrix<M,N,T>::operator*(const Matrix<N,L,T>& B) const {
-    Matrix<M,L,T> C = Matrix<M,L,T>();
+    Matrix<M,L,T> C;
     for(unsigned int r=0; r<M; r++) {
         for(unsigned int c=0; c<L; c++) {
             C(r,c) = (*this)(r,0)*B(0,c);
@@ -211,20 +176,20 @@ const Matrix<M,L,T> Matrix<M,N,T>::operator*(const Matrix<N,L,T>& B) const {
 
 template<unsigned int M, unsigned int N, typename T>
 const Vec<M,T> Matrix<M,N,T>::lMultiply(const Vec<N,T>& v) const {
-    Vec<M,T> a = Vec<M,T>();
-    for(unsigned int r=0; r<M; r++)
-        for(unsigned int c=0; c<N; c++)
-            a[r] += (*this)(r,c)*v[c];
-        return a;
+    Vec<M,T> a;
+    for(unsigned int r=0; r<M; r++) {
+        for(unsigned int c=0; c<N; c++) a[r] += (*this)(r,c)*v[c];
+    }
+    return a;
 }
 
 template<unsigned int M, unsigned int N, typename T>
 const Vec<N,T> Matrix<M,N,T>::rMultiply(const Vec<M,T>& v) const {
-    Vec<N,T> a = Vec<N,T>();
-    for(unsigned int r=0; r<M; r++)
-        for(unsigned int c=0; c<N; c++)
-            a[c] += v[r]*(*this)(r,c);
-        return a;
+    Vec<N,T> a;
+    for(unsigned int r=0; r<M; r++) {
+        for(unsigned int c=0; c<N; c++) a[c] += v[r]*(*this)(r,c);
+    }
+    return a;
 }
 
 
