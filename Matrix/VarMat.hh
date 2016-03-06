@@ -40,47 +40,47 @@ template<typename T>
 class VarMat: public BinaryOutputObject {
 public:
     /// constructor with prototype element
-    VarMat(unsigned int m=0, unsigned int n=0, const T& i = 0): M(m), N(n), vv(n*m,i) { }
+    VarMat(size_t m=0, size_t n=0, const T& i = 0): M(m), N(n), vv(n*m,i) { }
     /// constructor from fixed matrix
-    template<unsigned int MM, unsigned int NN>
+    template<size_t MM, size_t NN>
     VarMat(Matrix<MM,NN,T> A): M(MM), N(NN), vv(A.getData()) {}
     /// destructor
     ~VarMat() {}
     
     /// generate an "identity" matrix, using specified values on/off diagonal
-    static VarMat<T> identity(unsigned int n) { return  VarMat<T>::identity(n,1,0); }
+    static VarMat<T> identity(size_t n) { return  VarMat<T>::identity(n,1,0); }
     /// generate an "identity" matrix, using specified values on/off diagonal
-    static VarMat<T> identity(unsigned int n, const T& one, const T& zero);
+    static VarMat<T> identity(size_t n, const T& one, const T& zero);
     /// generate a random-filled VarMat
-    static VarMat<T> random(unsigned int m, unsigned int n);
+    static VarMat<T> random(size_t m, size_t n);
     
     /// get m rows
-    unsigned int nRows() const { return M; }
+    size_t nRows() const { return M; }
     /// get n cols
-    unsigned int nCols() const { return N; }
+    size_t nCols() const { return N; }
     /// get d ? rows : cols
-    unsigned int nDim(bool rows) const { return rows ? M:N; }
+    size_t nDim(bool rows) const { return rows ? M:N; }
     /// get total size
-    unsigned int size() const { return vv.size(); }
+    size_t size() const { return vv.size(); }
     
     /// const element access
-    const T& operator()(unsigned int m, unsigned int n) const { assert(m<M && n<N); return vv[m+n*M]; }
+    const T& operator()(size_t m, size_t n) const { assert(m<M && n<N); return vv[m+n*M]; }
     /// mutable element access
-    T& operator()(unsigned int m, unsigned int n) { assert(m<M && n<N); return vv[m+n*M]; }
+    T& operator()(size_t m, size_t n) { assert(m<M && n<N); return vv[m+n*M]; }
     /// direct access to data vector
     const VarVec<T>& getData() const { return vv; }
     /// mutable vector element access
-    T& operator[](unsigned int i) { return vv[i]; }
+    T& operator[](size_t i) { return vv[i]; }
     /// const vector element access
-    const T& operator[](unsigned int i) const { return vv[i]; }
+    const T& operator[](size_t i) const { return vv[i]; }
     /// append column
     void appendCol(const VarVec<T>& v) { if(!nRows() && !nCols()) M=v.size(); assert(v.size() == nRows()); vv.append(v); N++; }
     /// append matrix of columns
     void appendCols(const VarMat<T>& C) { if(!nRows() && !nCols()) M=C.nRows(); assert(C.nRows() == nRows()); vv.append(C.vv); N += C.nCols(); }
     /// get row vector
-    VarVec<T> getRow(unsigned int i) const;
+    VarVec<T> getRow(size_t i) const;
     /// get column vector
-    VarVec<T> getCol(unsigned int i) const;
+    VarVec<T> getCol(size_t i) const;
     /// get sum of each column
     VarVec<T> getColSum() const;
     /// get sum of each row
@@ -97,7 +97,7 @@ public:
     /// inplace inverse
     const VarMat<T>& invert();
     /// inplace resize, truncating or adding default elements
-    const VarMat<T>& resize(unsigned int m, unsigned int n);
+    const VarMat<T>& resize(size_t m, size_t n);
     /// trace of matrix
     T trace() const;
     
@@ -141,26 +141,26 @@ public:
     
 private:
     
-    unsigned int M;
-    unsigned int N;
+    size_t M;
+    size_t N;
     VarVec<T> vv;
     
     /// step in inversion process
-    void subinvert(unsigned int n);
+    void subinvert(size_t n);
 };
 
 template<typename T>
-VarMat<T> VarMat<T>::random(unsigned int m, unsigned int n) {
+VarMat<T> VarMat<T>::random(size_t m, size_t n) {
     VarMat<T> foo(m,n);
-    for(unsigned int i=0; i<foo.size(); i++)
+    for(size_t i=0; i<foo.size(); i++)
         foo[i] = 0.1+T(rand())/T(RAND_MAX);
     return foo; 
 }
 
 template<typename T>
-VarMat<T> VarMat<T>::identity(unsigned int n, const T& one, const T& zero) {
+VarMat<T> VarMat<T>::identity(size_t n, const T& one, const T& zero) {
     VarMat<T> foo(n,n,zero);
-    for(unsigned int i=0; i<n; i++)
+    for(size_t i=0; i<n; i++)
         foo(i,i) = one;
     return foo;
 }
@@ -168,8 +168,8 @@ VarMat<T> VarMat<T>::identity(unsigned int n, const T& one, const T& zero) {
 template<typename T>
 VarMat<T> VarMat<T>::transposed() const {
     VarMat<T> foo = VarMat(N,M);
-    for(unsigned int r=0; r<M; r++)
-        for(unsigned int c=0; c<N; c++)
+    for(size_t r=0; r<M; r++)
+        for(size_t c=0; c<N; c++)
             foo(c,r) = (*this)(r,c);
         return foo;
 }
@@ -177,7 +177,7 @@ VarMat<T> VarMat<T>::transposed() const {
 template<typename T>
 const VarMat<T> VarMat<T>::operator-() const {
     VarMat<T> foo = VarMat(M,N);
-    for(unsigned int i=0; i<M*N; i++)
+    for(size_t i=0; i<M*N; i++)
         foo[i] = -(*this)[i];
     return foo;
 }
@@ -215,12 +215,12 @@ template<typename T>
 const VarMat<T> VarMat<T>::operator*(const VarMat<T>& B) const {
     if(B.nRows() != N)
         throw(DimensionMismatchError());
-    unsigned int L = B.nCols();
+    size_t L = B.nCols();
     VarMat<T> C = VarMat<T>(M,L);
-    for(unsigned int r=0; r<M; r++) {
-        for(unsigned int c=0; c<L; c++) {
+    for(size_t r=0; r<M; r++) {
+        for(size_t c=0; c<L; c++) {
             C(r,c) = (*this)(r,0)*B(0,c);
-            for(unsigned int i=1; i<N; i++)
+            for(size_t i=1; i<N; i++)
                 C(r,c) += (*this)(r,i)*B(i,c);
         }
     }
@@ -233,9 +233,9 @@ const VarVec<V> VarMat<T>::lMultiply(const VarVec<U>& v) const {
     if(v.size() != N)
         throw(DimensionMismatchError());
     VarVec<V> a;
-    for(unsigned int r=0; r<M; r++) {
+    for(size_t r=0; r<M; r++) {
         a.push_back((*this)(r,0)*v[0]);
-        for(unsigned int c=1; c<N; c++)
+        for(size_t c=1; c<N; c++)
             a.back() += (*this)(r,c)*v[c];
     }
     return a;
@@ -248,9 +248,9 @@ const VarVec<V> VarMat<T>::rMultiply(const VarVec<U>& v) const {
         throw(DimensionMismatchError());
     VarVec<V> a;
     if(!size()) return a;
-    for(unsigned int c=0; c<N; c++) {
+    for(size_t c=0; c<N; c++) {
         a.push_back(v[0] * (*this)(0,c));
-        for(unsigned int r=1; r<M; r++)
+        for(size_t r=1; r<M; r++)
             a.back() += v[r] * (*this)(r,c);
     }
     return a;
@@ -260,13 +260,13 @@ template<typename T>
 T VarMat<T>::trace() const {
     if(!size()) return T();
     T s = vv[0];
-    for(unsigned int i=1; i<std::min(M,N); i++)
+    for(size_t i=1; i<std::min(M,N); i++)
         s += (*this)(i,i);
     return  s;
 }
 
 template<typename T>
-const VarMat<T>& VarMat<T>::resize(unsigned int m, unsigned int n) {
+const VarMat<T>& VarMat<T>::resize(size_t m, size_t n) {
     // change column dimension
     N = n;
     vv.getData().resize(M*N);
@@ -275,7 +275,7 @@ const VarMat<T>& VarMat<T>::resize(unsigned int m, unsigned int n) {
     if(m != M) {
         VarVec<T> vnew;
         for(n=0; n<N; n++)
-            for(unsigned int i=0; i<m; i++)
+            for(size_t i=0; i<m; i++)
                 vnew.push_back( i<M? (*this)(i,n) : T() );
         vv = vnew;
         M = m;
@@ -285,24 +285,24 @@ const VarMat<T>& VarMat<T>::resize(unsigned int m, unsigned int n) {
 }
 
 template<typename T>
-VarVec<T> VarMat<T>::getRow(unsigned int r) const {
+VarVec<T> VarMat<T>::getRow(size_t r) const {
     VarVec<T> v(nCols());
-    for(unsigned int c=0; c<nCols(); c++) v[c] = (*this)(r,c);
+    for(size_t c=0; c<nCols(); c++) v[c] = (*this)(r,c);
     return v;
 }
 
 template<typename T>
-VarVec<T> VarMat<T>::getCol(unsigned int c) const {
+VarVec<T> VarMat<T>::getCol(size_t c) const {
     VarVec<T> v(nRows());
-    for(unsigned int r=0; r<nRows(); r++) v[r] = (*this)(r,c);
+    for(size_t r=0; r<nRows(); r++) v[r] = (*this)(r,c);
     return v;
 }
 
 template<typename T>
 VarVec<T> VarMat<T>::getRowSum() const {
     VarVec<T> v(nRows());
-    for(unsigned int r=0; r<nRows(); r++)
-        for(unsigned int c=0; c<nCols(); c++)
+    for(size_t r=0; r<nRows(); r++)
+        for(size_t c=0; c<nCols(); c++)
             v[r] += (*this)(r,c);
     return v;
 }
@@ -310,8 +310,8 @@ VarVec<T> VarMat<T>::getRowSum() const {
 template<typename T>
 VarVec<T> VarMat<T>::getColSum() const {
     VarVec<T> v(nCols());
-    for(unsigned int r=0; r<nRows(); r++)
-        for(unsigned int c=0; c<nCols(); c++)
+    for(size_t r=0; r<nRows(); r++)
+        for(size_t c=0; c<nCols(); c++)
             v[c] += (*this)(r,c);
     return v;
 }
@@ -336,18 +336,18 @@ namespace VarMat_element_inversion {
 }
 
 template<typename T>
-void VarMat<T>::subinvert(unsigned int n) {
+void VarMat<T>::subinvert(size_t n) {
     
     // invert the first cell
     T& firstcell = (*this)(n,n);
     VarMat_element_inversion::invert_element(firstcell);
-    for(unsigned int i=n+1; i<M; i++)
+    for(size_t i=n+1; i<M; i++)
         (*this)(n,i) *= firstcell;
     
     // use to clear first column
-    for(unsigned int r=n+1; r<M; r++) {
+    for(size_t r=n+1; r<M; r++) {
         T& m0 = (*this)(r,n);
-        for(unsigned int c=n+1; c<M; c++)
+        for(size_t c=n+1; c<M; c++)
             (*this)(r,c) -= (*this)(n,c)*m0;
         m0 *= -firstcell;
     }
@@ -362,23 +362,23 @@ void VarMat<T>::subinvert(unsigned int n) {
     vector<T> subvec = vector<T>(M-n-1);
     
     // first column gets multiplied by inverting subVarMat
-    for(unsigned int r=n+1; r<M; r++)
+    for(size_t r=n+1; r<M; r++)
         subvec[r-n-1] = (*this)(r,n);
-    for(unsigned int r=n+1; r<M; r++) {
+    for(size_t r=n+1; r<M; r++) {
         (*this)(r,n) = (*this)(r,n+1)*subvec[0];
-        for(unsigned int c=n+2; c<M; c++)
+        for(size_t c=n+2; c<M; c++)
             (*this)(r,n) += (*this)(r,c)*subvec[c-n-1];
     }
     
     //finish off by cleaning first row
-    for(unsigned int c=n+1; c<M; c++)
+    for(size_t c=n+1; c<M; c++)
         subvec[c-n-1] = (*this)(n,c);
-    for(unsigned int c=n; c<M; c++) {
+    for(size_t c=n; c<M; c++) {
         if(c>n)
             (*this)(n,c) = -(*this)(n+1,c) * subvec[0];
         else
             (*this)(n,c) -= (*this)(n+1,c) * subvec[0];
-        for(unsigned int r=n+2; r<M; r++)
+        for(size_t r=n+2; r<M; r++)
             (*this)(n,c) -= (*this)(r,c) * subvec[r-n-1];
     }
     
@@ -387,9 +387,9 @@ void VarMat<T>::subinvert(unsigned int n) {
 /// string output representation for VarMat; TODO sensible output for complex types
 template<typename T>
 ostream& operator<<(ostream& o, const VarMat<T>& A) {
-    for(unsigned int r=0; r<A.nRows(); r++) {
+    for(size_t r=0; r<A.nRows(); r++) {
         o << "[ ";
-        for(unsigned int c=0; c<A.nCols(); c++) {
+        for(size_t c=0; c<A.nCols(); c++) {
             o << A(r,c);
             if(c+1<A.nCols()) o << ", ";
         }

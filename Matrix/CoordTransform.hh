@@ -33,8 +33,8 @@
  * and R be a rotation matrix, acting on right-hand-side operands:
  * [T] R = R [R^-1 T]
  * ([T] R)^-1 = R^-1 [-T] = [-R^-1 T] R^-1
- * [T'] [T] R = [T' + T]
- * [R'] [T] R = [R' T] R' R
+ * [T'] [T] R = [T' + T] R
+ * R' [T] R = [R' T] R' R
  * [T'] R' [T] R = [T' + R' T] R' R
  * where, for orthogonal R, R^-1 = transpose(R) --- though this algebra also works for general matrices M
  */

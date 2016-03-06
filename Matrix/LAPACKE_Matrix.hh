@@ -72,10 +72,10 @@ public:
                            VarMat<T>* C = NULL,
                            T alpha = 1, T beta = 0) const {
                                
-                               const unsigned int opA_rows = A.nDim(opA == CblasNoTrans);
-                               const unsigned int opA_cols = A.nDim(opA != CblasNoTrans);
-                               const unsigned int opB_rows = B.nDim(opB == CblasNoTrans);
-                               const unsigned int opB_cols = B.nDim(opB != CblasNoTrans);
+                               const size_t opA_rows = A.nDim(opA == CblasNoTrans);
+                               const size_t opA_cols = A.nDim(opA != CblasNoTrans);
+                               const size_t opB_rows = B.nDim(opB == CblasNoTrans);
+                               const size_t opB_cols = B.nDim(opB != CblasNoTrans);
                                
                                assert(opA_cols == opB_rows);
                                if(!C) C = new VarMat<T>(opA_rows, opB_cols);
@@ -118,10 +118,10 @@ public:
                             VarMat<CT>* C = NULL,
                             CT alpha = 1, CT beta = 0) const {
                                 
-                                const unsigned int opA_rows = A.nDim(opA == CblasNoTrans);
-                                const unsigned int opA_cols = A.nDim(opA != CblasNoTrans);
-                                const unsigned int opB_rows = B.nDim(opB == CblasNoTrans);
-                                const unsigned int opB_cols = B.nDim(opB != CblasNoTrans);
+                                const size_t opA_rows = A.nDim(opA == CblasNoTrans);
+                                const size_t opA_cols = A.nDim(opA != CblasNoTrans);
+                                const size_t opB_rows = B.nDim(opB == CblasNoTrans);
+                                const size_t opB_cols = B.nDim(opB != CblasNoTrans);
                                 
                                 assert(opA_cols == opB_rows);
                                 if(!C) C = new VarMat<CT>(opA_rows, opB_cols);
@@ -164,7 +164,7 @@ public:
         bool verbose = false;
         
         char diag = (A.nRows() >= A.nCols() ? 'U':'L');         // upper or lower diagonal reduction, depending on A's dimensions
-        VarMat<T> e(std::max(S.nRows()-1,(unsigned int)1),1);   // holder for secondary diagonal
+        VarMat<T> e(std::max(S.nRows()-1, (size_t)1),1);   // holder for secondary diagonal
         CT* tauQ = new CT[S.nRows()];
         CT* tauP = new CT[S.nRows()];
         
@@ -268,10 +268,10 @@ public:
         
         // U * (S^-1)
         VarMat<CT> USI = U;
-        for(unsigned int n=0; n<USI.nCols(); n++) {
+        for(size_t n=0; n<USI.nCols(); n++) {
             T psi = (epsilon >= 0 ? (fabs(S[n]) <= epsilon ? 0 : 1./S[n]) :
             (fabs(S[n]) <= fabs(epsilon) ? 1 : 0));
-            for(unsigned int m=0; m<USI.nRows(); m++) {
+            for(size_t m=0; m<USI.nRows(); m++) {
                 USI(m,n) *= psi;
             }
         }
@@ -285,11 +285,11 @@ public:
     const VarMat<T>& singular_values() const { return S; }
     
     /// get enumerated right singular vector
-    VarVec<CT> getRightSVec(unsigned int i) { return VT.getRow(i); }
+    VarVec<CT> getRightSVec(size_t i) { return VT.getRow(i); }
     /// get all right singular vectors
     VarMat<CT> getVT() const { return VT; }
     /// get enumerated left singular vector
-    VarVec<CT> getLeftSVec(unsigned int i) { return U.getCol(i); }
+    VarVec<CT> getLeftSVec(size_t i) { return U.getCol(i); }
     
     /// Dump binary data to file
     void writeToFile(ostream& o) const {

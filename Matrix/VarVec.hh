@@ -50,11 +50,11 @@ template<class T>
 class VarVec: public BinaryOutputObject {
 public:
     /// Constructor
-    VarVec(unsigned int n = 0): data(n) {}
+    VarVec(size_t n = 0): data(n) {}
     /// Constructor with fill element
-    VarVec(unsigned int n, const T& i): data(n,i) {}
+    VarVec(size_t n, const T& i): data(n,i) {}
     /// Constructor from fixed-length vector
-    template<unsigned int N>
+    template<size_t N>
     VarVec(const Vec<N,T>& v): data(&v[0],&v[0]+N) { }
     /// construct from start/end pointers
     template <class InputIterator>
@@ -63,9 +63,9 @@ public:
     ~VarVec() {}
     
     /// mutable element access operator
-    T& operator[](unsigned int i) { assert(i<data.size()); return data[i]; }
+    T& operator[](size_t i) { assert(i<data.size()); return data[i]; }
     /// immutable element access operator
-    const T& operator[](unsigned int i) const { assert(i<data.size()); return data[i]; }
+    const T& operator[](size_t i) const { assert(i<data.size()); return data[i]; }
     /// immutable access to back
     const T& back() const { assert(data.size()); return data.back(); }
     /// mutable access to back
@@ -83,14 +83,14 @@ public:
     /// append vector of elements
     void append(const VarVec<T>& v) { data.insert(data.end(), v.data.begin(), v.data.end()); }
     /// generate sub-vector
-    VarVec<T> subvec(unsigned int a, unsigned int b) const { VarVec<T> V; V.data = vector<T>(&data[a],&data[b]); return V; }
+    VarVec<T> subvec(size_t a, size_t b) const { VarVec<T> V; V.data = vector<T>(&data[a],&data[b]); return V; }
     /// copy data from a sub-vector, starting at position i
-    void load_subvec(const VarVec<T>& V, unsigned int i) { assert(i+V.size()<=size()); std::copy(V.getData().begin(), V.getData().end(), &data[i]); }
+    void load_subvec(const VarVec<T>& V, size_t i) { assert(i+V.size()<=size()); std::copy(V.getData().begin(), V.getData().end(), &data[i]); }
     
     /// size of vector
     size_t size() const { return data.size(); }
     /// display to stdout
-    void display() const { std::cout << "< "; for(unsigned int i=0; i<size(); i++) std::cout << data[i] << " "; std::cout << ">\n"; }
+    void display() const { std::cout << "< "; for(size_t i=0; i<size(); i++) std::cout << data[i] << " "; std::cout << ">\n"; }
     
     /// throw error if dimensions mismatches
     void checkDimensions(const VarVec& v) const throw(DimensionMismatchError) { if(v.size() != size()) throw(DimensionMismatchError()); }
@@ -100,7 +100,7 @@ public:
         checkDimensions(v);
         if(!size()) return 0;
         T s = data[0]*v[0];
-        for(unsigned int i=1; i<size(); i++) s+=data[i]*v[i];
+        for(size_t i=1; i<size(); i++) s+=data[i]*v[i];
         return s;
     }
     /// square magnitude \f$ v \cdot v \f$
@@ -112,9 +112,9 @@ public:
     /// maximum L2-norm over all elements
     double max_norm_L2() const;
     /// sum of vector elements
-    T sum() const { T s = data[0]; for(unsigned int i=1; i<size(); i++) s += data[i]; return s; }
+    T sum() const { T s = data[0]; for(size_t i=1; i<size(); i++) s += data[i]; return s; }
     /// product of vector elements
-    T prod() const { T s = data[0]; for(unsigned int i=1; i<size(); i++) s *= data[i]; return s; }
+    T prod() const { T s = data[0]; for(size_t i=1; i<size(); i++) s *= data[i]; return s; }
     /// minimum element of vector
     T min() const { return *std::min_element(data.begin(),data.end()); }
     /// maximum element of vector
@@ -183,13 +183,13 @@ public:
     bool operator>=(const VarVec<T>& rhs) const;
     
     /// zero all elements
-    VarVec<T>& zero() { for(unsigned int i=0; i<size(); i++) data[i] = T(); return *this; }
+    VarVec<T>& zero() { for(size_t i=0; i<size(); i++) data[i] = T(); return *this; }
     /// Make the nth element of the vector =1, all others =0
     VarVec<T>& basis(int n) { zero(); data[n] += 1.0; return *this; }
     /// Fill the vector with random numbers in [0,1]
-    VarVec<T>& random() { zero(); for(unsigned int i=0; i<size(); i++) data[i] += randunif(0,1); return *this; }
+    VarVec<T>& random() { zero(); for(size_t i=0; i<size(); i++) data[i] += randunif(0,1); return *this; }
     /// Fill the vector with ascending sequence \f$ r_0, r_0+1, r_0+2, \cdots \f$
-    VarVec<T>& ramp(T r0) { for(unsigned int i=0; i<size(); i++) data[i] = r0 + i; return *this; }
+    VarVec<T>& ramp(T r0) { for(size_t i=0; i<size(); i++) data[i] = r0 + i; return *this; }
     
     /// Create a new Vec by permuting the order of this vector's elements
     const VarVec<T> permuted(const Permutation& p) const;
@@ -209,7 +209,7 @@ protected:
 template<typename T>
 const VarVec<T> VarVec<T>::operator-() const {
     VarVec<T> v = *this;
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         v[i] *= -1.0;
     return v;
 }
@@ -217,7 +217,7 @@ const VarVec<T> VarVec<T>::operator-() const {
 template<typename T>
 VarVec<T>& VarVec<T>::operator+=(const VarVec<T>& rhs) {
     checkDimensions(rhs);
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         data[i] += rhs[i];
     return *this;
 }
@@ -225,28 +225,28 @@ VarVec<T>& VarVec<T>::operator+=(const VarVec<T>& rhs) {
 template<typename T>
 VarVec<T>& VarVec<T>::operator-=(const VarVec<T>& rhs) {
     checkDimensions(rhs);
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         data[i] -= rhs[i];
     return *this;
 }
 
 template<typename T>
 VarVec<T>& VarVec<T>::operator+=(T c) {
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         data[i] += c;
     return *this;
 }
 
 template<typename T>
 VarVec<T>& VarVec<T>::operator-=(T c) {
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         data[i] -= c;
     return *this;
 }
 
 template<typename T>
 VarVec<T>& VarVec<T>::operator*=(T c) {
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         data[i] *= c;
     return *this;
 }
@@ -254,14 +254,14 @@ VarVec<T>& VarVec<T>::operator*=(T c) {
 template<typename T>
 VarVec<T>& VarVec<T>::operator*=(const VarVec<T>& other) {
     checkDimensions(other);
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         data[i] *= other[i];
     return *this;
 }
 
 template<typename T>
 VarVec<T>& VarVec<T>::operator/=(T c) {
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         data[i] /= c;
     return *this;
 }
@@ -269,7 +269,7 @@ VarVec<T>& VarVec<T>::operator/=(T c) {
 template<typename T>
 VarVec<T>& VarVec<T>::operator/=(const VarVec<T>& other) {
     checkDimensions(other);
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         data[i] /= other[i];
     return *this;
 }
@@ -334,7 +334,7 @@ const VarVec<T> VarVec<T>::operator/(const VarVec<T>& other) const {
 template<typename T>
 bool VarVec<T>::operator==(const VarVec<T>& rhs) const {
     checkDimensions(rhs);
-    for(unsigned int i=0; i<size(); i++)
+    for(size_t i=0; i<size(); i++)
         if(data[i] != rhs.data[i])
             return false;
         return true;
@@ -348,7 +348,7 @@ bool VarVec<T>::operator!=(const VarVec<T>& rhs) const {
 template<typename T>
 bool VarVec<T>::operator<(const VarVec<T>& rhs) const {
     checkDimensions(rhs);
-    for(unsigned int i=0; i<size(); i++) {
+    for(size_t i=0; i<size(); i++) {
         if(data[i] < rhs.data[i])
             return true;
         if(data[i] > rhs.data[i])
@@ -360,7 +360,7 @@ bool VarVec<T>::operator<(const VarVec<T>& rhs) const {
 template<typename T>
 bool VarVec<T>::operator<=(const VarVec<T>& rhs) const {
     checkDimensions(rhs);
-    for(unsigned int i=0; i<size(); i++) {
+    for(size_t i=0; i<size(); i++) {
         if(data[i] < rhs.data[i])
             return true;
         if(data[i] > rhs.data[i])
@@ -384,7 +384,7 @@ template<class T>
 const VarVec<T> VarVec<T>::permuted(const Permutation& p) const
 {
     VarVec<T> o = VarVec<T>(size());
-    for(unsigned int i=0; i<size(); i++) o[i] = data[p[i]];
+    for(size_t i=0; i<size(); i++) o[i] = data[p[i]];
     return o;
 }
 
@@ -392,7 +392,7 @@ template<class T>
 VarVec<T>& VarVec<T>::permute(const Permutation& p)
 {
     vector<T> dnew = vector<T>(size());
-    for(unsigned int i=0; i<size(); i++) dnew[i] = data[p[i]];
+    for(size_t i=0; i<size(); i++) dnew[i] = data[p[i]];
     data = dnew;
     return *this;
 }
@@ -402,7 +402,7 @@ template<typename T>
 vector<double>
 varvec2doublevec(const VarVec<T>& v) {
     vector<double> dv(v.size());
-    for(unsigned int i=0; i<v.size(); i++) dv[i] = (double)v[i];
+    for(size_t i=0; i<v.size(); i++) dv[i] = (double)v[i];
     return dv;
 }
 
@@ -436,7 +436,7 @@ double VarVec<T>::norm_L2() const {
 template<typename T>
 ostream& operator<<(ostream& o, const VarVec<T>& v) {
     o << "< ";
-    for(unsigned int i=0; i<v.size(); i++)
+    for(size_t i=0; i<v.size(); i++)
         o << v[i] << " ";
     o << ">";
     return o;
@@ -465,9 +465,9 @@ namespace VarVec_element_IO {
 template<typename T>
 void VarVec<T>::writeToFile(ostream& o) const {
     writeString("(VarVec_"+std::to_string(sizeof(T))+")",o);
-    unsigned int N = size();
+    size_t N = size();
     o.write((char*)&N,  sizeof(N));
-    for(unsigned int i=0; i<N; i++)
+    for(size_t i=0; i<N; i++)
         VarVec_element_IO::writeToFile<T>(data[i],o);
     writeString("(/VarVec_"+std::to_string(sizeof(T))+")",o);
 }
@@ -476,9 +476,9 @@ template<typename T>
 VarVec<T> VarVec<T>::readFromFile(std::istream& s) {
     checkString("(VarVec_"+std::to_string(sizeof(T))+")",s);
     VarVec<T> foo;
-    unsigned int N;
+    size_t N;
     s.read((char*)&N,   sizeof(N));
-    for(unsigned int i=0; i<N; i++)
+    for(size_t i=0; i<N; i++)
         foo.push_back(VarVec_element_IO::readFromFile<T>(s));
     checkString("(/VarVec_"+std::to_string(sizeof(T))+")",s);
     return foo;

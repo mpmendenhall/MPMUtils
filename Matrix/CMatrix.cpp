@@ -32,9 +32,9 @@ using std::cout;
 
 // FFT handler ------______------______-------_______------______------
 
-map<unsigned int,cmatrix_fft*> cmatrix_fft::ffters;
+map<size_t,cmatrix_fft*> cmatrix_fft::ffters;
 
-cmatrix_fft::cmatrix_fft(unsigned int m): M(m), realspace(new double[M]), kspace(new complex<double>[M/2+1]) {
+cmatrix_fft::cmatrix_fft(size_t m): M(m), realspace(new double[M]), kspace(new complex<double>[M/2+1]) {
     FILE* fin = fopen("fftw_wisdom","r");
     if(fin) {
         fftw_import_wisdom_from_file(fin);
@@ -57,7 +57,7 @@ cmatrix_fft::cmatrix_fft(unsigned int m): M(m), realspace(new double[M]), kspace
     }
 }
 
-cmatrix_fft& cmatrix_fft::get_ffter(unsigned int m) {
+cmatrix_fft& cmatrix_fft::get_ffter(size_t m) {
     auto it = ffters.find(m);
     if(it != ffters.end()) return *(it->second);
     cmatrix_fft* f = new cmatrix_fft(m);
@@ -102,16 +102,16 @@ CMatrix CMatrix::readFromFile(std::istream& s) {
 
 // Special Matrices ------______------______-------_______------______------
 
-CMatrix CMatrix::identity(unsigned int M) {
+CMatrix CMatrix::identity(size_t M) {
     CMatrix m(M);
     if(!M) return m;
     m[0] = 1.0;
     return m;
 }
 
-CMatrix CMatrix::random(unsigned int M) {
+CMatrix CMatrix::random(size_t M) {
     CMatrix m(M);
-    for(unsigned int i=0; i<M; i++)
+    for(size_t i=0; i<M; i++)
         m[i] = double(rand())/double(RAND_MAX);
     return m;
 }
@@ -139,18 +139,18 @@ void CMatrix::calculateRealData() const {
     cmatrix_fft& ffter = cmatrix_fft::get_ffter(M);
     std::copy(kdata.begin(), kdata.end(), ffter.kspace);
     fftw_execute(ffter.reverseplan);
-    for(unsigned int n=0; n<M; n++) data[n] = ffter.realspace[n]/double(M);
+    for(size_t n=0; n<M; n++) data[n] = ffter.realspace[n]/double(M);
     has_realspace = true;
 }
 
-double CMatrix::operator[](unsigned int i) const {
+double CMatrix::operator[](size_t i) const {
     assert(i<M);
     if(!has_realspace)
         calculateRealData();
     return data[i];
 }
 
-double& CMatrix::operator[](unsigned int i) {
+double& CMatrix::operator[](size_t i) {
     assert(i<M);
     if(!has_realspace)
         calculateRealData();
@@ -190,7 +190,7 @@ const vector<double>& CMatrix::getRealData() const {
 double CMatrix::norm_L2() const {
     const vector< complex<double> >& v = getKData();
     vector<double> vn;
-    for(unsigned int i=0; i<v.size(); i++)
+    for(size_t i=0; i<v.size(); i++)
         vn.push_back(abs(v[i]));
     return *std::max_element(vn.begin(),vn.end());
 }
@@ -200,7 +200,7 @@ double CMatrix::det() const {
     if(!M) return 0;
     const vector< complex<double> >& v = getKData();
     double d = v[0].real();
-    for(unsigned int i=1; i<v.size(); i++)
+    for(size_t i=1; i<v.size(); i++)
         d *= norm(v[i]);
     if(!(M%2)) d /= v[M/2].real();
     return d;
@@ -212,7 +212,7 @@ double CMatrix::trace() const {
     if(has_realspace) return M*data[0];
     else if(has_kspace) {
         double s = kdata[0].real();
-        for(unsigned int i=1; i < kdata.size(); i++)
+        for(size_t i=1; i < kdata.size(); i++)
             s += kdata[i].real()*2;
         if(!(M%2)) s -= kdata[M/2].real();
         return s;
@@ -224,14 +224,14 @@ double CMatrix::trace() const {
 
 void CMatrix::printRow(int r) const {
     printf("| ");
-    for(unsigned int i=0; i<M; i++) printf("%.3g ",(*this)[(i+(M-r))%M]);
+    for(size_t i=0; i<M; i++) printf("%.3g ",(*this)[(i+(M-r))%M]);
     printf("|");
 }
 
 
 void CMatrix::display() const {
     cout << "CMatrix " << M << " " << has_realspace << " " << has_kspace << std::endl;
-    for(unsigned int r=0; r<M; r++) {
+    for(size_t r=0; r<M; r++) {
         printRow(r);
         printf("\n");
     }
@@ -241,15 +241,15 @@ void CMatrix::display() const {
 
 void CMatrix::displayK() const {
     cout << "{ ";
-    for(unsigned int i=0; i<M/2+1; i++) cout << getKData()[i] << " ";
+    for(size_t i=0; i<M/2+1; i++) cout << getKData()[i] << " ";
     cout << "}" << std::endl;
 }
 
 
 ostream& operator<<(ostream& o, const CMatrix& m) {
-    for(unsigned int r=0; r<m.nRows(); r++) {
+    for(size_t r=0; r<m.nRows(); r++) {
         o << "| ";
-        for(unsigned int c=0; c<m.nCols(); c++)
+        for(size_t c=0; c<m.nCols(); c++)
             o << m[(c+(m.nRows()-r))%m.nCols()] << " ";
         o << "|\n";
     }
@@ -268,13 +268,13 @@ CMatrix& CMatrix::operator+=(const CMatrix& m) {
     
     if(has_kspace && (m.has_kspace || !has_realspace)) {
         const vector< complex<double> >& kd = m.getKData();
-        for(unsigned int i=0; i<kdata.size(); i++)
+        for(size_t i=0; i<kdata.size(); i++)
             kdata[i] += kd[i];
     } else has_kspace = false;
     
     if(has_realspace && (m.has_realspace || !has_kspace)) {
         const vector<double>& d = m.getRealData();
-        for(unsigned int i=0; i<data.size(); i++)
+        for(size_t i=0; i<data.size(); i++)
             data[i] += d[i];
     } else has_realspace = false;
     
@@ -297,13 +297,13 @@ CMatrix& CMatrix::operator-=(const CMatrix& m) {
     
     if(has_kspace && (m.has_kspace || !has_realspace)) {
         const vector< complex<double> >& kd = m.getKData();
-        for(unsigned int i=0; i<kdata.size(); i++)
+        for(size_t i=0; i<kdata.size(); i++)
             kdata[i] -= kd[i];
     } else has_kspace = false;
     
     if(has_realspace && (m.has_realspace || !has_kspace)) {
         const vector<double>& d = m.getRealData();
-        for(unsigned int i=0; i<data.size(); i++)
+        for(size_t i=0; i<data.size(); i++)
             data[i] -= d[i];
     } else has_realspace = false;
     
@@ -321,10 +321,10 @@ const CMatrix CMatrix::operator-(const CMatrix& m) const {
 CMatrix& CMatrix::operator*=(double c) {
     
     if(has_realspace)
-        for(unsigned int i=0; i<data.size(); i++) data[i] *= c;
+        for(size_t i=0; i<data.size(); i++) data[i] *= c;
         
         if(has_kspace)
-            for(unsigned int i=0; i<kdata.size(); i++) kdata[i] *= c;
+            for(size_t i=0; i<kdata.size(); i++) kdata[i] *= c;
             
             return *this;
 }
@@ -350,7 +350,7 @@ CMatrix& CMatrix::operator*=(const CMatrix& m) {
     
     vector< complex<double> >& kd = getKData();
     const vector< complex<double> >& mkd = m.getKData();
-    for(unsigned int i=0; i<kd.size(); i++) kd[i] *= mkd[i];
+    for(size_t i=0; i<kd.size(); i++) kd[i] *= mkd[i];
     
     return *this;
 }
@@ -369,15 +369,15 @@ const VarVec<double> CMatrix::operator*(const VarVec<double>& v) const {
     
     cmatrix_fft& ffter = cmatrix_fft::get_ffter(M);
     ffter.realspace[0] = v[0];
-    for(unsigned int i=1; i<M; i++) ffter.realspace[i] = v[M - i];
+    for(size_t i=1; i<M; i++) ffter.realspace[i] = v[M - i];
     fftw_execute(ffter.forwardplan);
     
-    for(unsigned int i=0; i<kd.size(); i++) ffter.kspace[i] *= kd[i];
+    for(size_t i=0; i<kd.size(); i++) ffter.kspace[i] *= kd[i];
     fftw_execute(ffter.reverseplan);
     
     VarVec<double> out = VarVec<double>(M);
     out[0] = ffter.realspace[0];
-    for(unsigned int i=1; i<M; i++) out[i] = ffter.realspace[M-i];
+    for(size_t i=1; i<M; i++) out[i] = ffter.realspace[M-i];
     out /= double(M);
     return out;
 }
@@ -385,7 +385,7 @@ const VarVec<double> CMatrix::operator*(const VarVec<double>& v) const {
 
 CMatrix& CMatrix::invert() {
     vector< complex<double> >& kd = getKData();
-    for(unsigned int i=0; i<kdata.size(); i++)
+    for(size_t i=0; i<kdata.size(); i++)
         kd[i] = 1./kd[i];
     has_realspace = false;
     return *this;
@@ -402,6 +402,6 @@ const CMatrix CMatrix::transpose() const {
     CMatrix m(M);
     if(!M) return m;
     m[0] = (*this)[0];
-    for(unsigned int n=1; n<M; n++) m[n] = (*this)[M-n];
+    for(size_t n=1; n<M; n++) m[n] = (*this)[M-n];
     return m;
 }

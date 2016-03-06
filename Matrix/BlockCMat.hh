@@ -36,8 +36,8 @@
 
 typedef VarMat<CMatrix> BlockCMat;
 
-BlockCMat makeBlockCMatIdentity(unsigned int n, unsigned int mc);
-BlockCMat makeBlockCMatRandom(unsigned int n, unsigned int mc);
+BlockCMat makeBlockCMatIdentity(size_t n, size_t mc);
+BlockCMat makeBlockCMatRandom(size_t n, size_t mc);
 
 /// singular-value decomposition of block circulant matrix
 class BlockCMat_SVD: public BinaryOutputObject {
@@ -59,9 +59,9 @@ public:
     static BlockCMat_SVD* readFromFile(std::istream& s);
     
     /// sub-block singular values
-    double getSV(unsigned int i) const;
+    double getSV(size_t i) const;
     /// get enumerated right singular vector
-    VarVec<double> getRightSVec(unsigned int i) const;
+    VarVec<double> getRightSVec(size_t i) const;
     
 protected:
     /// empty constructor without calculation
@@ -70,12 +70,12 @@ protected:
     /// prepare sorted singular values
     void sort_singular_values();
     
-    unsigned int M, N, Mc, Ms;
+    size_t M, N, Mc, Ms;
     #ifdef WITH_LAPACKE
     vector< LAPACKE_Matrix_SVD<double,lapack_complex_double>* > block_SVDs;
     #endif
     VarVec<double> svalues;     ///< sorted singular values
-    VarVec<unsigned int> sloc;  ///< location of sorted singular-values in sub-matrix
+    VarVec<size_t> sloc;        ///< location of sorted singular-values in sub-matrix
     BlockCMat* PsI;             ///< pseudo-inverse
     double PsI_epsilon;         ///< threshold for singular vectors
 };

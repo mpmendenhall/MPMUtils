@@ -40,22 +40,22 @@ using std::complex;
 class cmatrix_fft {
 public:
     /// constructor
-    cmatrix_fft(unsigned int m);
+    cmatrix_fft(size_t m);
     /// destructor
     ~cmatrix_fft() { delete[] realspace; delete[] kspace; }
     
-    const unsigned int M;       ///< number of elements
+    const size_t M;             ///< number of elements
     fftw_plan forwardplan;      ///< FFTW data for forward Fourier Transforms of this size
     fftw_plan reverseplan;      ///< FFTW data for inverse Fourier Transforms of this size
     double* realspace;          ///< array for holding real-space side of transform data
     complex<double>* kspace;    ///< array for holding kspace-side of transform data
     
     /// get FFTer for dimension m
-    static cmatrix_fft& get_ffter(unsigned int m);
+    static cmatrix_fft& get_ffter(size_t m);
     
 protected:
     
-    static map<unsigned int,cmatrix_fft*> ffters;  ///< loaded FFTers
+    static map<size_t,cmatrix_fft*> ffters;  ///< loaded FFTers
 };
 
 namespace VarVec_element_IO {
@@ -81,16 +81,16 @@ namespace VarVec_element_IO {
 class CMatrix: public BinaryOutputObject {
 public:
     /// Constructor
-    CMatrix(unsigned int m = 0): M(m), data(M,0.), kdata(M/2+1,0.), has_realspace(true), has_kspace(true) { }
+    CMatrix(size_t m = 0): M(m), data(M,0.), kdata(M/2+1,0.), has_realspace(true), has_kspace(true) { }
     
     /// generate an identity CMatrix
-    static CMatrix identity(unsigned int m);
+    static CMatrix identity(size_t m);
     /// Fill this CMatrix with random numbers in [0,1]
-    static CMatrix random(unsigned int m);
+    static CMatrix random(size_t m);
     
-    unsigned int nRows() const { return M; }
-    unsigned int nCols() const { return M; }
-    unsigned int size() const { return M*M; }
+    size_t nRows() const { return M; }
+    size_t nCols() const { return M; }
+    size_t size() const { return M*M; }
     
     /// Print this CMatrix to stdout
     void display() const;
@@ -98,9 +98,9 @@ public:
     void displayK() const;
     
     /// immutable element access
-    double operator[](unsigned int n) const;
+    double operator[](size_t n) const;
     /// mutable element access
-    double& operator[](unsigned int n);
+    double& operator[](size_t n);
     
     /// L2 (Spectral) norm of circulant matrix
     double norm_L2() const;
@@ -158,7 +158,7 @@ public:
     
 private:
     
-    unsigned int M;     ///< number of cycles
+    size_t M;     ///< number of cycles
     
     /// calculate K-space data from real space
     void calculateKData() const;
