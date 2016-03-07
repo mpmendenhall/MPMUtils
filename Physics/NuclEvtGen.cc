@@ -20,10 +20,6 @@ unsigned int PSelector::select(double* x) const {
     return selected;
 }
 
-void PSelector::scale(double s) {
-    for(auto& p: cumprob) p *= s;
-}
-
 double PSelector::getProb(unsigned int n) const {
     smassert(n<cumprob.size()-1);
     return (cumprob[n+1]-cumprob[n])/cumprob.back();
@@ -36,6 +32,7 @@ string particleName(DecayType t) {
     if(t==D_ELECTRON) return "e-";
     if(t==D_POSITRON) return "e+";
     if(t==D_NEUTRINO) return "neutrino";
+    if(t==D_ALPHA) return "alpha";
     return "UNKNOWN";
 }
 
@@ -44,6 +41,7 @@ DecayType particleType(const std::string& s) {
     if(s=="e-") return D_ELECTRON;
     if(s=="e+") return D_POSITRON;
     if(s=="neutrino") return D_NEUTRINO;
+    if(s=="alpha") return D_ALPHA;
     return D_NONEVENT;
 }
 
@@ -86,10 +84,10 @@ DecayAtom::DecayAtom(BindingEnergyTable const* B): BET(B), Iauger(0), Ikxr(0), I
 }
 
 void DecayAtom::load(const Stringmap& m) {
-    for(std::multimap< std::string, string >::const_iterator it = m.dat.begin(); it != m.dat.end(); it++) {
-        smassert(it->first.size());
-        if(it->first[0]=='a') Iauger += atof(it->second.c_str())/100.0;
-        else if(it->first[0]=='k') Ikxr += atof(it->second.c_str())/100.0;
+    for(auto& kv: m.dat) {
+        smassert(kv.first.size());
+        if(kv.first[0]=='a') Iauger += atof(kv.second.c_str())/100.0;
+        else if(kv.first[0]=='k') Ikxr += atof(kv.second.c_str())/100.0;
     }
     Iauger = m.getDefault("Iauger",0)/100.0;
     
@@ -295,17 +293,13 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     if(Q.getDefault("norm","gamma","") == "groundstate") {
         double gsflux = 0;
         for(auto& l: levels)
-            if(!l.fluxOut)
-                gsflux += l.fluxIn;
-            for(auto& t: transitions)
-                t->scale(1./gsflux);
-            for(auto& l: levels)
-                l.scale(1./gsflux);
+            if(!l.fluxOut) gsflux += l.fluxIn;
+            for(auto& tr: transitions) tr->scale(1./gsflux);
+            for(auto& l: levels) l.scale(1./gsflux);
     }
     
     // set up Augers
-    for(auto& t: transitions)
-        t->toAtom->ICEK += t->getPVacant(0)*t->Itotal;
+    for(auto& tr: transitions) tr->toAtom->ICEK += tr->getPVacant(0)*tr->Itotal;
     vector<Stringmap> augers = Q.retrieve("AugerK");
     for(auto& a: augers) {
         int Z = a.getDefault("Z",0);
@@ -356,9 +350,20 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
         }
     }
     
+    for(unsigned int n=0; n<levels.size(); n++) circle_check(n);
     setCutoff(t);
 }
 
+void NucDecaySystem::circle_check(unsigned int n, set<unsigned int> pnts) const {
+    if(pnts.count(n)) {
+        SMExcept e("circular_transition");
+        e.insert("level",n);
+        throw(e);
+    }
+    pnts.insert(n);
+    for(auto tr: transOut[n]) circle_check(tr->to.n, pnts);
+}
+        
 NucDecaySystem::~NucDecaySystem() {
     for(auto& t: transitions) delete t;
     for(auto& kv: atoms) delete kv.second;
@@ -387,14 +392,12 @@ void NucDecaySystem::setCutoff(double t) {
     lStart = PSelector();
     for(unsigned int n=0; n<levels.size(); n++) {
         levelDecays[n] = PSelector();
-        for(unsigned int t = 0; t < transOut[n].size(); t++)
-            levelDecays[n].addProb(transOut[n][t]->Itotal);
+        for(auto tr : transOut[n]) levelDecays[n].addProb(tr->Itotal);
         
         double pStart = (n+1==levels.size());
         if(!pStart && levels[n].hl > tcut && transOut[n].size())
-            for(unsigned int t = 0; t < transIn[n].size(); t++)
-                pStart += transIn[n][t]->Itotal;
-            lStart.addProb(pStart);
+            for(auto tr: transIn[n]) pStart += tr->Itotal;
+        lStart.addProb(pStart);
     }
 }
 
@@ -409,9 +412,9 @@ void NucDecaySystem::display(bool verbose) const {
 
 void NucDecaySystem::displayLevels(bool verbose) const {
     printf("---- Energy Levels ----\n");
-    for(vector<NucLevel>::const_iterator it = levels.begin(); it != levels.end(); it++) {
-        printf("[%i DF] ",getNDF(it->n));
-        it->display(verbose);
+    for(auto& l: levels) {
+        printf("[%i DF] ",getNDF(l.n));
+        l.display(verbose);
     }
 }
 
@@ -425,10 +428,8 @@ void NucDecaySystem::displayTransitions(bool verbose) const {
 
 void NucDecaySystem::displayAtoms(bool verbose) const {
     printf("---- Atoms ----\n");
-    for(map<unsigned int, DecayAtom*>::const_iterator it = atoms.begin(); it != atoms.end(); it++)
-        it->second->display(verbose);
+    for(auto& kv: atoms) kv.second->display(verbose);
 }
-
 
 unsigned int NucDecaySystem::levIndex(const std::string& s) const {
     map<std::string,unsigned int>::const_iterator n = levelIndex.find(s);
@@ -467,8 +468,8 @@ unsigned int NucDecaySystem::getNDF(unsigned int n) const {
         }
     } else {
         // maximum DF over all transitions from this level
-        for(vector<TransitionBase*>::const_iterator it = transOut[n].begin(); it != transOut[n].end(); it++) {
-            unsigned int lndf = (*it)->getNDF()+getNDF((*it)->to.n);
+        for(auto tr: transOut[n]) {
+            unsigned int lndf = tr->getNDF()+getNDF(tr->to.n);
             ndf = lndf>ndf?lndf:ndf;
         }
     }
@@ -494,25 +495,25 @@ NucDecayLibrary::~NucDecayLibrary() {
     for(auto& kv: NDs) delete kv.second;
 }
 
-NucDecaySystem& NucDecayLibrary::getGenerator(const std::string& nm) {
-    auto it = NDs.find(nm);
+NucDecaySystem& NucDecayLibrary::getGenerator(const std::string& gennm) {
+    auto it = NDs.find(gennm);
     if(it != NDs.end()) return *(it->second);
-    string fname = datpath+"/"+nm+".txt"; 
+    string fname = datpath+"/"+gennm+".txt"; 
     if(!fileExists(fname)) {
         SMExcept e("MissingDecayData");
         e.insert("fname",fname);
         throw(e);
     }
-    return *(NDs.emplace(nm, new NucDecaySystem(SMFile(fname),BEL,tcut)).first->second);
+    return *(NDs.emplace(gennm, new NucDecaySystem(SMFile(fname),BEL,tcut)).first->second);
 }
 
-bool NucDecayLibrary::hasGenerator(const std::string& nm) {
-    if(cantdothis.count(nm)) return false;
+bool NucDecayLibrary::hasGenerator(const std::string& gennm) {
+    if(cantdothis.count(gennm)) return false;
     try {
-        getGenerator(nm);
+        getGenerator(gennm);
         return true;
     } catch(...) {
-        cantdothis.insert(nm);
+        cantdothis.insert(gennm);
     }
     return false;
 }
@@ -552,62 +553,3 @@ void GammaForest::genDecays(vector<NucDecayEvent>& v, double n) {
         --n;
     }
 }
-
-
-//-----------------------------------------
-
-void square2circle(double& x, double& y, double r) {
-    double th = 2*M_PI*x;
-    r *= sqrt(y);
-    x = r*cos(th);
-    y = r*sin(th);
-}
-
-void CubePosGen::genPos(double* v, double* rnd) const {
-    for(AxisDirection d = X_DIRECTION; d <= Z_DIRECTION; ++d)
-        v[d] = rnd?rnd[d]:gRandom->Uniform(0,1);
-}
-
-void CylPosGen::genPos(double* v, double* rnd) const {
-    for(AxisDirection d = X_DIRECTION; d <= Z_DIRECTION; ++d)
-        v[d] = rnd?rnd[d]:gRandom->Uniform(0,1);
-    square2circle(v[X_DIRECTION],v[Y_DIRECTION],r);
-    v[Z_DIRECTION] = (v[Z_DIRECTION]-0.5)*dz;
-}
-
-//------------------------------------------------------------------------------
-
-
-void EventTreeScanner::setReadpoints(TTree* T) {
-    SetBranchAddress(T,"num",&evt.eid);
-    SetBranchAddress(T,"PID",&evt.d);
-    SetBranchAddress(T,"KE",&evt.E);
-    SetBranchAddress(T,"vertex",evt.x);
-    SetBranchAddress(T,"direction",evt.p);
-    SetBranchAddress(T,"time",&evt.t);
-    SetBranchAddress(T,"weight",&evt.w);
-}
-
-int EventTreeScanner::addFile(const std::string& filename) {
-    int nf = TChainScanner::addFile(filename);
-    startScan();
-    nextPoint();
-    prevN = evt.eid;
-    firstpass = true;
-    return nf;
-}
-
-unsigned int EventTreeScanner::loadEvt(vector<NucDecayEvent>& v) {
-    unsigned int nevts = 0;
-    do {
-        v.push_back(evt);
-        ++nevts;
-        nextPoint();
-    } while(prevN==evt.eid);
-    firstpass &= evt.eid>=prevN;
-    prevN=evt.eid;
-    return nevts;
-}
-
-//------------------------------------------------------------------------------
-

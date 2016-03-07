@@ -10,7 +10,7 @@ CXXFLAGS = -std=c++11 -O3 -fPIC `root-config --cflags` -pedantic -Wall -Wextra -
 
 objects = EnumerationFitter.o GraphicsUtils.o GraphUtils.o HistogramSequenceFitter.o IterRangeFitter.o \
 	LinHistCombo.o MultiGaus.o OutputManager.o PluginSaver.o PointCloudHistogram.o \
-	SegmentSaver.o SplineFit.o TChainScanner.o TObjCollector.o TSQLHelper.o mpmrootdict.o
+	SegmentSaver.o SplineFit.o TChainScanner.o TF1_Quantiles.o TObjCollector.o TSQLHelper.o mpmrootdict.o
 # ROOT TObject-derived linkdef'd objects and header files
 ldefobjs = TDynamicHistogram.o TRateCategories.o TRatechart.o TStripchart.o 
 ldefincs = CumulativeData.hh TCumulative.hh TCumulativeMap.hh TDynamicHistogram.hh TDynamicLogHistogram.hh \

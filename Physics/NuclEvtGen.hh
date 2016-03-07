@@ -3,14 +3,16 @@
 #define NUCLEVTGEN_HH
 
 #include "ElectronBindingEnergy.hh"
-#include "PolarizedBetaAsym.hh"
+#include "BetaSpectrum.hh"
 #include "FloatErr.hh"
-#include "GraphUtils.hh"
-#include "TChainScanner.hh"
+#include "TF1_Quantiles.hh"
 #include <TF1.h>
 #include <vector>
+using std::vector;
 #include <map>
+using std::map;
 #include <set>
+using std::set;
 #include <climits>
 #include <float.h>
 #include <stdio.h>
@@ -31,7 +33,7 @@ public:
     /// get probability of numbered item
     double getProb(unsigned int n) const;
     /// scale all probabilities
-    void scale(double s);
+    void scale(double s) { for(auto& p: cumprob) p *= s; }
     
 protected:
     vector<double> cumprob;        ///< cumulative probabilites
@@ -68,13 +70,14 @@ enum DecayType {
     D_ELECTRON = 11,
     D_POSITRON = -11,
     D_NEUTRINO = -12, // anti-nu_e
+    D_ALPHA = 999,
     D_NONEVENT = 0
 };
 
 /// string name of particle types
 string particleName(DecayType t);
 /// decay type from particle name
-DecayType particleType(const std::string& s);
+DecayType particleType(const string& s);
 
 
 /// specification for a decay particle
@@ -174,9 +177,9 @@ public:
     double Igamma;      ///< total gamma intensity
     
 protected:
-    PSelector shells;                   ///< conversion electron shells
-    vector<float> shellUncert;     ///< uncertainty on shell selection probability
-    vector<PSelector> subshells;   ///< subshell choices for each shell
+    PSelector shells;           ///< conversion electron shells
+    vector<float> shellUncert;  ///< uncertainty on shell selection probability
+    vector<PSelector> subshells;///< subshell choices for each shell
 };
 
 /// electron capture transitions
@@ -196,7 +199,7 @@ public:
     /// return number of continuous degrees of freedom needed to specify transition
     virtual unsigned int getNDF() const { return 0; }
     
-    bool isKCapt;                       ///< whether transition was a K capture
+    bool isKCapt;       ///< whether transition was a K capture
 };
 
 /// beta decay transitions
@@ -254,134 +257,59 @@ public:
     
 protected:
     /// get index for named level
-    unsigned int levIndex(const std::string& s) const;
+    unsigned int levIndex(const string& s) const;
     /// get atom info for given Z
     DecayAtom* getAtom(unsigned int Z);
     /// add a transition
     void addTransition(TransitionBase* T);
+    /// check against circular references
+    void circle_check(unsigned int n, set<unsigned int> pnts = set<unsigned int>()) const;
     
-    BindingEnergyLibrary const&  BEL;                           ///< electron binding energy info
-    double tcut;
-    vector<NucLevel> levels;                               ///< levels, enumerated
-    map<std::string,unsigned int> levelIndex;              ///< energy levels by name
-    PSelector lStart;                                           ///< selector for starting level (for breaking up long decays)
-    vector<PSelector> levelDecays;                         ///< probabilities for transitions from each level
-    map<unsigned int, DecayAtom*> atoms;                   ///< atom information
-    vector<TransitionBase*> transitions;                   ///< transitions, enumerated
-    vector< vector<TransitionBase*> > transIn;        ///< transitions into each level
-    vector< vector<TransitionBase*> > transOut;       ///< transitions out of each level
+    BindingEnergyLibrary const&  BEL;           ///< electron binding energy info
+    double tcut;                                ///< cutoff time for splitting events
+    vector<NucLevel> levels;                    ///< levels, enumerated
+    map<string,unsigned int> levelIndex;        ///< energy levels by name
+    PSelector lStart;                           ///< selector for starting level (for breaking up long decays)
+    vector<PSelector> levelDecays;              ///< probabilities for transitions from each level
+    map<unsigned int, DecayAtom*> atoms;        ///< atom information
+    vector<TransitionBase*> transitions;        ///< transitions, enumerated
+    vector< vector<TransitionBase*> > transIn;  ///< transitions into each level
+    vector< vector<TransitionBase*> > transOut; ///< transitions out of each level
 };
 
 /// manager for loading decay event generators
 class NucDecayLibrary {
 public:
     /// constructor
-    NucDecayLibrary(const std::string& datp, double t = DBL_MAX);
+    NucDecayLibrary(const string& datp, double t = DBL_MAX);
     /// destructor
     ~NucDecayLibrary();
     /// check if generator is available
-    bool hasGenerator(const std::string& nm);
+    bool hasGenerator(const string& gennm);
     /// get decay generator by name
-    NucDecaySystem& getGenerator(const std::string& nm);
+    NucDecaySystem& getGenerator(const string& gennm);
     
-    string datpath;        ///< path to data folder
+    string datpath;             ///< path to data folder
     double tcut;                ///< event generator default cutoff time
     BindingEnergyLibrary  BEL;  ///< electron binding energy info
     
 protected:
-    map<std::string,NucDecaySystem*> NDs;  ///< loaded decay systems
-    std::set<string> cantdothis;           ///< list of decay systems that can't be loaded
+    map<string,NucDecaySystem*> NDs;    ///< loaded decay systems
+    set<string> cantdothis;        ///< list of decay systems that can't be loaded
 };
 
 /// class for throwing from large list of gammas
 class GammaForest {
 public:
     /// constructor
-    GammaForest(const std::string& fname, double E2keV = 1000);
+    GammaForest(const string& fname, double E2keV = 1000);
     /// get total cross section
     double getCrossSection() const { return gammaProb.getCumProb(); }
     /// generate cluster of gamma decays
     void genDecays(vector<NucDecayEvent>& v, double n = 1.0);
 protected:
-    vector<double> gammaE;         ///< gamma energies
-    PSelector gammaProb;                ///< gamma probabilities selector
-};
-
-//------------------------------------------------------------------------------
-
-/// base class for generating event positions
-class PositionGenerator {
-public:
-    /// constructor
-    PositionGenerator() {}
-    /// destructor
-    virtual ~PositionGenerator() {}
-    
-    /// get number of random DF consumed
-    virtual unsigned int getNDF() const { return 3; }
-    /// generate vertex position
-    virtual void genPos(double* v, double* rnd = NULL) const = 0;
-};
-
-/// map unit square onto circle of specified radius
-void square2circle(double& x, double& y, double r = 1.0);
-
-/// class for generating positions in a cylinder
-class CylPosGen: public PositionGenerator {
-public:
-    /// constructor
-    CylPosGen(double zlength, double radius): dz(zlength), r(radius) {}
-    /// generate vertex position
-    virtual void genPos(double* v, double* rnd = NULL) const;
-    
-    double dz;  ///< length of cylinder
-    double r;   ///< radius of cylinder
-};
-
-/// uniform cube [0,1]^3 positions, for later transform
-class CubePosGen: public PositionGenerator {
-public:
-    /// constructor
-    CubePosGen() {}
-    /// generate vertex position
-    virtual void genPos(double* v, double* rnd = NULL) const;
-};
-
-/// generate fixed event position
-class FixedPosGen: public PositionGenerator {
-public:
-    /// constructor
-    FixedPosGen(double x0=0, double y0=0, double z0=0): x(x0), y(y0), z(z0) {}
-    /// generate vertex position
-    virtual void genPos(double* v, double* = NULL) const { v[0]=x; v[1]=y; v[2]=z; }
-    /// get number of random DF consumed
-    virtual unsigned int getNDF() const { return 0; }
-    
-    double x;
-    double y;
-    double z;
-};
-
-//------------------------------------------------------------------------------
-
-/// class for reading events trees
-class EventTreeScanner: protected TChainScanner {
-public:
-    /// constructor
-    EventTreeScanner(): TChainScanner("Evts") {}
-    /// add a file to the TChain
-    virtual int addFile(const std::string& filename);
-    /// load next event into vector; return number of primaries
-    unsigned int loadEvt(vector<NucDecayEvent>& v);
-    
-    bool firstpass;     ///< whether read is on first pass through data
-    
-protected:
-    /// set tree readpoints
-    virtual void setReadpoints(TTree* T);
-    
-    NucDecayEvent evt;  ///< event readpoint
-    unsigned int prevN; ///< previous event number
+    vector<double> gammaE;      ///< gamma energies
+    PSelector gammaProb;        ///< gamma probabilities selector
 };
 
 #endif

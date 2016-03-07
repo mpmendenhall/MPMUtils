@@ -422,8 +422,8 @@ class ENSDF_Beta_Record(ENSDF_Record):
         self.LOGFT = ENSDF_Number(l[41:49], l[49:55])
         
         self.C_ = l[76:77].strip()      # coincidence comment
-        self.UN = l[77:79].strip()     # forbiddenness
-        self.Q = l[79:80]              # questionable decay marker
+        self.UN = l[77:79].strip()      # forbiddenness
+        self.Q = l[79:80]               # questionable decay marker
         
     def __repr__(self):
         s = "<Beta %s:"%(self.NUCID)
@@ -448,8 +448,8 @@ class ENSDF_EC_Record(ENSDF_Record):
         self.TI = ENSDF_Number(l[64:74], l[74:76])
         
         self.C_ = l[76:77].strip()      # coincidence comment
-        self.UN = l[77:79].strip()     # forbiddenness
-        self.Q = l[79:80]              # questionable decay marker
+        self.UN = l[77:79].strip()      # forbiddenness
+        self.Q = l[79:80]               # questionable decay marker
         
     def __repr__(self):
         s = "<Ecapt %s:"%(self.NUCID)
@@ -521,8 +521,8 @@ class ENSDF_Gamma_Record(ENSDF_Record):
         self.TI = ENSDF_Number(l[64:74], l[74:76])
         
         self.C_ = l[76:77].strip()      # comment flag
-        self.COIN = l[77:78].strip()   # confirmed by coincidence?
-        self.Q = l[79:80]              # questionable decay marker
+        self.COIN = l[77:78].strip()    # confirmed by coincidence?
+        self.Q = l[79:80]               # questionable decay marker
         
         # assigned later: level this goes to
         self.goesto = None
@@ -569,7 +569,7 @@ class ENSDF_Reader:
         
         self.IDrecord = ENSDF_Identification_Record(self.lines[0])
         self.history = []       # reverse-chrnological-order file history
-        self.qvalue = None
+        self.qvalue = None      # Q-Value entry
         self.parents = { }      # parent records (probably only 1; at most 2)
         self.topcomments = []   # general comments referring to whole dataset
         self.levels = { }       # levels in decay scheme, indexed by (NUCID, E)
@@ -652,6 +652,7 @@ class ENSDF_Reader:
         # insert parents into levels list
         for P in self.parents.values():
             l = ParentLevel(P)
+            P.asLevel = l
             self.levels[l.level_id()] = l
         
         # levels indexed by energy, and gamma transition assignments
@@ -667,7 +668,14 @@ class ENSDF_Reader:
                     print("*** Warning: level match discrepancy: ",g.goesDE)
         
         self.display()
-            
+    
+    def findParent(self, A, Z):
+        """Find parent matching A, Z"""
+        for P in self.parents.values():
+            if P.nucA == A and P.nucZ == Z:
+                return P
+        return None
+    
     def display(self):
         """Display to stdout"""
         
@@ -751,10 +759,6 @@ if __name__=="__main__":
     #ENSDF_Reader(basedir + "ENSDF_214Bi-214Po.txt")
     #ENSDF_Reader(basedir + "ENSDF_214Bi-210Tl.txt")
     #ENSDF_Reader(basedir + "ENSDF_210Tl-210Pb.txt")
-    
     R = ENSDF_Reader(basedir + "ENSDF_214Po-210Pb.txt")
-    R.shift_E0(1000.)
     R.display()
-    
-    #ENSDF_Reader(basedir + "ENSDF_Co60.txt")
     
