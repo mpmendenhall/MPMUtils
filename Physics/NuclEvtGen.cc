@@ -77,7 +77,7 @@ void NucLevel::display(bool) const {
 //-----------------------------------------
 
 DecayAtom::DecayAtom(BindingEnergyTable const* B): BET(B), Iauger(0), Ikxr(0), ICEK(0), IMissing(0), pAuger(0) {
-    if(BET->getZ()>2)
+    if(BET && BET->getZ()>2)
         Eauger = BET->getSubshellBinding(0,0) - BET->getSubshellBinding(1,0) - BET->getSubshellBinding(1,1);
     else
         Eauger = 0;
@@ -106,8 +106,8 @@ void DecayAtom::genAuger(vector<NucDecayEvent>& v) {
 }
 
 void DecayAtom::display(bool) const {
-    printf("%s %i: pAuger = %.3f, Eauger = %.2f, initCapt = %.3f\n",
-           BET->getName().c_str(),BET->getZ(),pAuger,Eauger,IMissing);
+    if(BET) printf("%s %i: pAuger = %.3f, Eauger = %.2f, initCapt = %.3f\n",BET->getName().c_str(),BET->getZ(),pAuger,Eauger,IMissing);
+    else printf("Atom information missing\n");
 }
 
 //-----------------------------------------
@@ -154,7 +154,7 @@ void ConversionGamma::run(vector<NucDecayEvent>& v, double* rnd) {
         evt.d = D_GAMMA;
     } else {
         evt.d = D_ELECTRON;
-        evt.E -= toAtom->BET->getSubshellBinding(shell,subshell);
+        if(toAtom->BET) evt.E -= toAtom->BET->getSubshellBinding(shell,subshell);
     }
     evt.randp(rnd);
     v.push_back(evt);
@@ -199,7 +199,7 @@ double ConversionGamma::shellAverageE(unsigned int n) const {
     for(unsigned int i=0; i<subshells[n].getN(); i++) {
         double p = subshells[n].getProb(i);
         w += p;
-        e += (Egamma-toAtom->BET->getSubshellBinding(n,i))*p;
+        e += (Egamma-(toAtom->BET? toAtom->BET->getSubshellBinding(n,i) : 0))*p;
     }
     return e/w;
 }
@@ -229,8 +229,28 @@ void ConversionGamma::scale(double s) {
 
 //-----------------------------------------
 
+AlphaDecayTrans::AlphaDecayTrans(NucLevel& f, NucLevel& t, const Stringmap& m): TransitionBase(f,t) { 
+    Ealpha = m.getDefault("E", from.E-to.E);
+    Itotal = m.getDefault("I", 0)/100.;
+}
+
+void AlphaDecayTrans::display(bool verbose) const {
+    printf("Alpha %.1f (%.3g%%) ", Ealpha, 100.*Itotal);
+    TransitionBase::display(verbose);
+}
+
+void AlphaDecayTrans::run(vector<NucDecayEvent>& v, double* rnd) {
+    NucDecayEvent evt;
+    evt.d = D_ALPHA;
+    evt.randp(rnd);
+    evt.E = Ealpha;
+    v.push_back(evt);
+}
+
+//-----------------------------------------
+
 BetaDecayTrans::BetaDecayTrans(NucLevel& f, NucLevel& t, bool pstrn, unsigned int forbidden):
-TransitionBase(f,t), positron(pstrn), BSG(to.A,to.Z*(positron?-1:1),from.E-to.E),
+TransitionBase(f,t), positron(pstrn), BSG(to.A,int(to.Z)*(positron?-1:1), from.E-to.E -(positron? 2*511. : 0)),
 betaTF1((f.name+"-"+t.name+"_Beta").c_str(),this,&BetaDecayTrans::evalBeta,0,1,0) {
     BSG.forbidden = forbidden;
     betaTF1.SetNpx(1000);
@@ -270,8 +290,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     fancyname = Q.getDefault("fileinfo","fancyname","");
     
     // load levels data
-    vector<Stringmap> levs = Q.retrieve("level");
-    for(auto& l: levs) {
+    for(auto& l: Q.retrieve("level")) {
         levels.push_back(NucLevel(l));
         transIn.push_back(vector<TransitionBase*>());
         transOut.push_back(vector<TransitionBase*>());
@@ -280,16 +299,19 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     std::sort(levels.begin(),levels.end(),sortLevels);
     int nlev = 0;
     for(auto& l: levels) {
-        smassert(levelIndex.find(l.name) == levelIndex.end());
+        if(levelIndex.find(l.name) != levelIndex.end()) {
+            SMExcept e("RepeatedLevel");
+            e.insert("name",l.name);
+            throw(e);
+        }
         l.n = nlev++;
         levelIndex.emplace(l.name, l.n);
     }
     
     // set up internal conversions
-    vector<Stringmap> gammatrans = Q.retrieve("gamma");
-    for(auto& g: gammatrans) {
+    for(auto& g: Q.retrieve("gamma"))
         addTransition(new ConversionGamma(levels[levIndex(g.getDefault("from",""))],levels[levIndex(g.getDefault("to",""))],g));
-    }
+    
     if(Q.getDefault("norm","gamma","") == "groundstate") {
         double gsflux = 0;
         for(auto& l: levels)
@@ -300,8 +322,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     
     // set up Augers
     for(auto& tr: transitions) tr->toAtom->ICEK += tr->getPVacant(0)*tr->Itotal;
-    vector<Stringmap> augers = Q.retrieve("AugerK");
-    for(auto& a: augers) {
+    for(auto& a: Q.retrieve("AugerK")) {
         int Z = a.getDefault("Z",0);
         if(!Z) {
             SMExcept e("BadAugerZ");
@@ -311,9 +332,12 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
         getAtom(Z)->load(a);
     }
     
+    // set up alpha decays
+    for(auto& al: Q.retrieve("alpha"))
+        addTransition(new AlphaDecayTrans(levels[levIndex(al.getDefault("from",""))],levels[levIndex(al.getDefault("to",""))],al));
+    
     // set up beta decays
-    vector<Stringmap> betatrans = Q.retrieve("beta");
-    for(auto& bt: betatrans) {
+    for(auto& bt: Q.retrieve("beta")) {
         BetaDecayTrans* BD = new BetaDecayTrans(levels[levIndex(bt.getDefault("from",""))],
                                                 levels[levIndex(bt.getDefault("to",""))],
                                                 bt.getDefault("positron",0),
@@ -327,8 +351,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     }
     
     // set up electron captures
-    vector<Stringmap> ecapts = Q.retrieve("ecapt");
-    for(auto& ec: ecapts) {
+    for(auto& ec: Q.retrieve("ecapt")) {
         NucLevel& Lorig = levels[levIndex(ec.getDefault("from",""))];
         string to = ec.getDefault("to","AUTO");
         if(to == "AUTO") {
@@ -345,7 +368,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
             NucLevel& Ldest = levels[levIndex(to)];
             smassert(Ldest.A == Lorig.A && Ldest.Z+1 == Lorig.Z && Ldest.E < Lorig.E);
             ECapture* EC = new ECapture(Lorig,Ldest);
-            EC->Itotal = ec.getDefault("I",0.);
+            EC->Itotal = ec.getDefault("I",0.)/100.;
             addTransition(EC);
         }
     }
@@ -372,7 +395,7 @@ NucDecaySystem::~NucDecaySystem() {
 DecayAtom* NucDecaySystem::getAtom(unsigned int Z) {
     auto it = atoms.find(Z);
     if(it != atoms.end()) return it->second;
-    DecayAtom* A = new DecayAtom(BEL.getBindingTable(Z));
+    DecayAtom* A = new DecayAtom(BEL.getBindingTable(Z,true));
     atoms.emplace(Z,A);
     return A;
 }

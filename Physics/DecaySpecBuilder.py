@@ -51,6 +51,7 @@ class DecaySpecBuilder:
         self.sheets = []        # loaded ENSDF datasheets
         self.levelcounter = { } # level number assignment count
         self.levidx = { }       # index of registered levels
+        self.min_tx_prob = 0    # ignore transitions less likely than this
         
     def add_sheet(self, s, linklevel = None):
         """Add parsed ENSDF datasheet; assigns unique global level numbers"""
@@ -71,6 +72,8 @@ class DecaySpecBuilder:
         for li in s.levidx:
             l = s.levels[li]
             levid = (l.nucA, l.nucZ)
+            l.nIn = 0
+            l.nOut = 0
             if hasattr(l,"levelID"):
                 assert l.levelID[:2] == levid
                 print("Linking level",l.levelID)
@@ -96,40 +99,52 @@ class DecaySpecBuilder:
 
     def levellist(self, smf):
         """Output energy levels to SMFile"""
-        for s in self.sheets:
-           for l in s.levels.values():
-               ml = KVMap()
-               ml.insert("nm", "%i.%i.%i"%l.levelID)
-               ml.insert("E", "%.2f"%l.E.tofloat())
+        for l in self.levidx.values():
+            if not l.nOut and not l.nIn:
+                continue
                
-               hl = -1 if l.T.vs == "STABLE" else l.T.tofloat()
-               hl = 0 if hl is None else hl
-               ml.insert("hl","%g"%hl)
+            ml = KVMap()
+            ml.insert("nm", "%i.%i.%i"%l.levelID)
+            ml.insert("E", "%.2f"%l.E.tofloat())
                
-               if l.J:
-                   ml.insert("jpi",l.J)
+            hl = -1 if l.T.vs == "STABLE" else l.T.tofloat()
+            hl = 0 if hl is None else hl
+            ml.insert("hl","%g"%hl)
                
-               smf.insert("level", ml)
+            if l.J:
+                ml.insert("jpi",l.J)
+               
+            smf.insert("level", ml)
                
     def transitionList(self, smf):
         """Output transitions to SMFile"""
         for s in self.sheets:
+            
+            assert len(s.parents) == 1          # almost always true...
+            P = tuple(s.parents.values())[0]    # parent for file
+            
             for l in s.levels.values():
+                
+                # normalization record for daughter, if available
+                nucnrm = P.norms.get(l.NUCID, None)
+                
                 for g in l.gammas:
                     Ig = g.RI.tofloat()
-                    if not Ig:
-                        continue
-                    
+                    if Ig and nucnrm: Ig *= nucnrm.NR.tofloat()
+                    if not Ig or Ig <= self.min_tx_prob: continue
+                
                     mg = KVMap()
                     mg.insert("from", "%i.%i.%i"%l.levelID)
                     mg.insert("to", "%i.%i.%i"%g.goesto.levelID)
-                    mg.insert("Igamma", Ig)
+                    mg.insert("Igamma", "%g"%Ig)
+                    mg.insert("E", "%g"%l.E.tofloat())
                     
                     ces = CETable(g.xvals).getCE()
-                    for c in ces:
-                        mg.insert("CE_"+c, ces[c])
+                    for c in ces: mg.insert("CE_"+c, ces[c])
                             
                     smf.insert("gamma", mg)
+                    l.nOut += 1
+                    g.goesto.nIn += 1
                     
                 for f in l.feeders:
                     
@@ -138,33 +153,52 @@ class DecaySpecBuilder:
                     
                     # identify parent level
                     pnt = None
-                    if f.RTYPE == "E":
-                        pnt = s.findParent(f.nucA, f.nucZ+1)
-                    elif f.RTYPE == "B":
-                        pnt = s.findParent(f.nucA, f.nucZ-1)
-                    elif f.RTYPE == "A":
-                        pnt = s.findParent(f.nucA+4, f.nucZ+2)
+                    if f.RTYPE == "E": pnt = s.findParent(f.nucA, f.nucZ+1)
+                    elif f.RTYPE == "B": pnt = s.findParent(f.nucA, f.nucZ-1)
+                    elif f.RTYPE == "A": pnt = s.findParent(f.nucA+4, f.nucZ+2)
                     assert pnt
                     mf.insert("from", "%i.%i.%i"%pnt.asLevel.levelID)
                     
+                    
+                    # beta, electron capture branches normalization
+                    NB = 1
+                    if nucnrm:
+                        NB = nucnrm.NB.tofloat()
+                    
                     if f.RTYPE == "E":
+                        doesEC = False
                         if f.IE.tofloat(): # electron capture
-                            mfe = deepcopy(mf)
-                            mfe.insert("I","%g"%f.IE.tofloat())
-                            smf.insert("ecapt", mfe)
+                            tprob = NB*f.IE.tofloat()
+                            if tprob > self.min_tx_prob:
+                                mfe = deepcopy(mf)
+                                mfe.insert("I","%g"%tprob)
+                                smf.insert("ecapt", mfe)
+                                doesEC = True
                         if f.IB.tofloat(): # beta+
-                            mfp = deepcopy(mf)
-                            mfp.insert("I","%g"%f.IB.tofloat())
-                            mfp.insert("positron","1")
-                            smf.insert("beta", mfp)
+                            tprob = NB*f.IB.tofloat()
+                            if tprob > self.min_tx_prob:
+                                mfp = deepcopy(mf)
+                                mfp.insert("I","%g"%tprob)
+                                mfp.insert("positron","1")
+                                smf.insert("beta", mfp)
+                                doesEC = True
+                        if not doesEC: continue
                     elif f.RTYPE == "B": # beta- decay
-                        mf.insert("I","%g"%f.IB.tofloat())
+                        tprob = NB*f.IB.tofloat()
+                        if tprob <= self.min_tx_prob: continue
+                        mf.insert("I","%g"%tprob)
                         smf.insert("beta", mf)
                     elif f.RTYPE == "A": # alpha decay
-                        mf.insert("I","%g"%f.IA.tofloat())
+                        tprob = f.IA.tofloat()*100
+                        if tprob <= self.min_tx_prob: continue
+                        mf.insert("I","%g"%tprob)
+                        mf.insert("E","%g"%f.E.tofloat())
                         smf.insert("alpha", mf)
                         
-        
+                    l.nIn += 1
+                    pnt.asLevel.nOut += 1
+                    
+
 if __name__=="__main__":
     basedir = "/home/mpmendenhall/Documents/PROSPECT/RefPapers/ENSDF/"
     
@@ -180,7 +214,8 @@ if __name__=="__main__":
     
     print(DSB.headercomments())
     smf = SMFile()
-    DSB.levellist(smf)
+    #DSB.min_tx_prob = 0.001
     DSB.transitionList(smf)
+    DSB.levellist(smf)
     
     print(smf.toString())

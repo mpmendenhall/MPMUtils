@@ -25,6 +25,7 @@
 
 #include "Vec.hh"
 #include <vector>
+#include <cassert>
 
 /// A templatized, fixed size, statically allocated matrix class.
 /**

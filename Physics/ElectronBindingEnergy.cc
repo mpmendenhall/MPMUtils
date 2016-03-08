@@ -56,18 +56,26 @@ void BindingEnergyTable::display() const {
 //----------------------------------------------
 
 BindingEnergyLibrary::BindingEnergyLibrary(const SMFile& Q) {
-    vector<Stringmap> v = Q.retrieve("binding");
-    for(unsigned int i=0; i<v.size(); i++)
-        tables.emplace(v[i].getDefault("Z",0), new BindingEnergyTable(v[i]));
+    for(auto& b: Q.retrieve("binding"))
+        tables.emplace(b.getDefault("Z",0), new BindingEnergyTable(b));
 }
 
-const BindingEnergyTable* BindingEnergyLibrary::getBindingTable(unsigned int Z) const {
-    auto it =  tables.find(Z);
+BindingEnergyLibrary::~BindingEnergyLibrary() {
+    for(auto& kv: tables) delete kv.second;
+}
+
+const BindingEnergyTable* BindingEnergyLibrary::getBindingTable(unsigned int Z, bool allowNULL) const {
+    map<unsigned int,BindingEnergyTable*>::const_iterator it =  tables.find(Z);
     if(it==tables.end()) {
+        if(allowNULL) return NULL;
         SMExcept e("MissingElement");
         e.insert("Z",Z);
         throw(e);
     }
     return it->second;
+}
+
+void BindingEnergyLibrary::display() const {
+    for(auto& kv: tables) kv.second->display();
 }
 

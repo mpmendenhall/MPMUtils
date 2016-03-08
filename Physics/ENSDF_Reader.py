@@ -322,9 +322,8 @@ class ENSDF_Parent_Record(ENSDF_Record):
 
     def display(self, d = 0):
         ENSDF_Record.display(self,d)
-        for kn in self.norms:
-            for n in self.norms[kn]:
-                n.display(d+1)
+        for n in self.norms.values():
+            n.display(d+1)
             
 class ENSDF_Normalization_Record(ENSDF_Record):
     def __init__(self,l):
@@ -342,9 +341,15 @@ class ENSDF_Normalization_Record(ENSDF_Record):
         # Multiplier from delayed-transition intensity to precursor decays
         self.NP = ENSDF_Number(l[55:62],l[62:64])
         
+        self.ProdNorm = None    # production normalization record, which should be following
+        
     def __repr__(self):
         return "<Normalization %s%s: NR = %s, NT = %s, BR = %s, NB = %s, NP = %s>"%(self.NUCID, self.num, self.NR, self.NT, self.BR, self.NB, self.NP)
 
+    def display(self, d = 0):
+        ENSDF_Record.display(self,d)
+        self.ProdNorm.display(d)
+    
 class ENSDF_ProdNorm_Record(ENSDF_Record):
     def __init__(self,l):
         ENSDF_Record.__init__(self,l)
@@ -358,10 +363,11 @@ class ENSDF_ProdNorm_Record(ENSDF_Record):
         self.NBxBR = ENSDF_Number(l[41:49],l[49:51])
         # Multiplier from delayed-transition intensity to precursor decays
         self.NP = ENSDF_Number(l[55:62],l[62:64])
-        self.COMM = l[77:78]    # blank or 'C' to show comment from continuation records
+        self.COMM = l[76:77]            # blank or 'C' to show comment from continuation records
+        self.OPT = int(l[77:78])        # option for intensity display in print format
         
     def __repr__(self):
-        return "<ProdNorm %s: NRxBR = %s, NTxBR = %s, NBxBR = %s, NP = %s>"%(self.NUCID, self.NRxBR, self.NTxBR, self.NBxBR, self.NP)
+        return "<ProdNorm %s: NRxBR = %s, NTxBR = %s, NBxBR = %s, NP = %s Opt %i>"%(self.NUCID, self.NRxBR, self.NTxBR, self.NBxBR, self.NP, self.OPT)
 
 class ENSDF_Level_Record(ENSDF_Record):
     """Energy level in decay scheme"""
@@ -416,7 +422,7 @@ class ENSDF_Beta_Record(ENSDF_Record):
         
         # endpoint energy [keV], if measured
         self.E = ENSDF_Number(l[9:19], l[19:21], "keV")
-        # intensity value
+        # intensity value (*= Normalization::NB for per 100 decays)
         self.IB = ENSDF_Number(l[21:29], l[29:31])
         # Log ft value
         self.LOGFT = ENSDF_Number(l[41:49], l[49:55])
@@ -438,13 +444,13 @@ class ENSDF_EC_Record(ENSDF_Record):
         
         # energy for electron capture to level [keV], if measured or deduced from measured beta+
         self.E = ENSDF_Number(l[9:19], l[19:21], "keV")    
-        # intensity of beta+ branch
+        # relative intensity of beta+ branch (*= Normalization::NB for per 100 decays)
         self.IB = ENSDF_Number(l[21:29], l[29:31])
-        # intensity of electron capture branch
+        # relative intensity of electron capture branch (*= Normalization::NB for per 100 decays)
         self.IE = ENSDF_Number(l[31:39], l[39:41])
         # Log ft value for (ec + beta+)
         self.LOGFT = ENSDF_Number(l[41:49], l[49:55])
-        # total intensity
+        # relative total intensity (*= Normalization::NB for per 100 decays)
         self.TI = ENSDF_Number(l[64:74], l[74:76])
         
         self.C_ = l[76:77].strip()      # coincidence comment
@@ -466,7 +472,7 @@ class ENSDF_Alpha_Record(ENSDF_Record):
         self.E = ENSDF_Number(l[9:19], l[19:21], "keV")    
         # intensity of alpha branch as percent of total alpha decay
         self.IA = ENSDF_Number(l[21:29], l[29:31], "%")
-        # hindrance factor for alpha decay
+        # "hindrance factor" for actual alpha rate relative to simple calculation
         self.HF = ENSDF_Number(l[31:39], l[39:41])
         
         assert not l[41:76].strip()
@@ -573,7 +579,7 @@ class ENSDF_Reader:
         self.parents = { }      # parent records (probably only 1; at most 2)
         self.topcomments = []   # general comments referring to whole dataset
         self.levels = { }       # levels in decay scheme, indexed by (NUCID, E)
-        norms = { }             # normalization records (attached to parents)
+        norms = []              # normalization records, later attached to parents
         self.unassigned = [ ]   # radiation unassigned to level structure
         self.refs = { }         # reference entries in special dataset
         self.unknown = [ ]      # unclassified records
@@ -617,7 +623,10 @@ class ENSDF_Reader:
             elif r.RTYPE == "P":
                 self.parents[r.parent_id()] = r
             elif r.RTYPE == "N":
-                norms.setdefault(r.parent_id(),[]).append(r)
+                if r.C == "P":
+                    norms[-1].ProdNorm = r
+                else:
+                    norms.append(r)
             elif r.RTYPE == "L":
                 currentLevel = r
                 assert r.level_id() not in self.levels
@@ -644,10 +653,10 @@ class ENSDF_Reader:
             r.complete()
     
         # associate normalizations with parents
-        for kn in norms:
-            for kp in self.parents:
-                if kn[1] == kp[1]:
-                    self.parents[kp].norms[kn[0]] = norms[kn]
+        for n in norms:
+            for p in self.parents.values():
+                if n.num == p.num:
+                    p.norms[n.NUCID] = n
         
         # insert parents into levels list
         for P in self.parents.values():

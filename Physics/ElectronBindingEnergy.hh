@@ -38,11 +38,11 @@ public:
     /// constructor from SMFile containing element tables
     BindingEnergyLibrary(const SMFile& Q);
     /// destructor
-    ~BindingEnergyLibrary() { for(auto& kv: tables) delete kv.second; }
+    ~BindingEnergyLibrary();
     /// get BindingEnergyTable for specified element
-    const BindingEnergyTable* getBindingTable(unsigned int Z) const;
+    const BindingEnergyTable* getBindingTable(unsigned int Z, bool allowNULL = false) const;
     /// display contents
-    void display() const { for(auto& kv: tables) kv.second->display(); }
+    void display() const;
 protected:
     map<unsigned int,BindingEnergyTable*> tables; ///< binding energy tables by element
 };

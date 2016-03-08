@@ -3,9 +3,9 @@
 #define NUCLEVTGEN_HH
 
 #include "ElectronBindingEnergy.hh"
-#include "BetaSpectrum.hh"
-#include "FloatErr.hh"
+#include "BetaSpectrumGenerator.hh"
 #include "TF1_Quantiles.hh"
+#include "FloatErr.hh"
 #include <TF1.h>
 #include <vector>
 using std::vector;
@@ -70,7 +70,7 @@ enum DecayType {
     D_ELECTRON = 11,
     D_POSITRON = -11,
     D_NEUTRINO = -12, // anti-nu_e
-    D_ALPHA = 999,
+    D_ALPHA = 1000020040,
     D_NONEVENT = 0
 };
 
@@ -155,21 +155,21 @@ public:
     /// constructor
     ConversionGamma(NucLevel& f, NucLevel& t, const Stringmap& m);
     /// select transition outcome
-    virtual void run(vector<NucDecayEvent>& v, double* rnd = NULL);
+    void run(vector<NucDecayEvent>& v, double* rnd = NULL) override;
     /// display transition line info
-    virtual void display(bool verbose = false) const;
+    void display(bool verbose = false) const override;
     /// get total conversion efficiency
     double getConversionEffic() const;
     /// get probability of knocking conversion electron from a given shell
-    virtual double getPVacant(unsigned int n) const { return n<shells.getN()-1?shells.getProb(n):0; }
+    double getPVacant(unsigned int n) const override { return n<shells.getN()-1?shells.getProb(n):0; }
     /// get whether said electron was knocked out
-    virtual unsigned int nVacant(unsigned int n) const { return int(n)==shell; }
+    unsigned int nVacant(unsigned int n) const override { return int(n)==shell; }
     /// shell weighted average energy
     double shellAverageE(unsigned int n) const;
     /// line weighted average
     float_err averageE() const;
     /// scale probability
-    virtual void scale(double s);
+    void scale(double s) override;
     
     double Egamma;      ///< gamma energy
     int shell;          ///< selected conversion electron shell
@@ -188,18 +188,33 @@ public:
     /// constructor
     ECapture(NucLevel& f, NucLevel& t): TransitionBase(f,t) {}
     /// select transition outcome
-    virtual void run(vector<NucDecayEvent>&, double* rnd = NULL);
+    void run(vector<NucDecayEvent>&, double* rnd = NULL) override;
     /// display transition line info
-    virtual void display(bool verbose = false) const { printf("Ecapture "); TransitionBase::display(verbose); }
+    void display(bool verbose = false) const override { printf("Ecapture "); TransitionBase::display(verbose); }
     /// get probability of removing an electron from a given shell
-    virtual double getPVacant(unsigned int n) const { return n==0?toAtom->IMissing:0; }
+    double getPVacant(unsigned int n) const override { return n==0?toAtom->IMissing:0; }
     /// get whether said electron was knocked out
-    virtual unsigned int nVacant(unsigned int n) const { return n==0?isKCapt:0; }
+    unsigned int nVacant(unsigned int n) const override { return n==0?isKCapt:0; }
     
     /// return number of continuous degrees of freedom needed to specify transition
-    virtual unsigned int getNDF() const { return 0; }
+    unsigned int getNDF() const override { return 0; }
     
     bool isKCapt;       ///< whether transition was a K capture
+};
+
+/// alpha decay transitions
+class AlphaDecayTrans: public TransitionBase {
+public:
+    /// constructor
+    AlphaDecayTrans(NucLevel& f, NucLevel& t, const Stringmap& m);
+    /// select transition outcome
+    void run(vector<NucDecayEvent>&, double* rnd = NULL) override;
+    /// display transition line info
+    void display(bool verbose = false) const override;
+    /// return number of continuous degrees of freedom needed to specify transition
+    unsigned int getNDF() const override { return 2; }
+    
+    double Ealpha; ///< alpha kinetic energy
 };
 
 /// beta decay transitions
@@ -210,12 +225,12 @@ public:
     /// destructor
     ~BetaDecayTrans();
     /// select transition outcome
-    virtual void run(vector<NucDecayEvent>& v, double* rnd = NULL);
+    void run(vector<NucDecayEvent>& v, double* rnd = NULL) override;
     /// display transition line info
-    virtual void display(bool verbose = false) const { printf("Beta(%.1f) ",from.E-to.E); TransitionBase::display(verbose); }
+    void display(bool verbose = false) const override { printf("Beta%s(%.1f) ", positron?"+":"-", BSG.EP); TransitionBase::display(verbose); }
     
     /// return number of continuous degrees of freedom needed to specify transition
-    virtual unsigned int getNDF() const { return 3; }
+    unsigned int getNDF() const override { return 3; }
     
     bool positron;                      ///< whether this is positron decay
     BetaSpectrumGenerator BSG;          ///< spectrum shape generator
@@ -289,13 +304,13 @@ public:
     /// get decay generator by name
     NucDecaySystem& getGenerator(const string& gennm);
     
-    string datpath;             ///< path to data folder
-    double tcut;                ///< event generator default cutoff time
-    BindingEnergyLibrary  BEL;  ///< electron binding energy info
+    string datpath;                     ///< path to data folder
+    double tcut;                        ///< event generator default cutoff time
+    BindingEnergyLibrary  BEL;          ///< electron binding energy info
     
 protected:
     map<string,NucDecaySystem*> NDs;    ///< loaded decay systems
-    set<string> cantdothis;        ///< list of decay systems that can't be loaded
+    set<string> cantdothis;             ///< list of decay systems that can't be loaded
 };
 
 /// class for throwing from large list of gammas
