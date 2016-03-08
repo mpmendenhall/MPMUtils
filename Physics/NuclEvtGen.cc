@@ -464,11 +464,13 @@ unsigned int NucDecaySystem::levIndex(const std::string& s) const {
     return n->second;
 }
 
-void NucDecaySystem::genDecayChain(vector<NucDecayEvent>& v, double* rnd, unsigned int n) {
-    bool init = n>=levels.size();
+void NucDecaySystem::genDecayChain(vector<NucDecayEvent>& v, double* rnd, unsigned int n, double t0) {
+    bool init = n >= levels.size();
     if(init)
         n = lStart.select(rnd);
     if(!levels[n].fluxOut || (!init && levels[n].hl > tcut)) return;
+    
+    size_t n_prev_evt = v.size();
     
     TransitionBase* T = transOut[n][levelDecays[n].select(rnd)];
     T->run(v, rnd);
@@ -477,7 +479,11 @@ void NucDecaySystem::genDecayChain(vector<NucDecayEvent>& v, double* rnd, unsign
     while(nAugerK--)
         getAtom(T->to.Z)->genAuger(v);
     
-    genDecayChain(v, rnd, T->to.n);
+    // determine and apply time delay for this decay stage
+    if(!init) t0 += -(levels[n].hl/log(2))*log(1.-gRandom->Uniform());
+    for(size_t i=n_prev_evt; i<v.size(); i++) v[i].t += t0;
+    
+    genDecayChain(v, rnd, T->to.n, t0);
 }
 
 unsigned int NucDecaySystem::getNDF(unsigned int n) const {

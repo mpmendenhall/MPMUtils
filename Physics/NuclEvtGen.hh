@@ -89,11 +89,11 @@ public:
     void randp(double* rnd = NULL) { randomDirection(p[0],p[1],p[2],rnd); }
     
     unsigned int eid;   ///< event ID number
-    double E;           ///< particle energy
+    double E;           ///< particle energy [keV]
     double p[3];        ///< particle momentum direction
-    double x[3];        ///< vertex position
-    DecayType d;        ///< particle type
-    double t;           ///< time of event
+    double x[3];        ///< vertex position [arb.]
+    DecayType d;        ///< particle type [PDG/Geant PID]
+    double t;           ///< time of event [s]
     double w;           ///< weighting for event
 };
 
@@ -259,8 +259,8 @@ public:
     void displayTransitions(bool verbose = false) const;
     /// display list of atoms
     void displayAtoms(bool verbose = false) const;
-    /// generate a chain of decay events starting from level n
-    void genDecayChain(vector<NucDecayEvent>& v, double* rnd = NULL, unsigned int n = UINT_MAX);
+    /// generate a chain of decay events starting from level n, starting time offset t0
+    void genDecayChain(vector<NucDecayEvent>& v, double* rnd = NULL, unsigned int n = UINT_MAX, double t0 = 0);
     /// rescale all probabilities
     void scale(double s);
     
