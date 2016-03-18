@@ -29,3 +29,4 @@ mpmrootdict.o: LinkDef.h $(ldefobjs) $(ldefincs)
 .PHONY: clean
 clean:
 	-rm -f *.o *.a *.so
+	-rm -f mpmrootdict.cxx

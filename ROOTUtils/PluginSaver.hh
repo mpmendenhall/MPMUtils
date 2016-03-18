@@ -9,6 +9,7 @@
 #define PLUGINSAVER_HH
 
 #include "SegmentSaver.hh"
+#include <cassert>
 
 /// Base class for optionally constructing SegmentSaver plugins "on demand"
 class PluginBuilder {
@@ -18,6 +19,23 @@ public:
     
     SegmentSaver* thePlugin = NULL;     ///< instantiated plugin (not memory managed here)
 };
+
+/// Simple templatized PluginBuilder, checking for correct parent type
+template <class Base, class Plug>
+class RecastPluginBuilder: public PluginBuilder {
+public:
+    /// Constructor
+    RecastPluginBuilder() { }
+    /// Re-casting plugin construction
+    void makePlugin(SegmentSaver* pnt) override {
+        auto PBase = dynamic_cast<Base*>(pnt);
+        assert(PBase);
+        thePlugin = _makePlugin(PBase);
+    }
+    /// Subclass me!
+    virtual SegmentSaver* _makePlugin(Base* PBase) { return new Plug(PBase); }
+};
+
 
 /// A SegmentSaver that manages several (optional) plugin SegmentSavers sharing the same file
 class PluginSaver: public SegmentSaver {
