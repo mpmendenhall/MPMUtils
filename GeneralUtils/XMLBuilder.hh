@@ -79,11 +79,12 @@ public:
     /// Add numerical attribute
     virtual void addAttr(const string& nm, double val) { addAttr(nm, to_str(val)); }
     
+    string tagname;                     ///< this item's tag name
+
 protected:
     /// add class-specific XML data; subclass me!
     virtual void _makeXML(XMLBuilder&) { }
     
-    string tagname;                     ///< this item's tag name
     map<string,string> xattrs;          ///< tag attributes
     vector<XMLProvider*> children;      ///< child providers
 };
