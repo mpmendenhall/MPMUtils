@@ -45,10 +45,7 @@ public:
     OutputManager(string nm, OutputManager* pnt);
     
     /// destructor
-    virtual ~OutputManager() {
-        clearItems();
-        if(!parent) delete defaultCanvas; 
-    }
+    virtual ~OutputManager() { clearItems(); }
     
     /// generate a TH1F registered with this runs output objects list
     TH1F* registeredTH1F(string hname, string htitle, unsigned int nbins, float x0, float x1);
@@ -64,7 +61,7 @@ public:
     /// write output ROOT file, or to new directory within parent; WARNING: THIS DELETES ALL REGISTERED ITEMS; do last if you reference these!
     void writeROOT(TDirectory* parentDir = NULL);
     
-    TCanvas* defaultCanvas;             ///< canvas for drawing plots
+    TCanvas defaultCanvas;              ///< canvas for drawing plots
     OutputManager* parent = NULL;       ///< parent output manager
     string basePath;                    ///< general output path
     string plotPath;                    ///< specific output path for plots

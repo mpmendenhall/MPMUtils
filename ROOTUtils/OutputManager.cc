@@ -30,24 +30,25 @@
 bool OutputManager::squelchAllPrinting = false;
 
 OutputManager::OutputManager(string nm, string bp):
-defaultCanvas(new TCanvas()),
 parent(NULL), name(nm) {
     TH1::AddDirectory(kFALSE);
     // set up output canvas
-    defaultCanvas->SetCanvasSize(200,200);
+    defaultCanvas.SetCanvasSize(200,200);
 #ifdef PUBLICATION_PLOTS
-    defaultCanvas->SetGrayscale(true);
+    defaultCanvas.SetGrayscale(true);
 #endif    
     basePath = plotPath = dataPath = rootPath = bp;
 }
 
 OutputManager::OutputManager(string nm, OutputManager* pnt):
-defaultCanvas(NULL), parent(pnt), name(nm) {
+parent(pnt), name(nm) {
     TH1::AddDirectory(kFALSE);
-    if(parent) {
-        defaultCanvas = parent->defaultCanvas;
-        plotPath = dataPath = basePath = rootPath = parent->basePath+"/"+name+"/";
-    }
+    // set up output canvas
+    defaultCanvas.SetCanvasSize(200,200);
+#ifdef PUBLICATION_PLOTS
+    defaultCanvas.SetGrayscale(true);
+#endif
+    if(parent) plotPath = dataPath = basePath = rootPath = parent->basePath+"/"+name+"/";
 }
 
 TDirectory* OutputManager::writeItems(TDirectory* d) {
@@ -93,6 +94,6 @@ void OutputManager::printCanvas(string fname, string suffix) const {
     printf("Printing canvas '%s' in '%s'\n",(fname+suffix).c_str(), plotPath.c_str());
     if(squelchAllPrinting) { printf("Printing squelched!\n"); return; }
     makePath(plotPath+"/"+fname+suffix,true);
-    defaultCanvas->Print((plotPath+"/"+fname+suffix).c_str());
+    defaultCanvas.Print((plotPath+"/"+fname+suffix).c_str());
 }
 

@@ -88,13 +88,13 @@ void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
 }
 
 void PluginSaver::makePlots() {
+    defaultCanvas.cd();
     SegmentSaver::makePlots(); 
     for(auto& kv: myBuilders) {
-        defaultCanvas->SetLogz(false);
-        defaultCanvas->SetLogx(false);
-        defaultCanvas->SetLogy(false);
-        if(kv.second->thePlugin)
+        if(kv.second->thePlugin) {
+            kv.second->thePlugin->defaultCanvas.cd();
             kv.second->thePlugin->makePlots();
+        }
     }
 }
 
