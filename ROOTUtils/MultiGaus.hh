@@ -50,7 +50,7 @@ public:
     };
     
     /// constructor
-    MultiGaus(unsigned int n, const string& name, float ns = 1.5): nSigma(ns), npks(n), iguess(new double[3*n]), myTF1(new TF1(name.c_str(),this,0,0,3*n)) { }
+    MultiGaus(unsigned int n, const string& name, float ns = 1.5): nSigma(ns), npks(n), iguess(3*n), myTF1(new TF1(name.c_str(),this,0,0,3*n)) { }
     
     /// destructor
     ~MultiGaus();
@@ -87,7 +87,7 @@ public:
     const unsigned int npks;    ///< number of peaks being fitted
     
 protected:
-    double* iguess;             ///< inital guess at peak positions
+    vector<double> iguess;             ///< inital guess at peak positions
     TF1* myTF1;                 ///< TF1 using this class as its fit function
     vector<corrPeak> corrPeaks; ///< correlated subpeaks
 };

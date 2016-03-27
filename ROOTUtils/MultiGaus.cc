@@ -27,7 +27,6 @@
 #include "SMExcept.hh"
 
 MultiGaus::~MultiGaus() { 
-    delete iguess;
     delete myTF1;
 }
 
