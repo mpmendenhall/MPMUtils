@@ -50,4 +50,13 @@ void makeRBpalette();
 /// gStyle settings for "slideshow-ready" plots
 void setupSlideStyle(TStyle* S = gStyle);
 
+/// filter out empty histograms
+template<class C>
+vector<C*> nonEmptyHistos(const vector<C*>& v) {
+    vector<C*> vv;
+    for(auto h: v) if(h->GetEntries()) vv.push_back(h);
+    return vv;
+}
+
+
 #endif

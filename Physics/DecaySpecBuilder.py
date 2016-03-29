@@ -203,19 +203,20 @@ if __name__=="__main__":
     basedir = "/home/mpmendenhall/Documents/PROSPECT/RefPapers/ENSDF/"
     
     DSB = DecaySpecBuilder()
-    #DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_Bi207.txt") )
+    DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_208Tl-208Pb.txt") )
     
-    DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_214Bi-214Po.txt") )
-    
-    s2 = ENSDF_Reader(basedir + "ENSDF_214Po-210Pb.txt")
-    pl = s2.findParent(214,84).asLevel
-    pl.levelID = (214,84,0)
-    DSB.add_sheet( s2, pl )
-    
+    if False:
+        DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_214Bi-214Po.txt") )
+        
+        s2 = ENSDF_Reader(basedir + "ENSDF_214Po-210Pb.txt")
+        pl = s2.findParent(214,84).asLevel
+        pl.levelID = (214,84,0)
+        DSB.add_sheet( s2, pl )
+        
     print(DSB.headercomments())
     smf = SMFile()
     #DSB.min_tx_prob = 0.001
     DSB.transitionList(smf)
     DSB.levellist(smf)
-    
+        
     print(smf.toString())
