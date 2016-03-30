@@ -56,6 +56,28 @@ void normalize_to_bin_area(TH2* h, double xscale) {
     h->Scale(xscale);
 }
 
+void addProjection(TH2& h, const TH1& hP, double s, bool xaxis) {
+    if(xaxis) {
+        assert(h.GetNbinsX() == hP.GetNbinsX());
+        for(Int_t nx=0; nx<=h.GetNbinsX()+1; nx++) {
+            double dz = hP.GetBinContent(nx)*s;
+            for(Int_t ny=1; ny<=h.GetNbinsY(); ny++) {
+                Int_t b = h.GetBin(nx,ny);
+                h.SetBinContent(b, h.GetBinContent(b) + dz);
+            }
+        }
+    } else {
+        assert(h.GetNbinsY() == hP.GetNbinsX());
+        for(Int_t nx=0; nx<=h.GetNbinsY()+1; nx++) {
+            double dz = hP.GetBinContent(nx)*s;
+            for(Int_t ny=1; ny<=h.GetNbinsX(); ny++) {
+                Int_t b = h.GetBin(ny,nx);
+                h.SetBinContent(b, h.GetBinContent(b) + dz);
+            }
+        }
+    }
+}
+
 void scale_times_bin_center(TH1* f) {
     if(!f) return;
     for(int i=1; i<=f->GetNbinsX(); i++) {
