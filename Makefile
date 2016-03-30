@@ -9,6 +9,11 @@ libs:
 	+cd ROOTUtils; make
 	+cd Matrix; make
 
+.PHONY: rootutils
+rootutils:
+	+cd GeneralUtils; make
+	+cd ROOTUtils; make
+
 .PHONY: doc
 doc:
 	doxygen Doxyfile
