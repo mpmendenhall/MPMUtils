@@ -23,7 +23,7 @@ public:
     /// Constructor
     SQLite_Helper(const string& dbname);
     /// Destructor
-    ~SQLite_Helper();
+    virtual ~SQLite_Helper();
 
     /// BEGIN TRANSACTION command
     int beginTransaction() { return exec("BEGIN TRANSACTION"); }
@@ -40,7 +40,9 @@ protected:
     int busyRetry(sqlite3_stmt*& stmt);
     /// run a statement expecting no return values (using busyRetry); optionally, throw error if not SQLITE_OK
     int exec(const string& qry, bool checkOK = true);
-    
+    /// put column i string into rslt, or leave unchanged if null; return whether non-NULL
+    static bool get_string(sqlite3_stmt* stmt, unsigned int i, string& rslt);
+        
     /// extract a vector<double> from a blob column
     void getVecBlob(vector<double>& v, sqlite3_stmt*& stmt, int col);
     /// bind a vector<double> as a blob to a statement parameter

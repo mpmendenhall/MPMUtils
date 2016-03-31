@@ -106,3 +106,9 @@ void SQLite_Helper::getVecBlob(vector<double>& v, sqlite3_stmt*& stmt, int col) 
 int SQLite_Helper::bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v) {
     return sqlite3_bind_blob(stmt, i, v.data(), v.size()*sizeof(double), NULL);
 }
+
+bool SQLite_Helper::get_string(sqlite3_stmt* stmt, unsigned int i, string& rslt) {
+    const unsigned char* s = sqlite3_column_text(stmt, i);
+    if(s) rslt = string((const char*)s);
+    return s;
+}
