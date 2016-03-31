@@ -50,7 +50,7 @@ class DecaySpecBuilder:
     def __init__(self):
         self.sheets = []        # loaded ENSDF datasheets
         self.levelcounter = { } # level number assignment count
-        self.levidx = { }       # index of registered levels
+        self.levidx = { }       # index of registered levels by level ID
         self.min_tx_prob = 0    # ignore transitions less likely than this
         
     def add_sheet(self, s, linklevel = None):
@@ -113,7 +113,7 @@ class DecaySpecBuilder:
                
             if l.J:
                 ml.insert("jpi",l.J)
-               
+            
             smf.insert("level", ml)
                
     def transitionList(self, smf):
@@ -130,14 +130,16 @@ class DecaySpecBuilder:
                 
                 for g in l.gammas:
                     Ig = g.RI.tofloat()
-                    if Ig and nucnrm: Ig *= nucnrm.NR.tofloat()
+                    nnBR = nucnrm.BR.tofloat()
+                    if nnBR is None: nnBR = 1.
+                    if Ig and nucnrm: Ig *= nucnrm.NR.tofloat() * nnBR
                     if not Ig or Ig <= self.min_tx_prob: continue
                 
                     mg = KVMap()
                     mg.insert("from", "%i.%i.%i"%l.levelID)
                     mg.insert("to", "%i.%i.%i"%g.goesto.levelID)
                     mg.insert("Igamma", "%g"%Ig)
-                    mg.insert("E", "%g"%l.E.tofloat())
+                    mg.insert("E", "%g"%g.E.tofloat())
                     
                     ces = CETable(g.xvals).getCE()
                     for c in ces: mg.insert("CE_"+c, ces[c])
@@ -163,7 +165,9 @@ class DecaySpecBuilder:
                     # beta, electron capture branches normalization
                     NB = 1
                     if nucnrm:
-                        NB = nucnrm.NB.tofloat()
+                        nnNB = nucnrm.NB.tofloat()
+                        if nnNB is None: nnNB = 1.
+                        NB = nnNB * nnBR
                     
                     if f.RTYPE == "E":
                         doesEC = False
@@ -203,19 +207,26 @@ if __name__=="__main__":
     basedir = "/home/mpmendenhall/Documents/PROSPECT/RefPapers/ENSDF/"
     
     DSB = DecaySpecBuilder()
-    DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_208Tl-208Pb.txt") )
+    #DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_208Tl-208Pb.txt") )
     
-    if False:
+    if True:
         DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_214Bi-214Po.txt") )
         
         s2 = ENSDF_Reader(basedir + "ENSDF_214Po-210Pb.txt")
         pl = s2.findParent(214,84).asLevel
         pl.levelID = (214,84,0)
-        DSB.add_sheet( s2, pl )
+        DSB.add_sheet(s2, pl)
+        
+    if False:
+        DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_152Eu-152Gd.txt") )
+        s2 = ENSDF_Reader(basedir + "ENSDF_152Eu-152Sm.txt")
+        pl = s2.findParent(152,63).asLevel
+        pl.levelID = (152,63,0)
+        DSB.add_sheet(s2, pl)
         
     print(DSB.headercomments())
     smf = SMFile()
-    #DSB.min_tx_prob = 0.001
+    #DSB.min_tx_prob = 1
     DSB.transitionList(smf)
     DSB.levellist(smf)
         

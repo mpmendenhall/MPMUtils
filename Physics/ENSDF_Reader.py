@@ -25,8 +25,8 @@ class ENSDF_Number:
     """Numerical value, possibly with units and errorbars or limit, from ENSDF text"""
     
     uvals = {"Y":365.25636*24*3600, "D": 24*3600, "H":3600,
-                "M":60., "S":1., "MS":1e-3, "US":1e-6, "PS":1e-12,
-                "FS":1e-15, "AS":1e-18,
+                "M":60., "S":1., "MS":1e-3, "US":1e-6, "NS":1e-9,
+                "PS":1e-12, "FS":1e-15, "AS":1e-18,
                 "EV": 1e-3, "KEV":1., "MEV":1e3,
                 "%":0.01, None:1}
             
@@ -34,8 +34,9 @@ class ENSDF_Number:
         self.vs = vs.strip()    # value, string format
         self.dvs = dvs.strip()  # uncertainty, string formay
 
-        self.unit = u
-        assert u is None or u.upper() in self.uvals
+        #self.unit = u
+        self.unit = u if u is not None and u.upper() in self.uvals else None
+        assert self.unit is None or self.unit.upper() in self.uvals
         self.v = self.dv = None
 
         if self.vs:
@@ -597,13 +598,13 @@ class ENSDF_Reader:
             
             # check for continuations
             if r.CONT != " ":
-                assert prevRec[r.CRTYPE]
-                prevRec[r.CRTYPE].addContinuation(r)
+                assert prevRec[r.CRTYPE.upper()]
+                prevRec[r.CRTYPE.upper()].addContinuation(r)
                 continue
             
-            if r.CRTYPE in prevRec:
-                prevRec[r.CRTYPE].complete()
-            prevRec[r.CRTYPE] = r
+            if r.CRTYPE.upper() in prevRec:
+                prevRec[r.CRTYPE.upper()].complete()
+            prevRec[r.CRTYPE.upper()] = r
             
             # check for comments
             if r.C != " " and not (r.RTYPE == "N" and r.C == "P"):
