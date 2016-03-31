@@ -27,8 +27,7 @@
 /// wrapper for multimap<string,Stringmap> with useful functions
 class SMFile {
 public:
-    
-    /// constructor given a string
+    /// Constructor with input filename
     SMFile(const string& s = "", bool readit = true);
     
     /// insert key/(string)value pair
@@ -59,13 +58,8 @@ public:
     /// display to stdout
     void display() const;
     
-    /// convert to RData format
-    
-protected:
-    
-    string name;                                   ///< name for this object
-    multimap< string, Stringmap > dat;        ///< key-value multimap
-    
+    string name;                        ///< output filename
+    multimap< string, Stringmap > dat;  ///< key-value multimap
 };
 
 #endif

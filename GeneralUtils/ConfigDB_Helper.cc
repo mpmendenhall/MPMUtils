@@ -34,8 +34,8 @@ Stringmap ConfigDB_Helper::getConfig(sqlite3_int64 cid) {
     return m;
 }
 
-SMFile ConfigDB_Helper::getConfigs(const string& family) {
-    sqlite3_stmt* stmt = loadStatement("SELECT rowid,name FROM config_values WHERE family = ?1");
+map<string, Stringmap> ConfigDB_Helper::getConfigs(const string& family) {
+    sqlite3_stmt* stmt = loadStatement("SELECT rowid,name FROM config_set WHERE family = ?1");
     sqlite3_bind_text(stmt, 1, family.c_str(), -1, SQLITE_STATIC);
     
     vector<sqlite3_int64> ids;
@@ -47,7 +47,7 @@ SMFile ConfigDB_Helper::getConfigs(const string& family) {
     }
     sqlite3_reset(stmt);
     
-    SMFile f;
-    for(size_t i=0; i<ids.size(); i++) f.insert(nms[i],getConfig(ids[i]));
+    map<string, Stringmap> f;
+    for(size_t i=0; i<ids.size(); i++) f.emplace(nms[i],getConfig(ids[i]));
     return f;
 }
