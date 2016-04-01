@@ -90,10 +90,12 @@ TH2F* OutputManager::registeredTH2F(string hname, string htitle, unsigned int nb
     return (TH2F*)addObject(new TH2F(hname.c_str(),htitle.c_str(),nbinsx,x0,x1,nbinsy,y0,y1));
 }
 
-void OutputManager::printCanvas(string fname, string suffix) const {
+string OutputManager::printCanvas(string fname, string suffix) const {
     printf("Printing canvas '%s' in '%s'\n",(fname+suffix).c_str(), plotPath.c_str());
-    if(squelchAllPrinting) { printf("Printing squelched!\n"); return; }
+    if(squelchAllPrinting) { printf("Printing squelched!\n"); return ""; }
     makePath(plotPath+"/"+fname+suffix,true);
-    defaultCanvas.Print((plotPath+"/"+fname+suffix).c_str());
+    string fout = plotPath+"/"+fname+suffix;
+    defaultCanvas.Print(fout.c_str());
+    return fout;
 }
 

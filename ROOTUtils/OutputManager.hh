@@ -53,8 +53,8 @@ public:
     TH1D* registeredTH1D(string hname, string htitle, unsigned int nbins, float x0, float x1);
     /// generate a TH2F registered with this runs output objects list
     TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
-    /// print current canvas
-    virtual void printCanvas(string fname, string suffix=".pdf") const;
+    /// print current canvas; return filename printed
+    virtual string printCanvas(string fname, string suffix=".pdf") const;
     
     /// write items to currently open directory, or specified
     TDirectory* writeItems(TDirectory* d = NULL) override;
