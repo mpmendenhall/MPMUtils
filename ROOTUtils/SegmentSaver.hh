@@ -78,7 +78,9 @@ public:
     /// scale all saved histograms by a factor
     virtual void scaleData(double s);
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
-    virtual void normalize() { }
+    virtual void normalize() {  normalization->ResizeTo(1); (*normalization)(0) = 1;  }
+    /// check whether normalization has been performed
+    virtual bool isNormalized() const { return normalization->GetNrows(); }
     
     /// add histograms, cumulatives from another SegmentSaver of the same type
     virtual void addSegment(const SegmentSaver& S, double sc = 1.);
@@ -105,6 +107,7 @@ public:
     TDirectory* dirIn = NULL;   ///< particular sub-directory for reading histograms
     string inflname;            ///< where to look for input file
     bool isCalculated;          ///< flag for whether calculation step has been completed
+    TVectorD* normalization;    ///< normalization information; meaning defined in subclasses
     
 protected:
     

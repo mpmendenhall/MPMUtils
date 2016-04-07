@@ -25,7 +25,7 @@
 #include <TString.h>
 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
-OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalculated(false), inflAge(0) {
+OutputManager(nm,pnt), inflname(inflName), isCalculated(false), inflAge(0) {
     // open file to load existing data
     fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : NULL;
     smassert(!fIn || !fIn->IsZombie(),"unreadable_file");
@@ -40,6 +40,11 @@ OutputManager(nm,pnt), ignoreMissingHistos(false), inflname(inflName), isCalcula
             if(!dirIn) dirIn = PSS->dirIn; // fallback for backwards compatibility prior to subdirectories
         }
     }
+    
+    // load normalization data
+    ignoreMissingHistos = true;
+    normalization = registerNamedVector("normalization", 0);
+    ignoreMissingHistos = false;
 }
 
 SegmentSaver::~SegmentSaver() {

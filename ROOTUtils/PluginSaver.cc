@@ -69,7 +69,7 @@ void PluginSaver::scaleData(double s) {
 }
 
 void PluginSaver::normalize() {
-    SegmentSaver::normalize();
+    _normalize();
     for(auto& kv: myBuilders)
         if(kv.second->thePlugin)
             kv.second->thePlugin->normalize();
@@ -111,6 +111,7 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
             if(!PS) vPi.push_back(NULL);
             else vPi.push_back(PS->getPlugin(kv.first));
         }
+        kv.second->thePlugin->defaultCanvas.cd();
         kv.second->thePlugin->compare(vPi);
     }
 }

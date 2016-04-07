@@ -54,6 +54,8 @@ public:
     void scaleData(double s) override;
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
     void normalize() override;
+    /// self-normalization before plugins
+    virtual void _normalize() { SegmentSaver::normalize(); }
     /// add histograms from another SegmentSaver of the same type
     void addSegment(const SegmentSaver& S, double sc = 1.) override;
     /// virtual routine for generating output plots
