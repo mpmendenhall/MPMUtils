@@ -98,6 +98,12 @@ void PluginSaver::makePlots() {
     }
 }
 
+void PluginSaver::finishData() {
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->finishData();
+}
+
 void PluginSaver::compare(const vector<SegmentSaver*>& v) {
     SegmentSaver::compare(v);
     

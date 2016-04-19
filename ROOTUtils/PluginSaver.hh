@@ -52,16 +52,19 @@ public:
     void zeroSavedHists() override;
     /// scale all saved histograms by a factor
     void scaleData(double s) override;
+    /// add histograms from another SegmentSaver of the same type
+    void addSegment(const SegmentSaver& S, double sc = 1.) override;
+    
+    /// optional cleanup at end of data loading
+    void finishData() override;
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
     void normalize() override;
     /// self-normalization before plugins
     virtual void _normalize() { SegmentSaver::normalize(); }
-    /// add histograms from another SegmentSaver of the same type
-    void addSegment(const SegmentSaver& S, double sc = 1.) override;
-    /// virtual routine for generating output plots
-    void makePlots() override;
     /// virtual routine for generating calculated hists
     void calculateResults() override;
+    /// virtual routine for generating output plots
+    void makePlots() override;
     /// virtual routine for comparing to other analyzers (of this type or NULL; meaning implementation-dependent)
     void compare(const vector<SegmentSaver*>& v) override;
     

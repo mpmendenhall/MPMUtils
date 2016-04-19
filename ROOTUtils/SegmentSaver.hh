@@ -77,8 +77,6 @@ public:
     virtual void zeroSavedHists();
     /// scale all saved histograms by a factor
     virtual void scaleData(double s);
-    /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
-    virtual void normalize() {  normalization->ResizeTo(1); (*normalization)(0) = 1;  }
     /// check whether normalization has been performed
     virtual bool isNormalized() const { return normalization->GetNrows(); }
     
@@ -95,11 +93,16 @@ public:
     // ----- Subclass me! ----- //
     
     /// create a new instance of this object(nm,inflname) (cloning self settings) for given directory
-    virtual SegmentSaver* makeAnalyzer(const string&, const string&) { assert(false); return NULL; } 
-    /// virtual routine for generating output plots
-    virtual void makePlots() {}
+    virtual SegmentSaver* makeAnalyzer(const string&, const string&) { assert(false); return NULL; }
+    
+    /// optional cleanup at end of data loading
+    virtual void finishData() { }
+    /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
+    virtual void normalize() {  normalization->ResizeTo(1); (*normalization)(0) = 1;  }
     /// virtual routine for generating calculated hists
     virtual void calculateResults() { isCalculated = true; }
+    /// virtual routine for generating output plots
+    virtual void makePlots() {}
     /// virtual routine for comparing to other analyzers (of this type or NULL; meaning implementation-dependent)
     virtual void compare(const vector<SegmentSaver*>&) { }
     
