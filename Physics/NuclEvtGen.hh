@@ -227,7 +227,7 @@ public:
     /// select transition outcome
     void run(vector<NucDecayEvent>& v, double* rnd = NULL) override;
     /// display transition line info
-    void display(bool verbose = false) const override { printf("Beta%s(%.1f) ", positron?"+":"-", BSG.EP); TransitionBase::display(verbose); }
+    void display(bool verbose = false) const override;
     
     /// return number of continuous degrees of freedom needed to specify transition
     unsigned int getNDF() const override { return 3; }

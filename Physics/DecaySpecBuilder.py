@@ -108,7 +108,8 @@ class DecaySpecBuilder:
             ml.insert("E", "%.2f"%l.E.tofloat())
                
             hl = -1 if l.T.vs == "STABLE" else l.T.tofloat()
-            hl = 0 if hl is None else hl
+            if l.T.unit in ["MeV","MEV"]: hl = 0
+            if hl is None: hl = 0
             ml.insert("hl","%g"%hl)
                
             if l.J:
@@ -127,11 +128,11 @@ class DecaySpecBuilder:
                 
                 # normalization record for daughter, if available
                 nucnrm = P.norms.get(l.NUCID, None)
-                
+                nnBR = nucnrm.BR.tofloat() if nucnrm else None
+                if nnBR is None: nnBR = 1.
+                    
                 for g in l.gammas:
                     Ig = g.RI.tofloat()
-                    nnBR = nucnrm.BR.tofloat()
-                    if nnBR is None: nnBR = 1.
                     if Ig and nucnrm: Ig *= nucnrm.NR.tofloat() * nnBR
                     if not Ig or Ig <= self.min_tx_prob: continue
                 
@@ -207,9 +208,12 @@ if __name__=="__main__":
     basedir = "/home/mpmendenhall/Documents/PROSPECT/RefPapers/ENSDF/"
     
     DSB = DecaySpecBuilder()
-    #DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_208Tl-208Pb.txt") )
     
     if True:
+        # single-sheet case
+        DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_12B-12C.txt") )
+    
+    if False:
         DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_214Bi-214Po.txt") )
         
         s2 = ENSDF_Reader(basedir + "ENSDF_214Po-210Pb.txt")

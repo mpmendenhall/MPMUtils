@@ -11,6 +11,8 @@ public:
     TF1_Quantiles(TF1& f);
     /// return quantile for 0 <= p <= 1
     double eval(double p) const;
+    /// get average value
+    Double_t getAvg() const { return avg; }
     
 protected:
     
@@ -18,6 +20,7 @@ protected:
     const Double_t xMin;
     const Double_t xMax;
     const Double_t dx;
+    Double_t avg;
     TArrayD integral;
     TArrayD alpha;
     TArrayD beta;

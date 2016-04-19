@@ -260,6 +260,11 @@ betaTF1((f.name+"-"+t.name+"_Beta").c_str(),this,&BetaDecayTrans::evalBeta,0,1,0
     betaQuantiles = new TF1_Quantiles(betaTF1);
 }
 
+void BetaDecayTrans::display(bool verbose) const {
+    printf("Beta%s(%.1f, %.1f) ", positron?"+":"-", BSG.EP, betaQuantiles->getAvg());
+    TransitionBase::display(verbose);
+}
+
 BetaDecayTrans::~BetaDecayTrans() {
     delete betaQuantiles;
 }

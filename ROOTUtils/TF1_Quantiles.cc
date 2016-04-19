@@ -9,13 +9,16 @@ integral(npx+1), alpha(npx), beta(npx), gamma(npx) {
     
     integral[0] = 0;
     Int_t intNegative = 0;
+    avg = 0;
     for (unsigned int i = 0; i < npx; i++) {
         Double_t integ = f.Integral(Double_t(xMin+i*dx),Double_t(xMin+i*dx+dx));
         if (integ < 0) {intNegative++; integ = -integ;}
         integral[i+1] = integral[i] + integ;
+        avg += integ * Double_t(xMin+(i+0.5)*dx);
     }
     
     const Double_t total = integral[npx];
+    avg /= total;
     
     if (intNegative > 0 || !total) {
         SMExcept e("bad_probability_distribution");

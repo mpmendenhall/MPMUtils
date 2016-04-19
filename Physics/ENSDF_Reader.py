@@ -349,7 +349,7 @@ class ENSDF_Normalization_Record(ENSDF_Record):
 
     def display(self, d = 0):
         ENSDF_Record.display(self,d)
-        self.ProdNorm.display(d)
+        if self.ProdNorm: self.ProdNorm.display(d)
     
 class ENSDF_ProdNorm_Record(ENSDF_Record):
     def __init__(self,l):
