@@ -21,6 +21,7 @@ BindingEnergyTable::BindingEnergyTable(const Stringmap& m): Z(m.getDefault("Z",0
 
 const vector<double>& BindingEnergyTable::getShellBinding(unsigned int n) const {
     if(n>=eBinding.size()) {
+        return noBinding;
         SMExcept e("MissingShellInfo");
         e.insert("Z",Z);
         e.insert("name",nm);
@@ -33,6 +34,7 @@ const vector<double>& BindingEnergyTable::getShellBinding(unsigned int n) const 
 double BindingEnergyTable::getSubshellBinding(unsigned int n, unsigned int m) const {
     const vector<double>& v = getShellBinding(n);
     if(m>=v.size()) {
+        return 0;
         SMExcept e("MissingSubshellInfo");
         e.insert("Z",Z);
         e.insert("name",nm);

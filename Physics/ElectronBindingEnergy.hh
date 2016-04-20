@@ -30,6 +30,7 @@ protected:
     unsigned int Z;                     ///< element number
     string nm;                          ///< element name abbrev.
     vector< vector<double> > eBinding;  ///< binding energy by shell and subshell
+    const vector<double> noBinding;     ///< empty vector for missing info
 };
 
 /// catalog of many BindingEnergyTables

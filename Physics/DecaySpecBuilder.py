@@ -184,7 +184,6 @@ class DecaySpecBuilder:
                             if tprob > self.min_tx_prob:
                                 mfp = deepcopy(mf)
                                 mfp.insert("I","%g"%tprob)
-                                mfp.insert("positron","1")
                                 smf.insert("beta", mfp)
                                 doesEC = True
                         if not doesEC: continue
@@ -211,7 +210,7 @@ if __name__=="__main__":
     
     if True:
         # single-sheet case
-        DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_12B-12C.txt") )
+        DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_22Na-22Ne.txt") )
     
     if False:
         DSB.add_sheet( ENSDF_Reader(basedir + "ENSDF_214Bi-214Po.txt") )
