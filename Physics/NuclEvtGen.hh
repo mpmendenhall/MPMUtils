@@ -221,7 +221,7 @@ public:
 class BetaDecayTrans: public TransitionBase {
 public:
     /// constructor
-    BetaDecayTrans(NucLevel& f, NucLevel& t, bool pstrn = false, unsigned int forbidden = 0);
+    BetaDecayTrans(NucLevel& f, NucLevel& t, unsigned int forbidden = 0);
     /// destructor
     ~BetaDecayTrans();
     /// select transition outcome

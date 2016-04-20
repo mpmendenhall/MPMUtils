@@ -249,8 +249,8 @@ void AlphaDecayTrans::run(vector<NucDecayEvent>& v, double* rnd) {
 
 //-----------------------------------------
 
-BetaDecayTrans::BetaDecayTrans(NucLevel& f, NucLevel& t, bool pstrn, unsigned int forbidden):
-TransitionBase(f,t), positron(pstrn), BSG(to.A,int(to.Z)*(positron?-1:1), from.E-to.E -(positron? 2*511. : 0)),
+BetaDecayTrans::BetaDecayTrans(NucLevel& f, NucLevel& t, unsigned int forbidden):
+TransitionBase(f,t), positron(f.Z > t.Z), BSG(to.A,int(to.Z)*(positron?-1:1), from.E-to.E -(positron? 2*511. : 0)),
 betaTF1((f.name+"-"+t.name+"_Beta").c_str(),this,&BetaDecayTrans::evalBeta,0,1,0) {
     BSG.forbidden = forbidden;
     betaTF1.SetNpx(1000);
@@ -345,7 +345,6 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     for(auto& bt: Q.retrieve("beta")) {
         BetaDecayTrans* BD = new BetaDecayTrans(levels[levIndex(bt.getDefault("from",""))],
                                                 levels[levIndex(bt.getDefault("to",""))],
-                                                bt.getDefault("positron",0),
                                                 bt.getDefault("forbidden",0));
         BD->Itotal = bt.getDefault("I",0)/100.0;
         if(bt.count("M2_F") || bt.count("M2_GT")) {
