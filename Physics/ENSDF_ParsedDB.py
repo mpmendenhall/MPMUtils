@@ -90,6 +90,13 @@ def upload_xdata(curs,l,pL):
         for o in ops:
             if ss[:len(o)] == o: return o
         return None
+    
+    def is_xreflist(ss):
+        refels = [s.strip() for s in ss.split(",")]
+        for s in refels[:1]:
+            if len(s) < 6 or s.isdigit() or not s.isalnum():
+                return False
+        return True
         
     for s in l.txt[1:].split("$"):
         if not s.strip():
@@ -100,15 +107,17 @@ def upload_xdata(curs,l,pL):
         qvals = []
         xref = None
         while len(s):
-            if s[0] == "(":
-                xref = s.strip("()")
-                break
             o = nextop(s)
             if not o: break
             s = s[len(o):]
             val = beforeop(s)
+            if quant != "XREF" and s and len(val)==len(s) and val[-1] == ")":
+                n = val.rfind('(')
+                xref = val[n+1:-2]
+                if not is_xreflist(xref): xref = None
+                else: val = val[:n]
             s = s[len(val):]
-            qvals.append((o,val))
+            qvals.append((o,val.strip()))
         for q in qvals:
             curs.execute("INSERT INTO record_xdata VALUES (?,?,?,?,?)", (pL.lid, quant, q[0], q[1], xref))
 
