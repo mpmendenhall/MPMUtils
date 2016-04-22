@@ -35,6 +35,16 @@ CREATE TABLE comment_records (
 );
 CREATE INDEX idx_comment_records on comment_records(line);
 
+-- identification records
+CREATE TABLE identification_records (
+    line INTEGER,       -- rowid from ENSDF_lines defining this entry
+    DSID TEXT,          -- dataset ID string
+    DSREF VARCHAR(26),  -- publication references
+    PUB VARCHAR(9),     -- publication information
+    EDATE INTEGER       -- YYYYMM entry date into ENSDF system
+);
+CREATE UNIQUE INDEX idx_identification_records on identification_records(line);
+
 -- continuation data fields for a line
 CREATE TABLE record_xdata (
     line INTEGER,       -- rowid from ENSDF_lines this pertains to
@@ -44,6 +54,12 @@ CREATE TABLE record_xdata (
     refs TEXT           -- references
 );
 CREATE INDEX idx_record_xdata on record_xdata(line);
+
+-- History records
+CREATE TABLE history_records (
+    line INTEGER        -- rowid from ENSDF_lines defining this line
+);
+CREATE UNIQUE INDEX idx_history_records on history_records(line);
 
 -- Alpha records
 CREATE TABLE alpha_records (
@@ -154,6 +170,40 @@ CREATE TABLE level_records (
 );
 CREATE UNIQUE INDEX idxlevel_records on level_records(line,E);
 
+-- Normalization records
+CREATE TABLE normalization_records (
+    line INTEGER,       -- rowid from ENSDF_lines defining this entry    
+    n INTEGER,          -- multiple-parent identifier
+    NR REAL,
+    DNR REAL,
+    NT REAL,
+    DNT REAL,
+    BR REAL,
+    DBR REAL,
+    NB REAL,
+    DNB REAL,
+    NP REAL,
+    DNP REAL
+);
+CREATE UNIQUE INDEX idxnormalization_records on normalization_records(line);
+
+-- Production Normalization records
+CREATE TABLE prodnorm_records (
+    line INTEGER,       -- rowid from ENSDF_lines defining this entry
+    NRxBR REAL,
+    DNRxBR REAL,
+    NTxBR REAL,
+    DNTxBR REAL,
+    NBxBR REAL,
+    DNBxBR REAL,
+    NP REAL,
+    DNP REAL,
+    COM CHAR(1),
+    OPT INTEGER
+);
+CREATE UNIQUE INDEX idxprodnorm_records on prodnorm_records(line);
+
+
 -- Parent records
 CREATE TABLE parent_records (
     line INTEGER,       -- rowid from ENSDF_lines defining this entry
@@ -168,3 +218,18 @@ CREATE TABLE parent_records (
     ION INTEGER         -- ionization state for ionized atom decay
 );
 CREATE UNIQUE INDEX idx_parent_records on parent_records(line);
+
+-- Qvalue records
+CREATE TABLE qval_records (
+    line INTEGER,       -- rowid from ENSDF_lines defining this entry
+    Qm REAL,            -- Total energy [keV] available for beta- decay to ground state
+    DQm REAL,           -- uncertainty on Qm
+    SN REAL,            -- Neutron separation energy [keV]
+    DSN REAL,           -- uncertainty on SN
+    SP REAL,            -- Proton separation energy
+    DSP REAL,           -- uncertainty on SP
+    QA REAL,            -- Total energy [keV] available for alpha decay to ground state
+    DQA REAL,           -- uncertainty on QA
+    QREF TEXT           -- reference citation(s)
+);
+CREATE UNIQUE INDEX idx_qval_records on qval_records(line);
