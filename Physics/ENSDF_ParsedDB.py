@@ -490,7 +490,9 @@ class ParsedParentRecord(DBRecord):
     def __init__(self,curs,cid):
         DBRecord.__init__(self,curs,"parent_records",cid,True)
     def __repr__(self):
-        t = "[Parent %s%s J=%s: E=%s, halflife %s]"%(self.mass, self.elem, self.J, rep_num(self.E,self.DE), rep_num(self.T, self.DT))
+        t = "[Parent %s%s J=%s: E %s keV, halflife %s s"%(self.mass, self.elem, self.J, rep_num(self.E,self.DE), rep_num(self.T, self.DT))
+        if self.QP: t += ", Qgs %s keV"%rep_num(self.QP,self.DQP)
+        t += "]"
         if self.xdata: t += " " + self.repr_xdat()
         return t
     
@@ -533,27 +535,79 @@ class ParsedCard:
     def __init__(self, curs, cid):
         
         def cardlines(tbl, tp=None):
+            """select lines for this card from specified table"""
             curs.execute("SELECT rowid FROM %s WHERE line IN (SELECT rowid FROM ENSDF_lines WHERE card = ?) ORDER BY rowid"%tbl,(cid,))
-            if tp is None: return [DBRecord(curs, tbl, r[0], True) for r in curs.fetchall()]
-            return [tp(curs, r[0]) for r in curs.fetchall()]
+            if tp is None: rs = [DBRecord(curs, tbl, r[0], True) for r in curs.fetchall()]
+            else: rs = [tp(curs, r[0]) for r in curs.fetchall()]
+            for r in rs: r.card = self
+            return rs
         
         self.idrec = cardlines("identification_records", ParsedIDRecord)
         assert len(self.idrec) == 1
         self.idrec = self.idrec[0]
         self.history = cardlines("history_records")
+        self.refs = cardlines("reference_records")
+        self.xrefs = cardlines("xref_records")
+        
         self.qvals = cardlines("qval_records")
         self.parents = cardlines("parent_records", ParsedParentRecord)
         self.norms = cardlines("normalization_records")
         self.prodnorms = cardlines("prodnorm_records")
+        
         self.levels = cardlines("level_records", ParsedLevelRecord)
+        self.levels = dict([(l.rowid,l) for l in self.levels]) # index levels for transitions
+        
         self.alphas = cardlines("alpha_records")
         self.betas = cardlines("beta_records", ParsedBetaRecord)
         self.gammas = cardlines("gamma_records", ParsedGammaRecord)
         self.dptcls = cardlines("dptcl_records")
         self.ecapts = cardlines("ec_records", ParsedECRecord)
-        self.refs = cardlines("reference_records")
-        self.xrefs = cardlines("xref_records")
+        
+        # connect normalizations, parents
+        assert not self.prodnorms or len(self.norms) == len(self.prodnorms)
+        for (i,nrm) in enumerate(self.norms):
+            # determine composite normalizations
+            try: nrm.NRxBR = nrm.NR * nrm.BR
+            except: nrm.NRxBR = 1
+            try: nrm.NRxBR = float(self.prodnorms[i].NRxBR)
+            except: pass
+            
+            try: nrm.NBxBR = nrm.NB * nrm.BR
+            except: nrm.NBxBR = 1
+            try: nrm.NBxBR = float(self.prodnorms[i].NBxBR)
+            except: pass
+            
+            for p in self.parents:
+                if p.n == nrm.n:
+                    p.norm = nrm
+                    if self.prodnorms: p.prodnorm = self.prodnorms[i]
+                    
+        if len(self.parents) != 1: return # TODO handle multiple parents
     
+        # connect level information to transitions
+        for txs in (self.alphas, self.betas, self.dptcls, self.ecapts):
+            for a in txs:
+                if a.tolvl: a.tolvl = self.levels[a.tolvl]
+                a.fromlvl = self.parents[0]
+        for g in self.gammas:
+            if g.fromlvl: g.fromlvl = self.levels[g.fromlvl]
+            if g.probto: g.tolvl = self.levels[g.probto]
+            else: g.tolvl = None
+            
+        # calculate transition absolute rates
+        nrm = self.norms[0]
+        for g in self.gammas:
+            try: g.Igamma = g.RI * nrm.NRxBR
+            except: g.Igamma = 0
+        for b in self.betas:
+            try: b.Ibeta = b.IB * nrm.NBxBR
+            except: b.Ibeta = 0
+        for e in self.ecapts:
+            try: e.Ibeta = e.IB * nrm.NBxBR
+            except: e.Ibeta = 0
+            try: e.Iec = e.IE * nrm.NBxBR
+            except: e.Iec = 0
+            
     def display(self):
         print(self.idrec.displayform())
         for a in self.history: print(a.displayform())
@@ -564,13 +618,14 @@ class ParsedCard:
         for a in self.refs: print(a.displayform())
         for a in self.xrefs: print(a.displayform())
         print("-"*80)
-        for l in self.levels:
+        for l in self.levels.values():
             print(l)
-            for a in [a for a in self.alphas if a.tolvl == l.rowid]: print("\t"+a.displayform())
-            for a in [a for a in self.betas if a.tolvl == l.rowid]: print("\t"+a.displayform())
-            for a in [a for a in self.gammas if a.fromlvl == l.rowid]: print("\t"+a.displayform())
-            for a in [a for a in self.dptcls if a.tolvl == l.rowid]: print("\t"+a.displayform())
-            for a in [a for a in self.ecapts if a.tolvl == l.rowid]: print("\t"+a.displayform())
+            for a in [a for a in self.alphas if a.tolvl == l]: print("\t"+a.displayform())
+            for a in [a for a in self.betas if a.tolvl == l]: print("\t"+a.displayform())
+            for a in [a for a in self.gammas if a.fromlvl == l]: print("\t"+a.displayform())
+            for a in [a for a in self.ecapts if a.tolvl == l]: print("\t"+a.displayform())
+            for a in [a for a in self.dptcls if a.tolvl == l]: print("\t"+a.displayform())
+            
     
 if __name__ == "__main__":
     datdir = "/home/mpmendenhall/Documents/ENSDF/"
@@ -579,7 +634,7 @@ if __name__ == "__main__":
     curs = conn.cursor()
     
     if True:
-        curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '207Bi%'")
+        curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '40K %'")
         for cid in curs.fetchall():
             print("\n\n")
             ParsedCard(curs,cid[0]).display()
@@ -598,6 +653,7 @@ if __name__ == "__main__":
             traceback.print_exc(file=sys.stdout)
             #raise
             
+    curs.execute('analyze')        
     conn.commit()
     conn.close()
 

@@ -87,6 +87,7 @@ if __name__ == "__main__":
     
     if True:
         upload_dataset(curs,datdir+"ensdf_150208/")
+        #upload_cards(curs, open(datdir+"ensdf_150208/ensdf_151208.upd").read())
         conn.commit()
     else:
         curs.execute('select rowid from ENSDF_cards WHERE mass = 12 AND elem = "C"')
