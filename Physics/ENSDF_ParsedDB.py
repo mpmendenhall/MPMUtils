@@ -68,11 +68,16 @@ def upload_C_record(curs,l,pL):
     assert l.rectp[1] in 'CDTcdt'
     assert pL
     t = l.txt
+    RTYPE = l.rectp[2]
     PSYM = t[0]
     ts = t[1:].split("$")
     SYM = ts[0].strip() if len(ts) > 1 else None
     CTEXT = ts[1].strip() if SYM is not None else t[1:].strip()
-    curs.execute("INSERT INTO comment_records VALUES (?,?,?,?)", (pL.lid, PSYM, SYM, CTEXT))
+    if SYM is None and t[10:11] == ' ' and not RTYPE == PSYM == ' ': # "old format" comments
+        SYM = t[1:10].strip()
+        if not SYM: SYM = None
+        CTEXT = t[11:].strip()
+    curs.execute("INSERT INTO comment_records VALUES (?,?,?,?,?)", (pL.lid, RTYPE, PSYM, SYM, CTEXT))
 
 def upload_xdata(curs,l,pL):
     """Parse and upload continuation records"""
@@ -146,6 +151,7 @@ class DBRecord:
             l = DBRecord(curs, "ENSDF_lines", self.line)
             self.mass = l.mass
             self.elem = l.elem
+            self.rectp = l.rectp
             if loadall: self.load_extras(curs)
     
     def load_extras(self,curs):
@@ -153,8 +159,8 @@ class DBRecord:
         curs.execute("SELECT * FROM record_xdata WHERE line = ?", (self.line,))
         for r in curs.fetchall(): self.xdata.setdefault(r["quant"], []).append((r["op"],r["val"],r["refs"]))
         
-        curs.execute("SELECT * FROM comment_records WHERE line = ?", (self.line,))
-        self.comments = [(r["PSYM"],r["SYM"],r["CTEXT"]) for r in curs.fetchall()]
+        curs.execute("SELECT rowid FROM comment_records WHERE line = ?", (self.line,))
+        self.comments = [ParsedCommentRecord(curs,r[0]) for r in curs.fetchall()]
         
     def isot(self):
         """Isotope identifier"""
@@ -169,7 +175,7 @@ class DBRecord:
         return "{ "+" | ".join(s)+" }"
     
     def repr_comments(self):
-        return "\n".join(["/// " + ("%s: "%c[1] if c[1] is not None else '') + "\n//  ".join(c[2].split("\n")) for c in self.comments])
+        return "\n".join([str(c) for c in self.comments])
 
     def __repr__(self):
         t = "< " + " | ".join(["%s:%s"%(k,v) for k,v in self.dbrow.items() if v not in [None,'',' '] and k != "line"])
@@ -180,6 +186,20 @@ class DBRecord:
         s = str(self)
         return s if not self.comments else s+"\n"+self.repr_comments()
 
+class ParsedCommentRecord(DBRecord):
+    def __init__(self, curs, cid):
+        DBRecord.__init__(self,curs,"comment_records",cid,False)
+    def __repr__(self):
+        t = "/// "
+        if self.RTYPE != ' ': t += "%s) "%self.RTYPE
+        if self.SYM: t += "%s: "%self.SYM
+        return t + "\n//  ".join(self.CTEXT.split("\n"))
+    
+    
+    
+    
+    
+    
 def upload_A_record(curs,l):
     """Parse and upload Alpha record from raw line"""
     t = l.txt
@@ -311,6 +331,21 @@ def upload_Q_record(curs,l):
     QREF = t[47:72].strip()
     curs.execute("INSERT INTO qval_records VALUES (?,?,?,?,?,?,?,?,?,?)", (l.lid,Qm,DQm,SN,DSN,SP,DSP,QA,DQA,QREF))
 
+def upload_R_record(curs,l):
+    """Parse and upload Reference record from raw line"""
+    t = l.txt
+    assert t[0] == ' '
+    KEYNUM = t[1:9].strip()
+    REFERENCE = t[9:72].strip()
+    curs.execute("INSERT INTO reference_records VALUES (?,?,?)", (l.lid,KEYNUM,REFERENCE))
+
+def upload_X_record(curs,l):
+    t = l.txt
+    DSSYM = t[0]
+    DSID = t[1:31].strip()
+    # [31:72] blank
+    curs.execute("INSERT INTO xref_records VALUES (?,?,?)", (l.lid,DSSYM,DSID))
+    
 def upload_N_record(curs,l):
     """Parse and upload Normalization record from raw line"""
     t = l.txt
@@ -337,7 +372,7 @@ def upload_PN_record(curs,l):
     OPT = int(t[69:70]) if t[69:70].strip() else None
     # [71:72] unspecified
     curs.execute("INSERT INTO prodnorm_records VALUES (?,?,?,?,?,?,?,?,?,?,?)", (l.lid,NRxBR,DNRxBR,NTxBR,DNTxBR,NBxBR,DNBxBR,NP,DNP,C,OPT))
-    
+
 def clearParsed(curs, cid):
     """Clear parsed data for card"""
     cmd0 = 'DELETE FROM %s WHERE rowid IN (SELECT %s.rowid FROM ENSDF_lines INNER JOIN %s ON (ENSDF_lines.rowid = %s.line) WHERE ENSDF_lines.card = ?)'
@@ -367,7 +402,9 @@ def parseCard(curs, C):
                 'L': upload_L_record,
                 'N': upload_N_record,
                 'P': upload_P_record,
-                'Q': upload_Q_record  }
+                'Q': upload_Q_record,
+                'R': upload_R_record,
+                'X': upload_X_record }
     
     for l in C.lines:
         try:
@@ -375,8 +412,8 @@ def parseCard(curs, C):
                 if l.rectp[1] not in ' P': # comment continuation
                     assert prevComment
                     prevComment.txt += "\n" + l.txt
-                    continue
                 else: upload_xdata(curs,l,prevLine)
+                continue
             elif l.rectp[1] not in ' P': # should be starting a non-continued comment
                 if prevComment is not None: upload_C_record(curs, prevComment, prevComment.myline)
                 prevComment = l
@@ -393,8 +430,6 @@ def parseCard(curs, C):
                 if l.rectp[2] == "L":
                     levels.append(rec)
                     isotLevels.setdefault(rec.isot(),[]).append(rec)
-            elif l.rectp[2] in "RX":
-                pass # TODO
             else:
                 print("Unparsed line:",l)
             prevLine = l
@@ -463,7 +498,7 @@ class ParsedLevelRecord(DBRecord):
     def __init__(self,curs,cid):
         DBRecord.__init__(self,curs,"level_records",cid,True)
     def __repr__(self):
-        t = "[Level E=%s, halflife=%s]"%(rep_num(self.E,self.DE), rep_num(self.T,self.DT))
+        t = "[%s%s J=%s: E=%s, halflife=%s]"%(self.mass, self.elem, self.J, rep_num(self.E,self.DE), rep_num(self.T,self.DT))
         if self.xdata: t += " " + self.repr_xdat()
         return t
 
@@ -516,6 +551,8 @@ class ParsedCard:
         self.gammas = cardlines("gamma_records", ParsedGammaRecord)
         self.dptcls = cardlines("dptcl_records")
         self.ecapts = cardlines("ec_records", ParsedECRecord)
+        self.refs = cardlines("reference_records")
+        self.xrefs = cardlines("xref_records")
     
     def display(self):
         print(self.idrec.displayform())
@@ -524,6 +561,8 @@ class ParsedCard:
         for a in self.norms: print(a.displayform())
         for a in self.prodnorms: print(a.displayform())
         for a in self.qvals: print(a.displayform())
+        for a in self.refs: print(a.displayform())
+        for a in self.xrefs: print(a.displayform())
         print("-"*80)
         for l in self.levels:
             print(l)

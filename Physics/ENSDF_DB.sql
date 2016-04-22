@@ -29,6 +29,7 @@ CREATE INDEX idx_ENSDF_lines on ENSDF_lines(card);
 -- comment records
 CREATE TABLE comment_records (
     line INTEGER,       -- line to which this comment pertains
+    RTYPE CHAR(1),      -- record type being commented on
     PSYM CHAR(1),       -- particle symbol
     SYM TEXT,           -- symbol(s) being commented on
     CTEXT TEXT          -- text of comment
@@ -60,6 +61,22 @@ CREATE TABLE history_records (
     line INTEGER        -- rowid from ENSDF_lines defining this line
 );
 CREATE UNIQUE INDEX idx_history_records on history_records(line);
+
+-- Reference records
+CREATE TABLE reference_records (
+    line INTEGER,       -- rowid from ENSDF_lines defining this entry
+    KEYNUM TEXT,        -- reference key number
+    REFERENCE TEXT      -- Abbreviated reference
+);
+CREATE UNIQUE INDEX idx_reference_records on reference_records(line);
+
+-- Cross-reference records
+CREATE TABLE xref_records (
+    line INTEGER,       -- rowid from ENSDF_lines defining this entry
+    DSSYM CHAR(1),      -- identifier for cross-reference
+    DSID TEXT           -- matches DSID of referenced card
+);
+CREATE UNIQUE INDEX idx_xref_records on xref_records(line);
 
 -- Alpha records
 CREATE TABLE alpha_records (
