@@ -14,7 +14,7 @@ CXXFLAGS = -std=c++11 -O3 -fPIC -pedantic -Wall -Wextra -I.
 #
 
 objects = ColorSpec.o CompileVersion.o ControlMenu.o DynamicHistogram.o FloatErr.o PathUtils.o \
-	ProgressBar.o SMFile.o RollingWindow.o SMExcept.o StringManip.o Stringmap.o \
+	ProgressBar.o SMFile.o RefPool.o RollingWindow.o SMExcept.o StringManip.o Stringmap.o \
 	SVGGradientAxis.o TagCounter.o XMLBuilder.o
 
 all: libMPMGeneralUtils.a libMPMGeneralUtils.so
