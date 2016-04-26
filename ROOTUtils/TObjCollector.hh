@@ -26,7 +26,7 @@ public:
     virtual ~TObjCollector() { clearItems(); }
     
     /// write items to currently open directory, or specified; return directory written to
-    virtual TDirectory* writeItems(TDirectory* d = NULL);
+    virtual TDirectory* writeItems(TDirectory* d = nullptr);
     /// clear (delete) items
     virtual void clearItems();
     /// register a named ROOT object for output (and eventual deletion)

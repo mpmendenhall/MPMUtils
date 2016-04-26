@@ -103,7 +103,7 @@ void LinEqSolver::solve() {
     if(!(M && y && r)) return;
     if(x) gsl_vector_free(x);
     x = lsmin(M,y,r);
-    M = NULL;
+    M = nullptr;
 }
 
 double LinEqSolver::ssresid() const {

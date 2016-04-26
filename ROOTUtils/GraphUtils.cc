@@ -409,7 +409,7 @@ TGraph* derivative(TGraph& g) {
 void transformAxis(TGraph& g, TGraph& T, bool useJacobean) {
     double x,y,j;
     j = 1.0;
-    TGraph* d = useJacobean? derivative(T) : NULL;
+    TGraph* d = useJacobean? derivative(T) : nullptr;
     for(int i=0; i<g.GetN(); i++) {
         g.GetPoint(i,x,y);
         if(d) j = d->Eval(x);

@@ -31,7 +31,7 @@ public:
     /// set grid dimensions; pre-calculate offsets
     void setDimensions(const size_t d[N]);
     /// set user grid coordinates
-    void setUserRange(const T r0[N], const T r1[N], const T e[N] = NULL);
+    void setUserRange(const T r0[N], const T r1[N], const T e[N] = nullptr);
     /// set grid point value (adds guard values for boundary conditions as needed)
     void set(const size_t i[N], T v);
     

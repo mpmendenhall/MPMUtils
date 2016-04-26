@@ -39,7 +39,7 @@ using std::map;
 class StreamInteractor {
 public:
     /// constructor
-    StreamInteractor(): mydeque(NULL), mystack(NULL)  {}
+    StreamInteractor(): mydeque(nullptr), mystack(nullptr)  {}
     /// destructor
     virtual ~StreamInteractor() {}
     /// do something! (put something useful here in subclasses)
@@ -82,15 +82,15 @@ public:
 class InputRequester: public NamedInteractor {
 public:
     /// constructor
-    InputRequester(string d, void (*f)(StreamInteractor*) = NULL, StreamInteractor* fObj = NULL);
+    InputRequester(string d, void (*f)(StreamInteractor*) = nullptr, StreamInteractor* fObj = nullptr);
     /// action when selected
     virtual void doIt();
     /// add new argument
-    virtual void addArg(const string& s, const string& dflt = "", const string& descrip = "", NamedInteractor* filter = NULL);
+    virtual void addArg(const string& s, const string& dflt = "", const string& descrip = "", NamedInteractor* filter = nullptr);
     /// add new argument, assuming descriptions come from filter
     virtual void addArg(NamedInteractor* filter, const string& s = "") { addArg(s,"","",filter); }
     /// set argument parameters
-    virtual void setArgOpts(unsigned int i, string s, string dflt = "", NamedInteractor* filter = NULL);
+    virtual void setArgOpts(unsigned int i, string s, string dflt = "", NamedInteractor* filter = nullptr);
     /// get option name
     virtual string getArgname(unsigned int i) const;
     ///get my name/description
@@ -125,7 +125,7 @@ public:
     /// constructor
     NameSelector(string t, string promptval = "Selection", bool persist = false);
     /// add selection choice
-    virtual void addChoice(string d, string nm = "", Selector_Option_Flags o = SELECTOR_NORMAL, string mname = "", StreamInteractor* action = NULL);
+    virtual void addChoice(string d, string nm = "", Selector_Option_Flags o = SELECTOR_NORMAL, string mname = "", StreamInteractor* action = nullptr);
     /// display available options
     virtual void displayOptions();
     /// get choice from input queue, return selected item on stack
@@ -137,12 +137,12 @@ public:
     /// set catchall action
     virtual void setCatchall(StreamInteractor* SI) { catchAll = SI; }
     /// prevent adding arguments (doesn't make sense in this context)
-    virtual void addArg(const string&, const string& = "", const string& = "", NamedInteractor* = NULL) { assert(false); }
+    virtual void addArg(const string&, const string& = "", const string& = "", NamedInteractor* = nullptr) { assert(false); }
     /// prevent adding arguments (doesn't make sense in this context)
     virtual void addArg(NamedInteractor*, const string& = "") { assert(false); }
     /// add a synonym for an existing argument
     virtual void addSynonym(string arg0, string syn);
-    /// set soft-matching function (set to NULL to disable soft matching)
+    /// set soft-matching function (set to nullptr to disable soft matching)
     void setSoftmatch(bool (*f)(const string& a, const string& b) = &nameselector_default_softmatch) { softmatch = f; }
     static string barf_control;
     static string exit_control;

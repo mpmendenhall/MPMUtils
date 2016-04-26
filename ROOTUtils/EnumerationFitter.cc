@@ -43,7 +43,7 @@ double EnumerationFitter::Evaluate(double *x, double *p) {
 void EnumerationFitter::addTerm(const vector<double>& t) {
     if(fitter) {
         delete fitter;
-        fitter = NULL;
+        fitter = nullptr;
     }
     fterms.push_back(t);
 }
@@ -69,7 +69,7 @@ TGraphErrors* EnumerationFitter::loadFitFile(const string& fname) {
     fterms.clear();
     if(fitter) {
         delete fitter;
-        fitter = NULL;
+        fitter = nullptr;
     }
     
     printf("Loading data from '%s'...\n",fname.c_str());
@@ -93,5 +93,5 @@ TGraphErrors* EnumerationFitter::loadFitFile(const string& fname) {
     
     printf("Loaded %i fit points and %i parameters\n",(int)dat.size(),(int)fterms.size());
     
-    return new TGraphErrors(dat.size(),&datenum[0],&dat[0],NULL,&daterr[0]);
+    return new TGraphErrors(dat.size(),&datenum[0],&dat[0],nullptr,&daterr[0]);
 }

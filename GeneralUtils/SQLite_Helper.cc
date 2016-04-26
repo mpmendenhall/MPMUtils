@@ -23,7 +23,7 @@ bool SQLite_Helper::errlog_configured = false;
 
 SQLite_Helper::SQLite_Helper(const string& dbname) {
     if(!errlog_configured) {
-        sqlite3_config(SQLITE_CONFIG_LOG, &errorLogCallback, NULL);
+        sqlite3_config(SQLITE_CONFIG_LOG, &errorLogCallback, nullptr);
         errlog_configured = true;
     }
     printf("Opening SQLite3 DB '%s'...\n",dbname.c_str());
@@ -34,7 +34,7 @@ SQLite_Helper::SQLite_Helper(const string& dbname) {
         e.insert("err",err);
         e.insert("message",sqlite3_errmsg(db));
         sqlite3_close(db);
-        db = NULL;
+        db = nullptr;
         throw e;
     }
 }
@@ -48,7 +48,7 @@ SQLite_Helper::~SQLite_Helper() {
 
 int SQLite_Helper::setQuery(const char* qry, sqlite3_stmt*& stmt) {
     int rc;
-    while((rc = sqlite3_prepare_v2(db, qry, strlen(qry), &stmt, NULL)) == SQLITE_BUSY) {
+    while((rc = sqlite3_prepare_v2(db, qry, strlen(qry), &stmt, nullptr)) == SQLITE_BUSY) {
         printf("Waiting for DB retry preparing statement...\n");
         fflush(stdout);
         usleep(500000+(rand()%500000));
@@ -65,7 +65,7 @@ int SQLite_Helper::setQuery(const char* qry, sqlite3_stmt*& stmt) {
 sqlite3_stmt* SQLite_Helper::loadStatement(const string& qry) {
     auto it = statements.find(qry);
     if(it != statements.end()) return it->second;
-    sqlite3_stmt* stmt = NULL;
+    sqlite3_stmt* stmt = nullptr;
     setQuery(qry.c_str(), stmt);
     statements.emplace(qry,stmt);
     return stmt;
@@ -104,7 +104,7 @@ void SQLite_Helper::getVecBlob(vector<double>& v, sqlite3_stmt*& stmt, int col) 
 }
 
 int SQLite_Helper::bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v) {
-    return sqlite3_bind_blob(stmt, i, v.data(), v.size()*sizeof(double), NULL);
+    return sqlite3_bind_blob(stmt, i, v.data(), v.size()*sizeof(double), nullptr);
 }
 
 bool SQLite_Helper::get_string(sqlite3_stmt* stmt, unsigned int i, string& rslt) {

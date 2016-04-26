@@ -151,7 +151,7 @@ CREATE UNIQUE INDEX idx_ec_records on ec_records(line);
 -- Gamma records
 CREATE TABLE gamma_records (
     line INTEGER,       -- rowid from ENSDF_lines defining this entry
-    fromlvl INTEGER,    -- rowid from level_records this gamma comes from (NULL if unassigned)
+    fromlvl INTEGER,    -- rowid from level_records this gamma comes from (nullptr if unassigned)
     probto INTEGER,     -- likeliest target rowid from level_records
     E REAL,             -- energy [keV] of gamma
     DE REAL,            -- uncertainty on E

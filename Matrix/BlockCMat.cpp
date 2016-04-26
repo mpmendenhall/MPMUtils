@@ -47,7 +47,7 @@ public:
 };
 
 
-BlockCMat_SVD::BlockCMat_SVD(const BlockCMat& BC): M(BC.nRows()), N(BC.nCols()), Mc(BC[0].nRows()), Ms(std::min(M,N)), PsI(NULL), PsI_epsilon(0) {
+BlockCMat_SVD::BlockCMat_SVD(const BlockCMat& BC): M(BC.nRows()), N(BC.nCols()), Mc(BC[0].nRows()), Ms(std::min(M,N)), PsI(nullptr), PsI_epsilon(0) {
     #ifdef WITH_LAPACKE
     for(size_t i=0; i<Mc/2+1; i++) {
         VarMat<lapack_complex_double> dblock(BC.nRows(),BC.nCols());

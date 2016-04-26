@@ -70,7 +70,7 @@ double fileAge(const string& fname) {
         return -1.;
     struct stat attrib;
     stat(fname.c_str(), &attrib);
-    time_t timenow = time(NULL);
+    time_t timenow = time(nullptr);
     return timenow - attrib.st_mtime;
 }
 
@@ -78,7 +78,7 @@ vector<string> listdir(const string& dir, bool includeHidden, bool fullPath) {
     vector<string> dirs;
     dirent* entry;
     DIR* dp = opendir(dir.c_str());
-    if (dp == NULL)
+    if (dp == nullptr)
         return dirs;
     while((entry = readdir(dp)))
         if(includeHidden || entry->d_name[0] != '.')

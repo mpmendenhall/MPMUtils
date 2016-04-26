@@ -27,7 +27,7 @@ public:
     /// print statement for each step
     virtual void showStep() const;
     
-    TF1* myF = NULL;    ///< fit function
+    TF1* myF = nullptr;    ///< fit function
     int nmax = 20;      ///< maximum number of iteration attempts
     double rtol = 1e-4; ///< relative tolerance on window edge movement to window width
 
@@ -39,7 +39,7 @@ protected:
 class IterRangeGaus: public IterRangeFitter {
 public:
     /// Constructor
-    IterRangeGaus(double c0, double s0, TF1* f = NULL);
+    IterRangeGaus(double c0, double s0, TF1* f = nullptr);
     
     double nsigmalo = 2.;       ///< fit range below peak
     double nsigmahi = 2.;       ///< fit range above peak

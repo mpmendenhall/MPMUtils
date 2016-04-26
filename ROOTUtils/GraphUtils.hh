@@ -90,7 +90,7 @@ void accumPoints(TGraphErrors& a, const TGraphErrors& b, bool errorWeight = true
 TGraph* derivative(TGraph& g);
 
 /// Poisson-smear a histogram (with optional limiting resolution), preserving total counts
-TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut = NULL, double n_max = 0);
+TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut = nullptr, double n_max = 0);
 
 /// transform axis on a TGraph, optionally using jacobean to preserve integral
 void transformAxis(TGraph& g, TGraph& T, bool useJacobean = true);

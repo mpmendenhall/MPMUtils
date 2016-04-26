@@ -38,7 +38,7 @@ public:
     
 protected:
     static int nameCounter;     ///< counter for unique naming
-    TF1* myFitter = NULL;       ///< fitter for spline
+    TF1* myFitter = nullptr;       ///< fitter for spline
 };
 
 #endif

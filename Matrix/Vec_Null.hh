@@ -19,9 +19,9 @@
  */
 
 /// \file Vec_Null.hh Special case for 0-element vectors
-#ifndef VEC_NULL_HH
+#ifndef VEC_nullptr_HH
 /// Make sure this header is only loaded once
-#define VEC_NULL_HH
+#define VEC_nullptr_HH
 
 #include "Vec.hh"
 #include <cassert>

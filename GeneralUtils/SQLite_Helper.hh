@@ -40,7 +40,7 @@ protected:
     int busyRetry(sqlite3_stmt*& stmt);
     /// run a statement expecting no return values (using busyRetry); optionally, throw error if not SQLITE_OK
     int exec(const string& qry, bool checkOK = true);
-    /// put column i string into rslt, or leave unchanged if null; return whether non-NULL
+    /// put column i string into rslt, or leave unchanged if null; return whether non-nullptr
     static bool get_string(sqlite3_stmt* stmt, unsigned int i, string& rslt);
         
     /// extract a vector<double> from a blob column
@@ -48,7 +48,7 @@ protected:
     /// bind a vector<double> as a blob to a statement parameter
     int bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v);
     
-    sqlite3* db = NULL;                     ///< database connection
+    sqlite3* db = nullptr;                     ///< database connection
     map<string, sqlite3_stmt*> statements;  ///< prepared statements awaiting deletion
 
 private:

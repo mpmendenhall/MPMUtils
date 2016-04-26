@@ -25,7 +25,7 @@ public:
     /// add a probability
     void addProb(double p) { cumprob.push_back(p+cumprob.back()); }
     /// select partition for given input (random if not specified); re-scale input to partition range to pass along to sub-selections
-    unsigned int select(double* x = NULL) const;
+    unsigned int select(double* x = nullptr) const;
     /// get cumulative probability
     double getCumProb() const { return cumprob.back(); }
     /// get number of items
@@ -40,7 +40,7 @@ protected:
 };
 
 /// generate an isotropic random direction, from optional random in [0,1]^2
-void randomDirection(double& x, double& y, double& z, double* rnd = NULL);
+void randomDirection(double& x, double& y, double& z, double* rnd = nullptr);
 
 /// Nuclear energy level
 class NucLevel {
@@ -86,7 +86,7 @@ public:
     /// constructor
     NucDecayEvent(): eid(0), E(0), d(D_NONEVENT), t(0), w(1.) {}
     /// randomize momentum direction
-    void randp(double* rnd = NULL) { randomDirection(p[0],p[1],p[2],rnd); }
+    void randp(double* rnd = nullptr) { randomDirection(p[0],p[1],p[2],rnd); }
     
     unsigned int eid;   ///< event ID number
     double E;           ///< particle energy [keV]
@@ -129,7 +129,7 @@ public:
     virtual void display(bool verbose = false) const;
     
     /// select transition outcome
-    virtual void run(vector<NucDecayEvent>&, double* = NULL) { }
+    virtual void run(vector<NucDecayEvent>&, double* = nullptr) { }
     
     /// return number of continuous degrees of freedom needed to specify transition
     virtual unsigned int getNDF() const { return 2; }
@@ -155,7 +155,7 @@ public:
     /// constructor
     ConversionGamma(NucLevel& f, NucLevel& t, const Stringmap& m);
     /// select transition outcome
-    void run(vector<NucDecayEvent>& v, double* rnd = NULL) override;
+    void run(vector<NucDecayEvent>& v, double* rnd = nullptr) override;
     /// display transition line info
     void display(bool verbose = false) const override;
     /// get total conversion efficiency
@@ -188,7 +188,7 @@ public:
     /// constructor
     ECapture(NucLevel& f, NucLevel& t): TransitionBase(f,t) {}
     /// select transition outcome
-    void run(vector<NucDecayEvent>&, double* rnd = NULL) override;
+    void run(vector<NucDecayEvent>&, double* rnd = nullptr) override;
     /// display transition line info
     void display(bool verbose = false) const override { printf("Ecapture "); TransitionBase::display(verbose); }
     /// get probability of removing an electron from a given shell
@@ -208,7 +208,7 @@ public:
     /// constructor
     AlphaDecayTrans(NucLevel& f, NucLevel& t, const Stringmap& m);
     /// select transition outcome
-    void run(vector<NucDecayEvent>&, double* rnd = NULL) override;
+    void run(vector<NucDecayEvent>&, double* rnd = nullptr) override;
     /// display transition line info
     void display(bool verbose = false) const override;
     /// return number of continuous degrees of freedom needed to specify transition
@@ -225,7 +225,7 @@ public:
     /// destructor
     ~BetaDecayTrans();
     /// select transition outcome
-    void run(vector<NucDecayEvent>& v, double* rnd = NULL) override;
+    void run(vector<NucDecayEvent>& v, double* rnd = nullptr) override;
     /// display transition line info
     void display(bool verbose = false) const override;
     
@@ -260,7 +260,7 @@ public:
     /// display list of atoms
     void displayAtoms(bool verbose = false) const;
     /// generate a chain of decay events starting from level n, starting time offset t0
-    void genDecayChain(vector<NucDecayEvent>& v, double* rnd = NULL, unsigned int n = UINT_MAX, double t0 = 0);
+    void genDecayChain(vector<NucDecayEvent>& v, double* rnd = nullptr, unsigned int n = UINT_MAX, double t0 = 0);
     /// rescale all probabilities
     void scale(double s);
     

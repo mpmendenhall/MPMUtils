@@ -22,5 +22,11 @@ RefPoolItem* RefPool::checkout() {
     items.pop_back();
     i->clear();
     i->retain();
+    checkedout.insert(i);
     return i;
+}
+
+RefPool::~RefPool() {
+    for(auto i: items) delete i;
+    for(auto i: checkedout) if(i->myPool == this) i->myPool = nullptr;
 }

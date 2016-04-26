@@ -57,10 +57,10 @@ public:
     const size_t n;             ///< number of variables
 
 protected:    
-    gsl_matrix* M = NULL;       ///< coefficients matrix
-    gsl_vector* x = NULL;       ///< solution vector
-    gsl_vector* y = NULL;       ///< RHS vector
-    gsl_vector* r = NULL;       ///< residuals vector
+    gsl_matrix* M = nullptr;       ///< coefficients matrix
+    gsl_vector* x = nullptr;       ///< solution vector
+    gsl_vector* y = nullptr;       ///< RHS vector
+    gsl_vector* r = nullptr;       ///< residuals vector
 };
 
 #endif

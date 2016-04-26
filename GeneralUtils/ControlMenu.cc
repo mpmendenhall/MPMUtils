@@ -132,7 +132,7 @@ bool nameselector_default_softmatch(const string& a, const string& b) {
 string NameSelector::barf_control = "\033_BARF";
 string NameSelector::exit_control = "\033_EXIT";
 
-NameSelector::NameSelector(string t, string promptval, bool persist): InputRequester(t), catchAll(NULL), isPersistent(persist) {
+NameSelector::NameSelector(string t, string promptval, bool persist): InputRequester(t), catchAll(nullptr), isPersistent(persist) {
     InputRequester::addArg(promptval);
     setSoftmatch();
 }

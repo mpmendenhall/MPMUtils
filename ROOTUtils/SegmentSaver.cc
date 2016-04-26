@@ -27,7 +27,7 @@
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
 OutputManager(nm,pnt), inflname(inflName), isCalculated(false), inflAge(0) {
     // open file to load existing data
-    fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : NULL;
+    fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : nullptr;
     smassert(!fIn || !fIn->IsZombie(),"unreadable_file");
     if(fIn) {
         dirIn = fIn->GetDirectory("");
@@ -60,8 +60,8 @@ void resetZaxis(TH1* o) {
 }
 
 TObject* SegmentSaver::tryLoad(const string& oname) {
-    if(!fIn && !dirIn) return NULL;
-    TObject* o = NULL;
+    if(!fIn && !dirIn) return nullptr;
+    TObject* o = nullptr;
     if(dirIn) dirIn->GetObject(oname.c_str(),o);   // first try in my directory
     if(!o && fIn) fIn->GetObject(oname.c_str(),o); // fall back to file base for backwards compatibility
     if(!o) {

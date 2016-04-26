@@ -38,7 +38,7 @@ using std::vector;
 class LinHistCombo {
 public:
     /// constructor
-    LinHistCombo(): interpolate(true), myFit(NULL) {}
+    LinHistCombo(): interpolate(true), myFit(nullptr) {}
     /// destructor
     ~LinHistCombo() { delete myFit; }
     /// add a fit term

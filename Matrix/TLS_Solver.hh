@@ -29,7 +29,7 @@ public:
     VarVec<double> v;           ///< direction vector
     
 protected:
-    LAPACKE_Matrix_SVD<double,double>* mySVD = NULL;
+    LAPACKE_Matrix_SVD<double,double>* mySVD = nullptr;
 };
 
 #endif

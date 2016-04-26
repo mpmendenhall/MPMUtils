@@ -93,7 +93,7 @@ public:
     // ----- Subclass me! ----- //
     
     /// create a new instance of this object(nm,inflname) (cloning self settings) for given directory
-    virtual SegmentSaver* makeAnalyzer(const string&, const string&) { assert(false); return NULL; }
+    virtual SegmentSaver* makeAnalyzer(const string&, const string&) { assert(false); return nullptr; }
     
     /// optional cleanup at end of data loading
     virtual void finishData() { }
@@ -103,11 +103,11 @@ public:
     virtual void calculateResults() { isCalculated = true; }
     /// virtual routine for generating output plots
     virtual void makePlots() {}
-    /// virtual routine for comparing to other analyzers (of this type or NULL; meaning implementation-dependent)
+    /// virtual routine for comparing to other analyzers (of this type or nullptr; meaning implementation-dependent)
     virtual void compare(const vector<SegmentSaver*>&) { }
     
     TFile* fIn;                 ///< input file to read in histograms from
-    TDirectory* dirIn = NULL;   ///< particular sub-directory for reading histograms
+    TDirectory* dirIn = nullptr;   ///< particular sub-directory for reading histograms
     string inflname;            ///< where to look for input file
     bool isCalculated;          ///< flag for whether calculation step has been completed
     TVectorD* normalization;    ///< normalization information; meaning defined in subclasses

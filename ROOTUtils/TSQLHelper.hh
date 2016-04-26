@@ -54,7 +54,7 @@ public:
     /// get name of DB in use
     string getDBName() const { return dbName; }
     
-    bool isNullResult;  ///< whether field query returned NULL
+    bool isNullResult;  ///< whether field query returned nullptr
     
     char query[9182];   ///< buffer space for SQL query strings
     /// execute a non-info-returning query
@@ -63,11 +63,11 @@ public:
 protected:
     /// use current query string, return first row
     TSQLRow* getFirst();
-    /// get field as string (with default for NULL)
+    /// get field as string (with default for nullptr)
     string fieldAsString(TSQLRow* row, unsigned int fieldnum=0, const std::string& dflt = "");
-    /// get field as integer (with default for NULL)
+    /// get field as integer (with default for nullptr)
     int fieldAsInt(TSQLRow* row, unsigned int fieldnum=0, int dflt = 0);
-    /// get field as float (with default for NULL)
+    /// get field as float (with default for nullptr)
     float fieldAsFloat(TSQLRow* row, unsigned int fieldnum=0, float dflt = 0);
     /// display a query result to stdout
     void printResult();

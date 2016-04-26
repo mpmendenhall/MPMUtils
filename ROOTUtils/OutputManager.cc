@@ -30,7 +30,7 @@
 bool OutputManager::squelchAllPrinting = false;
 
 OutputManager::OutputManager(string nm, string bp):
-parent(NULL), name(nm) {
+parent(nullptr), name(nm) {
     TH1::AddDirectory(kFALSE);
     // set up output canvas
     defaultCanvas.SetCanvasSize(200,200);
@@ -60,7 +60,7 @@ TDirectory* OutputManager::writeItems(TDirectory* d) {
 
 void OutputManager::writeROOT(TDirectory* parentDir) {
     printf("\n--------- Building output .root file... ----------\n");
-    TFile* rootOut = NULL;
+    TFile* rootOut = nullptr;
     if(parentDir) writeItems(parentDir);
     else {
         makePath(rootPath);
@@ -68,7 +68,7 @@ void OutputManager::writeROOT(TDirectory* parentDir) {
         printf("Writing to '%s'\n", outfname.c_str());
         rootOut = new TFile(outfname.c_str(),"RECREATE");
         rootOut->cd();
-        writeItems(NULL);
+        writeItems(nullptr);
     }
     clearItems();
     delete rootOut;

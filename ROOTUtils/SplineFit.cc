@@ -7,7 +7,7 @@ int SplineFit::nameCounter = 0;
 void SplineFit::setX(const double* x, size_t n) {
     if(myFitter && myFitter->GetNpar() != int(n)) {
         delete myFitter;
-        myFitter = NULL;
+        myFitter = nullptr;
     }
     vector<double> y(n);
     mySpline = TGraphErrors(n,x,y.data());

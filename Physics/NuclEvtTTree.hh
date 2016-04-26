@@ -34,7 +34,7 @@ public:
     /// get number of random DF consumed
     virtual unsigned int getNDF() const { return 3; }
     /// generate vertex position
-    virtual void genPos(double* v, double* rnd = NULL) const = 0;
+    virtual void genPos(double* v, double* rnd = nullptr) const = 0;
 };
 
 /// map unit square onto circle of specified radius
@@ -46,7 +46,7 @@ public:
     /// constructor
     CylPosGen(double zlength, double radius): dz(zlength), r(radius) {}
     /// generate vertex position
-    virtual void genPos(double* v, double* rnd = NULL) const;
+    virtual void genPos(double* v, double* rnd = nullptr) const;
     
     double dz;  ///< length of cylinder
     double r;   ///< radius of cylinder
@@ -58,7 +58,7 @@ public:
     /// constructor
     CubePosGen() {}
     /// generate vertex position
-    virtual void genPos(double* v, double* rnd = NULL) const;
+    virtual void genPos(double* v, double* rnd = nullptr) const;
 };
 
 /// generate fixed event position
@@ -67,7 +67,7 @@ public:
     /// constructor
     FixedPosGen(double x0=0, double y0=0, double z0=0): x(x0), y(y0), z(z0) {}
     /// generate vertex position
-    virtual void genPos(double* v, double* = NULL) const { v[0]=x; v[1]=y; v[2]=z; }
+    virtual void genPos(double* v, double* = nullptr) const { v[0]=x; v[1]=y; v[2]=z; }
     /// get number of random DF consumed
     virtual unsigned int getNDF() const { return 0; }
     

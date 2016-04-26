@@ -57,12 +57,12 @@ public:
     virtual string printCanvas(string fname, string suffix=".pdf") const;
     
     /// write items to currently open directory, or specified
-    TDirectory* writeItems(TDirectory* d = NULL) override;
+    TDirectory* writeItems(TDirectory* d = nullptr) override;
     /// write output ROOT file, or to new directory within parent; WARNING: THIS DELETES ALL REGISTERED ITEMS; do last if you reference these!
-    void writeROOT(TDirectory* parentDir = NULL);
+    void writeROOT(TDirectory* parentDir = nullptr);
     
     TCanvas defaultCanvas;              ///< canvas for drawing plots
-    OutputManager* parent = NULL;       ///< parent output manager
+    OutputManager* parent = nullptr;       ///< parent output manager
     string basePath;                    ///< general output path
     string plotPath;                    ///< specific output path for plots
     string dataPath;                    ///< specific output path for output data

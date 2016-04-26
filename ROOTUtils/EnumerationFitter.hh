@@ -38,7 +38,7 @@ using std::string;
 class EnumerationFitter {
 public:
     /// constructor
-    EnumerationFitter(): fitter(NULL) {}
+    EnumerationFitter(): fitter(nullptr) {}
     /// destructor
     ~EnumerationFitter() { delete fitter; }
     /// add a fit terms set

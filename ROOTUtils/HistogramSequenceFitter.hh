@@ -46,7 +46,7 @@ public:
     double eval_error(const double* params) const;
     
     /// definite integral over intervals (using supplied or internal parameter list)
-    double operator()(const intervalList& L, const double* params = NULL) const;
+    double operator()(const intervalList& L, const double* params = nullptr) const;
     
     /// indefinite integral of fit function (subclass me!)
     virtual double integ_f(double t, const double* params) const = 0;
@@ -112,7 +112,7 @@ public:
     /// calculate fit results
     void fit();
     /// generate interpolated histogram for time range
-    TH1* interpolate(const intervalList& dt, TH1* h = NULL) const;
+    TH1* interpolate(const intervalList& dt, TH1* h = nullptr) const;
     
 protected:
     

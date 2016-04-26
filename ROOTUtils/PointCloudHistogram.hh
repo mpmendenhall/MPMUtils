@@ -13,7 +13,7 @@ using std::map;
 class KDTreeSet {
 public:
     /// constructor
-    KDTreeSet(unsigned int n): ndim(n), fData(n), T(NULL) {}
+    KDTreeSet(unsigned int n): ndim(n), fData(n), T(nullptr) {}
     
     const unsigned int ndim;            ///< number of dimensions
     vector< vector<float> > fData;      ///< coordinate points
@@ -25,7 +25,7 @@ public:
     unsigned int nPts() const { return fData[0].size(); }
     
     /// add points filling specified range
-    void fillPointRange(unsigned int npts, const float* xlo, const float* xhi, const float* dens = NULL);
+    void fillPointRange(unsigned int npts, const float* xlo, const float* xhi, const float* dens = nullptr);
 };
 
 

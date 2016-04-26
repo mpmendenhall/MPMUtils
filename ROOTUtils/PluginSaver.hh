@@ -17,7 +17,7 @@ public:
     /// instantiate plugin SegmentSaver
     virtual void makePlugin(SegmentSaver* pnt) = 0;
     
-    SegmentSaver* thePlugin = NULL;     ///< instantiated plugin (not memory managed here)
+    SegmentSaver* thePlugin = nullptr;     ///< instantiated plugin (not memory managed here)
 };
 
 /// Simple templatized PluginBuilder, checking for correct parent type
@@ -45,7 +45,7 @@ public:
     /// Destructor
     ~PluginSaver();
     
-    /// get plugin by name; NULL if not available
+    /// get plugin by name; nullptr if not available
     SegmentSaver* getPlugin(const string& nm) const;
     
     /// zero out all saved histograms
@@ -65,11 +65,11 @@ public:
     void calculateResults() override;
     /// virtual routine for generating output plots
     void makePlots() override;
-    /// virtual routine for comparing to other analyzers (of this type or NULL; meaning implementation-dependent)
+    /// virtual routine for comparing to other analyzers (of this type or nullptr; meaning implementation-dependent)
     void compare(const vector<SegmentSaver*>& v) override;
     
     /// write items to current directory or subdirectory of provided
-    TDirectory* writeItems(TDirectory* d = NULL) override;
+    TDirectory* writeItems(TDirectory* d = nullptr) override;
     /// clear (delete) items
     void clearItems() override;
     

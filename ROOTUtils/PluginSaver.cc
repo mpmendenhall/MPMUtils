@@ -50,7 +50,7 @@ void PluginSaver::buildPlugins() {
 
 SegmentSaver* PluginSaver::getPlugin(const string& nm) const {
     auto PB = myBuilders.find(nm);
-    if(PB==myBuilders.end()) return NULL;
+    if(PB==myBuilders.end()) return nullptr;
     return PB->second->thePlugin;
 }
 
@@ -114,7 +114,7 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
         if(!kv.second->thePlugin) continue;
         vector<SegmentSaver*> vPi;
         for(auto PS: vP) {
-            if(!PS) vPi.push_back(NULL);
+            if(!PS) vPi.push_back(nullptr);
             else vPi.push_back(PS->getPlugin(kv.first));
         }
         kv.second->thePlugin->defaultCanvas.cd();

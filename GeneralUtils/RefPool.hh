@@ -11,11 +11,14 @@
 #include "RefCounter.hh"
 #include <vector>
 using std::vector;
+#include <set>
+using std::set;
 
 class RefPool;
 
 /// Reference-counted item which returns itself to a pool for re-use
 class RefPoolItem: public RefCounter {
+friend class RefPool;
 public:
     /// Constructor
     RefPoolItem(RefPool* P, bool rtn = false): RefCounter(rtn), myPool(P) { }
@@ -33,16 +36,17 @@ class RefPool {
 friend class RefPoolItem;
 public:    
     /// Destructor
-    virtual ~RefPool() { for(auto i: items) delete i; }
+    virtual ~RefPool();
     /// Check (cleared, released) item out from pool
     virtual RefPoolItem* checkout();
 protected:
     /// allocate new item (subclass correct type; assign to this pool)
     virtual RefPoolItem* newItem() = 0;
     /// return to pool
-    void returnItem(RefPoolItem* i) { items.push_back(i); }
+    void returnItem(RefPoolItem* i) { checkedout.erase(i); items.push_back(i); }
     
-    vector<RefPoolItem*> items;  ///< pool items awaiting re-use
+    vector<RefPoolItem*> items;         ///< pool items awaiting re-use
+    set<RefPoolItem*> checkedout;       ///< checked-out items
 };
 
 #endif

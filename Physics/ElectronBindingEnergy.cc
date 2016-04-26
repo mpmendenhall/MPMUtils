@@ -66,10 +66,10 @@ BindingEnergyLibrary::~BindingEnergyLibrary() {
     for(auto& kv: tables) delete kv.second;
 }
 
-const BindingEnergyTable* BindingEnergyLibrary::getBindingTable(unsigned int Z, bool allowNULL) const {
+const BindingEnergyTable* BindingEnergyLibrary::getBindingTable(unsigned int Z, bool allownullptr) const {
     map<unsigned int,BindingEnergyTable*>::const_iterator it =  tables.find(Z);
     if(it==tables.end()) {
-        if(allowNULL) return NULL;
+        if(allownullptr) return nullptr;
         SMExcept e("MissingElement");
         e.insert("Z",Z);
         throw(e);

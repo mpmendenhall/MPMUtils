@@ -41,7 +41,7 @@ public:
     /// destructor
     ~BindingEnergyLibrary();
     /// get BindingEnergyTable for specified element
-    const BindingEnergyTable* getBindingTable(unsigned int Z, bool allowNULL = false) const;
+    const BindingEnergyTable* getBindingTable(unsigned int Z, bool allownullptr = false) const;
     /// display contents
     void display() const;
 protected:

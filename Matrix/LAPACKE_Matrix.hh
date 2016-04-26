@@ -55,7 +55,7 @@ public:
                            const VarMat<T>& B,
                            CBLAS_TRANSPOSE opA = CblasNoTrans,
                            CBLAS_TRANSPOSE opB = CblasNoTrans,
-                           VarMat<T>* C = NULL,
+                           VarMat<T>* C = nullptr,
                            T alpha = 1, T beta = 0) const = 0;
 };
 
@@ -69,7 +69,7 @@ public:
                            const VarMat<T>& B,
                            CBLAS_TRANSPOSE opA = CblasNoTrans,
                            CBLAS_TRANSPOSE opB = CblasNoTrans,
-                           VarMat<T>* C = NULL,
+                           VarMat<T>* C = nullptr,
                            T alpha = 1, T beta = 0) const {
                                
                                const size_t opA_rows = A.nDim(opA == CblasNoTrans);
@@ -115,7 +115,7 @@ public:
                             const VarMat<CT>& B,
                             CBLAS_TRANSPOSE opA = CblasNoTrans,
                             CBLAS_TRANSPOSE opB = CblasNoTrans,
-                            VarMat<CT>* C = NULL,
+                            VarMat<CT>* C = nullptr,
                             CT alpha = 1, CT beta = 0) const {
                                 
                                 const size_t opA_rows = A.nDim(opA == CblasNoTrans);
@@ -158,7 +158,7 @@ template<typename T, typename CT>
 class LAPACKE_Matrix_SVD: public BinaryOutputObject {
 public:
     /// Constructor
-    LAPACKE_Matrix_SVD(VarMat<CT>& A): S(std::min(A.nRows(), A.nCols()),1), U(A.nRows(), S.nRows()), VT(S.nRows(), A.nCols()), PsI(NULL), PsI_epsilon(0) {
+    LAPACKE_Matrix_SVD(VarMat<CT>& A): S(std::min(A.nRows(), A.nCols()),1), U(A.nRows(), S.nRows()), VT(S.nRows(), A.nCols()), PsI(nullptr), PsI_epsilon(0) {
         
         lapack_int info;
         bool verbose = false;
@@ -244,7 +244,7 @@ public:
                           VT.nRows(),           // leading dimension of VT; >= max(1,n) for ncvt>0; >= 1 otherwise.
                           &U[0],                // nru * n unit matrix U; unused if nru=0
                           U.nRows(),            // leading dimension of U; >= max(1,nru)
-                          NULL,                 // matrix for calculating Q^H*C; second dimension >= max(1,ncc); unused if ncc = 0
+                          nullptr,                 // matrix for calculating Q^H*C; second dimension >= max(1,ncc); unused if ncc = 0
                           1                     // leading dimension of C; >= max(1,n) if ncc>0; >=1 otherwise
         );
         assert(!info);
@@ -324,7 +324,7 @@ public:
 protected:
     
     /// non-calculating constructor
-    LAPACKE_Matrix_SVD(): PsI(NULL), PsI_epsilon(0) {}
+    LAPACKE_Matrix_SVD(): PsI(nullptr), PsI_epsilon(0) {}
     
     VarMat<T> S;        ///< singular values diagonal
     VarMat<CT> U;       ///< left singular vectors

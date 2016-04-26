@@ -34,7 +34,7 @@ TSQLHelper::TSQLHelper(const std::string& dbnm,
                      const std::string& dbUser,
                      const std::string& dbPass,
                      unsigned int port,
-                     unsigned int ntries): db(NULL), res(NULL), dbName(dbnm) {
+                     unsigned int ntries): db(nullptr), res(nullptr), dbName(dbnm) {
                          
     string dbAddressFull = "mysql://"+dbAddress+":"+to_str(port)+"/"+dbnm;
     while(!db) {
@@ -58,7 +58,7 @@ TSQLHelper::TSQLHelper(const std::string& dbnm,
 
 void TSQLHelper::execute() {
     delete res;
-    res = NULL;
+    res = nullptr;
     if(!db->Exec(query)) {
         SMExcept e("DBExecFail");
         e.insert("query",query);
@@ -68,7 +68,7 @@ void TSQLHelper::execute() {
 
 void TSQLHelper::Query() { 
     if(!db) {
-        res = NULL;
+        res = nullptr;
     } else {
         delete res;
         res = db->Query(query);
@@ -121,7 +121,7 @@ void TSQLHelper::printResult() {
     while( (row = res->Next()) ) {
         printf("----------------\n");
         for(int i=0; i<res->GetFieldCount(); i++)
-            printf("%s:\t%s\n",res->GetFieldName(i),fieldAsString(row,i,"NULL").c_str());
+            printf("%s:\t%s\n",res->GetFieldName(i),fieldAsString(row,i,"nullptr").c_str());
         delete row;
     }
 }
@@ -129,7 +129,7 @@ void TSQLHelper::printResult() {
 TSQLRow* TSQLHelper::getFirst() {
     Query();
     if(!res)
-        return NULL;
+        return nullptr;
     return res->Next();
 }
 
