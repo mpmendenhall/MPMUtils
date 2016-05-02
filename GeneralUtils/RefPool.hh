@@ -14,6 +14,20 @@ using std::vector;
 #include <set>
 using std::set;
 
+template<class T>
+/// Base for "reusable" item pointer pool to avoid over-use of "new"
+class ReusePool {
+public:
+    /// Destructor
+    virtual ~ReusePool() { for(auto i: myPool) delete i; }
+    /// Get item
+    virtual T* getItem() { if(!myPool.size()) myPool.push_back(new T); T* i = myPool.back(); myPool.pop_back(); return i; }
+    /// Return item
+    virtual void returnItem(T* i) { myPool.push_back(i); }
+protected:
+    vector<T*> myPool;
+};
+
 class RefPool;
 
 /// Reference-counted item which returns itself to a pool for re-use
