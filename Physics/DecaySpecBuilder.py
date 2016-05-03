@@ -5,6 +5,8 @@ Builds decay generator specification files from ENSDF inputs"""
 from ENSDF_ParsedDB import *
 from SMFile import *
 from copy import *
+import numpy
+from numpy import linalg
 
 class ElementNames:
     """Element name/symbol lookup table"""
@@ -55,7 +57,9 @@ class CETable:
                     c = ce[i]
                     break
             if c:
-                v,dv = parse_stderr(*c.split())
+                cels = list(c.split())
+                if len(cels) < 2: cels.append("")
+                v,dv = parse_stderr(cels[0],cels[1])
                 rs = "%g"%v
                 if dv:
                     rs += "~%g"%dv
@@ -67,57 +71,95 @@ class DecaySpecBuilder:
     
     def __init__(self,curs):
         self.curs = curs
-        self.sheets = []        # loaded ENSDF datasheets
+        self.cards = []         # loaded ENSDF datasheets
         self.parents = []       # collection of all parent specifiers in loaded cards
-        self.joins = []         # joining points between multiple cards
+        self.joins = []         # joining points (n0, n1, l0, l1) between cards n0,n1 levels l0,l1
         self.min_tx_prob = 0    # ignore transitions less likely than this
+    
+    def bottom_join_levels(self,n0,n1):
+        """Identify join points between card level lists with same energy scale"""
+        levsets = {}
+        for l in self.cards[n0].levellist + self.cards[n1].levellist:
+            levsets.setdefault((l.mass,l.elem,l.J.strip("()")), []).append(l)
+        for ls in levsets.values():
+            ls.sort(key=(lambda l: l.E))
+            for i in range(len(ls)-1):
+                if ls[i].card != ls[i+1].card and ls[i+1].E-ls[i].E < 0.5:
+                    self.joins.append((n0,n1,ls[i],ls[i+1]))
+                    print("Joining %s to %s"%(ls[i],ls[i+1]))
+                    
+    def find_joins(self,n0,n1):
+        """Identify level joins between cards n0 and n1"""
+        c0 = self.cards[n0]
+        c1 = self.cards[n1]
         
-    def add_sheet(self, cid):
+        for l0 in c0.linkpts:
+            for l1 in c1.linkpts:
+                if l0.mass == l1.mass and l0.elem == l1.elem and l0.J.strip("()") == l1.J.strip("()"):
+                    if l0.E == l1.E == 0: self.bottom_join_levels(n0,n1)
+                    else:
+                        self.joins.append((n0,n1,l0,l1))
+                        print("Joining %s to %s"%(l0,l1))
+
+    
+    
+    def add_card(self, cid):
         """Add parsed ENSDF datasheet"""
         card = ParsedCard(self.curs,cid)
         print("\nAdding card:")
         card.display()
         
-        # auto-join multiple branches from same parent
-        card.shiftE = 0
-        for p in card.parents:
-            p.E = p.QP
-            isJoined = False
-            for p1 in self.parents:
-                if p.mass == p1.mass and p.elem == p1.elem and p.J == p1.J:
-                    card.shiftE = p1.card.shiftE + p1.E - p.E
-                    self.joins.append((p,p1))
-                    isJoined = True
-                    print("Joining parents %s"%p)
-                    break
-            if isJoined: continue
+        for p in card.parents: 
+            p.E = p.QP # assign energy from qvalue
             self.parents.append(p)
+        self.cards.append(card)
+    
+    def calc_eshifts(self):
+        """Calculate energy shifts to cards in unified join scheme"""
+        for n1 in range(len(self.cards))[1:]: 
+            for n0 in range(n1):
+                self.find_joins(n0,n1)
+        
+        nj = len(self.joins)
+        m = numpy.matrix(numpy.zeros((nj+1, len(self.cards))))
+        v = numpy.matrix(numpy.zeros((nj+1,1)))
+        m[nj,0] = 1
+        v[nj,0] = 0
+        for (n,j) in enumerate(self.joins):
+            m[n,j[0]] = 1
+            m[n,j[1]] = -1
+            v[n,0] = j[3].E - j[2].E
             
-        self.sheets.append(card)
+        print(m)
+        dE = linalg.lstsq(m,v)[0]
+        print(m*dE - v)
         
+        for (n,c) in enumerate(self.cards): c.shiftE = dE[n,0]
         
-
     def assign_level_names(self):
         """Assign output names to active levels"""
         self.levels = []
-        for s in self.sheets:
+        for s in self.cards:
             self.levels += s.levels.values()
         self.levels += self.parents
-        self.levels.sort(key=(lambda l: l.E))
+        self.levels.sort(key=(lambda l: l.E + l.card.shiftE))
         isotcounts = {}
         for l in self.levels:
             a = l.mass
             z = TheElementNames.elNum(l.elem)
             i = isotcounts.setdefault((a,z), 0)
             l.outName = "%i.%i.%i"%(a,z,i)
+            l.isJoined = False
             isotcounts[(a,z)] += 1
-        for j in self.joins: j[0].outName = j[1].outName
+        for j in self.joins:
+            j[3].outName = j[2].outName
+            j[3].isJoined = True
             
     def headercomments(self):
         """Generate header comments block"""
         h =  "#########################################\n"
         h += "# Decay scheme generated from ENSDF data:\n#\n"
-        for s in self.sheets:
+        for s in self.cards:
             rID = s.idrec
             h += "# '%s' %s:"%(rID.DSID, rID.EDATE)
             for rH in s.history:
@@ -128,10 +170,13 @@ class DecaySpecBuilder:
 
     def levellist(self, smf):
         """Output energy levels to SMFile"""
+        self.calc_eshifts()
         self.assign_level_names()
         
         for l in self.levels:
-        
+            
+            if l.isJoined: continue
+            
             ml = KVMap()
             ml.insert("nm", l.outName)
             ml.insert("E", "%.2f"%(l.E + l.card.shiftE))
@@ -156,13 +201,13 @@ class DecaySpecBuilder:
                 return m
             except: return None
          
-        for s in self.sheets:
+        for s in self.cards:
             
             for a in s.alphas:
                 if a.Ialpha <= self.min_tx_prob: continue
                 ma = maketx(a)
                 if not ma: continue
-                ma.insert("I", "%g"%a.Ibeta)
+                ma.insert("I", "%g"%a.Ialpha)
                 smf.insert("alpha", ma)
                 
             for b in s.betas:
@@ -206,19 +251,40 @@ if __name__=="__main__":
     curs = conn.cursor()
     
     DSB = DecaySpecBuilder(curs)
+    def findLike(s):
+        curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE ?",(s,))
+        return [r[0] for r in curs.fetchall()]
     
     if False: # example with two joined branches
         curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '40K %'")
-        for cid in curs.fetchall(): DSB.add_sheet(cid[0])
-    elif True:
+        for cid in curs.fetchall(): DSB.add_card(cid[0])
+    elif False:
         curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '207BI EC%'")
-        for cid in curs.fetchall(): DSB.add_sheet(cid[0])
+        for cid in curs.fetchall(): DSB.add_card(cid[0])
+    elif True: # big Actinium chain
+        for cid in findLike("227AC A%"): DSB.add_card(cid)
+        for cid in findLike("227AC B-%"): DSB.add_card(cid)
+        for cid in findLike("227TH A%"): DSB.add_card(cid)
+        for cid in findLike("223FR B-%"): DSB.add_card(cid)
+        for cid in findLike("223FR A%"): DSB.add_card(cid)
+        for cid in findLike("223RA A%"): DSB.add_card(cid)
+        for cid in findLike("219RN A%"): DSB.add_card(cid)
+        for cid in findLike("219AT B-%"): DSB.add_card(cid) # doesn't exist?
+        for cid in findLike("219AT A%"): DSB.add_card(cid)
+        for cid in findLike("215BI B- DECAY (7.6 M)%"): DSB.add_card(cid)
+        for cid in findLike("215PO A%"): DSB.add_card(cid)
+        for cid in findLike("215PO B-%"): DSB.add_card(cid)
+        for cid in findLike("215AT A%"): DSB.add_card(cid)
+        for cid in findLike("211PO A DECAY (0.516 S)%"): DSB.add_card(cid)
+        for cid in findLike("211BI B-%"): DSB.add_card(cid)
+        for cid in findLike("211BI A%"): DSB.add_card(cid)
+        for cid in findLike("207TL B-%"): DSB.add_card(cid)
         
     print(DSB.headercomments())
     smf = SMFile()
     DSB.levellist(smf)
     
-    #DSB.min_tx_prob = 1
+    #DSB.min_tx_prob = 5
     DSB.transitionList(smf)
     
     print(smf.toString())

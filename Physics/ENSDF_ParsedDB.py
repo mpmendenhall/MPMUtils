@@ -504,6 +504,14 @@ class ParsedLevelRecord(DBRecord):
         if self.xdata: t += " " + self.repr_xdat()
         return t
 
+class ParsedAlphrecord(DBRecord):
+    def __init__(self,curs,cid):
+        DBRecord.__init__(self,curs,"alpha_records",cid,True)
+    def __repr__(self):
+        t = "[Alpha E=%s, intensity=%s]"%(rep_num(self.E,self.DE), rep_num(self.IA,self.DIA))
+        if self.xdata: t += " " + self.repr_xdat()
+        return t
+    
 class ParsedBetaRecord(DBRecord):
     def __init__(self,curs,cid):
         DBRecord.__init__(self,curs,"beta_records",cid,True)
@@ -554,10 +562,14 @@ class ParsedCard:
         self.norms = cardlines("normalization_records")
         self.prodnorms = cardlines("prodnorm_records")
         
-        self.levels = cardlines("level_records", ParsedLevelRecord)
-        self.levels = dict([(l.rowid,l) for l in self.levels]) # index levels for transitions
+        self.levellist = cardlines("level_records", ParsedLevelRecord)
+        self.levellist.sort(key=(lambda l: l.E))
+        self.levels = dict([(l.rowid,l) for l in self.levellist]) # index levels for transitions
+        # top and bottom level link points
+        self.linkpts = list(self.parents)
+        if self.levellist: self.linkpts.append(self.levellist[0])
         
-        self.alphas = cardlines("alpha_records")
+        self.alphas = cardlines("alpha_records", ParsedAlphrecord)
         self.betas = cardlines("beta_records", ParsedBetaRecord)
         self.gammas = cardlines("gamma_records", ParsedGammaRecord)
         self.dptcls = cardlines("dptcl_records")
@@ -596,12 +608,15 @@ class ParsedCard:
             
         # calculate transition absolute rates
         nrm = self.norms[0]
-        for g in self.gammas:
-            try: g.Igamma = g.RI * nrm.NRxBR
-            except: g.Igamma = 0
+        for a in self.alphas:
+            try: a.Ialpha = a.IA * nrm.NBxBR
+            except: a.Ialpha = 0
         for b in self.betas:
             try: b.Ibeta = b.IB * nrm.NBxBR
             except: b.Ibeta = 0
+        for g in self.gammas:
+            try: g.Igamma = g.RI * nrm.NRxBR
+            except: g.Igamma = 0
         for e in self.ecapts:
             try: e.Ibeta = e.IB * nrm.NBxBR
             except: e.Ibeta = 0
@@ -618,7 +633,7 @@ class ParsedCard:
         for a in self.refs: print(a.displayform())
         for a in self.xrefs: print(a.displayform())
         print("-"*80)
-        for l in self.levels.values():
+        for l in self.levellist[::-1]:
             print(l)
             for a in [a for a in self.alphas if a.tolvl == l]: print("\t"+a.displayform())
             for a in [a for a in self.betas if a.tolvl == l]: print("\t"+a.displayform())
@@ -634,7 +649,7 @@ if __name__ == "__main__":
     curs = conn.cursor()
     
     if True:
-        curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '40K %'")
+        curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '%219AT%'")
         for cid in curs.fetchall():
             print("\n\n")
             ParsedCard(curs,cid[0]).display()
