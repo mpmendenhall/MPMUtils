@@ -7,21 +7,7 @@ from SMFile import *
 from copy import *
 import numpy
 from numpy import linalg
-
-class ElementNames:
-    """Element name/symbol lookup table"""
-    def __init__(self, fname="ElementsList.txt"):
-        self.dat = [(int(x[0]),x[1],x[2]) for x in [l.split() for l in open(fname).readlines()] if len(x)==3]
-        self.byNum = dict([(e[0],e) for e in self.dat])
-        self.bySymb = dict([(e[1].lower(),e) for e in self.dat])
-        self.byName = dict([(e[2].lower(),e) for e in self.dat])
-        
-    def elNum(self, s):
-        """Element Z by name or symbol, case-insensitive"""
-        s = s.lower()
-        n = self.bySymb.get(s,None)
-        n = n if n else self.byName.get(s,None)
-        return n[0] if n else None
+from AtomsDB import *
 
 TheElementNames = ElementNames()
 
@@ -104,8 +90,12 @@ class DecaySpecBuilder:
     
     
     def add_card(self, cid):
-        """Add parsed ENSDF datasheet"""
+        """Add parsed ENSDF datasheet by DB number"""
         card = ParsedCard(self.curs,cid)
+        self._add_card(card)
+        
+    def _add_card(self, card):
+        """Add parsed ENSDF datasheet"""
         print("\nAdding card:")
         card.display()
         
@@ -154,6 +144,9 @@ class DecaySpecBuilder:
         for j in self.joins:
             j[3].outName = j[2].outName
             j[3].isJoined = True
+            # try to find half-life in one record
+            if j[2].T is None: j[2].T = j[3].T
+            if j[3].T is None: j[3].T = j[2].T
             
     def headercomments(self):
         """Generate header comments block"""
@@ -261,24 +254,6 @@ if __name__=="__main__":
     elif False:
         curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '207BI EC%'")
         for cid in curs.fetchall(): DSB.add_card(cid[0])
-    elif True: # big Actinium chain
-        for cid in findLike("227AC A%"): DSB.add_card(cid)
-        for cid in findLike("227AC B-%"): DSB.add_card(cid)
-        for cid in findLike("227TH A%"): DSB.add_card(cid)
-        for cid in findLike("223FR B-%"): DSB.add_card(cid)
-        for cid in findLike("223FR A%"): DSB.add_card(cid)
-        for cid in findLike("223RA A%"): DSB.add_card(cid)
-        for cid in findLike("219RN A%"): DSB.add_card(cid)
-        for cid in findLike("219AT B-%"): DSB.add_card(cid) # doesn't exist?
-        for cid in findLike("219AT A%"): DSB.add_card(cid)
-        for cid in findLike("215BI B- DECAY (7.6 M)%"): DSB.add_card(cid)
-        for cid in findLike("215PO A%"): DSB.add_card(cid)
-        for cid in findLike("215PO B-%"): DSB.add_card(cid)
-        for cid in findLike("215AT A%"): DSB.add_card(cid)
-        for cid in findLike("211PO A DECAY (0.516 S)%"): DSB.add_card(cid)
-        for cid in findLike("211BI B-%"): DSB.add_card(cid)
-        for cid in findLike("211BI A%"): DSB.add_card(cid)
-        for cid in findLike("207TL B-%"): DSB.add_card(cid)
         
     print(DSB.headercomments())
     smf = SMFile()

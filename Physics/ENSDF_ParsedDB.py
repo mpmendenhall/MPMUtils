@@ -500,7 +500,7 @@ class ParsedIDRecord(DBRecord):
     def __init__(self, curs, cid):
         DBRecord.__init__(self,curs,"identification_records",cid,True)
     def __repr__(self):
-        return "[ENSDF Card: %s to %s%s (%s %s)]"%(self.DSID, self.mass, self.elem, self.PUB, self.EDATE)
+        return "[ENSDF Card: %s to %s%s (%s %s)] (%i)"%(self.DSID, self.mass, self.elem, self.PUB, self.EDATE, self.card.cid)
 
 class ParsedParentRecord(DBRecord):
     def __init__(self,curs,cid):
@@ -566,6 +566,7 @@ class ParsedCard:
             for r in rs: r.card = self
             return rs
         
+        self.cid = cid
         self.idrec = cardlines("identification_records", ParsedIDRecord)
         assert len(self.idrec) == 1
         self.idrec = self.idrec[0]
@@ -681,8 +682,8 @@ if __name__ == "__main__":
     if True:
         #curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '%219AT%'")
         #cids = [r[0] for r in curs.fetchall()]
-        #cids = find_as_parent(curs,219,"At")
-        cids = find_cardsfor(curs,219,"At")
+        cids = find_as_parent(curs,219,"At")
+        #cids = find_cardsfor(curs,219,"At")
         for cid in cids:
             print("\n\n",cid)
             ParsedCard(curs,cid).display()
