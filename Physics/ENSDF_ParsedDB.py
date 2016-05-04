@@ -373,15 +373,31 @@ def upload_PN_record(curs,l):
     # [71:72] unspecified
     curs.execute("INSERT INTO prodnorm_records VALUES (?,?,?,?,?,?,?,?,?,?,?)", (l.lid,NRxBR,DNRxBR,NTxBR,DNTxBR,NBxBR,DNBxBR,NP,DNP,C,OPT))
 
+parsed_tables = ["comment_records","history_records","identification_records","record_xdata","parent_records",
+                "qval_records","normalization_records","prodnorm_records","level_records","alpha_records",
+                "beta_records","dptcl_records","ec_records","gamma_records"]
+
 def clearParsed(curs, cid):
     """Clear parsed data for card"""
     cmd0 = 'DELETE FROM %s WHERE rowid IN (SELECT %s.rowid FROM ENSDF_lines INNER JOIN %s ON (ENSDF_lines.rowid = %s.line) WHERE ENSDF_lines.card = ?)'
-    for tbl in ["comment_records","history_records","identification_records","record_xdata","parent_records",
-                "qval_records","normalization_records","prodnorm_records","level_records","alpha_records",
-                "beta_records","dptcl_records","ec_records","gamma_records"]:
+    for tbl in parsed_tables:
         cmd = cmd0%(tbl,tbl,tbl,tbl)
         curs.execute(cmd, (cid,))
+
+def clearOrphaned(curs):
+    """Clear parsed data referencing non-existent lines"""
+    cmd0 = 'DELETE FROM %s WHERE line NOT IN (SELECT rowid FROM ENSDF_lines)'
+    for tbl in parsed_tables:
+        cmd = cmd0%tbl
+        print(cmd)
+        curs.execute(cmd)
         
+def deleteCard(curs,cid):
+    """Delete all data for card"""
+    clearParsed(curs,cid)
+    curs.execute("DELETE FROM ENSDF_lines WHERE card = ?", (cid,))
+    curs.execute("DELETE FROM ENSDF_cards WHERE rowid = ?", (cid,))
+
 def parseCard(curs, C):
     """Generate "parsed" information for card"""
     
@@ -576,38 +592,38 @@ class ParsedCard:
         self.ecapts = cardlines("ec_records", ParsedECRecord)
         
         # connect normalizations, parents
-        assert not self.prodnorms or len(self.norms) == len(self.prodnorms)
-        for (i,nrm) in enumerate(self.norms):
-            # determine composite normalizations
-            try: nrm.NRxBR = nrm.NR * nrm.BR
-            except: nrm.NRxBR = 1
-            try: nrm.NRxBR = float(self.prodnorms[i].NRxBR)
-            except: pass
-            
-            try: nrm.NBxBR = nrm.NB * nrm.BR
-            except: nrm.NBxBR = 1
-            try: nrm.NBxBR = float(self.prodnorms[i].NBxBR)
-            except: pass
-            
-            for p in self.parents:
-                if p.n == nrm.n:
-                    p.norm = nrm
-                    if self.prodnorms: p.prodnorm = self.prodnorms[i]
-                    
-        if len(self.parents) != 1: return # TODO handle multiple parents
-    
+        if not self.prodnorms or len(self.norms) == len(self.prodnorms):
+            for (i,nrm) in enumerate(self.norms):
+                # determine composite normalizations
+                try: nrm.NRxBR = nrm.NR * nrm.BR
+                except: nrm.NRxBR = 1
+                try: nrm.NRxBR = float(self.prodnorms[i].NRxBR)
+                except: pass
+                
+                try: nrm.NBxBR = nrm.NB * nrm.BR
+                except: nrm.NBxBR = 1
+                try: nrm.NBxBR = float(self.prodnorms[i].NBxBR)
+                except: pass
+                
+                for p in self.parents:
+                    if p.n == nrm.n:
+                        p.norm = nrm
+                        if self.prodnorms: p.prodnorm = self.prodnorms[i]
+        else:
+            print("***Warning: uninterpreted normalizations****")
+
         # connect level information to transitions
         for txs in (self.alphas, self.betas, self.dptcls, self.ecapts):
             for a in txs:
                 if a.tolvl: a.tolvl = self.levels[a.tolvl]
-                a.fromlvl = self.parents[0]
+                if len(self.parents) == 1: a.fromlvl = self.parents[0]
         for g in self.gammas:
             if g.fromlvl: g.fromlvl = self.levels[g.fromlvl]
             if g.probto: g.tolvl = self.levels[g.probto]
             else: g.tolvl = None
             
         # calculate transition absolute rates
-        nrm = self.norms[0]
+        nrm = self.norms[0] if len(self.norms) else None
         for a in self.alphas:
             try: a.Ialpha = a.IA * nrm.NBxBR
             except: a.Ialpha = 0
@@ -634,14 +650,28 @@ class ParsedCard:
         for a in self.xrefs: print(a.displayform())
         print("-"*80)
         for l in self.levellist[::-1]:
-            print(l)
+            print(l.displayform())
             for a in [a for a in self.alphas if a.tolvl == l]: print("\t"+a.displayform())
             for a in [a for a in self.betas if a.tolvl == l]: print("\t"+a.displayform())
             for a in [a for a in self.gammas if a.fromlvl == l]: print("\t"+a.displayform())
             for a in [a for a in self.ecapts if a.tolvl == l]: print("\t"+a.displayform())
             for a in [a for a in self.dptcls if a.tolvl == l]: print("\t"+a.displayform())
-            
-    
+
+def find_cardsfor(curs,A,elem):
+    """Find cards related to A,elem in identification line"""
+    curs.execute("SELECT rowid FROM ENSDF_cards WHERE mass = ? AND elem LIKE ? ORDER BY rowid",(A,elem))
+    return [r[0] for r in curs.fetchall()]
+
+def find_as_parent(curs,A,elem):
+    """Return card ID's pertaining to specified A,elem as parent"""
+    curs.execute("SELECT DISTINCT card FROM ENSDF_lines,parent_records WHERE line = ENSDF_Lines.rowid AND mass = ? AND elem LIKE ?",(A,elem))
+    return [r[0] for r in curs.fetchall()]
+
+def daughters_in(curs,cid):
+    """Return (A,elem) for levels in scheme"""
+    curs.execute("SELECT DISTINCT mass,elem FROM ENSDF_lines,level_records WHERE line = ENSDF_Lines.rowid AND card = ?",(cid,))
+    return [tuple(r) for r in curs.fetchall()]
+
 if __name__ == "__main__":
     datdir = "/home/mpmendenhall/Documents/ENSDF/"
     conn = sqlite3.connect(datdir+"ENSDF.db")
@@ -649,13 +679,19 @@ if __name__ == "__main__":
     curs = conn.cursor()
     
     if True:
-        curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '%219AT%'")
-        for cid in curs.fetchall():
-            print("\n\n")
-            ParsedCard(curs,cid[0]).display()
-        exit(0)
+        #curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '%219AT%'")
+        #cids = [r[0] for r in curs.fetchall()]
+        #cids = find_as_parent(curs,219,"At")
+        cids = find_cardsfor(curs,219,"At")
+        for cid in cids:
+            print("\n\n",cid)
+            ParsedCard(curs,cid).display()
     
-    curs.execute('select rowid from ENSDF_cards WHERE 1 ORDER BY rowid')
+    exit(0)
+    
+    #curs.execute('select rowid from ENSDF_cards WHERE 1 ORDER BY rowid')
+    clearOrphaned(curs)
+    curs.execute('SELECT rowid FROM ENSDF_cards WHERE rowid not in (SELECT card FROM identification_records,ENSDF_lines WHERE line=ENSDF_lines.rowid) ORDER BY ENSDF_cards.rowid')
     for cid in curs.fetchall():
         clearParsed(curs, cid[0])
         C = ENSDFCardData(curs,cid[0])
@@ -668,7 +704,7 @@ if __name__ == "__main__":
             traceback.print_exc(file=sys.stdout)
             #raise
             
-    curs.execute('analyze')        
+    curs.execute('analyze')
     conn.commit()
     conn.close()
 
