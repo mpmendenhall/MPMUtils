@@ -278,7 +278,7 @@ protected:
     /// add a transition
     void addTransition(TransitionBase* T);
     /// check against circular references
-    void circle_check(unsigned int n, set<unsigned int> pnts = set<unsigned int>()) const;
+    void circle_check(unsigned int n, set<unsigned int>& passed, set<unsigned int> pnts = set<unsigned int>()) const;
     
     BindingEnergyLibrary const&  BEL;           ///< electron binding energy info
     double tcut;                                ///< cutoff time for splitting events

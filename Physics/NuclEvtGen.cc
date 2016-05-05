@@ -377,18 +377,20 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
         }
     }
     
-    for(unsigned int n=0; n<levels.size(); n++) circle_check(n);
+    set<unsigned int> c;
+    for(unsigned int n=0; n<levels.size(); n++) circle_check(n,c);
     setCutoff(t);
 }
 
-void NucDecaySystem::circle_check(unsigned int n, set<unsigned int> pnts) const {
+void NucDecaySystem::circle_check(unsigned int n, set<unsigned int>& passed, set<unsigned int> pnts) const {
     if(pnts.count(n)) {
         SMExcept e("circular_transition");
         e.insert("level",n);
         throw(e);
     }
     pnts.insert(n);
-    for(auto tr: transOut[n]) circle_check(tr->to.n, pnts);
+    for(auto tr: transOut[n]) if(!passed.count(tr->to.n)) circle_check(tr->to.n, passed, pnts);
+    passed.insert(n);
 }
         
 NucDecaySystem::~NucDecaySystem() {
@@ -491,6 +493,10 @@ void NucDecaySystem::genDecayChain(vector<NucDecayEvent>& v, double* rnd, unsign
 }
 
 unsigned int NucDecaySystem::getNDF(unsigned int n) const {
+    static map<unsigned int, unsigned int> ndf_cache;
+    auto it = ndf_cache.find(n);
+    if(it != ndf_cache.end()) return it->second;
+    
     unsigned int ndf = 0;
     if(n>=levels.size()) {
         // maximum DF over all starting levels
@@ -506,6 +512,7 @@ unsigned int NucDecaySystem::getNDF(unsigned int n) const {
             ndf = lndf>ndf?lndf:ndf;
         }
     }
+    ndf_cache.emplace(n,ndf);
     return ndf;
 }
 
