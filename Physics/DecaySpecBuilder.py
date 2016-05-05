@@ -66,7 +66,7 @@ class DecaySpecBuilder:
         """Identify join points between card level lists with same energy scale"""
         levsets = {}
         for l in self.cards[n0].levellist + self.cards[n1].levellist:
-            levsets.setdefault((l.mass,l.elem,l.J.strip("()")), []).append(l)
+            levsets.setdefault((l.mass,l.elem,l.J.replace("(","").replace(")","")), []).append(l)
         for ls in levsets.values():
             ls.sort(key=(lambda l: l.E))
             for i in range(len(ls)-1):
@@ -142,7 +142,8 @@ class DecaySpecBuilder:
             l.isJoined = False
             isotcounts[(a,z)] += 1
         for j in self.joins:
-            j[3].outName = j[2].outName
+            if j[3].outName > j[2].outName: j[3].outName = j[2].outName
+            else: j[2].outName = j[3].outName
             j[3].isJoined = True
             # try to find half-life in one record
             if j[2].T is None: j[2].T = j[3].T
@@ -236,6 +237,15 @@ class DecaySpecBuilder:
                     if not me: continue
                     me.insert("I","%g"%e.Ibeta)
                     smf.insert("beta", me)
+        
+    def makeDecayspec(self):
+        smf = SMFile()
+        self.levellist(smf)
+        self.transitionList(smf)
+        print("\n\n")
+        print(self.headercomments())
+        print(smf.toString())
+            
 
 if __name__=="__main__":
     datdir = "/home/mpmendenhall/Documents/ENSDF/"
@@ -255,11 +265,7 @@ if __name__=="__main__":
         curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '207BI EC%'")
         for cid in curs.fetchall(): DSB.add_card(cid[0])
         
-    print(DSB.headercomments())
-    smf = SMFile()
-    DSB.levellist(smf)
-    
+
     #DSB.min_tx_prob = 5
-    DSB.transitionList(smf)
+    DSB.makeDecayspec()
     
-    print(smf.toString())

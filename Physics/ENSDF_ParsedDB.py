@@ -502,6 +502,13 @@ class ParsedIDRecord(DBRecord):
     def __repr__(self):
         return "[ENSDF Card: %s to %s%s (%s %s)] (%i)"%(self.DSID, self.mass, self.elem, self.PUB, self.EDATE, self.card.cid)
 
+class ParsedNormRecord(DBRecord):
+    def __init__(self,curs,cid):
+        DBRecord.__init__(self,curs,"normalization_records",cid,True)
+    def __repr__(self):
+        t = "[Normalization %s]"%DBRecord.__repr__(self)
+        return t
+    
 class ParsedParentRecord(DBRecord):
     def __init__(self,curs,cid):
         DBRecord.__init__(self,curs,"parent_records",cid,True)
@@ -576,7 +583,7 @@ class ParsedCard:
         
         self.qvals = cardlines("qval_records")
         self.parents = cardlines("parent_records", ParsedParentRecord)
-        self.norms = cardlines("normalization_records")
+        self.norms = cardlines("normalization_records", ParsedNormRecord)
         self.prodnorms = cardlines("prodnorm_records")
         
         self.levellist = cardlines("level_records", ParsedLevelRecord)
@@ -626,7 +633,7 @@ class ParsedCard:
         # calculate transition absolute rates
         nrm = self.norms[0] if len(self.norms) else None
         for a in self.alphas:
-            try: a.Ialpha = a.IA * nrm.NBxBR
+            try: a.Ialpha = a.IA * (nrm.BR if nrm else 1)
             except: a.Ialpha = 0
         for b in self.betas:
             try: b.Ibeta = b.IB * nrm.NBxBR
@@ -679,7 +686,7 @@ if __name__ == "__main__":
     conn.row_factory = sqlite3.Row # fast name-based access to columns
     curs = conn.cursor()
     
-    if True:
+    if False:
         #curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '%219AT%'")
         #cids = [r[0] for r in curs.fetchall()]
         cids = find_as_parent(curs,219,"At")
@@ -687,7 +694,10 @@ if __name__ == "__main__":
         for cid in cids:
             print("\n\n",cid)
             ParsedCard(curs,cid).display()
-    
+    else:
+        deleteCard(curs,17098)
+        conn.commit()
+        
     exit(0)
     
     #curs.execute('select rowid from ENSDF_cards WHERE 1 ORDER BY rowid')

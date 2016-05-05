@@ -13,6 +13,8 @@ class NucCanvas:
     """Utilities for drawing nuclear decay chains on A:Z canvas"""
     def __init__(self):
         self.c = canvas.canvas()
+        text.set(mode="latex")
+        text.preamble(r"\usepackage{mathtools}")
         self.nucs = set()       # isotopes (A,Z) in underlying list
         self.elnames =  ElementNames()
         self.dscale = 1.2       # overall drawing scale factor
@@ -26,7 +28,8 @@ class NucCanvas:
     def toZ(self, elem): return self.elnames.elNum(elem)
     
     def addNuc(self,A,elem):
-        self.nucs.add((A, self.toZ(elem)))
+        n = (A, self.toZ(elem))
+        self.nucs.add(n)
     
     def nucCenter(self,A,Z):
         """Drawing coordinates center for nuclide"""
@@ -36,7 +39,7 @@ class NucCanvas:
         for A,Z in self.nucs:
             x0,y0 = self.nucCenter(A,Z)
             self.c.stroke(path.rect(x0-0.45*self.dscale, y0-0.45*self.dscale, 0.9*self.dscale, 0.9*self.dscale))
-            self.c.text(x0, y0, r"$^{%i}$%s"%(A,self.elnames.elSym(Z)), [text.halign.boxcenter])
+            self.c.text(x0, y0, r"$\prescript{%i}{%i}{}$%s"%(A,Z,self.elnames.elSym(Z)), [text.halign.boxcenter])
                     
     def drawBeta(self,A,Z):
         """Draw marker for beta transition"""
@@ -93,7 +96,10 @@ if __name__=="__main__":
     #D = DecayScheme(conn.cursor())
     #print(find_chain(curs,235,"U"))
     
-    dchain = find_chain(curs,227,"Ac",{16607,16608}) # don't really need 16975 215At either
+    skip = {16607,16608,16972,16440}
+    skip.add(16975) # don't really need 215At either
+    dchain = find_chain(curs,227,"Ac",skip)
+    
     #dchain = find_chain(curs,235,"U",{16607,16608})
     print(dchain)
     dchain = load_chain(curs,dchain)
@@ -115,9 +121,5 @@ if __name__=="__main__":
     for c in clist: 
         if c.alphas or c.betas: DSB._add_card(c)
     
-    smf = SMFile()
-    print(DSB.headercomments())
-    DSB.levellist(smf)
     #DSB.min_tx_prob = 5
-    DSB.transitionList(smf)
-    print(smf.toString())
+    DSB.makeDecayspec()
