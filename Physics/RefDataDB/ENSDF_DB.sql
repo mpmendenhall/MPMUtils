@@ -1,5 +1,5 @@
 -- sqlite3 database schema for ENSDF card information
--- sqlite3 ENSDF.db < $MPMUTILS/Physics/ENSDF_DB.sql
+-- sqlite3 ENSDF.db < $MPMUTILS/Physics/RefDataDB/ENSDF_DB.sql
 
 -- cards in dataset, with rowid used elsewhere for card identifier; interpreted from Identification record
 CREATE TABLE ENSDF_cards (
