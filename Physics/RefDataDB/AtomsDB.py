@@ -5,7 +5,7 @@ Atom information resources --- currently dumb elements list"""
 import sqlite3
 
 class ElementNames:
-    """Element name/symbol lookup table"""
+    """Element name/symbol lookup table from text file"""
     def __init__(self, fname="ElementsList.txt"):
         # (Z,symb,name)
         self.dat = [(int(x[0]),x[1],x[2]) for x in [l.split() for l in open(fname).readlines()] if len(x)==3]

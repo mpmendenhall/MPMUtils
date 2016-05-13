@@ -14,7 +14,6 @@
     
 #include <vector>
 #include <TH1.h>
-#include <cfloat>
 
 using std::vector;
 using std::string;

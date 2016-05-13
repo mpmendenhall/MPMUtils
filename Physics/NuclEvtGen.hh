@@ -13,8 +13,7 @@ using std::vector;
 using std::map;
 #include <set>
 using std::set;
-#include <climits>
-#include <float.h>
+#include <limits>
 #include <stdio.h>
 
 /// random event selector
@@ -246,7 +245,7 @@ protected:
 class NucDecaySystem {
 public:
     /// constructor from specification file
-    NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, double t = DBL_MAX);
+    NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, double t = std::numeric_limits<double>::infinity());
     /// destructor
     ~NucDecaySystem();
     /// set cutoff lifetime for intermediate states
@@ -260,12 +259,12 @@ public:
     /// display list of atoms
     void displayAtoms(bool verbose = false) const;
     /// generate a chain of decay events starting from level n, starting time offset t0
-    void genDecayChain(vector<NucDecayEvent>& v, double* rnd = nullptr, unsigned int n = UINT_MAX, double t0 = 0);
+    void genDecayChain(vector<NucDecayEvent>& v, double* rnd = nullptr, unsigned int n = std::numeric_limits<unsigned int>::max(), double t0 = 0);
     /// rescale all probabilities
     void scale(double s);
     
     /// return number of degrees of freedom needed to specify decay from given level
-    unsigned int getNDF(unsigned int n = UINT_MAX) const;
+    unsigned int getNDF(unsigned int n = std::numeric_limits<unsigned int>::max()) const;
     
     /// LaTeX name for generator
     string fancyname;
@@ -296,7 +295,7 @@ protected:
 class NucDecayLibrary {
 public:
     /// constructor
-    NucDecayLibrary(const string& datp, double t = DBL_MAX);
+    NucDecayLibrary(const string& datp, double t = std::numeric_limits<double>::infinity());
     /// destructor
     ~NucDecayLibrary();
     /// check if generator is available

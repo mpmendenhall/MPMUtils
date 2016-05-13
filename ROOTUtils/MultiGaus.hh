@@ -31,7 +31,7 @@ using std::string;
 #include <vector>
 using std::vector;
 
-#include <climits>
+#include <limits>
 
 #include <TF1.h>
 #include <TH1F.h>
@@ -75,7 +75,7 @@ public:
     TF1* getFitter();
     
     /// single-peak fit estimate, assuming center and sigma initial guess set
-    void fitEstimate(TH1* h, unsigned int n = INT_MAX);
+    void fitEstimate(TH1* h, unsigned int n = std::numeric_limits<unsigned int>::max());
     /// fit a TH1 after initial peak centers/widths have been guessed; update inital guess
     void fit(TH1* h, bool draw = true);
     

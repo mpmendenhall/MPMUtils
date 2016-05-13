@@ -6,7 +6,6 @@
 #include <TROOT.h>
 #include <TMath.h>
 #include <TDirectory.h>
-#include <cfloat>
 #include <cmath>
 #include <cassert>
 

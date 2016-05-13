@@ -6,7 +6,7 @@
 // -- Michael P. Mendenhall, 2015
 
 #include "Clustering.hh"
-#include <cfloat>
+#include <limits>
 #include <cassert>
 
 void KMeansCalculator::calcClassCounts() {
@@ -28,7 +28,7 @@ void KMeansCalculator::calcMeans() {
 }
 
 unsigned int KMeansCalculator::classify() {
-    vector<double> mindist(points.size(), DBL_MAX);
+    vector<double> mindist(points.size(), std::numeric_limits<double>::max());
     auto oldclass = classification;
     unsigned int nreclassified = 0;
     for(unsigned int i=0; i<points.size(); i++) {

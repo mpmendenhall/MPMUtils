@@ -98,9 +98,11 @@ if __name__=="__main__":
     
     skip = {16607,16608,16972,16440}
     skip.add(16975) # don't really need 215At either
-    dchain = find_chain(curs,227,"Ac",skip)
+    #dchain = find_chain(curs,227,"Ac",skip)
     
-    #dchain = find_chain(curs,235,"U",{16607,16608})
+    
+    dchain = find_chain(curs,232,"U",{})
+    
     print(dchain)
     dchain = load_chain(curs,dchain)
     

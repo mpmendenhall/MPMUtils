@@ -4,7 +4,7 @@
 
 #include <utility>
 #include <deque>
-#include <cfloat>
+#include <limits>
 #include <cmath>
 
 using std::deque;
@@ -14,7 +14,7 @@ using std::pair;
 class RollingWindow {
 public:
     /// constructor
-    RollingWindow(unsigned int n, double l=FLT_MAX): nMax(n), lMax(l), sw(0), sww(0) {}
+    RollingWindow(unsigned int n, double l = std::numeric_limits<double>::infinity()): nMax(n), lMax(l), sw(0), sww(0) {}
     
     /// introduce next element
     void addCount(double t, double w=1.);

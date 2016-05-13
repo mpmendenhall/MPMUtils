@@ -670,9 +670,12 @@ def find_cardsfor(curs,A,elem):
     curs.execute("SELECT rowid FROM ENSDF_cards WHERE mass = ? AND elem LIKE ? ORDER BY rowid",(A,elem))
     return [r[0] for r in curs.fetchall()]
 
-def find_as_parent(curs,A,elem):
+def find_as_parent(curs,A,elem,Ezero=True):
     """Return card ID's pertaining to specified A,elem as parent"""
-    curs.execute("SELECT DISTINCT card FROM ENSDF_lines,parent_records WHERE line = ENSDF_Lines.rowid AND mass = ? AND elem LIKE ?",(A,elem))
+    if Ezero:
+        curs.execute("SELECT DISTINCT card FROM ENSDF_lines,parent_records WHERE line = ENSDF_Lines.rowid AND mass = ? AND elem LIKE ? AND E=0",(A,elem))
+    else:
+        curs.execute("SELECT DISTINCT card FROM ENSDF_lines,parent_records WHERE line = ENSDF_Lines.rowid AND mass = ? AND elem LIKE ?",(A,elem))
     return [r[0] for r in curs.fetchall()]
 
 def daughters_in(curs,cid):
@@ -695,7 +698,7 @@ if __name__ == "__main__":
             print("\n\n",cid)
             ParsedCard(curs,cid).display()
     else:
-        deleteCard(curs,17098)
+        deleteCard(curs,17223)
         conn.commit()
         
     exit(0)

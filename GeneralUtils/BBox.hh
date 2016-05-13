@@ -8,7 +8,7 @@
 #ifndef BBOX_HH
 #define BBOX_HH
 
-#include <cfloat>
+#include <limits>
 
 /// Templatized D-dimensional bounding box
 template<size_t D, typename T>
@@ -46,8 +46,8 @@ template<size_t D>
 BBox<D,double> empty_double_bbox() {
     BBox<D,double> b;
     for(size_t i=0; i<D; i++) {
-        b.lo[i] = DBL_MAX;
-        b.hi[i] = -DBL_MAX;
+        b.lo[i] = std::numeric_limits<double>::max();
+        b.hi[i] = -std::numeric_limits<double>::max();
     }
     return b;
 }

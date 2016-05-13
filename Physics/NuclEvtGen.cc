@@ -4,7 +4,6 @@
 #include "StringManip.hh"
 #include "PathUtils.hh"
 #include <math.h>
-#include <cfloat>
 #include <stdlib.h>
 #include <algorithm>
 #include <TRandom.h>
@@ -65,7 +64,7 @@ NucLevel::NucLevel(const Stringmap& m): fluxIn(0), fluxOut(0) {
     n = atoi(v[2].c_str());
     E = m.getDefault("E",0);
     hl = m.getDefault("hl",0);
-    if(hl < 0) hl = DBL_MAX;
+    if(hl < 0) hl = std::numeric_limits<decltype(hl)>::infinity();
     jpi = m.getDefault("jpi","");
 }
 

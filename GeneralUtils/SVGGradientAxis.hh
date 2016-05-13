@@ -10,7 +10,6 @@
 
 #include "SVGBuilder.hh"
 #include "BBox.hh"
-#include <cfloat>
 #include <set>
 using std::set;
 
