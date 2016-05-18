@@ -100,7 +100,6 @@ if __name__=="__main__":
     skip.add(16975) # don't really need 215At either
     #dchain = find_chain(curs,227,"Ac",skip)
     
-    
     dchain = find_chain(curs,232,"U",{})
     
     print(dchain)

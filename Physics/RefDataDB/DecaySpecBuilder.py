@@ -61,6 +61,7 @@ class DecaySpecBuilder:
         self.parents = []       # collection of all parent specifiers in loaded cards
         self.joins = []         # joining points (n0, n1, l0, l1) between cards n0,n1 levels l0,l1
         self.min_tx_prob = 0    # ignore transitions less likely than this
+        self.filler_tx_prob = 1e-15     # assign this to zero-likelihood transitions as placeholder
     
     def bottom_join_levels(self,n0,n1):
         """Identify join points between card level lists with same energy scale"""
@@ -198,14 +199,16 @@ class DecaySpecBuilder:
         for s in self.cards:
             
             for a in s.alphas:
-                if a.Ialpha <= self.min_tx_prob: continue
+                if a.Ialpha < self.min_tx_prob: continue
+                if a.Ialpha < self.filler_tx_prob: a.Ialpha = self.filler_tx_prob
                 ma = maketx(a)
                 if not ma: continue
                 ma.insert("I", "%g"%a.Ialpha)
                 smf.insert("alpha", ma)
                 
             for b in s.betas:
-                if b.Ibeta <= self.min_tx_prob: continue
+                if b.Ibeta < self.min_tx_prob: continue
+                if b.Ibeta < self.filler_tx_prob: b.Ibeta = self.filler_tx_prob
                 mb = maketx(b)
                 if not mb: continue
                 mb.insert("I", "%g"%b.Ibeta)
@@ -214,7 +217,8 @@ class DecaySpecBuilder:
                 smf.insert("beta", mb)
 
             for g in s.gammas:
-                if g.Igamma <= self.min_tx_prob: continue
+                if g.Igamma < self.min_tx_prob: continue
+                if g.Igamma < self.filler_tx_prob: g.Igamma = self.filler_tx_prob
                 
                 mg = maketx(g)
                 if not mg: continue
@@ -227,12 +231,14 @@ class DecaySpecBuilder:
                 smf.insert("gamma", mg)
                 
             for e in s.ecapts:
-                if self.min_tx_prob < e.Iec:
+                if self.min_tx_prob <= e.Iec:
+                    if e.Iec < self.filler_tx_prob: e.Iec = self.filler_tx_prob
                     me = maketx(e)
                     if not me: continue
                     me.insert("I","%g"%e.Iec)
                     smf.insert("ecapt", me)
-                if self.min_tx_prob < e.Ibeta:
+                if self.min_tx_prob <= e.Ibeta:
+                    if e.Ibeta < self.filler_tx_prob: e.Ibeta = self.filler_tx_prob
                     me = maketx(e)
                     if not me: continue
                     me.insert("I","%g"%e.Ibeta)

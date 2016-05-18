@@ -278,6 +278,10 @@ protected:
     void addTransition(TransitionBase* T);
     /// check against circular references
     void circle_check(unsigned int n, set<unsigned int>& passed, set<unsigned int> pnts = set<unsigned int>()) const;
+    /// sum fluxIn, fluxOut for specified level
+    void sumFluxInOut(size_t l);
+    /// normalize input/output fluxes to consistency
+    void normalizeFluxInOut();
     
     BindingEnergyLibrary const&  BEL;           ///< electron binding energy info
     double tcut;                                ///< cutoff time for splitting events

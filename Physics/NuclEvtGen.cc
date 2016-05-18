@@ -378,6 +378,8 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     
     set<unsigned int> c;
     for(unsigned int n=0; n<levels.size(); n++) circle_check(n,c);
+    
+    normalizeFluxInOut();
     setCutoff(t);
 }
 
@@ -524,6 +526,26 @@ void NucDecaySystem::scale(double s) {
         levelDecays[i].scale(s);
     }
 }
+
+void NucDecaySystem::sumFluxInOut(size_t l) {
+    levels[l].fluxIn = levels[l].fluxOut = 0;
+    for(auto T: transIn[l]) levels[l].fluxIn += T->Itotal;
+    for(auto T: transOut[l]) levels[l].fluxOut += T->Itotal;
+}
+
+void NucDecaySystem::normalizeFluxInOut() {
+    size_t lmax = levels.size()-1;
+    for(size_t l=0; l<levels.size(); l++) {
+        sumFluxInOut(lmax-l);
+        if(!l) levels[lmax-l].fluxIn = 1;
+        if(!levels[lmax-l].fluxOut) continue;
+        double s = levels[lmax-l].fluxIn / levels[lmax-l].fluxOut;
+        for(auto T: transOut[lmax-l]) T->scale(s);
+        levels[lmax-l].fluxOut = levels[lmax-l].fluxIn;
+    }
+}
+
+
 
 //-----------------------------------------
 
