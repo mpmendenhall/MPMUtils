@@ -91,7 +91,7 @@ void drawDataMCPair(TH1* dat, TH1* mc) {
     }
 }
 
-void combo_draw(const vector<TH1*>& hs, const string& outp, const char* opt) {
+void combo_draw_objs(const vector<TObject*>& hs, const string& outp, const char* opt) {
     string aName;
     string outpath = outp;
     string nbase = split(outpath,"/").back();
@@ -113,12 +113,6 @@ void combo_draw(const vector<TH1*>& hs, const string& outp, const char* opt) {
         gPad->Print(file_template,"pdf");
     }
     combo_pdf(hNames, outpath + "/"+nbase+".pdf");
-}
-
-void combo_draw(const vector<TH2*>& hs, const string& outpath, const char* opt) {
-    vector<TH1*> hs1;
-    for(auto h: hs) hs1.push_back(h);
-    combo_draw(hs1, outpath, opt);
 }
 
 TEllipse* drawCircle(float r, Int_t color, Int_t lstyle, float x0, float y0) {
