@@ -167,11 +167,16 @@ Stringmap graphToStringmap(const TGraph& g) {
     return m;
 }
 
-TGraphErrors* TH1toTGraph(const TH1& h) {
+TGraphErrors* TH1toTGraph(const TH1& h, bool invert) {
     TGraphErrors* g = new TGraphErrors(h.GetNbinsX()-2);
     for(int i=0; i<h.GetNbinsX()-2; i++) {
-        g->SetPoint(i,h.GetBinCenter(i+1),h.GetBinContent(i+1));
-        g->SetPointError(i,0.0,h.GetBinError(i+1));
+        if(invert) {
+            g->SetPoint(i, h.GetBinContent(i+1), h.GetBinCenter(i+1));
+            g->SetPointError(i, h.GetBinError(i+1), 0.);
+        } else {
+            g->SetPoint(i, h.GetBinCenter(i+1), h.GetBinContent(i+1));
+            g->SetPointError(i, 0, h.GetBinError(i+1));
+        }
     }
     return g;
 }

@@ -45,8 +45,8 @@ TH1F* stringmapToTH1F(const Stringmap& m);
 /// convert a TGraph to a Stringmap
 Stringmap graphToStringmap(const TGraph& g);
 
-/// convert a histogram to a TGraph
-TGraphErrors* TH1toTGraph(const TH1& h);
+/// convert a histogram to a TGraph, optionally swapping x/y
+TGraphErrors* TH1toTGraph(const TH1& h, bool invert = false);
 
 /// convert a TProfile to a TGraph
 TGraphErrors* TProf2TGraph(const TProfile& P, unsigned int minpts = 0);
