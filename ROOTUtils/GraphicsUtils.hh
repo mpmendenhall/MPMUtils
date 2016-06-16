@@ -31,7 +31,7 @@ void combo_draw_objs(const vector<TObject*>& hs, const string& outpath, const ch
 template<class T = TObject>
 void combo_draw(const vector<T*>& hs, const string& outpath, const char* opt = "") {
     vector<TObject*> v(hs.begin(), hs.end());
-    combo_draw_objs(v, outpath, opt = "");
+    combo_draw_objs(v, outpath, opt);
 }
 
 /// draw vertical line marker
