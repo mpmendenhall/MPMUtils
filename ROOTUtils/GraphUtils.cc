@@ -168,8 +168,8 @@ Stringmap graphToStringmap(const TGraph& g) {
 }
 
 TGraphErrors* TH1toTGraph(const TH1& h, bool invert) {
-    TGraphErrors* g = new TGraphErrors(h.GetNbinsX()-2);
-    for(int i=0; i<h.GetNbinsX()-2; i++) {
+    TGraphErrors* g = new TGraphErrors(h.GetNbinsX());
+    for(int i=0; i<h.GetNbinsX(); i++) {
         if(invert) {
             g->SetPoint(i, h.GetBinContent(i+1), h.GetBinCenter(i+1));
             g->SetPointError(i, h.GetBinError(i+1), 0.);
@@ -182,9 +182,9 @@ TGraphErrors* TH1toTGraph(const TH1& h, bool invert) {
 }
 
 TGraphErrors* TProf2TGraph(const TProfile& P, unsigned int minpts) {
-    TGraphErrors* g = new TGraphErrors(P.GetNbinsX()-2);
+    TGraphErrors* g = new TGraphErrors(P.GetNbinsX());
     unsigned int ig = 0;
-    for(int i=0; i<P.GetNbinsX()-2; i++) {
+    for(int i=0; i<P.GetNbinsX(); i++) {
         if(P.GetBinEntries(i+1)<minpts) continue;
         g->SetPoint(ig,P.GetBinCenter(i+1),P.GetBinContent(i+1));
         g->SetPointError(ig,0.0,P.GetBinError(i+1));
