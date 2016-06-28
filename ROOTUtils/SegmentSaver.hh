@@ -95,6 +95,8 @@ public:
     /// create a new instance of this object(nm,inflname) (cloning self settings) for given directory
     virtual SegmentSaver* makeAnalyzer(const string&, const string&) { assert(false); return nullptr; }
     
+    /// optional setup at start of data loading
+    virtual void startData() { }
     /// optional cleanup at end of data loading
     virtual void finishData() { }
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!

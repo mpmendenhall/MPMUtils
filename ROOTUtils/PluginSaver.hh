@@ -55,6 +55,8 @@ public:
     /// add histograms from another SegmentSaver of the same type
     void addSegment(const SegmentSaver& S, double sc = 1.) override;
     
+    /// optional setup at start of data loading
+    void startData() override;
     /// optional cleanup at end of data loading
     void finishData() override;
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!

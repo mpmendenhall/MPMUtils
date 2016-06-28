@@ -98,6 +98,12 @@ void PluginSaver::makePlots() {
     }
 }
 
+void PluginSaver::startData() {
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->startData();
+}
+
 void PluginSaver::finishData() {
     for(auto& kv: myBuilders)
         if(kv.second->thePlugin)
