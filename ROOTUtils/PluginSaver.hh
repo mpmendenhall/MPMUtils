@@ -11,13 +11,20 @@
 #include "SegmentSaver.hh"
 #include <cassert>
 
+#include <memory>
+using std::shared_ptr;
+using std::make_shared;
+
 /// Base class for optionally constructing SegmentSaver plugins "on demand"
 class PluginBuilder {
 public:
+    /// Destructor
+    virtual ~PluginBuilder() { }
+    
     /// instantiate plugin SegmentSaver
     virtual void makePlugin(SegmentSaver* pnt) = 0;
     
-    SegmentSaver* thePlugin = nullptr;     ///< instantiated plugin (not memory managed here)
+    shared_ptr<SegmentSaver> thePlugin = nullptr; ///< instantiated plugin
 };
 
 /// Simple templatized PluginBuilder, checking for correct parent type
@@ -33,7 +40,7 @@ public:
         thePlugin = _makePlugin(PBase);
     }
     /// Subclass me!
-    virtual SegmentSaver* _makePlugin(Base* PBase) { return new Plug(PBase); }
+    virtual shared_ptr<SegmentSaver> _makePlugin(Base* PBase) { return make_shared<Plug>(PBase); }
 };
 
 
@@ -42,11 +49,9 @@ class PluginSaver: public SegmentSaver {
 public:
     /// Constructor, optionally with input filename
     PluginSaver(OutputManager* pnt, const string& nm = "PluginSaver", const string& inflName = "");
-    /// Destructor
-    ~PluginSaver();
     
-    /// get plugin by name; nullptr if not available
-    SegmentSaver* getPlugin(const string& nm) const;
+    /// get plugin by name
+    shared_ptr<SegmentSaver> getPlugin(const string& nm) const;
     
     /// zero out all saved histograms
     void zeroSavedHists() override;
@@ -79,8 +84,8 @@ protected:
     /// build plugins appropriate for input file; call in subclass after setting up myBuilders
     virtual void buildPlugins();
     
-    map<string,PluginBuilder*> myBuilders;      ///< available named plugins list
-    TObjString* filePlugins;                    ///< list of plugin names from file
+    map<string, shared_ptr<PluginBuilder>> myBuilders;  ///< available named plugins list
+    TObjString* filePlugins;                            ///< list of plugin names from file
 };
 
 #endif

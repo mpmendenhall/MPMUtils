@@ -14,12 +14,6 @@ PluginSaver::PluginSaver(OutputManager* pnt, const string& nm, const string& inf
     assert(filePlugins);
 }
 
-PluginSaver::~PluginSaver() {
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
-            delete kv.second->thePlugin;
-}
-
 void PluginSaver::buildPlugins() {
     if(fIn) {
         /// try to load all plugins named in input file
@@ -48,9 +42,9 @@ void PluginSaver::buildPlugins() {
     }
 }
 
-SegmentSaver* PluginSaver::getPlugin(const string& nm) const {
+shared_ptr<SegmentSaver> PluginSaver::getPlugin(const string& nm) const {
     auto PB = myBuilders.find(nm);
-    if(PB==myBuilders.end()) return nullptr;
+    if(PB == myBuilders.end()) return nullptr;
     return PB->second->thePlugin;
 }
 
@@ -80,7 +74,7 @@ void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
     const PluginSaver& PS = dynamic_cast<const PluginSaver&>(S);
     for(auto& kv: myBuilders) {
         if(kv.second->thePlugin) {
-            SegmentSaver* Si = PS.getPlugin(kv.first);
+            auto Si = PS.getPlugin(kv.first);
             if(Si) kv.second->thePlugin->addSegment(*Si,sc);
             else printf("Warning: PluginSaver::addSegment missing matching plugin for '%s'\n", kv.first.c_str());
         }
@@ -121,7 +115,7 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
         vector<SegmentSaver*> vPi;
         for(auto PS: vP) {
             if(!PS) vPi.push_back(nullptr);
-            else vPi.push_back(PS->getPlugin(kv.first));
+            else vPi.push_back(PS->getPlugin(kv.first).get());
         }
         kv.second->thePlugin->defaultCanvas.cd();
         kv.second->thePlugin->compare(vPi);

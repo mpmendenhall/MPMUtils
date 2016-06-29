@@ -9,9 +9,11 @@
 #ifndef XMLBUILDER_HH
 #define XMLBUILDER_HH
 
-#include "RefCounter.hh"
 #include "StringManip.hh"
 
+#include <memory>
+using std::shared_ptr;
+using std::make_shared;
 #include <map>
 using std::map;
 #include <vector>
@@ -21,15 +23,15 @@ using std::vector;
 using std::ostream;
 
 /// Reference-counted XML tag
-class XMLBuilder: public RefCounter {
+class XMLBuilder {
 public:
     /// Constructor
     XMLBuilder(const string& nm = ""): name(nm) { }
     /// Destructor
-    virtual ~XMLBuilder() { for(auto c: children) c->release(); }
+    virtual ~XMLBuilder() { }
     
     /// Add child node
-    virtual void addChild(XMLBuilder* C) { assert(C); C->retain(); children.push_back(C); }
+    virtual void addChild(const shared_ptr<XMLBuilder>& C) { children.push_back(C); }
     /// Add a tag attribute
     virtual void addAttr(const string& nm, const string& val) { attrs[nm] = val; }
     /// Add numerical attribute
@@ -45,7 +47,7 @@ public:
     
 protected:
     
-    vector<XMLBuilder*> children;       ///< child nodes
+    vector<shared_ptr<XMLBuilder>> children;       ///< child nodes
     
     /// subclass me! setup before write
     virtual void prepare() { }
@@ -71,9 +73,9 @@ public:
     /// Destructor
     virtual ~XMLProvider() { }
     /// build XML output
-    XMLBuilder* makeXML();
+    shared_ptr<XMLBuilder> makeXML();
     /// Add child node
-    virtual void addChild(XMLProvider* C) { assert(C); children.push_back(C); }
+    virtual void addChild(const shared_ptr<XMLProvider>& C) { children.push_back(C); }
     /// Add a tag attribute
     virtual void addAttr(const string& nm, const string& val) { xattrs[nm] = val; }
     /// Add numerical attribute
@@ -86,7 +88,7 @@ protected:
     virtual void _makeXML(XMLBuilder&) { }
     
     map<string,string> xattrs;          ///< tag attributes
-    vector<XMLProvider*> children;      ///< child providers
+    vector<shared_ptr<XMLProvider>> children;      ///< child providers
 };
 
 #endif

@@ -49,7 +49,7 @@ namespace SVG {
     
     class title: public XMLBuilder {
     public:
-        title(const string& t): XMLBuilder("title") { addChild(new XMLText(t)); oneline = true; }
+        title(const string& t): XMLBuilder("title") { addChild(make_shared<XMLText>(t)); oneline = true; }
     };
     
     class line: public XMLBuilder {
@@ -112,7 +112,7 @@ namespace SVG {
             attrs["y1"] = to_str(y1);
             attrs["x2"] = to_str(x2);
             attrs["y2"] = to_str(y2);
-            for(auto const& s: G.getStops()) addChild(new gradstop(s.first, s.second.first));
+            for(auto const& s: G.getStops()) addChild(make_shared<gradstop>(s.first, s.second.first));
         }
         
         string idstr() const { return "url(#" + attrs.find("id")->second + ")"; }
@@ -120,14 +120,14 @@ namespace SVG {
     
     class text: public XMLBuilder {
     public:
-        text(const string& t, double x, double y, const string& fill = "black"): XMLBuilder("text"), myText(new XMLText(t)) {
+        text(const string& t, double x, double y, const string& fill = "black"): XMLBuilder("text"), myText(make_shared<XMLText>(t)) {
             attrs["x"] = to_str(x);
             attrs["y"] = to_str(y);
             attrs["fill"] = fill;
             oneline = true;
             addChild(myText);
         }
-        XMLText* myText;
+        shared_ptr<XMLText> myText;
     };
 }
 

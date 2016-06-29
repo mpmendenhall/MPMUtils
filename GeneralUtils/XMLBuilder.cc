@@ -39,8 +39,8 @@ void XMLBuilder::closeTag(ostream& o, bool abbrev) {
 
 ////////////////////////////////
 
-XMLBuilder* XMLProvider::makeXML() {
-    XMLBuilder* B = new XMLBuilder(tagname);
+shared_ptr<XMLBuilder> XMLProvider::makeXML() {
+    auto B = make_shared<XMLBuilder>(tagname);
     B->attrs = xattrs;
     _makeXML(*B);
     for(auto c: children) B->addChild(c->makeXML());

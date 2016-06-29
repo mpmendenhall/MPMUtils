@@ -56,11 +56,11 @@ public:
     bool logscale = false;                                      ///< log scale setting
     BBox<1,double> range = empty_double_bbox<1>();              ///< axis range
     set<tick> axticks;                                          ///< axis tick locations
-    SVG::group* axisGroup = new SVG::group();                   ///< group containing axis information
+    shared_ptr<SVG::group> axisGroup = make_shared<SVG::group>();       ///< group containing axis information
     
     color::Gradient G;                                          ///< gradient color definition
-    XMLBuilder* Gaxis = new XMLBuilder("linearGradient");       ///< axis plot SVG
-    SVG::lingradient* base_gradient;                            ///< gradient in SVG form
+    shared_ptr<XMLBuilder> Gaxis = make_shared<XMLBuilder>("linearGradient");       ///< axis plot SVG
+    shared_ptr<SVG::lingradient> base_gradient;                 ///< gradient in SVG form
 };
 
 #endif
