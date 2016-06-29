@@ -76,6 +76,8 @@ public:
     shared_ptr<XMLBuilder> makeXML();
     /// Add child node
     virtual void addChild(const shared_ptr<XMLProvider>& C) { children.push_back(C); }
+    /// Add externally-memory-managed child node
+    virtual void addChild(XMLProvider* C) { addChild(shared_ptr<XMLProvider>(shared_ptr<XMLProvider>(), C)); }
     /// Add a tag attribute
     virtual void addAttr(const string& nm, const string& val) { xattrs[nm] = val; }
     /// Add numerical attribute
