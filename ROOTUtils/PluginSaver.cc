@@ -98,6 +98,12 @@ void PluginSaver::startData() {
             kv.second->thePlugin->startData();
 }
 
+void PluginSaver::processEvent() {
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->processEvent();
+}
+    
 void PluginSaver::finishData() {
     for(auto& kv: myBuilders)
         if(kv.second->thePlugin)
