@@ -40,7 +40,7 @@ public:
     /// update status at i items completed
     void update(uint64_t i);
     /// increment status by n items
-    void increment(int64_t n) { update(c+n); }
+    void increment(int64_t n = 1) { update(c+n); }
     
 protected:
     
