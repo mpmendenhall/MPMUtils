@@ -9,7 +9,6 @@
 #define ANALYSISDB_HH
 
 #include "SQLite_Helper.hh"
-#include "PathUtils.hh"
 #include <stdio.h>
 
 /// Calibration database interface
@@ -20,7 +19,7 @@ public:
     /// close and delete instance
     static void closeDB() { if(myDB) { delete myDB; myDB = nullptr; } }
     
-    static string dbvar;        ///< environment variable specifying DB path
+    static string dbfile;   ///< database file location
     
     /// create analysis run identifier
     sqlite3_int64 createAnaRun(const string& dataname);
@@ -31,7 +30,7 @@ public:
     
 protected:
     /// Constructor
-    AnalysisDB(): SQLite_Helper(getEnvSafe(dbvar)) { }
+    AnalysisDB(): SQLite_Helper(dbfile) { }
     
     static AnalysisDB* myDB;    ///< singleton instance of DB connection
 };

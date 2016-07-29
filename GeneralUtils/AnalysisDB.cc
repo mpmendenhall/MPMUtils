@@ -10,7 +10,7 @@
 #include <cassert>
 
 AnalysisDB* AnalysisDB::myDB = nullptr;
-string AnalysisDB::dbvar = "";
+string AnalysisDB::dbfile = "";
 
 sqlite3_int64 AnalysisDB::createAnaRun(const string& dataname) {
     sqlite3_stmt* stmt = loadStatement("INSERT INTO analysis_runs(dataname,anatime) VALUES (?1,?2)");
