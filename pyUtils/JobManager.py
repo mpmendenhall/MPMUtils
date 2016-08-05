@@ -175,7 +175,7 @@ if __name__ == "__main__":
     
     parser.add_option("--account",  help="submission user account")
     parser.add_option("--queue",  help="submission queue")
-    parser.add_option("--limit",  help="concurrent jobs limit")
+    parser.add_option("--limit",  type="int", default=10, help="concurrent jobs limit")
     parser.add_option("--db",  help="jobs database")
     
     parser.add_option("--launch", action="store_true", help="update and launch")
