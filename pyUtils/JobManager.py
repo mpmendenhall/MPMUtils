@@ -3,8 +3,9 @@
 import sqlite3
 import subprocess
 import os
+from optparse import OptionParser
 
-jobstates = {"Idle":2,"Running":3,"Completed":4,"Removed":6}
+jobstates = {"Idle":2,"Starting":3,"Running":3,"Completed":4,"Removed":6}
 
 def get_showq_runstatus():
     """Get queue status according to showq"""
@@ -144,17 +145,48 @@ def load_test_batch(qsettings, njobs=8):
     conn.close()
 
 def upload_jobs(curs,joblist):
+    """Upload a list of jobs to run"""
     # job specifier: (name,input,log,nodes,walltime)
     print("Uploading jobs")
     for j in joblist: print("\t",j)
     curs.executemany("INSERT INTO jobs(name,jobfile,outlog,n_nodes,est_walltime,status) VALUES (?,?,?,?,?,0)", joblist)
+
+def make_upload_jobs(curs, jname, jcmds, walltime, nodes=1):
+    """Generate jobfiles for "one liners" and upload to DB"""
+    # jcmds = (contents, logfile)
+    jobdir = os.environ["HOME"]+"/jobs/%s/"%jname
+    os.makedirs(jobdir, exist_ok=True)
+    joblist = []
+    for (n,jc) in enumerate(jcmds):
+        jfl = jobdir + "/job_%i.sh"%n
+        open(jfl,"w").write(jc[0])
+        joblist.append((jname,jfl,jc[1],nodes,walltime))
+    upload_jobs(curs,joblist)
+
+
+
 
 
 ###################
 ###################
 ###################
 if __name__ == "__main__":
-    qs = {"account":"tpc", "queue":"pbatch", "limit":5, "db":"jobs.db"}
-    #load_test_batch(qs)
-    update_and_launch(qs)
-    #cancel_queued_jobs(qs)
+    parser = OptionParser()
+    
+    parser.add_option("--account",  help="submission user account")
+    parser.add_option("--queue",  help="submission queue")
+    parser.add_option("--limit",  help="concurrent jobs limit")
+    parser.add_option("--db",  help="jobs database")
+    
+    parser.add_option("--launch", action="store_true", help="update and launch")
+    parser.add_option("--status", action="store_true", help="update and display status")
+    parser.add_option("--cancel", action="store_true", help="cancel queued jobs")
+    
+    options, args = parser.parse_args()
+
+    qs = {"account":options.account, "queue":options.queue, "limit":options.limit, "db":options.db}
+    
+    if options.launch: update_and_launch(qs)
+    if options.status: update(qs)
+    if options.cancel: cancel_queued_jobs(qs)
+
