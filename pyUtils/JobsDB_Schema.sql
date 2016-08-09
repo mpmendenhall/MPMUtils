@@ -8,9 +8,13 @@ CREATE TABLE jobs (
     name TEXT,                  -- user-assigned (group) name
     jobfile TEXT,               -- job commands file
     outlog TEXT,                -- output logfile path
+    associated INTEGER,         -- associated job for bundling
     t_submit DATETIME,          -- submission time
     n_nodes INTEGER,            -- required number of nodes
-    est_walltime REAL           -- estimated wall time in s
+    est_walltime REAL,          -- estimated wall time [s]
+    use_walltime REAL,          -- actual used wall time [s]
+    return_code INTEGER,        -- job system return code
+    FOREIGN KEY(associated) REFERENCES jobs(job_id) ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX idx_jobs_qid ON jobs(queue_id);
 CREATE INDEX idx_jobs_name ON jobs(name,status);
