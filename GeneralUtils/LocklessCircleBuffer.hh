@@ -5,6 +5,17 @@
 
 #include <vector>
 #include <unistd.h>     // for usleep
+#include <pthread.h>
+
+/// pthreads function for launching read process
+template<class MyBufferType>
+void* run_buffer_thread(void* p) {
+    auto B = (MyBufferType*)p;
+    while(!B->all_done) { B->flush(); usleep(B->sleep_us); }
+    B->flush();
+    return nullptr;
+}
+
 
 /// Circular buffer base class
 template<typename T>
@@ -51,11 +62,23 @@ public:
     
     /// processing on read item --- override me!
     virtual void process_item() = 0;
-    
+  
+    /// launch buffer thread
+    virtual int launch_mythread() {
+        return pthread_create(&mythread, nullptr, run_buffer_thread<typename std::remove_reference<decltype(*this)>::type>, this);
+    }
+
+    /// finish clearing buffer thread
+    virtual int finish_mythread() {
+        all_done = true;
+        return pthread_join(mythread, NULL);
+    }
+ 
     size_t n_write_fails = 0;       ///< number of buffer-full write failures
     bool all_done = false;          ///< flag to indicate when all write operations complete
     useconds_t sleep_us = 50000;    ///< recommended sleep time between buffer clearing operations
-    
+    pthread_t mythread;             ///< identifier for buffer-clearing thread
+
 protected:
     std::vector<T> buf;             ///< data buffer
     std::vector<int> ready;         ///< read indicator; int to encourage atomic updating
@@ -63,27 +86,6 @@ protected:
     size_t write_idx = 0;           ///< write point marker
     size_t read_idx = 0;            ///< read point marker
 };
-
-/// pthreads function for launching read process
-template<class MyBufferType>
-void* run_buffer_thread(void* p) {
-    auto B = (MyBufferType*)p;
-    while(!B->all_done) { B->flush(); usleep(B->sleep_us); }
-    B->flush();
-    return nullptr;
-}
-
-/*
-#include <pthread.h>
-MyBufferType B;
-pthread_t thread_id;
-int rc = pthread_create(&thread_id, nullptr, run_buffer_thread<MyBufferType>, &B);
-assert(rc = 0);
-
-// wait for completion
-rc = pthread_join(thread_id, NULL);
-assert(rc);
-*/
 
 #endif
 
