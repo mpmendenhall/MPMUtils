@@ -23,7 +23,9 @@ class LocklessCircleBuffer {
 public:
     /// Constructor
     LocklessCircleBuffer(size_t n = 1024): buf(n), ready(n) { }
-    
+    /// Destructor
+    virtual ~LocklessCircleBuffer() { }
+
     /// change buffer size
     void allocate(size_t n) {
         buf.clear();
@@ -43,7 +45,7 @@ public:
     }
     
     /// consume one next available item
-    bool readOne() {
+    bool read_one() {
         if(!ready[read_idx]) return false;
         current = buf[read_idx];
         __sync_synchronize();
@@ -56,8 +58,16 @@ public:
     /// consume all next available items
     size_t flush() {
         int nread = 0;
-        while(readOne()) nread++;
+        while(read_one()) nread++;
         return nread;
+    }
+    
+    /// count number of buffered items... not guaranteed correct
+    size_t n_buffered() const {
+        size_t iw = write_idx;
+        size_t ir = read_idx;
+        if(ir > iw) iw += buf.size();
+        return iw==ir? 0 : iw - ir - 1;
     }
     
     /// processing on read item --- override me!
@@ -65,19 +75,23 @@ public:
   
     /// launch buffer thread
     virtual int launch_mythread() {
+        is_launched = true;
         return pthread_create(&mythread, nullptr, run_buffer_thread<typename std::remove_reference<decltype(*this)>::type>, this);
     }
 
     /// finish clearing buffer thread
     virtual int finish_mythread() {
         all_done = true;
-        return pthread_join(mythread, NULL);
+        int rc = pthread_join(mythread, NULL);
+        is_launched = false;
+        return rc;
     }
  
     size_t n_write_fails = 0;       ///< number of buffer-full write failures
     bool all_done = false;          ///< flag to indicate when all write operations complete
     useconds_t sleep_us = 50000;    ///< recommended sleep time between buffer clearing operations
     pthread_t mythread;             ///< identifier for buffer-clearing thread
+    bool is_launched = false;       ///< marker for whether thread is launched
 
 protected:
     std::vector<T> buf;             ///< data buffer
