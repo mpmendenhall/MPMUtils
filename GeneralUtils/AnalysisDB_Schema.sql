@@ -1,5 +1,5 @@
 -- Analysis results database schema
--- sqlite3 $PROSPECT_ANADB < $MPM_P2X_ANALYSIS/FileIO/AnalysisDB_Schema.sql
+-- sqlite3 [analysis DB] < AnalysisDB_Schema.sql
 
 -- Analysis run identifier
 CREATE TABLE analysis_runs (
@@ -32,13 +32,13 @@ CREATE UNIQUE INDEX idx_analysis_results ON analysis_results(run,var);
 -- tables joined:
 -- SELECT * FROM analysis_runs,analysis_vars,analysis_results WHERE run = analysis_runs.rowid AND var = analysis_vars.rowid;
 --
--- newest analysis for every run:  
+-- newest analysis for every run:
 -- SELECT * FROM analysis_runs GROUP BY dataname ORDER BY anatime;
 --
 -- newest analysis for a particular run:
--- SELECT * FROM analysis_runs WHERE dataname = "yale/P50/P50A/series018" GROUP BY dataname ORDER BY anatime;
+-- SELECT * FROM analysis_runs WHERE dataname = "<dataset name>" GROUP BY dataname ORDER BY anatime;
 --
 -- newest results for particular run:
 -- SELECT * FROM analysis_runs,analysis_vars,analysis_results WHERE run = analysis_runs.rowid AND var = analysis_vars.rowid
--- AND analysis_runs.rowid = (SELECT rowid FROM analysis_runs WHERE dataname = "yale/P50/P50A/series018" GROUP BY dataname ORDER BY anatime);
+-- AND analysis_runs.rowid = (SELECT rowid FROM analysis_runs WHERE dataname = "<dataset name>" GROUP BY dataname ORDER BY anatime);
 --

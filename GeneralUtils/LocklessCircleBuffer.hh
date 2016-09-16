@@ -27,7 +27,7 @@ public:
     virtual ~LocklessCircleBuffer() { }
 
     /// change buffer size
-    void allocate(size_t n) {
+    virtual void allocate(size_t n) {
         buf.clear();
         ready.clear();
         buf.resize(n);
