@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2015
 
 #ifndef TOBJCOLLECTOR_HH
@@ -24,7 +24,7 @@ class TObjCollector {
 public:
     /// destructor
     virtual ~TObjCollector() { clearItems(); }
-    
+
     /// write items to currently open directory, or specified; return directory written to
     virtual TDirectory* writeItems(TDirectory* d = nullptr);
     /// clear (delete) items
@@ -35,9 +35,9 @@ public:
     virtual TObject* addDeletable(TObject* o);
     /// register an anonymous ROOT object under the specified name
     virtual TObject* addWithName(TObject* o, const string& name);
-    
+
     vector<TNamed*> namedItems;         ///< objects with their own names; held until deleted
-    map<string,TObject*> anonItems;     ///< objects assigned a name; held until deleted.     
+    map<string,TObject*> anonItems;     ///< objects assigned a name; held until deleted.
     vector<TObject*> deleteItems;       ///< other objects never written to file
 };
 

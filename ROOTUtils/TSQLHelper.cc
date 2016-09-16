@@ -1,5 +1,5 @@
 /// \file TSQLHelper.cc
-/* 
+/*
  * TSQLHelper.cc, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -35,7 +35,7 @@ TSQLHelper::TSQLHelper(const std::string& dbnm,
                      const std::string& dbPass,
                      unsigned int port,
                      unsigned int ntries): db(nullptr), res(nullptr), dbName(dbnm) {
-                         
+
     string dbAddressFull = "mysql://"+dbAddress+":"+to_str(port)+"/"+dbnm;
     while(!db) {
         ntries--;
@@ -66,7 +66,7 @@ void TSQLHelper::execute() {
     }
 }
 
-void TSQLHelper::Query() { 
+void TSQLHelper::Query() {
     if(!db) {
         res = nullptr;
     } else {

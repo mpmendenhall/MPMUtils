@@ -40,7 +40,7 @@ public:
     void release() override;
     /// Re-set contents for re-use
     virtual void clear() { }
-    
+
 protected:
     RefPool* myPool;     ///< pool to which this object belongs
 };
@@ -48,7 +48,7 @@ protected:
 /// Pool of re-usable reference-counted items
 class RefPool {
 friend class RefPoolItem;
-public:    
+public:
     /// Destructor
     virtual ~RefPool();
     /// Check (cleared, released) item out from pool
@@ -58,7 +58,7 @@ protected:
     virtual RefPoolItem* newItem() = 0;
     /// return to pool
     void returnItem(RefPoolItem* i) { checkedout.erase(i); items.push_back(i); }
-    
+
     vector<RefPoolItem*> items;         ///< pool items awaiting re-use
     set<RefPoolItem*> checkedout;       ///< checked-out items
 };

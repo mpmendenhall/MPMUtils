@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2016
 
 #ifndef CUMULATIVEDATA_HH
@@ -17,7 +17,7 @@ public:
     CumulativeData() { }
     /// Destructor
     virtual ~CumulativeData() { }
-    
+
     /// Scale contents by factor
     virtual void _Scale(Double_t s) = 0;
     /// add another histogram, assuming same binning convention or re-calculating bins
@@ -28,7 +28,7 @@ public:
     CumulativeData& operator+=(const CumulativeData& rhs) { _Add(&rhs); return *this; }
     /// inline product
     CumulativeData& operator*=(Double_t s) { _Scale(s); return *this; }
-    
+
     ClassDef(CumulativeData,1);
 };
 

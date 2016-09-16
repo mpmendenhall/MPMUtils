@@ -15,7 +15,7 @@ public:
     SplineFit() { }
     /// Destructor
     virtual ~SplineFit() { delete myFitter; }
-    
+
     /// set spline x positions
     void setX(const double* x, size_t n);
     /// set spline x positions from vector
@@ -26,16 +26,16 @@ public:
     TF1* getFitter(const TH1* h);
     /// generate fitter with initial guess for TGraph
     TF1* getFitter(const TGraph* g);
-   
+
     /// update spline to match fit results
     void updateSpline();
-    
-    
+
+
     /// fitter evaluation
     double eval(double* x, double* p);
-    
+
     TGraphErrors mySpline;      ///< fitted spline TGraph with fit errors
-    
+
 protected:
     static int nameCounter;     ///< counter for unique naming
     TF1* myFitter = nullptr;       ///< fitter for spline

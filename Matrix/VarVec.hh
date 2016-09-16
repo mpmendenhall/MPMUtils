@@ -1,4 +1,4 @@
-/* 
+/*
  * VarVec.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -61,7 +61,7 @@ public:
     VarVec(InputIterator first, InputIterator last): data(first,last) {}
     /// Destructor
     ~VarVec() {}
-    
+
     /// mutable element access operator
     T& operator[](size_t i) { assert(i<data.size()); return data[i]; }
     /// immutable element access operator
@@ -86,15 +86,15 @@ public:
     VarVec<T> subvec(size_t a, size_t b) const { VarVec<T> V; V.data = vector<T>(&data[a],&data[b]); return V; }
     /// copy data from a sub-vector, starting at position i
     void load_subvec(const VarVec<T>& V, size_t i) { assert(i+V.size()<=size()); std::copy(V.getData().begin(), V.getData().end(), &data[i]); }
-    
+
     /// size of vector
     size_t size() const { return data.size(); }
     /// display to stdout
     void display() const { std::cout << "< "; for(size_t i=0; i<size(); i++) std::cout << data[i] << " "; std::cout << ">\n"; }
-    
+
     /// throw error if dimensions mismatches
     void checkDimensions(const VarVec& v) const throw(DimensionMismatchError) { if(v.size() != size()) throw(DimensionMismatchError()); }
-    
+
     /// dot product with another vector
     T dot(const VarVec<T>& v) const {
         checkDimensions(v);
@@ -119,7 +119,7 @@ public:
     T min() const { return *std::min_element(data.begin(),data.end()); }
     /// maximum element of vector
     T max() const { return *std::max_element(data.begin(),data.end()); }
-    
+
     /// this vector, normalized to magnitude 1
     VarVec<T> normalized() const { return (*this)/mag(); }
     /// project out component parallel to another vector
@@ -128,11 +128,11 @@ public:
     VarVec<T> orthoProj(const VarVec<T>& v) const { return (*this)-paraProj(v); }
     /// angle with another vector
     //T angle(const VarVec<T> v) const { return acos(dot(v)/sqrt(mag2()*v.mag2())); }
-    
-    
+
+
     /// unary minus operator
     const VarVec<T> operator-() const;
-    
+
     /// inplace addition
     VarVec<T>& operator+=(const VarVec<T>& rhs);
     /// inplace subtraction
@@ -141,7 +141,7 @@ public:
     VarVec<T>& operator+=(T c);
     /// inplace subtraction
     VarVec<T>& operator-=(T c);
-    
+
     /// inplace multiplication
     VarVec<T>& operator*=(T c);
     /// inplace elementwise multiplication
@@ -150,7 +150,7 @@ public:
     VarVec<T>& operator/=(T c);
     /// inplace elementwise division
     VarVec<T>& operator/=(const VarVec<T>& other);
-    
+
     /// addition operator
     const VarVec<T> operator+(const VarVec<T>& other) const;
     /// subtraction operator
@@ -159,7 +159,7 @@ public:
     const VarVec<T> operator+(T c) const;
     /// subtraction operator
     const VarVec<T> operator-(T c) const;
-    
+
     /// multiplication operator
     const VarVec<T> operator*(T c) const;
     /// elementwise multiplication operator
@@ -168,7 +168,7 @@ public:
     const VarVec<T> operator/(T c) const;
     /// elementwise division operator
     const VarVec<T> operator/(const VarVec<T>& other) const;
-    
+
     /// equality operator
     bool operator==(const VarVec<T>& rhs) const;
     /// inequality operator
@@ -181,7 +181,7 @@ public:
     bool operator>(const VarVec<T>& rhs) const;
     /// dictionary-order comparison operator
     bool operator>=(const VarVec<T>& rhs) const;
-    
+
     /// zero all elements
     VarVec<T>& zero() { for(size_t i=0; i<size(); i++) data[i] = T(); return *this; }
     /// Make the nth element of the vector =1, all others =0
@@ -190,22 +190,22 @@ public:
     VarVec<T>& random() { zero(); for(size_t i=0; i<size(); i++) data[i] += randunif(0,1); return *this; }
     /// Fill the vector with ascending sequence \f$ r_0, r_0+1, r_0+2, \cdots \f$
     VarVec<T>& ramp(T r0) { for(size_t i=0; i<size(); i++) data[i] = r0 + i; return *this; }
-    
+
     /// Create a new Vec by permuting the order of this vector's elements
     const VarVec<T> permuted(const Permutation& p) const;
     /// Permute the order of this vector's elements
     VarVec<T>& permute(const Permutation& p);
-    
+
     /// Dump binary data to file
     void writeToFile(ostream& o) const;
     /// Read binary data from file
     static VarVec<T> readFromFile(std::istream& s);
-    
+
 protected:
-    vector<T> data;        
+    vector<T> data;
 };
-    
-    
+
+
 template<typename T>
 const VarVec<T> VarVec<T>::operator-() const {
     VarVec<T> v = *this;
@@ -451,7 +451,7 @@ namespace VarVec_element_IO {
     inline void writeToFile(const double& t, ostream& o) { o.write((char*)&t, sizeof(t)); }
     template<>
     inline void writeToFile(const int16_t& t, ostream& o) { o.write((char*)&t, sizeof(t)); }
-    
+
     template<typename T>
     inline T readFromFile(std::istream& s) { return T::readFromFile(s); }
     template<>

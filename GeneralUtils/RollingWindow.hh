@@ -15,7 +15,7 @@ class RollingWindow {
 public:
     /// constructor
     RollingWindow(unsigned int n, double l = std::numeric_limits<double>::infinity()): nMax(n), lMax(l), sw(0), sww(0) {}
-    
+
     /// introduce next element
     void addCount(double t, double w=1.);
     /// remove item off back
@@ -36,10 +36,10 @@ public:
     inline double getRmsExcl(double x) const { return sqrt((sww-x*x-(sw-x)*(sw-x))/(itms.size()-1)); }
     /// clear all data
     void clear() { sw = sww = 0; itms.clear(); }
-    
+
     unsigned int nMax;          ///< maximum number of items to track
     double lMax;                ///< maximum time span to track from leading object
-    
+
 protected:
     deque< pair<double,double> > itms;  ///< items in window
     double sw;                          ///< sum of weights

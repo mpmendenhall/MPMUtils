@@ -1,5 +1,5 @@
 /// \file MultiGaus.cc
-/* 
+/*
  * MultiGaus.cc, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -26,7 +26,7 @@
 #include "MultiGaus.hh"
 #include "SMExcept.hh"
 
-MultiGaus::~MultiGaus() { 
+MultiGaus::~MultiGaus() {
     delete myTF1;
 }
 
@@ -90,7 +90,7 @@ void MultiGaus::fit(TH1* h, bool draw) {
         h->Fit(getFitter(),"QR");
     else
         h->Fit(getFitter(),"QRN");
-    
+
     for(unsigned int i=0; i<3*npks; i++) {
         if(i%3==2)
             iguess[i] = fabs(myTF1->GetParameter(i));
@@ -119,8 +119,8 @@ void MultiGaus::addCorrelated(unsigned int n, double relCenter, double relHeight
 }
 
 
-double MultiGaus::operator() (double* x, double* par) { 
-    
+double MultiGaus::operator() (double* x, double* par) {
+
     bool reject = true;
     for(unsigned int i=0; i<npks; i++) {
         if( iguess[3*i+1] - 1.01*nSigma*iguess[3*i+2] < x[0] && x[0] < iguess[3*i+1] + 1.01*nSigma*iguess[3*i+2] ) {
@@ -132,7 +132,7 @@ double MultiGaus::operator() (double* x, double* par) {
         TF1::RejectPoint();
         return 0;
     }
-    
+
     Double_t s = 0;
     for(unsigned int i=0; i<npks; i++)
         s += par[3*i]*exp( -(x[0]-par[3*i+1])*(x[0]-par[3*i+1])/(2*par[3*i+2]*par[3*i+2]) );

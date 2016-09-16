@@ -1,4 +1,4 @@
-/* 
+/*
  * Matrix.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2016 Michael P. Mendenhall
  *
@@ -39,14 +39,14 @@ public:
     Matrix(): vv(Vec<M*N,T>()) { }
     /// Constructor from vector
     Matrix(const Vec<M*N,T>& v): vv(v) { }
-    
+
     /// generate a random-filled matrix
     static Matrix<M,N,T> random();
     /// generate identity matrix
     static Matrix<M,N,T> identity();
     /// generate rotation between two axes
     static Matrix<M,N,T> rotation(size_t a1, size_t a2, T th);
-    
+
     /// const element access
     const T& operator()(size_t m, size_t n) const { assert(m<M && n<N); return vv[m+n*M]; }
     /// mutable element access
@@ -61,12 +61,12 @@ public:
     Vec<N,T> row(size_t i) const;
     /// column vector
     Vec<M,T> col(size_t i) const;
-    
+
     /// transposed copy
     Matrix<N,M,T> transposed() const;
     ///unary minus
     const Matrix<M,N,T> operator-() const;
-    
+
     /// inplace multiplication by a constant
     Matrix<N,M,T>& operator*=(const T& c) { vv *= c; return *this; }
     /// multiplication by a constant
@@ -83,7 +83,7 @@ public:
     Matrix<N,M,T>& operator-=(const Matrix<M,N,T>& rhs) { vv -= rhs.getData(); return *this; }
     /// subtraction of a matrix
     const Matrix<M,N,T> operator-(const Matrix<M,N,T>& rhs) const { auto foo = *this; return (foo -= rhs); }
-    
+
     /// matrix multiplication
     template<size_t L>
     const Matrix<M,L,T> operator*(const Matrix<N,L,T>& B) const;
@@ -95,28 +95,28 @@ public:
     const Vec<M,T> operator*(const Vec<N,T>& v) const { return lMultiply(v); }
     /// rotate between two axes
     Matrix<M,N,T>& rotate(size_t a1, size_t a2, T th) { *this = rotation(a1,a2,th)*(*this); return *this; }
-    
+
     /// inplace inverse
     const Matrix<M,N,T>& invert();
-    
+
 private:
     Vec<M*N,T> vv;
-    
+
     /// step in inversion process
     void subinvert(size_t n);
 };
 
 template<size_t M, size_t N, typename T>
-Matrix<M,N,T> Matrix<M,N,T>::random() { 
-    Matrix<M,N,T> foo; 
+Matrix<M,N,T> Matrix<M,N,T>::random() {
+    Matrix<M,N,T> foo;
     for(size_t i=0; i<M*N; i++)
         foo[i] = 0.1+T(rand())/T(RAND_MAX);
-    return foo; 
+    return foo;
 }
 
 template<size_t M, size_t N, typename T>
 Matrix<M,N,T> Matrix<M,N,T>::identity() {
-    Matrix<M,N,T> foo; 
+    Matrix<M,N,T> foo;
     for(size_t i=0; i < std::min(M,N); i++)
         foo(i,i) = 1;
     return foo;
@@ -157,7 +157,7 @@ Vec<M,T> Matrix<M,N,T>::col(size_t i) const {
 
 template<size_t M, size_t N, typename T>
 const Matrix<M,N,T> Matrix<M,N,T>::operator-() const {
-    Matrix<M,N,T> foo; 
+    Matrix<M,N,T> foo;
     for(size_t i=0; i<M*N; i++)
         foo[i] = -(*this)[i];
     return foo;
@@ -208,26 +208,26 @@ const Matrix<M,N,T>& Matrix<M,N,T>::invert() {
 
 
 namespace matrix_element_inversion {
-    
+
     template<typename T>
     inline void invert_element(T& t) { t.invert(); }
     template<>
     inline void invert_element(float& t) { t = 1.0/t; }
     template<>
     inline void invert_element(double& t) { t = 1.0/t; }
-    
+
 }
 
 template<size_t M, size_t N, typename T>
 void Matrix<M,N,T>::subinvert(size_t n) {
-    
+
     // invert the first cell
     T& firstcell = (*this)(n,n);
     matrix_element_inversion::invert_element(firstcell);
     for(size_t i=n+1; i<M; i++)
         (*this)(n,i) *= firstcell;
     //(*this)(n,i) = firstcell*(*this)(n,i);
-    
+
     // use to clear first column
     for(size_t r=n+1; r<M; r++) {
         T& m0 = (*this)(r,n);
@@ -236,16 +236,16 @@ void Matrix<M,N,T>::subinvert(size_t n) {
         m0 *= -firstcell;
         //m0 = -m0*firstcell;
     }
-    
+
     if(n==M-1)
         return;
-    
+
     //invert the submatrix
     subinvert(n+1);
-    
+
     // temporary space allocation
     vector<T> subvec = vector<T>(M-n-1);
-    
+
     // first column gets multiplied by inverting submatrix
     for(size_t r=n+1; r<M; r++)
         subvec[r-n-1] = (*this)(r,n);
@@ -254,7 +254,7 @@ void Matrix<M,N,T>::subinvert(size_t n) {
         for(size_t c=n+2; c<M; c++)
             (*this)(r,n) += (*this)(r,c)*subvec[c-n-1];
     }
-    
+
     //finish off by cleaning first row
     for(size_t c=n+1; c<M; c++)
         subvec[c-n-1] = (*this)(n,c);
@@ -266,7 +266,7 @@ void Matrix<M,N,T>::subinvert(size_t n) {
         for(size_t r=n+2; r<M; r++)
             (*this)(n,c) -= (*this)(r,c) * subvec[r-n-1];
     }
-    
+
 }
 
 

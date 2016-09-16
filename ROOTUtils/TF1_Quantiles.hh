@@ -13,9 +13,9 @@ public:
     double eval(double p) const;
     /// get average value
     Double_t getAvg() const { return avg; }
-    
+
 protected:
-    
+
     const unsigned int npx;
     const Double_t xMin;
     const Double_t xMax;

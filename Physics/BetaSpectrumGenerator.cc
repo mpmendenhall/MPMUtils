@@ -24,7 +24,7 @@ double BetaSpectrumGenerator::spectrumCorrectionFactor(double W) const {
     // Cs137 second-forbidden decay
     if(forbidden==2 && A==137)
         c *= Behrens_Cs137_C(W, W0);
-    
+
     return c;
 }
 

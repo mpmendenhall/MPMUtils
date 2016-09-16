@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2016
 
 #ifndef TCUMULATIVEMAP_HH
@@ -18,7 +18,7 @@ class TCumulativeMap: public TCumulative {
 public:
     /// Constructor
     TCumulativeMap(const TString& nme = "", const TString& ttl = ""): TCumulative(nme,ttl) { }
-    
+
     /// Scale contents by factor
     virtual void _Scale(Double_t s) { for(auto& kv: fDat) kv.second *= s; }
     /// Add another object of the same type
@@ -29,7 +29,7 @@ public:
     }
     /// clear data contents
     virtual void _Clear() { fDat.clear(); }
-    
+
     /// Add data contents
     void Insert(const K_& k, V_ v) {
         auto it = fDat.find(k);
@@ -46,7 +46,7 @@ public:
     map<K_,V_>& GetData() { return fDat; }
     /// Get internal data, const
     const map<K_,V_>& GetData() const { return fDat; }
-    
+
 protected:
     map<K_,V_> fDat;    ///< data contents
     ClassDef(TCumulativeMap, 1)

@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2015
 
 #include "TLS_Solver.hh"
@@ -20,7 +20,7 @@ void TLS_Solver::solve() {
     for(size_t mm = 0; mm < B.nRows(); mm++)
         for(size_t nn = 0; nn < n; nn++)
             B(mm,nn) -= mu[nn];
-            
+
     // SVD
     delete mySVD;
     VarMat<double> BB = B;

@@ -1,5 +1,5 @@
 /// \file Visr.hh Simple OpenGL visualization window
-/* 
+/*
  * Visr.hh, part of the MPMUtils package
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -28,14 +28,14 @@
 #include <deque>
 
 namespace vsr {
-    
+
     typedef Vec<3,double> vec3;
-    
+
     /// initialize visualization window
     void initWindow(const std::string& title = "OpenGL Viewer Window", double s = 1.0);
     /// enter main drawing loop
     void doGlutLoop();
-    
+
     /// reset view to default
     void resetViewTransformation();
     /// update view window after changes
@@ -46,7 +46,7 @@ namespace vsr {
     void stopRecording();
     /// wait for [ENTER] to be pushed in vis window
     void pause();
-    
+
     /// clear window to blank screen
     void clearWindow();
     /// set background clear color
@@ -63,14 +63,14 @@ namespace vsr {
     void filledquad(float* xyz);
     /// draw dot at location
     void dot(vec3 p);
-    
+
     /// start a polygon/series-of-lines
     void startLines();
     /// next vertex in line series
     void vertex(vec3 v);
     /// end series of lines
     void endLines();
-    
+
     /// set the pause flag, cleared when [ENTER] pressed in vis window
     void set_pause();
     /// get current state of pause flag
@@ -86,14 +86,14 @@ public:
     Visualizable() {}
     /// destructor
     virtual ~Visualizable() {}
-    
-    
+
+
     /// visualize "top level"
     void visualize() const { vsr::startRecording(true); vsr::clearWindow(); _visualize(); vsr::stopRecording(); }
-    
+
     /// visualize without clearing screen
     virtual void _visualize() const = 0;
-    
+
     static bool vis_on;
 };
 

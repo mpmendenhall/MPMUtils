@@ -15,48 +15,48 @@
 /// which parametrizes simulation results for <20km altitudes
 class SatoNiitaNeutrons {
 public:
-    
+
     /// Constructor (default initialization to Nashville, TN location from Ziegler 1998)
     SatoNiitaNeutrons() { setParameters(0.5*GV, 3.47*GV, 1016*g/cm2, 0.2); }
-    
+
     /// Set solar modulation potential ss, cutoff rigidity rc, atmospheric depth d, water fraction w
     void setParameters(double ss, double rc, double d, double w);
-    
+
     /// approximate conversion from altitude to atmospheric depth
     static double altitudeToDepth(double a) { return pow(10,-0.066044*a/km)*1033.7*g/cm2; }
-    
+
     /// Calcuate energy-dependent spectrum terms at energy E
     double calcAirSpectrum(double E);
     /// Calculate ground-level spectrum E*dPhi/dE (calls calcAirSpectrum)
     double calcGroundSpectrum(double E);
-    
+
     double phi_L;               ///< Low-energy neutron flux (constant in E)
     double phi_B;               ///< "basic" neutron spectrum shape, 1/Lethargy
-    
+
     double phi_inf;             ///< semi-infinite atmospheric flux, 1/Lethargy
     double phi_T;               ///< thermal neutron spectrum
     double phi_T_scaled;        ///< phi_T scaled as contribution to phi_G
     double f_G;                 ///< ground enhancement factor
     double phi_G;               ///< ground-level spectrum
-    
+
     double scale_T = 1.0;       ///< extra scale factor for thermal contribution
     double scale_S = 1.0;       ///< extra scale factor for non-thermal spectrum
     double E_T = 0.025*eV;      ///< thermal neutron energy
-    
+
 protected:
-    
+
     /// calculate phi_L flux normalization
     void calcFluxNorm();
-    
+
     const double GV = 1000*megavolt;    /// convenience shorthand for GigaVolt unit
-    
+
     const double s_max = 1.700*GV;      ///< solar modulation potential maximum
     const double s_min = 0.465*GV;      ///< solar modulation potential minimum
     /***/ double s_mod;                 ///< solar modulation potential
     /***/ double r_c;                   ///< cutoff rigidity
     /***/ double depth;                 ///< atmospheric depth
     /***/ double waterFrac;             ///< water fraction in ground
-    
+
     // Table 1, except b_i2mn[3], which has been changed from 0.292 to -0.292         | Table 3
     //                        0  1           2               3        4               | 5         6               7      8              9         10              11        12
     /***/ double a[13]    = { 0, 0.,         0.,             0.,      0.,               0.,       1.71e-4*cm2/g,  0.530, 0.00136*cm2/g, 0.,       0.,             0.,       0.0133*cm2/g };
@@ -68,7 +68,7 @@ protected:
     const double b_i2mx[5]= { 0, 15.7/cm2/s, 5.70e-4*cm2/g, -0.210,   0.00441*cm2/g };
     const double b_i3[12] = { 0, 5.62*GV,    5.99*GV,        0.99*GV, 2.24*GV,          10.9*GV,   0,             0,     0,             2.32*GV,  8.84*GV,        3.18*GV };
     const double b_i4[12] = { 0, 1.79*GV,    1.94*GV,        2.24*GV, 2.66*GV,          2.38*GV,   0,             0,     0,             0.897*GV, 0.587*GV,       1.47*GV };
-    
+
     // Table 2 for c_i
     const double c_1 = 0.229;           // 1/Lethargy units
     const double c_2 = 2.31*MeV;
@@ -82,7 +82,7 @@ protected:
     const double c_10 = 9.59e-8*MeV;
     const double c_11 = 1.48;
     /***/ double c_12 = 299*MeV;        ///< redefined in Eq. (9)
-    
+
     // Table 4 for g
     const double g_1 = -0.0235;
     const double g_2 = -0.0129;
@@ -90,7 +90,7 @@ protected:
     const double g_4 = 0.969;
     /***/ double g_5;                   ///< from Eq. (13)
     /***/ double g_6;                   ///< from Eq. (16)
-    
+
     // Table 5 for h
     const double h_31 = -25.2;
     const double h_32 =  2.73;

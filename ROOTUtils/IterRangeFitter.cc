@@ -5,7 +5,7 @@
 void IterRangeFitter::doFit(TH1* h, const char* opt) {
     assert(myF);
     getRange(fr0, fr1);
-    
+
     int ntries = 0;
     while(ntries++ < nmax) {
         myF->SetRange(fr0,fr1);

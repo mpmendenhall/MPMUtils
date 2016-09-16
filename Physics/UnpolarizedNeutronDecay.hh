@@ -20,12 +20,12 @@ public:
     NKine_Rndm_Src(): u(u0+3) { }
     /// destructor
     virtual ~NKine_Rndm_Src() { }
-    
+
     /// get next random u[8] for electron, nu, gamma kinematics
     virtual void next() = 0;
     /// number of random slots supplied in u
     virtual size_t n_random() const = 0;
-        
+
     double u0[11];      ///< kinematics random array, with optional first 3 position
     double* u;          ///< kinematics array starting at u0[3]
 };
@@ -35,56 +35,56 @@ class NeutronDecayKinematics {
 public:
     /// Constructor
     NeutronDecayKinematics(NKine_Rndm_Src* R): myR(R) { assert(R); }
-    
+
     const double G_F = 1.1663787e-17;   ///< Fermi coupling constant, [/keV^2]
     const double G2_V = G_F*G_F*0.94920; ///< |G_V|^2 = |V_ud G_F g_V|^2
     const double m = m_n;               ///< initial nucleus mass
     const double m_2 = m_e;             ///< mass of charged lepton
     const double Delta = delta_mn_mp;   ///< decay energy m - m_f;
-    
+
     /// Generate weighted event
     virtual void gen_evt_weighted() = 0;
     /// calculate cos theta between electron, neutrino
     double cos_theta_e_nu() const { return dot3(n_1, n_2); }
     /// calcualte "proton inferred" cos theta between electron, neutrino
     double proton_ctheta() const;
-    /// radiative correction weight from fit to [Glu93] tables 
+    /// radiative correction weight from fit to [Glu93] tables
     double Gluck93_radcxn_wt() const;
     /// recoil and weak magnetism correction weight
     double B59_rwm_cxn_wt() const;
     /// set fixed electron kinetic energy
     virtual void set_KEe(double k) { use_KEe = k; }
-    
+
     double E_2;         ///< electron total energy [keV]
     double p_2;         ///< electron momentum magnitude [keV/c]
     double n_2[3];      ///< electron unit direction
     double beta;        ///< electron velocity v/c
-    
+
     double E0_1;        ///< antineutrino energy in center-of-mass frame [keV]
     double E_1;         ///< antineutrino energy minus photon [keV]
     double p_1;         ///< neutrino momentum magnitude [keV/c]
     double n_1[3];      ///< neutrino momentum unit direction
-    
+
     double K = 0;       ///< hard photon energy
     double n_gamma[3];  ///< gamma unit direction
-    
+
     double p_f[3];      ///< recoil nucleon momentum
     double mag_p_f;     ///< magnitude of recoil momentum
-    
+
     double evt_w;       ///< calculated event weight for kinematics
-    
+
     double pt2_max = 0; ///< optional limit on maximum electron transverse momentum
     double c_2_min;     ///< optional minimum electron cos theta, calculated from pt2_max
     double c_2_wt;      ///< extra weight for c_2 selection
-    
+
     /// number of random entries required
-    virtual size_t n_random() const = 0;  
-    
+    virtual size_t n_random() const = 0;
+
 protected:
-    
+
     NKine_Rndm_Src* myR;        ///< random number source
     double use_KEe = -1;        ///< generate electrons at this fixed kinetic energy if > 0
-    
+
     /// calculate proton kinematics from electron, neutrino, gamma
     void calc_proton();
     /// unit vector from z cosine and x,y azimuth
@@ -103,10 +103,10 @@ public:
 
     double c_1, c_2;            ///< phase-space cosines
     double phi_1, phi_2;        ///< phase-space azimuths
-    
+
     /// number of random entries required
     virtual size_t n_random() const override { return 5; }
-    
+
 protected:
     static const size_t NPTS = 16384;   ///< lookup table dimensions
     double invcdf[NPTS+4];              ///< inverse CDF lookup table with interpolation guard entries
@@ -130,26 +130,26 @@ public:
     /// constructor
     Gluck_beta_MC(NKine_Rndm_Src* R, double M2_F = 1, double M2_GT = 3): NeutronDecayKinematics(R),
     zeta(M2_F + lambda*lambda*M2_GT), a( (M2_F - lambda*lambda*M2_GT/3.)/zeta ) { calc_rho(); }
-        
+
     /// Generate weighted event
     virtual void gen_evt_weighted() override;
-    
+
     /// Show "efficiency" of MC (5.22)
     void showEffic();
     /// test calculate hard photon decay probability by MC
     void test_calc_P_H(size_t n_sim = 1000000);
-    
+
     /// additional recoil, weak magnetism weight factor, from Bilenki'i 1959 Eq. (10)
     double rwm_cxn() const;
     /// additional Coulomb correction weight factor
     double coulomb_cxn() const { return WilkinsonF0(1, E_2/m_e); }
     /// test electron spectrum shape factor against Sirlin (alpha/2pi)*g (4.15)
     double recalc_Sirlin_g_a2pi(double E_e);
-    
-    const double C_S = 0.001;           ///< hard photon production cutoff fraction 
+
+    const double C_S = 0.001;           ///< hard photon production cutoff fraction
     const double zeta;                  ///< spectrum weighting (2.13)
     const double a;                     ///< a_0 (2.13)
-        
+
     double rho_H;       ///< hard decay rate (5.16)
     double rho_0;       ///< 0^th order decay rate (5.18)
     double rho_VS;      ///< soft photon decay rate (5.20)
@@ -159,22 +159,22 @@ public:
     Reweighter P_H;     ///< probability of hard photon decay (5.21)
     double E_0VS;       ///< MC efficiency for virtual-soft events (5.22)
     double E_H;         ///< MC efficiency for hard decay events (5.22)
-    
+
     double c_gamma;     ///< cos(theta_gamma) (5.6)
     double c_1, c_2;    ///< phase-space cosines
     double phi_gamma;   ///< gamma azimuth relative to electron
     double phi_1, phi_2;///< phase-space azimuths
-    
+
     double M_0;         ///< uncorrected decay amplitude (2.11, 2.12)
     double Mtilde;      ///< (3.2)
     double M_VS;        ///< virtual and soft brem amplitude (3.9)
     double M_BR;        ///< hard brem amplitude (4.4)
-    
+
     double evt_w0;      ///< event weight without radiative corrections
-    
+
     /// number of random entries required
     virtual size_t n_random() const override { return 8; }
-    
+
 protected:
 
     double N;           ///< N(beta) (3.3)
@@ -182,7 +182,7 @@ protected:
     double np_2[3];     ///< coordinate transform vector (5.10)
     double npp_2[3];    ///< coordinate transform vector (5.10)
     double V_g;         ///< re-weighting function integral (5.15)
-    
+
     double w_avg = 1.11164e-30;         ///< average value of w, (5.23) and (5.16)
     double Wavg_0VS = 7.83328e-10;      ///< average value of W_0VS (5.23)
     double w_max = 0;           ///< maximum observed value of w
@@ -191,7 +191,7 @@ protected:
     int64_t n_S = 0;            ///< number of soft brem events generated
     double sum_w = 0;           ///< sum of hard brem weights
     double sum_W_0VS = 0;       ///< sum of soft brem weights
-    
+
     /// choose initial un-weighted kinematics
     void propose_kinematics();
     /// calculate electron vector and relative coordinates
@@ -200,12 +200,12 @@ protected:
     void vec_rel_n_2(double c, double phi, double* v) const;
     /// calculate beta and N(beta)
     void calc_beta_N();
-    
+
     /// corrected spectrum probability for virtual and soft brem photons
     double calc_soft();
     /// corrected spectrum probability for hard photon production
     double calc_hard_brem();
-    
+
     /// virtual and soft brem correction (3.10)
     double z_VS() const;
     /// hard brem correction (4.14)
@@ -219,7 +219,7 @@ class Gluck93_Distribution {
 public:
     /// Constructor
     Gluck93_Distribution() { }
-    
+
     const double G_F = 1.1663787e-17;   ///< Fermi coupling constant, [/keV^2]
     const double G2_V = G_F*G_F*0.94920; ///< |G_V|^2 = |V_ud G_F g_V|^2
     const double m_i = m_n;             ///< initial nucleus mass
@@ -229,14 +229,14 @@ public:
     const double E_2m = Delta - (Delta*Delta-m_2*m_2)/(2*m_i);  ///< (2.3) recoil-corrected endpoint
     const double kappa = (1.792847356-(-1.91304273))/2;         ///< difference in _anomalous_ magnetic moments
     const double a0 = calc_a0();        ///< a_0 base asymmetry
-    
+
     /// Calculate electron/(inferred)nu distribution with full corrections
     double calc_Wenu_0Ca(double E_2, double c);
     /// Calculate electron/proton phase space, including recoil-order but not radiative corrections
     double calc_W_0C(double E_2, double E_f, double c_f = 0);
     /// Calculate electron/nu phase space uncorrected
     double calc_Wenu_0(double E_2, double c);
-    
+
     double Wenu_0Ca;    ///< (4.2) electron/(inferred)nu phase space with all corrections
     double Wenu_0;      ///< (4.6) zeroth-order approximated elecrton/nu distribution
     double W_0C;        ///< (3.1) electron/proton phase space with Fermi function

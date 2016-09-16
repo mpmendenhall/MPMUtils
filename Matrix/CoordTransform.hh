@@ -1,4 +1,4 @@
-/* 
+/*
  * CoordTransform.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2016 Michael P. Mendenhall
  *
@@ -54,7 +54,7 @@ public:
     CoordTransform<N,T>& operator+=(const Vec<N,T>& v) { dx += v; return *this; }
     /// Left-multiplied composition this = other * this
     CoordTransform<N,T>& operator*=(const CoordTransform<N,T>& other) { return ((*this *= other.R) += other.dx); }
-    
+
     /// Apply to position
     Vec<N,T> operator*(const Vec<N,T>& rhs) const { return dx + (R*rhs); }
     /// Apply rotation to vector

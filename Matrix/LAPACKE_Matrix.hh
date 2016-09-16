@@ -1,5 +1,5 @@
 /// \file LAPACKE_Matrix.hh Convenience interface to LAPACK matrix operations
-/* 
+/*
  * LAPACKE_Matrix.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -49,7 +49,7 @@ public:
     Mat_Ops() {}
     /// destructor
     virtual ~Mat_Ops() {}
-    
+
     /// multiplication
     virtual VarMat<T>* mul(const VarMat<T>& A,
                            const VarMat<T>& B,
@@ -63,7 +63,7 @@ public:
 template<typename T>
 class Mat_Ops_Real: public Mat_Ops<T> {
 public:
-    
+
     /// form a new matrix by multiplication C = alpha * o(A)*o(B) + beta * C
     virtual VarMat<T>* mul(const VarMat<T>& A,
                            const VarMat<T>& B,
@@ -71,16 +71,16 @@ public:
                            CBLAS_TRANSPOSE opB = CblasNoTrans,
                            VarMat<T>* C = nullptr,
                            T alpha = 1, T beta = 0) const {
-                               
+
                                const size_t opA_rows = A.nDim(opA == CblasNoTrans);
                                const size_t opA_cols = A.nDim(opA != CblasNoTrans);
                                const size_t opB_rows = B.nDim(opB == CblasNoTrans);
                                const size_t opB_cols = B.nDim(opB != CblasNoTrans);
-                               
+
                                assert(opA_cols == opB_rows);
                                if(!C) C = new VarMat<T>(opA_rows, opB_cols);
                                assert(C->nRows() == opA_rows && C->nCols() == opB_cols);
-                               
+
                                (*f_gemm)(CblasColMajor, // data order, CblasColMajor or CblasRowMajor
                                          opA,           // op(A) = CblasNoTrans, CblasTrans, CblasConjTrans
                                          opB,           // op(B) = CblasNoTrans, CblasTrans, CblasConjTrans
@@ -98,7 +98,7 @@ public:
                                );
                                return C;
                            }
-                           
+
     /// matrix multiply BLAS function
     static void (*f_gemm)(const enum CBLAS_ORDER, const enum CBLAS_TRANSPOSE, const enum CBLAS_TRANSPOSE,
                           const int, const int, const int, const T, const T*, const int lda,
@@ -109,7 +109,7 @@ public:
 template<typename CT>
 class Mat_Ops_Complex: public Mat_Ops<CT> {
 public:
-    
+
     /// form a new matrix by multiplication C = alpha * o(A)*o(B) + beta * C
     virtual VarMat<CT>* mul(const VarMat<CT>& A,
                             const VarMat<CT>& B,
@@ -117,16 +117,16 @@ public:
                             CBLAS_TRANSPOSE opB = CblasNoTrans,
                             VarMat<CT>* C = nullptr,
                             CT alpha = 1, CT beta = 0) const {
-                                
+
                                 const size_t opA_rows = A.nDim(opA == CblasNoTrans);
                                 const size_t opA_cols = A.nDim(opA != CblasNoTrans);
                                 const size_t opB_rows = B.nDim(opB == CblasNoTrans);
                                 const size_t opB_cols = B.nDim(opB != CblasNoTrans);
-                                
+
                                 assert(opA_cols == opB_rows);
                                 if(!C) C = new VarMat<CT>(opA_rows, opB_cols);
                                 assert(C->nRows() == opA_rows && C->nCols() == opB_cols);
-                                
+
                                 (*f_gemm)(CblasColMajor,        // data order, CblasColMajor or CblasRowMajor
                                           opA,                  // op(A) = CblasNoTrans, CblasTrans, CblasConjTrans
                                           opB,                  // op(B) = CblasNoTrans, CblasTrans, CblasConjTrans
@@ -144,7 +144,7 @@ public:
                                 );
                                 return C;
                             }
-                            
+
                             /// matrix multiply BLAS function
                             static void (*f_gemm)(const enum CBLAS_ORDER, const enum CBLAS_TRANSPOSE, const enum CBLAS_TRANSPOSE,
                                                   const int, const int, const int, const void*, const void*, const int lda,
@@ -159,17 +159,17 @@ class LAPACKE_Matrix_SVD: public BinaryOutputObject {
 public:
     /// Constructor
     LAPACKE_Matrix_SVD(VarMat<CT>& A): S(std::min(A.nRows(), A.nCols()),1), U(A.nRows(), S.nRows()), VT(S.nRows(), A.nCols()), PsI(nullptr), PsI_epsilon(0) {
-        
+
         lapack_int info;
         bool verbose = false;
-        
+
         char diag = (A.nRows() >= A.nCols() ? 'U':'L');         // upper or lower diagonal reduction, depending on A's dimensions
         VarMat<T> e(std::max(S.nRows()-1, (size_t)1),1);   // holder for secondary diagonal
         CT* tauQ = new CT[S.nRows()];
         CT* tauP = new CT[S.nRows()];
-        
+
         // overall reduce general A = (U*Q) * S * (P^H * V^T)
-        
+
         // decomposes m*n A = Q B P^H,  Q and P unitary, B bidiagonal of min(m,n)*min(m,n)
         // over-writes A with B on diagonals, P above, and Q below.
         info = (*f_gebrd)(LAPACK_COL_MAJOR,     // LAPACK_COL_MAJOR or LAPACK_ROW_MAJOR data ordering,
@@ -183,17 +183,17 @@ public:
                           tauP                  // array with extra info on P, dimension >= max(1, min(m, n))
         );
         assert(!info);
-        
+
         if(verbose) {
             cout << "Bi-diagonalizing A:\n\n";
             cout << "Main diagonal:\n" << S << "\n";
             cout << "Secondary diagonal:\n" << e << "\n";
         }
-        
+
         // extract bi-diagonalizing matrices, truncated to useful dimension
         U = A;
         VT = A;
-        
+
         info = (*f_orgbr)(LAPACK_COL_MAJOR,     // LAPACK_COL_MAJOR or LAPACK_ROW_MAJOR data ordering,
                           'Q',                  // extract 'Q' or 'P' (P^T)
                           U.nRows(),            // rows in extracted matrix
@@ -204,7 +204,7 @@ public:
                           tauQ                  // extra return array tauQ or tauP from ?gebrd
         );
         assert(!info);
-        
+
         info = (*f_orgbr)(LAPACK_COL_MAJOR,     // LAPACK_COL_MAJOR or LAPACK_ROW_MAJOR data ordering,
                           'P',                  // extract 'Q' or 'P' (P^T)
                           S.nRows(),            // rows in extracted matrix
@@ -215,21 +215,21 @@ public:
                           tauP                  // extra return array tauQ or tauP from ?gebrd
         );
         assert(!info);
-        
+
         // trim U, VT to useful content
         U.resize(A.nRows(),S.nRows());
         VT.resize(S.nRows(),A.nCols());
-        
+
         if(verbose) {
             cout << "Q left bidiagonalizer:\n" << U << "\n";
             cout << "P right bidiagonalizer:\n" << VT << "\n";
             cout << "\nSingular Value Decomposition:\n\n";
         }
-        
+
         // no longer need these
         delete[] tauQ;
         delete[] tauP;
-        
+
         // decompose B = U2 S V2^H, Q and P orthogonal singular vectors, S diagonal singular values
         // overwrites d = S; destroys e
         info = (*f_bdsqr)(LAPACK_COL_MAJOR,     // LAPACK_COL_MAJOR or LAPACK_ROW_MAJOR data ordering
@@ -248,24 +248,24 @@ public:
                           1                     // leading dimension of C; >= max(1,n) if ncc>0; >=1 otherwise
         );
         assert(!info);
-        
+
         if(verbose) {
             cout << "Left singular vectors:\n" << U << "\n";
             cout << "Singular values:\n" << S << "\n";
             cout << "Right singular vectors:\n" << VT << "\n";
         }
-        
+
     }
-    
+
     /// destructor
     ~LAPACKE_Matrix_SVD() { delete PsI; }
-    
+
     /// Calculate pseudo-inverse, discarding singular values <= epsilon
     const VarMat<CT>& calc_pseudo_inverse(T epsilon = 0) {
         if(PsI && PsI_epsilon==epsilon) return *PsI;
         delete PsI;
         PsI_epsilon = epsilon;
-        
+
         // U * (S^-1)
         VarMat<CT> USI = U;
         for(size_t n=0; n<USI.nCols(); n++) {
@@ -278,19 +278,19 @@ public:
         PsI = myOps->mul(VT, USI, CblasConjTrans, CblasConjTrans);
         return *PsI;
     }
-    
+
     /// get number of singular values
     int n_singular_values() const { return S.size(); }
     /// get list of singular values
     const VarMat<T>& singular_values() const { return S; }
-    
+
     /// get enumerated right singular vector
     VarVec<CT> getRightSVec(size_t i) { return VT.getRow(i); }
     /// get all right singular vectors
     VarMat<CT> getVT() const { return VT; }
     /// get enumerated left singular vector
     VarVec<CT> getLeftSVec(size_t i) { return U.getCol(i); }
-    
+
     /// Dump binary data to file
     void writeToFile(ostream& o) const {
         writeString("(LAPACKE_Matrix_SVD_"+std::to_string(sizeof(CT))+")",o);
@@ -302,11 +302,11 @@ public:
         if(PsI) PsI->writeToFile(o);
         writeString("(/LAPACKE_Matrix_SVD_"+std::to_string(sizeof(CT))+")",o);
     }
-    
+
     /// Read binary data from file
     static LAPACKE_Matrix_SVD* readFromFile(std::istream& s) {
         LAPACKE_Matrix_SVD* foo = new LAPACKE_Matrix_SVD();
-        
+
         checkString("(LAPACKE_Matrix_SVD_"+std::to_string(sizeof(CT))+")",s);
         foo->S = VarMat<T>::readFromFile(s);
         foo->U = VarMat<CT>::readFromFile(s);
@@ -320,25 +320,25 @@ public:
         checkString("(/LAPACKE_Matrix_SVD_"+std::to_string(sizeof(CT))+")",s);
         return foo;
     }
-    
+
 protected:
-    
+
     /// non-calculating constructor
     LAPACKE_Matrix_SVD(): PsI(nullptr), PsI_epsilon(0) {}
-    
+
     VarMat<T> S;        ///< singular values diagonal
     VarMat<CT> U;       ///< left singular vectors
     VarMat<CT> VT;      ///< right singular vectors
     VarMat<CT>* PsI;    ///< pseudo-inverse
     T PsI_epsilon;      ///< threshold for singular vectors
-    
+
     /// appropriate data type version of xGEBRD bidiagonal reduction
     static lapack_int (*f_gebrd)(int, lapack_int, lapack_int, CT*, lapack_int, T*, T*, CT*, CT*);
     /// appropriate data type version of orgbr/ungbr, unpacks bidiagonal decomposition matrices
     static lapack_int (*f_orgbr)(int, char, lapack_int, lapack_int, lapack_int, CT*, lapack_int, const CT*);
     /// appropriate data type version of zBDSQR SVD from bidiagonal
     static lapack_int (*f_bdsqr)(int, char, lapack_int, lapack_int, lapack_int, lapack_int, T*, T*, CT*, lapack_int, CT*, lapack_int, CT*, lapack_int);
-    
+
     /// bundle of other appropriate matrix operations
     static Mat_Ops<CT>* myOps;
 };

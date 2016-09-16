@@ -11,12 +11,12 @@ void DHBinData::operator+=(const DHBinData& r) {
 void DynamicHistogram::fill(double x, double w) {
     DHBinData d(x,w);
     total += d;
-    
+
     if(!dat.size()) {
         dat.emplace(bincenter(d),d);
         return;
     }
-    
+
     auto it = choosebin(d);
     if(it == dat.end()) {
         dat.emplace(bincenter(d),d);

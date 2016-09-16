@@ -1,5 +1,5 @@
 /// \file ControlMenu.hh interactive text-based menu interface
-/* 
+/*
  * ControlMenu.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -44,24 +44,24 @@ public:
     virtual ~StreamInteractor() {}
     /// do something! (put something useful here in subclasses)
     virtual void doIt() {}
-    
+
     /// check that there are at least the specified number of items on the stack
     bool menutils_CheckStackSize(unsigned int n);
-    
+
     /// pop string off front of deque
     string popStringD() { assert(mydeque); string s = mydeque->front(); mydeque->pop_front(); return s; }
     /// pop int off front of deque
     int popIntD() { return atoi(popStringD().c_str()); }
     /// pop float off front of deque
     float popFloatD() { return atof(popStringD().c_str()); }
-    
+
     /// pop string off stack
     string popString() { assert(mystack); string s = mystack->top(); mystack->pop(); return s; }
     /// pop int off stack
     int popInt() { return atoi(popString().c_str()); }
     /// pop float off stack
     float popFloat() { return atof(popString().c_str()); }
-    
+
     deque<string>* mydeque;     ///< command arguments deque
     stack<string>* mystack;     ///< working space stack
 };
@@ -73,7 +73,7 @@ public:
     NamedInteractor(string nm): name(nm) {}
     /// get my name/description
     virtual string getDescription() { return name; }
-    
+
     string name; ///< name for this interactor
 };
 
@@ -95,9 +95,9 @@ public:
     virtual string getArgname(unsigned int i) const;
     ///get my name/description
     virtual string getDescription();
-    
+
     static InputRequester exitMenu;
-    
+
 protected:
     vector<string> argNames;                    ///< names of arguments
     vector<string> argDescrips;                 ///< extended descriptions of arguments
@@ -146,7 +146,7 @@ public:
     void setSoftmatch(bool (*f)(const string& a, const string& b) = &nameselector_default_softmatch) { softmatch = f; }
     static string barf_control;
     static string exit_control;
-    
+
 protected:
     map<string,unsigned int> nameMap;      ///< map from choice names to selected content
     vector<string> choiceNames;                 ///< choice names

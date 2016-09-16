@@ -11,7 +11,7 @@ Stringmap ConfigDB_Helper::getConfig(const string& family, const string& name) {
     sqlite3_stmt* stmt = loadStatement("SELECT rowid FROM config_values WHERE name = ?1 AND family = ?2");
     sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, family.c_str(), -1, SQLITE_STATIC);
-   
+
     int rc = busyRetry(stmt);
     sqlite3_int64 n = (rc == SQLITE_ROW)? sqlite3_column_int64(stmt, 0) : -1;
     sqlite3_reset(stmt);
@@ -22,7 +22,7 @@ Stringmap ConfigDB_Helper::getConfig(const string& family, const string& name) {
 Stringmap ConfigDB_Helper::getConfig(sqlite3_int64 cid) {
     sqlite3_stmt* stmt = loadStatement("SELECT name,value FROM config_values WHERE csid = ?1");
     sqlite3_bind_int64(stmt, 1, cid);
-    
+
     Stringmap m;
     while(busyRetry(stmt)== SQLITE_ROW) {
         string k,v;
@@ -37,7 +37,7 @@ Stringmap ConfigDB_Helper::getConfig(sqlite3_int64 cid) {
 map<string, Stringmap> ConfigDB_Helper::getConfigs(const string& family) {
     sqlite3_stmt* stmt = loadStatement("SELECT rowid,name FROM config_set WHERE family = ?1");
     sqlite3_bind_text(stmt, 1, family.c_str(), -1, SQLITE_STATIC);
-    
+
     vector<sqlite3_int64> ids;
     vector<string> nms;
     while(busyRetry(stmt)== SQLITE_ROW) {
@@ -46,7 +46,7 @@ map<string, Stringmap> ConfigDB_Helper::getConfigs(const string& family) {
         get_string(stmt, 0, nms.back());
     }
     sqlite3_reset(stmt);
-    
+
     map<string, Stringmap> f;
     for(size_t i=0; i<ids.size(); i++) f.emplace(nms[i],getConfig(ids[i]));
     return f;

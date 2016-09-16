@@ -1,5 +1,5 @@
 /// \file TagCounter.hh templatized counts tally
-/* 
+/*
  * TagCounter.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -55,7 +55,7 @@ public:
     double total() const;
     /// get count for given item
     double operator[](const T& itm) const;
-    
+
     map<T,double> counts;  ///< counts per object
 };
 

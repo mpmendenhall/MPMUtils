@@ -1,4 +1,4 @@
-/* 
+/*
  * Monomial.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -52,30 +52,30 @@ public:
     Monomial(T v): val(v), dimensions(Vec<N,P>()) { }
     /// destructor
     virtual ~Monomial() {}
-    
+
     /// check Monomial consistency
     bool consistentWith(const Monomial<N,T,P>& u) const { return dimensions == u.dimensions; }
     /// throw error if inconsistent
     virtual void assertConsistent(const Monomial<N,T,P>& u) const { if(!consistentWith(u)) throw(InconsistentMonomialException()); }
-    
+
     /// output representation in algebraic form
     ostream& algebraicForm(ostream& o) const;
     /// output representation in data table form
     ostream& tableForm(ostream& o) const;
     /// output representation in LaTeX form
     ostream& latexForm(ostream& o) const;
-    
+
     /// convert to dimensionless quantity of given unit
     double in(const Monomial<N,T,P>& u) const { assertConsistent(u); return val/u.val; }
-    
+
     /// unary minus
     const Monomial<N,T,P> operator-() const;
     /// inverse Monomial
     const Monomial<N,T,P> inverse() const;
-    
+
     /// evaluate value at given point
     T operator()(const Vec<N,T>& v) const;
-    
+
     /// inplace addition
     Monomial<N,T,P>& operator+=(const Monomial<N,T,P>& rhs);
     /// inplace subtraction
@@ -100,13 +100,13 @@ public:
     const Monomial<N,T,P> operator*(T other) const;
     /// division operator
     const Monomial<N,T,P> operator/(T other) const;
-    
+
     T val;                              ///< dimensionless value
     Vec<N,P> dimensions;                ///< unit dimensions
-    
+
     static const char* vletters;        ///< letters for variable names
-    
-    
+
+
 };
 
 template<unsigned int N, typename T, typename P>

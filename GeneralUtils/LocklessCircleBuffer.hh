@@ -33,7 +33,7 @@ public:
         buf.resize(n);
         ready.resize(n);
     }
-    
+
     /// write to next buffer space, failing if unavailable
     bool write(const T& a) {
         if(ready[write_idx]) { n_write_fails++; return false; }
@@ -43,7 +43,7 @@ public:
         write_idx = (write_idx + 1)%buf.size();
         return true;
     }
-    
+
     /// consume one next available item
     bool read_one() {
         if(!ready[read_idx]) return false;
@@ -54,14 +54,14 @@ public:
         read_idx = (read_idx + 1)%buf.size();
         return true;
     }
-    
+
     /// consume all next available items
     size_t flush() {
         int nread = 0;
         while(read_one()) nread++;
         return nread;
     }
-    
+
     /// count number of buffered items... not guaranteed correct
     size_t n_buffered() const {
         size_t iw = write_idx;
@@ -69,10 +69,10 @@ public:
         if(ir > iw) iw += buf.size();
         return iw==ir? 0 : iw - ir - 1;
     }
-    
+
     /// processing on read item --- override me!
     virtual void process_item() = 0;
-  
+
     /// launch buffer thread
     virtual int launch_mythread() {
         is_launched = true;
@@ -86,7 +86,7 @@ public:
         is_launched = false;
         return rc;
     }
- 
+
     size_t n_write_fails = 0;       ///< number of buffer-full write failures
     bool all_done = false;          ///< flag to indicate when all write operations complete
     useconds_t sleep_us = 50000;    ///< recommended sleep time between buffer clearing operations

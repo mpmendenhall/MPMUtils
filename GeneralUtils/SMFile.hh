@@ -1,5 +1,5 @@
 /// \file SMFile.hh simple text data format
-/* 
+/*
  * SMFile.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -29,7 +29,7 @@ class SMFile {
 public:
     /// Constructor with input filename
     SMFile(const string& s = "", bool readit = true);
-    
+
     /// insert key/(string)value pair
     void insert(const string& str, const Stringmap& v);
     /// remove a key
@@ -50,14 +50,14 @@ public:
     unsigned int size() const { return dat.size(); }
     /// transfer all data for given key from other SMFile
     void transfer(const SMFile& Q, const string& k);
-    
+
     /// set output file location
     void setOutfile(string fnm) { name = fnm; }
     /// commit data to file
     void commit(string outname = "") const;
     /// display to stdout
     void display() const;
-    
+
     string name;                        ///< output filename
     multimap< string, Stringmap > dat;  ///< key-value multimap
 };

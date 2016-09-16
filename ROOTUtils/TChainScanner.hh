@@ -1,5 +1,5 @@
 /// \file TChainScanner.hh Utility for scanning data spread over many .root input files
-/* 
+/*
  * TChainScanner.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -36,10 +36,10 @@ public:
     TChainScanner(const string& treeName);
     /// destructor
     virtual ~TChainScanner() { delete Tch; }
-    
+
     /// add a file to the TChain
     virtual int addFile(const string& filename);
-    
+
     /// start a "speed scan," possibly at a random entry number
     virtual void startScan(bool startRandom = false);
     /// jump scanner to specified event
@@ -62,21 +62,21 @@ public:
     unsigned int getLocal(unsigned int e) { return Tch->LoadTree(e); }
     /// get number of files
     virtual unsigned int getnFiles() const { return nFiles; }
-    
+
     UInt_t nEvents;                     ///< number of events in current TChain
-    
+
     /// over-write this in subclass to automaticlly set readout points on first loaded file
     virtual void setReadpoints(TTree*) = 0;
-    
+
 protected:
-    
+
     /// "string friendly" SetBranchAddress
     void SetBranchAddress(TTree* T, const string& bname, void* bdata);
-    
+
     vector<unsigned int> nnEvents; ///< number of events in each loaded TChain;
     unsigned int nFiles;                ///< get number of loaded files
     bool noEmpty;                       ///< whether to abort on attempt to load empty files
-    
+
     TChain* Tch;                        ///< TChain of relevant runs
     unsigned int currentEvent;          ///< event number of current event in chain
     unsigned int noffset;               ///< offset of current event relative to currently loaded tree

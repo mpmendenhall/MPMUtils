@@ -1,4 +1,4 @@
-/* 
+/*
  * Vec_Null.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -30,10 +30,10 @@
 template<typename T>
 class Vec<0,T>: public array<T,0> {
 public:
-    
+
     /// default constructor for zero vector
     Vec() { }
-    
+
     /// dot product with another vector
     T dot(const Vec<0,T>) const { return T(); }
     /// square magnitude \f$ v \cdot v \f$
@@ -44,7 +44,7 @@ public:
     T sum() const { return T(); }
     /// product of vector elements
     T prod() const { return T(); }
-    
+
     /// this vector, normalized to magnitude 1
     Vec<0,T> normalized() const { return Vec<0,T>(); }
     /// project out component parallel to another vector
@@ -53,20 +53,20 @@ public:
     Vec<0,T> orthoProj(const Vec<0,T>) const { return Vec<0,T>(); }
     /// angle with another vector
     T angle(const Vec<0,T>) const { return T(); }
-    
+
     /// mutable element access operator
     T& operator[](size_t) { assert(false); }
     /// immutable element access operator
     T operator[](size_t) const { assert(false); }
-    
+
     /// unary minus operator
     const Vec<0,T> operator-() const { return Vec<0,T>(); }
-    
+
     /// inplace addition
     Vec<0,T>& operator+=(const Vec<0,T>&) { return *this; }
     /// inplace subtraction
     Vec<0,T>& operator-=(const Vec<0,T>&) { return *this; }
-    
+
     /// inplace multiplication
     Vec<0,T>& operator*=(T) { return *this; }
     /// inplace elementwise multiplication
@@ -75,12 +75,12 @@ public:
     Vec<0,T>& operator/=(T) { return *this; }
     /// inplace elementwise division
     Vec<0,T>& operator/=(const Vec<0,T>&) { return *this; }
-    
+
     /// addition operator
     const Vec<0,T> operator+(const Vec<0,T>&) const { return Vec<0,T>(); }
     /// subtraction operator
     const Vec<0,T> operator-(const Vec<0,T>&) const { return Vec<0,T>(); }
-    
+
     /// multiplication operator
     const Vec<0,T> operator*(T) const { return Vec<0,T>(); }
     /// elementwise multiplication operator
@@ -90,6 +90,5 @@ public:
     /// elementwise division operator
     const Vec<0,T> operator/(const Vec<0,T>&) const { return Vec<0,T>(); }
 };
-    
+
 #endif
-    

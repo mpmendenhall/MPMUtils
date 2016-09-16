@@ -14,7 +14,7 @@ public:
     float_err(const std::string& s);
     /// converto to a string
     string toString() const;
-    
+
     float x;    ///< central value
     float err;  ///< error
 };

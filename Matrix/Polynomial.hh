@@ -1,4 +1,4 @@
-/* 
+/*
  * Polynomial.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -37,15 +37,15 @@ public:
     Polynomial(Monomial<N,T,unsigned int> m) { terms[m.dimensions] = m.val; }
     /// destructor
     ~Polynomial() {}
-    
+
     /// generate polynomial with all terms of order <= o in each variable
     static Polynomial<N,T> allTerms(unsigned int o);
     /// generate polynomial with all terms of total order <= o
     static Polynomial<N,T> lowerTriangleTerms(unsigned int o);
-    
+
     /// return polynomial with only even terms
     Polynomial<N,T> even() const;
-    
+
     /// evaluate at given point
     T operator()(const Vec<N,T>& v) const;
     /// evaluate a polynomial change of variable
@@ -54,7 +54,7 @@ public:
     const Polynomial<N,T> recentered(const Vec<N,T>& c) const;
     /// remove negligible terms
     Polynomial<N,T>& prune(T c = 0);
-    
+
     /// inplace addition
     Polynomial<N,T>& operator+=(const Polynomial<N,T>& rhs);
     /// inplace subtraction
@@ -67,7 +67,7 @@ public:
     Polynomial<N,T>& operator/=(const Monomial<N,T,unsigned int>& rhs);
     /// inplace division by a constant
     Polynomial<N,T>& operator/=(T c);
-    
+
     /// addition
     const Polynomial<N,T> operator+(const Polynomial<N,T>& rhs) const;
     /// subtraction
@@ -80,14 +80,14 @@ public:
     const Polynomial<N,T> operator/(const Monomial<N,T,unsigned int>& rhs) const;
     /// division by a scalar
     const Polynomial<N,T> operator/(T c) const;
-    
+
     /// output representation, algebraic form
     ostream& algebraicForm(ostream& o) const;
     /// output in table form
     ostream& tableForm(ostream& o) const;
     /// output in LaTeX form
     ostream& latexForm(ostream& o) const;
-    
+
     map<Vec<N,unsigned int>, T> terms;                     ///< terms of the polynomial
 };
 
@@ -181,7 +181,7 @@ Polynomial<N,T>& Polynomial<N,T>::operator*=(const Polynomial<N,T>& rhs) {
     map<Vec<N,unsigned int>, T> newterms;
     for(auto const& kv: terms)
         for(auto const& kv2: rhs.terms)
-            newterms[kv.first + kv2.first] += kv.second*kv2.second; 
+            newterms[kv.first + kv2.first] += kv.second*kv2.second;
         terms = newterms;
     return *this;
 }
@@ -195,7 +195,7 @@ Polynomial<N,T>& Polynomial<N,T>::operator*=(T c) {
 template<unsigned int N, typename T>
 Polynomial<N,T>& Polynomial<N,T>::operator/=(const Monomial<N,T,unsigned int>& rhs) {
     map<Vec<N,unsigned int>, T> newterms;
-    for(auto const& kv: terms) newterms[kv.first + rhs.dimensions] += kv.second*rhs.val; 
+    for(auto const& kv: terms) newterms[kv.first + rhs.dimensions] += kv.second*rhs.val;
     terms = newterms;
     return *this;
 }
@@ -211,7 +211,7 @@ Polynomial<N,T>& Polynomial<N,T>::prune(T c) {
     map<Vec<N,unsigned int>, T> newterms;
     for(auto const& kv: terms)
         if(kv.second > c || kv.second < -c)
-            newterms[kv.first] += kv.second; 
+            newterms[kv.first] += kv.second;
         terms = newterms;
     return *this;
 }

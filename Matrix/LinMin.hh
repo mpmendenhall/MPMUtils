@@ -1,5 +1,5 @@
 /// \file "LinMin.hh" Least-squares linear polynomial fits
-/* 
+/*
  * LinMin.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -52,11 +52,11 @@ public:
     double getx(size_t i) const;
     /// get resid r
     double getr(size_t i) const;
-        
+
     const size_t m;             ///< number of equations
     const size_t n;             ///< number of variables
 
-protected:    
+protected:
     gsl_matrix* M = nullptr;       ///< coefficients matrix
     gsl_vector* x = nullptr;       ///< solution vector
     gsl_vector* y = nullptr;       ///< RHS vector

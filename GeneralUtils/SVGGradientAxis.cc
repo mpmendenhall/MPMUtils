@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2015
 
 #include "SVGGradientAxis.hh"
@@ -15,26 +15,26 @@ SVGGradientAxis::SVGGradientAxis() {
         double l = double(i)/(ngradstops-1);
         G.addStop(l, color::hsv((1-l)*1.5*M_PI,1,1));
     }
-    
-    // base gradient    
+
+    // base gradient
     base_gradient = make_shared<SVG::lingradient>(G, "zaxis", 0, 0, 1, 0);
     base_gradient->attrs["gradientUnits"] = "userSpaceOnUse";
-    
+
     // derived axis gradient
     Gaxis->attrs["id"] = "Gaxis";
     Gaxis->attrs["gradientTransform"] = "rotate(-90) translate(-1 0)";
     Gaxis->attrs["xlink:href"] = "#"+base_gradient->attrs["id"];
     axisGroup->addChild(Gaxis);
-    
+
     // gradient rectangle
     auto r = make_shared<SVG::rect>(0, 0, 0.1, 1);
     r->attrs["style"] = "fill:url(#" + Gaxis->attrs["id"] + ");stroke:black;stroke-width:0.002";
     axisGroup->addChild(r);
-    
+
     axisGroup->attrs["font-size"] = "0.07";
 }
 
-double SVGGradientAxis::axisUnits(double x) const { 
+double SVGGradientAxis::axisUnits(double x) const {
     if(logscale) return x > 0? log(x/range.lo[0]) / log(range.hi[0]/range.lo[0]) : -100;
     return (x-range.lo[0])/range.dl(0);
 }
@@ -48,12 +48,12 @@ void SVGGradientAxis::finalize() {
     if(logscale) {
         if(range.lo[0] < 1e-6*range.hi[0]) range.lo[0] = 1e-6*range.hi[0];
     }
-    
+
     if(!axticks.size()) {
         addtick(range.lo[0]);
         addtick(range.hi[0]);
     }
-    
+
     for(auto const& t: axticks) {
         double zz = 1-axisUnits(t.z);
         if(zz < 0 || zz > 1) continue;

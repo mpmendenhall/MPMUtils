@@ -1,5 +1,5 @@
 /// \file StringManip.cc
-/* 
+/*
  * StringManip.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -47,7 +47,7 @@ string itosRN(int i) {
 string c_to_str(char c) {
     char ch[3];
     sprintf(ch,"%c",c);
-    return string(ch);          
+    return string(ch);
 }
 
 string lower(string s) {

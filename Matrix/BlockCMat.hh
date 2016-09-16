@@ -1,4 +1,4 @@
-/* 
+/*
  * BlockCMat.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -46,30 +46,30 @@ public:
     BlockCMat_SVD(const BlockCMat& BC);
     /// destructor
     ~BlockCMat_SVD();
-    
+
     /// generate inverse at given singular value threshold
     const BlockCMat& calc_pseudo_inverse(double epsilon = 0);
-    
+
     /// return sorted list of singular values, for threshold determination
     const vector<double>& singular_values() const { return svalues.getData(); }
-    
+
     /// Dump binary data to file
     void writeToFile(ostream& o) const;
     /// Read binary data from file
     static BlockCMat_SVD* readFromFile(std::istream& s);
-    
+
     /// sub-block singular values
     double getSV(size_t i) const;
     /// get enumerated right singular vector
     VarVec<double> getRightSVec(size_t i) const;
-    
+
 protected:
     /// empty constructor without calculation
     BlockCMat_SVD() {}
-    
+
     /// prepare sorted singular values
     void sort_singular_values();
-    
+
     size_t M, N, Mc, Ms;
     #ifdef WITH_LAPACKE
     vector< LAPACKE_Matrix_SVD<double,lapack_complex_double>* > block_SVDs;

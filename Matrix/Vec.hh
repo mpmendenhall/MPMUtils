@@ -1,4 +1,4 @@
-/* 
+/*
  * Vec.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2016 Michael P. Mendenhall
  *
@@ -37,14 +37,14 @@ using std::array;
 template<size_t N, typename T>
 class Vec: public array<T,N> {
 public:
-    
+
     /// Default constructor for zero-filled vector
     Vec() { this->fill(T()); }
     /// Constructor from std::array
     Vec(const array<T,N>& a): array<T,N>(a) { }
     /// Construct a basis vector with 1 in the n^th spot
     static Vec<N,T> basis(size_t n) { Vec<N,T> v = Vec<N,T>(); v[n] = 1; return v; }
-    
+
     /// dot product with another vector
     T dot(const Vec<N,T>& v) const { T s = (*this)[0]*v[0]; for(size_t i=1; i<N; i++) s+=(*this)[i]*v[i]; return s; }
     /// square magnitude \f$ v \cdot v \f$
@@ -55,7 +55,7 @@ public:
     T sum() const { T s = (*this)[0]; for(size_t i=1; i<N; i++) s += (*this)[i]; return s; }
     /// product of vector elements
     T prod() const { T s = (*this)[0]; for(size_t i=1; i<N; i++) s *= (*this)[i]; return s; }
-    
+
     /// this vector, normalized to magnitude 1
     Vec<N,T> normalized() const { return (*this)/mag(); }
     /// project out component parallel to another vector
@@ -64,10 +64,10 @@ public:
     Vec<N,T> orthoProj(const Vec<N,T>& v) const { return (*this)-paraProj(v); }
     /// angle with another vector
     T angle(const Vec<N,T> v) const { return acos(dot(v)/sqrt(mag2()*v.mag2())); }
-    
+
     /// unary minus operator
     const Vec<N,T> operator-() const { auto v = *this; for(size_t i=0; i<N; i++) v[i] = -v[i]; return v; }
-    
+
     /// inplace addition
     Vec<N,T>& operator+=(const Vec<N,T>& rhs) { for(size_t i=0; i<N; i++) (*this)[i] += rhs[i]; return *this; }
     /// inplace addition of a constant
@@ -76,7 +76,7 @@ public:
     Vec<N,T>& operator-=(const Vec<N,T>& rhs) { for(size_t i=0; i<N; i++) (*this)[i] -= rhs[i]; return *this; }
     /// inplace subtraction of a constant
     Vec<N,T>& operator-=(const T& c) { for(auto& x: *this) x -= c; return *this; }
-    
+
     /// inplace multiplication
     Vec<N,T>& operator*=(const T& c) { for(auto& x: *this) x *= c; return *this; }
     /// inplace elementwise multiplication
@@ -85,12 +85,12 @@ public:
     Vec<N,T>& operator/=(const T& c) { for(auto& x: *this) x /= c; return *this; }
     /// inplace elementwise division
     Vec<N,T>& operator/=(const Vec<N,T>& other) { for(size_t i=0; i<N; i++) (*this)[i] /= other[i]; return *this; }
-    
+
     /// addition operator
     const Vec<N,T> operator+(const Vec<N,T>& other) const { auto result = *this; return (result += other); }
     /// subtraction operator
     const Vec<N,T> operator-(const Vec<N,T>& other) const { auto result = *this; return (result -= other); }
-    
+
     /// multiplication operator
     const Vec<N,T> operator*(const T& c) const { auto result = *this; return (result *= c); }
     /// elementwise multiplication operator
@@ -99,7 +99,7 @@ public:
     const Vec<N,T> operator/(const T& c) const { auto result = *this; return (result /= c); }
     /// elementwise division operator
     const Vec<N,T> operator/(const Vec<N,T>& other) const { auto result = *this; return (result /= other); }
-        
+
     /// write in binray form to a file
     void writeBinary(ostream& o) const { o.write((char*)this->data(),N*sizeof(T)); }
     /// read a Vec from a file
@@ -133,7 +133,7 @@ Vec<3,T> cross( const Vec<3,T>& a, const Vec<3,T>& b ) {
 /// rotation of a 2-vector 90 degrees counterclockwise
 template<typename T>
 Vec<2,T> rhOrtho( const Vec<2,T>& v ) {
-    return Vec<2,T>(-v[1],v[0]); 
+    return Vec<2,T>(-v[1],v[0]);
 }
 
 /// rotation of a 2-vector by given angle
@@ -144,13 +144,13 @@ Vec<2,T> rotated(const Vec<2,T>& v, T a ) {
 
 /// orthonormal 2-vector 90 degrees counterclockwise of given 2-vector
 template<typename T>
-Vec<2,T> rhOrthoNorm( const Vec<2,T>& v ) { 
+Vec<2,T> rhOrthoNorm( const Vec<2,T>& v ) {
     return Vec<2,T>(-v[1],v[0]).normalized();
 }
 
 /// atan2() angle of a 2-vector
 template<typename T>
-T angle( const Vec<2,T>& v ) { 
+T angle( const Vec<2,T>& v ) {
     return atan2(v[1],v[0]);
 }
 
@@ -170,4 +170,3 @@ vector<double> vec2doublevec(const Vec<N,T>& v) {
 
 
 #endif
-    

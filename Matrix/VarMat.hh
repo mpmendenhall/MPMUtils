@@ -1,4 +1,4 @@
-/* 
+/*
  * VarMat.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -46,14 +46,14 @@ public:
     VarMat(Matrix<MM,NN,T> A): M(MM), N(NN), vv(A.getData()) {}
     /// destructor
     ~VarMat() {}
-    
+
     /// generate an "identity" matrix, using specified values on/off diagonal
     static VarMat<T> identity(size_t n) { return  VarMat<T>::identity(n,1,0); }
     /// generate an "identity" matrix, using specified values on/off diagonal
     static VarMat<T> identity(size_t n, const T& one, const T& zero);
     /// generate a random-filled VarMat
     static VarMat<T> random(size_t m, size_t n);
-    
+
     /// get m rows
     size_t nRows() const { return M; }
     /// get n cols
@@ -62,7 +62,7 @@ public:
     size_t nDim(bool rows) const { return rows ? M:N; }
     /// get total size
     size_t size() const { return vv.size(); }
-    
+
     /// const element access
     const T& operator()(size_t m, size_t n) const { assert(m<M && n<N); return vv[m+n*M]; }
     /// mutable element access
@@ -89,7 +89,7 @@ public:
     T getSumSquares() const { return vv.mag2(); }
     /// get determinant TODO for M>2
     T det() const { if(M!=N) return 0; if(M==1) return vv[0]; if(M==2) return vv[0]*vv[3]-vv[1]*vv[2]; assert(false); return 0; }
-    
+
     /// unary minus (negated copy)
     const VarMat<T> operator-() const;
     /// transposed copy
@@ -100,10 +100,10 @@ public:
     const VarMat<T>& resize(size_t m, size_t n);
     /// trace of matrix
     T trace() const;
-    
+
     /// throw error if dimensions mismatches
     void checkDimensions(const VarMat& m) const throw(DimensionMismatchError) { if(m.nRows() != M || m.nCols() != N) throw(DimensionMismatchError()); }
-    
+
     /// inplace multiplication by a constant
     void operator*=(const T& c) { vv *= c; }
     /// multiplication by a constant
@@ -122,7 +122,7 @@ public:
     const VarMat<T> operator-(const VarMat<T>& rhs) const;
     /// zero all elements
     VarMat<T>& zero() { vv.zero(); return *this; }
-    
+
     /// VarMat multiplication
     const VarMat<T> operator*(const VarMat<T>& B) const;
     /// left-multiply a vector
@@ -133,18 +133,18 @@ public:
     const VarVec<V> rMultiply(const VarVec<U>& v) const;
     /// vector multiplication, when all objects are of same type
     const VarVec<T> operator*(const VarVec<T>& v) const { return lMultiply<T,T>(v); }
-    
+
     /// Dump binary data to file
     void writeToFile(ostream& o) const;
     /// Read binary data from file
     static VarMat<T> readFromFile(std::istream& s);
-    
+
 private:
-    
+
     size_t M;
     size_t N;
     VarVec<T> vv;
-    
+
     /// step in inversion process
     void subinvert(size_t n);
 };
@@ -154,7 +154,7 @@ VarMat<T> VarMat<T>::random(size_t m, size_t n) {
     VarMat<T> foo(m,n);
     for(size_t i=0; i<foo.size(); i++)
         foo[i] = 0.1+T(rand())/T(RAND_MAX);
-    return foo; 
+    return foo;
 }
 
 template<typename T>
@@ -270,7 +270,7 @@ const VarMat<T>& VarMat<T>::resize(size_t m, size_t n) {
     // change column dimension
     N = n;
     vv.getData().resize(M*N);
-    
+
     // change row dimension
     if(m != M) {
         VarVec<T> vnew;
@@ -280,7 +280,7 @@ const VarMat<T>& VarMat<T>::resize(size_t m, size_t n) {
         vv = vnew;
         M = m;
     }
-    
+
     return *this;
 }
 
@@ -325,25 +325,25 @@ const VarMat<T>& VarMat<T>::invert() {
 }
 
 namespace VarMat_element_inversion {
-    
+
     template<typename T>
     inline void invert_element(T& t) { t.invert(); }
     template<>
     inline void invert_element(float& t) { t = 1.0/t; }
     template<>
     inline void invert_element(double& t) { t = 1.0/t; }
-    
+
 }
 
 template<typename T>
 void VarMat<T>::subinvert(size_t n) {
-    
+
     // invert the first cell
     T& firstcell = (*this)(n,n);
     VarMat_element_inversion::invert_element(firstcell);
     for(size_t i=n+1; i<M; i++)
         (*this)(n,i) *= firstcell;
-    
+
     // use to clear first column
     for(size_t r=n+1; r<M; r++) {
         T& m0 = (*this)(r,n);
@@ -351,16 +351,16 @@ void VarMat<T>::subinvert(size_t n) {
             (*this)(r,c) -= (*this)(n,c)*m0;
         m0 *= -firstcell;
     }
-    
+
     if(n==M-1)
         return;
-    
+
     //invert the subVarMat
     subinvert(n+1);
-    
+
     // temporary space allocation
     vector<T> subvec = vector<T>(M-n-1);
-    
+
     // first column gets multiplied by inverting subVarMat
     for(size_t r=n+1; r<M; r++)
         subvec[r-n-1] = (*this)(r,n);
@@ -369,7 +369,7 @@ void VarMat<T>::subinvert(size_t n) {
         for(size_t c=n+2; c<M; c++)
             (*this)(r,n) += (*this)(r,c)*subvec[c-n-1];
     }
-    
+
     //finish off by cleaning first row
     for(size_t c=n+1; c<M; c++)
         subvec[c-n-1] = (*this)(n,c);
@@ -381,7 +381,7 @@ void VarMat<T>::subinvert(size_t n) {
         for(size_t r=n+2; r<M; r++)
             (*this)(n,c) -= (*this)(r,c) * subvec[r-n-1];
     }
-    
+
 }
 
 /// string output representation for VarMat; TODO sensible output for complex types

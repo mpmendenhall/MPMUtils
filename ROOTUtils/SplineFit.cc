@@ -42,7 +42,7 @@ void SplineFit::updateSpline() {
         mySpline.GetEY()[i] = myFitter->GetParError(i);
     }
 }
-    
+
 double SplineFit::eval(double* x, double* p) {
     const size_t n = mySpline.GetN();
     for(size_t i=0; i<n; i++) mySpline.GetY()[i] = p[i];

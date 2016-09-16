@@ -1,5 +1,5 @@
 /// \file SMExcept.cc
-/* 
+/*
  * SMExcept.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -25,9 +25,9 @@ SMExcept::SMExcept(const string& tp): std::exception(), Stringmap() {
     insert("type",tp);
 }
 
-const char* SMExcept::what() const throw() { 
+const char* SMExcept::what() const throw() {
     msg = toString();
-    return msg.c_str(); 
+    return msg.c_str();
 }
 
 void smassert(bool b, const string& tp, const Stringmap& m) {

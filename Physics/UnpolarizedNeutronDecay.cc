@@ -54,7 +54,7 @@ N3BodyUncorrelated::N3BodyUncorrelated(NKine_Rndm_Src* R): NeutronDecayKinematic
     }
     cdf[0] = -1e-6;
     cdf[NPTS-1] = 1.000001;
-    
+
     // linearly interpolate inverse table, plus guard values
     size_t j = 1;
     invcdf[0] = 0;
@@ -81,7 +81,7 @@ void N3BodyUncorrelated::gen_evt_weighted() {
     assert(myR);
     myR->next(); // random seed
     evt_w = 1;
-    
+
     if(use_KEe > 0) E_2 = use_KEe + m_2;
     else {
         // electron energy cubic interpolated from inverse CDF lookup table
@@ -90,11 +90,11 @@ void N3BodyUncorrelated::gen_evt_weighted() {
         jf -= j;
         E_2 = m_2 + eval_cubic_interpl(jf, invcdf + j + 1);
     }
-    
+
     // electron momentum magnitude, velocity
     p_2 = sqrt(E_2*E_2 - m_2*m_2);
     beta = sqrt(1-m_2*m_2/E_2/E_2);
-    
+
     // electron direction, including transverse momentum limiting
     c_2_min = -1;
     if(pt2_max && p_2 > pt2_max)
@@ -103,14 +103,14 @@ void N3BodyUncorrelated::gen_evt_weighted() {
     c_2 = c_2_min + (1-c_2_min)*myR->u[1];
     phi_2 = 2*M_PI*myR->u[2];
     n_from_angles(c_2, phi_2, n_2);
-    
+
     // neutrino energy, direction
     E_1 = Delta - E_2;
     p_1 = E_1; // massless neutrino approximation
     c_1 = 2*myR->u[3] - 1;
     phi_1 = 2*M_PI*myR->u[4];
     n_from_angles(c_1, phi_1, n_1);
-    
+
     // proton kinematics
     mag_p_f = 0;
     for(int i=0; i<3; i++) {
@@ -136,7 +136,7 @@ double Gluck_beta_MC::z_H() const {
     // (4.14), noting E0_1/omega = 1/C_S (3.8)
     return alpha/M_PI * (2*(N/beta-1)*(log(1/C_S) + E0_1/(3*E_2) -3./2.)
                          + N/beta * E0_1*E0_1/(12*E_2*E_2));
-    
+
 }
 
 void Gluck_beta_MC::vec_rel_n_2(double c, double phi, double* v) const {
@@ -152,57 +152,57 @@ void Gluck_beta_MC::vec_rel_n_2(double c, double phi, double* v) const {
 double Gluck_beta_MC::calc_soft() {
     // neutrino direction is relative to electron, so we can use c_1 below
     vec_rel_n_2(c_1, phi_1, n_1);
-  
+
     // (2.12) uncorrected phase space matrix element
-    M_0 = 16 * G2_V * zeta * m*m * E0_1 * E_2 * (1 + a * beta * c_1); 
-    
-    // (3.2) 
+    M_0 = 16 * G2_V * zeta * m*m * E0_1 * E_2 * (1 + a * beta * c_1);
+
+    // (3.2)
     Mtilde = -alpha/M_PI * 16 * G2_V * (1-beta*beta)/beta * N * m*m * E0_1 * E_2 * zeta;
-    
+
     // (3.9)
     M_VS = z_VS() * M_0 + Mtilde;
-    
+
     // weight function
     double W_0VS = beta * E0_1 * E_2 * (M_0 + M_VS);
     evt_w0 =  beta * E0_1 * E_2 * M_0 * evt_w;
-    if(W_0VS > Wmax_0VS) Wmax_0VS = W_0VS; 
+    if(W_0VS > Wmax_0VS) Wmax_0VS = W_0VS;
     sum_W_0VS += W_0VS;
     n_S++;
-    
+
     return W_0VS;
 }
 
 double Gluck_beta_MC::calc_hard_brem() {
-    
+
     // (5.5) hard photon energy
     K = omega * pow(C_S,-myR->u[5]);
-    
+
     // (4.9) neutrino energy, corrected for hard photon
     E_1 = Delta - E_2 - K;
-    
+
     // (5.6) gamma direction cosine relative to electron
     c_gamma = (1-(1+beta)*exp(-2*N*myR->u[6]))/beta;
     // (5.7) gamma direction uniform in phi
     phi_gamma = 2*M_PI*myR->u[7];
     // calculate gamma direction in fixed coordinates
     vec_rel_n_2(c_gamma, phi_gamma, n_gamma);
-    
+
     // neutrino direction in hard case is in fixed coordinate system
     // (5.11), (5.12) applied to neutrino direction
     n_from_angles(c_1, phi_1, n_1);
     // or do it relative to electron for consistency... shouldn't matter
     //vec_rel_n_2(c_1, phi_1, n_1);
-    
+
     // (5.13) calculate momentum dot products
     const double p_1_dot_k = E_1 * K * dot3(n_1, n_gamma);
     const double p_2_dot_k = beta * E_2 * K * c_gamma;
     const double p_1_dot_p_2 = beta * E_1 * E_2 * dot3(n_1, n_2);
     // (4.8) four-vector momenta dot
     const double p4_2_dot_k4 = E_2*K - p_2_dot_k;
-    
+
     // (5.3) approximate distribution function
     const double g = beta*E_2/(2*N*p4_2_dot_k4);
-    
+
     // (4.7)
     const double Psq = 1./K/K + m_2*m_2/p4_2_dot_k4/p4_2_dot_k4 - 2*E_2/K/p4_2_dot_k4;
     // (4.5)
@@ -214,13 +214,13 @@ double Gluck_beta_MC::calc_hard_brem() {
     const double esq = 4*M_PI*alpha;
     // (4.4)
     M_BR = 16*G2_V*zeta*m*m*esq*(H_0 + a*H_1);
-    
+
     // (5.14)
     double w = (K * beta * E_1 * E_2 * M_BR)/(pow(2,13)*pow(M_PI,8)*m*m*g);
     if(w > w_max) w_max = w;
     sum_w += w;
     n_H++;
-    
+
     return w;
 }
 
@@ -243,14 +243,14 @@ void Gluck_beta_MC::calc_beta_N() {
 }
 
 void Gluck_beta_MC::propose_kinematics() {
-    
+
     K = 0;
     evt_w = 1;
-    
+
     if(use_KEe > 0) E_2 = use_KEe + m_2;
     else E_2 = m_2 + (Delta-m_2)*myR->u[0];  // (5.4) electron energy
     p_2 = sqrt(E_2*E_2 - m_2*m_2);      // electron momentum magnitude
-    
+
     // electron cos theta to axis... possibly pre-restricted range
     c_2_min = -1;
     if(pt2_max && p_2 > pt2_max)
@@ -259,15 +259,15 @@ void Gluck_beta_MC::propose_kinematics() {
     c_2 = c_2_min + (1-c_2_min)*myR->u[2]; //c_2 = -1 + 2*myR->u[2];
     // electron azimuthal angle
     phi_2 = 2*M_PI*myR->u[4];
-    
+
     // (2.10) neutrino energy by energy conservation (tweak later for photon emission)
     E_1 = E0_1 = Delta - E_2;
-       
+
     // (5.7) isotropic neutrino direction (rel. to electron in "soft" case; world coordinates in "hard")
     c_1 = 2*myR->u[1] - 1;
     phi_1 = 2*M_PI*myR->u[3];
-    
-    
+
+
     calc_beta_N();
     calc_n_2();
 }
@@ -285,17 +285,17 @@ void Gluck_beta_MC::calc_n_2() {
 void Gluck_beta_MC::gen_evt_weighted() {
     assert(myR);
     myR->next();
-    
+
     if(P_H.q < myR->u[4]) {
         myR->u[4] = (myR->u[4]-P_H.q)/(1-P_H.q);
         propose_kinematics();
-        
+
         evt_w *= calc_soft()/Wavg_0VS * P_H.np_wt();
         evt_w0 /= Wavg_0VS;
     } else {
         myR->u[4] /= P_H.q;
         propose_kinematics();
-       
+
         evt_w *= calc_hard_brem()/w_avg * P_H.p_wt();
         evt_w0 = 0;
     }
@@ -303,22 +303,22 @@ void Gluck_beta_MC::gen_evt_weighted() {
 }
 
 void Gluck_beta_MC::calc_rho() {
-    
+
     printf("Calculating correction rates:\n");
-    
+
     // numerical integration over electron energy E2 by Simpson's Rule
     const int npts = 4001;
     rho_0 = rho_VS = rho_H = 0;
     const double C = G2_V * zeta / (2*pow(M_PI,3));
     for(int i=0; i<=npts; i++) {
-        
+
         E_2 = use_KEe >= 0? use_KEe + m_2 : m_2 + i*(Delta-m_2)/npts;
         E0_1 = Delta - E_2;
         calc_beta_N();
-        
+
         if(!beta) continue;
         //printf("E_2 = %g, beta = %g, z_VS = %g, z_H = %g\n", E_2, beta, z_VS(), z_H());
-        
+
         const int scoeff = (i==0 || i==npts)? 1: (i%2)? 4:2; // Simpson's Rule integration weight
         // (5.19)
         const double w0 = C * beta * E0_1*E0_1 * E_2*E_2;
@@ -327,48 +327,48 @@ void Gluck_beta_MC::calc_rho() {
         // (5.20)
         rho_VS += scoeff * w0 * (z_VS() - alpha/M_PI * N * (1-beta*beta)/beta);
         // (4.13)
-        rho_H += scoeff * w0 * z_H(); 
+        rho_H += scoeff * w0 * z_H();
     }
     const double nrm = (Delta-m_2)/npts/3.;
     rho_0 *= nrm;
     rho_VS *= nrm;
     rho_H *= nrm;
-    
+
     rho_0VS = rho_0 + rho_VS;
-    
+
     // (5.21)
     P_H.p = P_H.q = rho_H/(rho_H + rho_0VS);
-    
+
     // (5.15)
     V_g = -32*pow(M_PI,3)*(Delta-m_2)*log(C_S);
-    
+
     w_avg = rho_H / V_g;
-    
+
     // (6.1)
     r_rho = 100*(rho_VS+rho_H)/rho_0;
     r_H = 100*P_H.p;
-    
+
     printf("\trho_0 = %g, rho_VS = %g, rho_H = %g => P_H = %g\n", rho_0, rho_VS, rho_H, P_H.p);
     printf("\tr_rho = %g (Gluck: 1.503),\tr_H = %g (Gluck: 0.847)\n", r_rho, r_H);
     printf("\tw_avg = %g\tWavg_0VS = %g\n", w_avg, Wavg_0VS);
 }
 
 void Gluck_beta_MC::test_calc_P_H(size_t n_sim) {
-    
+
     // (5.16), (5.17) MC calculation of rho_H
     double t_rho_H = 0;
     double sw2 = 0;
     printf("Calculating P_H using %zu points... ", n_sim);
     for(size_t i=0; i<n_sim; i++) {
         if(!(i%(n_sim/20))) { printf("*"); fflush(stdout); }
-        
+
         myR->next();
-        
+
         propose_kinematics();
         double w = calc_hard_brem();
         t_rho_H +=  w;
         sw2 += w*w;
-        
+
         // do this calculation to build up statistics on Wmax_0VS
         propose_kinematics();
         calc_soft();
@@ -376,13 +376,13 @@ void Gluck_beta_MC::test_calc_P_H(size_t n_sim) {
     printf(" Done.\n");
     double dt_rho_H = sqrt(sw2 - t_rho_H*t_rho_H/n_sim)*V_g/n_sim;
     t_rho_H *= V_g/n_sim;
-    
+
     // (5.21)
     double t_P_H = t_rho_H/(t_rho_H + rho_0VS);
     double dt_P_H = dt_rho_H/(t_rho_H + rho_0VS);
     printf("\tMC rho_H = %g +/- %g, P_H = %g\n", t_rho_H, dt_rho_H, t_P_H);
     printf("\tMC r_H = %g +- %g;\t\tV_g = %g\n", 100*t_P_H, 100*dt_P_H, V_g);
-    
+
     showEffic();
 }
 
@@ -405,18 +405,18 @@ double Gluck_beta_MC::rwm_cxn() const {
 
 double B59_rwm_cxn(double E, double cos_thn) {
     // Expecting lambda = |lambda| sign convention
-    
+
     const double mu = delta_mu;
     const double Delta = m_n-m_p;
     const double M = m_n;
-    
+
     const double beta = sqrt(1-m_e*m_e/(E*E));
     const double x = 1 + 3*lambda*lambda;
     const double c1 = 1 + lambda*lambda;
     const double c2 = 1 - lambda*lambda;
     const double lpm = lambda + mu;
     const double c4 = 1 + lambda*lambda + 2*lambda*mu;
-    
+
     // note, compared to Bilenkii A(E), we've already factored out the spectrum shape,
     // leaving 1+O(E/M) angle-independent shape correction term
     double A = ( 1 + (3 + 4*lambda*mu/x)*E/M
@@ -428,7 +428,7 @@ double B59_rwm_cxn(double E, double cos_thn) {
                      +c2*c4*m_e*m_e/(M*E)
                      -(8*lambda*c1*mu + 3*x*x)*E/M )/(x*x);
     double b = -3 * a0 * E/M;
-    
+
     // divide out 1+a0*beta*cos_thn zeroth-order angular dependence to produce correction factor
     return A*(1 + beta*a*cos_thn + beta*beta*b*cos_thn*cos_thn)/(1+beta*a0*cos_thn);
 }
@@ -440,16 +440,16 @@ double GM78_radiative_cxn(double E, double cos_thn) {
     double c0 = athb/beta;
     double c1 = 3./2.*log(m_p/m_e) - 3./8. + 2./beta*SpenceL(2*beta/(1+beta));
     double c2 = log(2*(E_m-E)/m_e);
-    
-    
-    double phth1 = ( c1 + 2*(c0-1)*( (E_m-E)/(3*E) - 3./2. + c2 )  
+
+
+    double phth1 = ( c1 + 2*(c0-1)*( (E_m-E)/(3*E) - 3./2. + c2 )
                     + c0/2.*(2*(1+beta*beta) + (E_m-E)*(E_m-E)/(6*E*E) - 4*athb) ) * alpha/M_PI;
-                    
+
     double phth2 = ( c1 + (c0-1)*((E_m-E)*(E_m-E)/(12*beta*beta*E*E) + 2*(E_m-E)/(3*E*beta*beta) + 2*c2 - 3)
                     -2*c0*(athb-1) ) * alpha/M_PI;
-                    
+
     //double r0 = (1 + 3*lambda*lambda + beta*cos_thn*(1 - lambda*lambda));
-     
+
     double r0 = (1 + 3*lambda*lambda)*(1.+Wilkinson_g_a2pi(E/m_e));
     return (1 + phth1 + 3*lambda*lambda*(1+phth1)
             + beta*cos_thn*(1 + phth2 - lambda*lambda*(1 + phth2)) )/r0;
@@ -473,30 +473,30 @@ double Gluck93_Distribution::calc_W_0C(double E_2, double E_f, double c_f) {
     double D_I = 2*(E_2*(E_2m-E_2)-E_1*(E_1m-E_1));
     // note negative lambda sign convention!
     double W_0 = m_i * G2_V / (4*M_PI*M_PI*M_PI) * (D_V + lambda*lambda*D_A - fabs(lambda)*(1+2*kappa)*D_I);
-    
+
     double p_f = sqrt(E_f*E_f - m_f*m_f);
     double v_f = p_f/E_f;
     //double c_f = +1; // TODO cos electron/proton angle = p_2.p_f / |p_2||p_f|
     double beta_r = fabs(beta-(1-beta*beta)*v_f*c_f); // (3.4) electron-proton relative velocity
     // (2.5)
     double Fhat_C = Gluck93_F_C(E_2, beta_r);
-    
+
     // (3.1)
     return W_0C = W_0 * Fhat_C;
 }
 
 double Gluck93_Distribution::calc_Wenu_0Ca(double E_2, double c) {
     calc_Wenu_0(E_2, c); // gets p_2, beta
-    
+
     // (4.3)
     double d = m_i - E_2;
     double E_fc = (d*d + p_2*p_2 + m_f*m_f + 2*d*p_2*c)/(2*(d+p_2*c));
     calc_W_0C(E_2, E_fc);
-    
+
     // (4.4)
     dEfc_dc = p_2*(E_2m - E_2)/m_i * (1 + 2*E_2/m_i*(1-beta*c));
-    
-    
+
+
     double x = (E_2-m_2)/(E_2m-m_2);    // (2.6)
     double r_enu = Gluck93_r_enu(x,c);  // from parametrized fit to Table V
     double r_e = 100*Wilkinson_g_a2pi(E_2/m_2);

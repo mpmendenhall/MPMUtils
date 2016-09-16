@@ -1,5 +1,5 @@
 /// \file Stringmap.cc
-/* 
+/*
  * Stringmap.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *

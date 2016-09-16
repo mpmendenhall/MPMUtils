@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2016
 
 #ifndef TDYNAMICHISTOGRAM_HH
@@ -28,7 +28,7 @@ public:
         Double_t sw = 0;        ///< sum of weights
         Double_t sww = 0;       ///< sum of weights squared
     };
-    
+
     /// fill new data point
     void Fill(Double_t x, Double_t w=1.);
     /// scale all bin contents
@@ -47,19 +47,19 @@ public:
     TGraphErrors* MakeGraph() const;
     /// divide bins by width and optional additional scaling
     virtual void normalize_to_bin_width(Double_t sc = 1.);
-    
+
     /// Scale contents by factor
     virtual void _Scale(Double_t s) { Scale(s); }
     /// add another histogram, assuming same binning convention or re-calculating bins
     virtual void _Add(const CumulativeData* CD, Double_t s = 1.);
-    
+
 protected:
-    
+
     map<Int_t, BinData> fDat;   ///< histogram data
     Double_t fN;                ///< number of bins in prototype interval
     Double_t fX0;               ///< beginning of prototype interval
     Double_t fX1;               ///< end of prototype interval
-    
+
     ClassDef(TDynamicHistogram,2);
 };
 

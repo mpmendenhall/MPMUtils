@@ -1,5 +1,5 @@
 /// \file OutputManager.cc
-/* 
+/*
  * OutputManager.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -36,7 +36,7 @@ parent(nullptr), name(nm) {
     defaultCanvas.SetCanvasSize(200,200);
 #ifdef PUBLICATION_PLOTS
     defaultCanvas.SetGrayscale(true);
-#endif    
+#endif
     basePath = plotPath = dataPath = rootPath = bp;
 }
 

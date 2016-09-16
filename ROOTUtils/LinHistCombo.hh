@@ -1,5 +1,5 @@
 /// \file LinHistCombo.hh Least-squares fitter for linear combinations of histograms
-/* 
+/*
  * LinHistCombo.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -49,11 +49,11 @@ public:
     int Fit(TH1* h, double xmin, double xmax, const std::string& fitopt = "QR");
     /// require coefficients to be non-negative
     void forceNonNegative();
-    
+
     vector<double> coeffs;      ///< fit coefficients
     vector<double> dcoeffs;     ///< fit coefficient errors
     bool interpolate;           ///< whether to interpolate between bins
-    
+
     /// fit evaluation
     double Evaluate(double* x, double* p);
     /// fit evaluation with current coefficients

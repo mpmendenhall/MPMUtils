@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2016
 
 #include "TRatechart.hh"
@@ -35,15 +35,15 @@ TGraphErrors* TRatechart::MakeGraph(bool per_dt, Double_t xscale) const {
 
 void TRatechart::SummarizeWindow()  {
     if(!fPts.size()) return;
-    
+
     SummaryPt P;
     P.fW = fSw;
     for(auto const& a: fPts) P.fX += a[0]*a[1];
     P.fX /= fSw;
-    
+
     for(auto const& a: fPts) P.fXX += (a[0]-P.fX)*(a[0]-P.fX)*a[1];
     P.fXX /= fSw;
-    
+
     fDat.push_back(P);
     fSw = 0;
     fPts.clear();

@@ -1,5 +1,5 @@
 /// \file ProgressBar.hh text-based progress bar
-/* 
+/*
  * ProgressBar.hh, part of the MPMUtils package
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -30,23 +30,23 @@
 /// class for printing a progress bar to stdout
 class ProgressBar {
 public:
-    
+
     /// constructor, given total number of items and number of output steps
     ProgressBar(uint64_t nt, unsigned int ns = 20, bool v=true, const std::string& label="");
-    
+
     /// destructor
     ~ProgressBar() { if(verbose) printf("* Done.\n"); }
-    
+
     /// update status at i items completed
     void update(uint64_t i);
     /// increment status by n items
     void increment(int64_t n = 1) { update(c+n); }
-    
+
 protected:
-    
+
     const uint64_t ntotal;      ///< total number of items to completion
     const unsigned int nsteps;  ///< number of steps to mark
-    
+
     uint64_t c;                 ///< number of items completed
     unsigned int s;             ///< steps displayed
     const bool verbose;         ///< whether to display the progress bar

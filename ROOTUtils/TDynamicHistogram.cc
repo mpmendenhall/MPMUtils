@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2016
 
 #include "TDynamicHistogram.hh"
@@ -14,7 +14,7 @@ void TDynamicHistogram::Fill(Double_t x, Double_t w) {
     b.sww += w*w;
 }
 
-void TDynamicHistogram::Scale(Double_t s) { 
+void TDynamicHistogram::Scale(Double_t s) {
     for(auto& kv: fDat) {
         kv.second.sw *= s;
         kv.second.sww *= s*s;

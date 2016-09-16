@@ -4,9 +4,9 @@
 
 TF1_Quantiles::TF1_Quantiles(TF1& f): npx(f.GetNpx()), xMin(f.GetXmin()), xMax(f.GetXmax()), dx((xMax-xMin)/npx),
 integral(npx+1), alpha(npx), beta(npx), gamma(npx) {
-    
+
     smassert(npx);
-    
+
     integral[0] = 0;
     Int_t intNegative = 0;
     avg = 0;
@@ -16,20 +16,20 @@ integral(npx+1), alpha(npx), beta(npx), gamma(npx) {
         integral[i+1] = integral[i] + integ;
         avg += integ * Double_t(xMin+(i+0.5)*dx);
     }
-    
+
     const Double_t total = integral[npx];
     avg /= total;
-    
+
     if (intNegative > 0 || !total) {
         SMExcept e("bad_probability_distribution");
         e.insert("integral",total);
         e.insert("negative_segs",intNegative);
         throw(e);
     }
-    
+
     // normalize integral to CDF
     for (unsigned int i = 1; i <= npx; i++) integral[i] /= total;
-    
+
     //the integral r for each bin is approximated by a parabola
     //  x = alpha + beta*r +gamma*r**2
     // compute the coefficients alpha, beta, gamma for each bin
@@ -45,14 +45,14 @@ integral(npx+1), alpha(npx), beta(npx), gamma(npx) {
 }
 
 double TF1_Quantiles::eval(double p) const {
-    
+
     UInt_t bin  = TMath::Max(TMath::BinarySearch(npx+1,integral.GetArray(),p),(Long64_t)0);
     // LM use a tolerance 1.E-12 (integral precision)
     while (bin < npx-1 && TMath::AreEqualRel(integral[bin+1], p, 1E-12) ) {
         if (TMath::AreEqualRel(integral[bin+2], p, 1E-12) ) bin++;
         else break;
     }
-    
+
     const Double_t rr = p-integral[bin];
     Double_t x;
     if (rr != 0.0) {
@@ -67,6 +67,6 @@ double TF1_Quantiles::eval(double p) const {
         x = alpha[bin];
         if (integral[bin+1] == p) x += dx;
     }
-    
+
     return x;
 }

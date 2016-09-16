@@ -1,5 +1,5 @@
 /// \file Stringmap.hh wrapper for multimap<string,string> with useful functions
-/* 
+/*
  * Stringmap.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -38,8 +38,8 @@ public:
     Stringmap(const string& str = "");
     /// destructor
     virtual ~Stringmap() {}
-    
-    
+
+
     /// insert key/(string)value pair
     void insert(const string& str, const string& v);
     /// insert key/(double)value
@@ -54,24 +54,24 @@ public:
     unsigned int count(const string& str) const { return dat.count(str); }
     /// serialize to a string
     string toString() const;
-    
+
     /// get first key value (double) or default
     double getDefault(const string& str, double d) const;
     /// retrieve key values as doubles
     vector<double> retrieveDouble(const string& str) const;
     /// remove a key
     void erase(const string& str);
-    
+
     /// display to screen
     void display(string linepfx = "") const;
-    
+
     /// merge data from another stringmap
     void operator+=(const Stringmap& S) { S.mergeInto(*this); }
-    
+
     multimap<string, string> dat;       ///< key-value multimap
-    
+
 protected:
-    
+
     /// merge data into another stringmap
     void mergeInto(Stringmap& S) const;
 };

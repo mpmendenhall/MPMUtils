@@ -1,5 +1,5 @@
 /// \file ControlMenu.cc
-/* 
+/*
  * ControlMenu.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -42,9 +42,9 @@ InputRequester::InputRequester(string d, void (*f)(StreamInteractor*), StreamInt
 NamedInteractor(d), myFuncObject(fObj), myFunc(f) { }
 
 void InputRequester::doIt() {
-    
+
     assert(mydeque && mystack);
-    
+
     for(unsigned int i=0; i<inputFilters.size(); i++) {
         if(inputFilters[i]) {
             // call input filter if set
@@ -71,7 +71,7 @@ void InputRequester::doIt() {
                 mystack->push(argin);
         }
     }
-    
+
     // function call using collected results
     if(myFunc) {
         if(myFuncObject) {
@@ -89,15 +89,15 @@ void InputRequester::addArg(const string& s, const string& dflt, const string& d
     inputFilters.push_back(filter);
 }
 
-void InputRequester::setArgOpts(unsigned int i, string s, string dflt, NamedInteractor* filter) { 
-    assert(i<argNames.size()); 
+void InputRequester::setArgOpts(unsigned int i, string s, string dflt, NamedInteractor* filter) {
+    assert(i<argNames.size());
     argNames[i] = s;
     defaultArgs[i] = dflt;
     inputFilters[i] = filter;
 }
 
-string InputRequester::getArgname(unsigned int i) const { 
-    assert(i<argNames.size()); 
+string InputRequester::getArgname(unsigned int i) const {
+    assert(i<argNames.size());
     return argNames[i];
 }
 
@@ -144,7 +144,7 @@ void NameSelector::addChoice(string d, string nm, Selector_Option_Flags o, strin
     if(!mname.size())
         mname = nm;
     nameMap.emplace(nm,choiceNames.size());
-    
+
     choiceNames.push_back(nm);
     choiceDescrips.push_back(d);
     choiceOut.push_back(mname);
@@ -171,28 +171,28 @@ string NameSelector::getDescription() {
     string s = name;
     if(defaultArgs[0].size())
         s += " = "+defaultArgs[0];
-    return s; 
+    return s;
 }
 
 void NameSelector::doIt() {
     bool forceBreak = false;
     assert(mystack && mydeque);
     do {
-        
+
         // display options if choice not already made
         if(!mydeque->size()) {
             displayOptions();
             printf("---------------------------\n");
         }
-        
+
         // input request loop
         while(1) {
             // prompt for input value onto stack
             InputRequester::doIt();
-            
+
             // get argument off stack
             string myArg = popString();
-            
+
             // break for control sequences
             if(startsWith(myArg, exit_control) || startsWith(myArg, barf_control) ) {
                 if(startsWith(myArg, barf_control))
@@ -200,23 +200,23 @@ void NameSelector::doIt() {
                 forceBreak = true;
                 break;
             }
-            
+
             // keep trying on empty input
             if(!myArg.size())
                 continue;
-            
+
             // find matching selection name
             auto it = nameMap.find(myArg);
-            
+
             // if no direct match, apply soft matching when available
             if(it == nameMap.end() && softmatch) {
-                
+
                 // find soft matches
                 vector<map<string,unsigned int>::iterator> matches;
                 for(map<string,unsigned int>::iterator i = nameMap.begin(); i != nameMap.end(); i++) {
                     if(!(oflags[i->second] & SELECTOR_DISABLED) && softmatch(myArg,i->first)) matches.push_back(i);
                 }
-                
+
                 // exactly one soft match is just right
                 if(matches.size() == 1) {
                     myArg = matches.back()->first;
@@ -230,7 +230,7 @@ void NameSelector::doIt() {
                     continue;
                 }
             }
-            
+
             if(it == nameMap.end() || (oflags[it->second] & SELECTOR_DISABLED)) {
                 if(catchAll) {
                     mystack->push(myArg);
@@ -252,7 +252,7 @@ void NameSelector::doIt() {
                 break;
             }
         }
-        
+
     } while(isPersistent && !forceBreak);
 }
 

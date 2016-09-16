@@ -1,5 +1,5 @@
 /// \file SegmentSaver.cc
-/* 
+/*
  * SegmentSaver.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -40,7 +40,7 @@ OutputManager(nm,pnt), inflname(inflName), isCalculated(false), inflAge(0) {
             if(!dirIn) dirIn = PSS->dirIn; // fallback for backwards compatibility prior to subdirectories
         }
     }
-    
+
     // load normalization data
     ignoreMissingHistos = true;
     normalization = registerNamedVector("normalization", 0);

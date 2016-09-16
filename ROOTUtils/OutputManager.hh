@@ -1,5 +1,5 @@
 /// \file OutputManager.hh Convenience class for bundling ROOT output into a directory
-/* 
+/*
  * OutputManager.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -43,10 +43,10 @@ public:
     OutputManager(string nm, string bp);
     /// constructor for nested
     OutputManager(string nm, OutputManager* pnt);
-    
+
     /// destructor
     virtual ~OutputManager() { clearItems(); }
-    
+
     /// generate a TH1F registered with this runs output objects list
     TH1F* registeredTH1F(string hname, string htitle, unsigned int nbins, float x0, float x1);
     /// generate a TH1D registered with this runs output objects list
@@ -55,12 +55,12 @@ public:
     TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
     /// print current canvas; return filename printed
     virtual string printCanvas(string fname, string suffix=".pdf") const;
-    
+
     /// write items to currently open directory, or specified
     TDirectory* writeItems(TDirectory* d = nullptr) override;
     /// write output ROOT file, or to new directory within parent; WARNING: THIS DELETES ALL REGISTERED ITEMS; do last if you reference these!
     void writeROOT(TDirectory* parentDir = nullptr);
-    
+
     TCanvas defaultCanvas;              ///< canvas for drawing plots
     OutputManager* parent = nullptr;       ///< parent output manager
     string basePath;                    ///< general output path
@@ -68,7 +68,7 @@ public:
     string dataPath;                    ///< specific output path for output data
     string rootPath;                    ///< specific output path for ROOT files
     string name;                        ///< name for this subsystem
-    
+
     static bool squelchAllPrinting;     ///< whether to cancel all printCanvas output
 };
 

@@ -33,7 +33,7 @@ public:
     double getProb(unsigned int n) const;
     /// scale all probabilities
     void scale(double s) { for(auto& p: cumprob) p *= s; }
-    
+
 protected:
     vector<double> cumprob;        ///< cumulative probabilites
 };
@@ -50,7 +50,7 @@ public:
     void display(bool verbose = false) const;
     /// scale probabilities
     void scale(double s) { fluxIn *= s; fluxOut *= s; }
-    
+
     string name;        ///< name for this level
     unsigned int A;     ///< nucleus A
     unsigned int Z;     ///< nucleus Z
@@ -86,7 +86,7 @@ public:
     NucDecayEvent(): eid(0), E(0), d(D_NONEVENT), t(0), w(1.) {}
     /// randomize momentum direction
     void randp(double* rnd = nullptr) { randomDirection(p[0],p[1],p[2],rnd); }
-    
+
     unsigned int eid;   ///< event ID number
     double E;           ///< particle energy [keV]
     double p[3];        ///< particle momentum direction
@@ -107,7 +107,7 @@ public:
     void genAuger(vector<NucDecayEvent>& v);
     /// display info
     void display(bool verbose = false) const;
-    
+
     BindingEnergyTable const* BET;      ///< binding energy table
     double Eauger;                      ///< Auger K energy
     double Iauger;                      ///< intensity of Auger electron emissions
@@ -126,21 +126,21 @@ public:
     virtual ~TransitionBase() {}
     /// display transition line info
     virtual void display(bool verbose = false) const;
-    
+
     /// select transition outcome
     virtual void run(vector<NucDecayEvent>&, double* = nullptr) { }
-    
+
     /// return number of continuous degrees of freedom needed to specify transition
     virtual unsigned int getNDF() const { return 2; }
-    
+
     /// scale probability
     virtual void scale(double s) { Itotal *= s; }
-    
+
     /// get probability of removing an electron from a given shell
     virtual double getPVacant(unsigned int) const { return 0; }
     /// how many of given electron type were knocked out
     virtual unsigned int nVacant(unsigned int) const { return 0; }
-    
+
     DecayAtom* toAtom;  ///< final state atom info
     NucLevel& from;     ///< level this transition is from
     NucLevel& to;       ///< level this transition is to
@@ -169,12 +169,12 @@ public:
     float_err averageE() const;
     /// scale probability
     void scale(double s) override;
-    
+
     double Egamma;      ///< gamma energy
     int shell;          ///< selected conversion electron shell
     int subshell;       ///< selected conversion electron subshell
     double Igamma;      ///< total gamma intensity
-    
+
 protected:
     PSelector shells;           ///< conversion electron shells
     vector<float> shellUncert;  ///< uncertainty on shell selection probability
@@ -194,10 +194,10 @@ public:
     double getPVacant(unsigned int n) const override { return n==0?toAtom->IMissing:0; }
     /// get whether said electron was knocked out
     unsigned int nVacant(unsigned int n) const override { return n==0?isKCapt:0; }
-    
+
     /// return number of continuous degrees of freedom needed to specify transition
     unsigned int getNDF() const override { return 0; }
-    
+
     bool isKCapt;       ///< whether transition was a K capture
 };
 
@@ -212,7 +212,7 @@ public:
     void display(bool verbose = false) const override;
     /// return number of continuous degrees of freedom needed to specify transition
     unsigned int getNDF() const override { return 2; }
-    
+
     double Ealpha; ///< alpha kinetic energy
 };
 
@@ -227,13 +227,13 @@ public:
     void run(vector<NucDecayEvent>& v, double* rnd = nullptr) override;
     /// display transition line info
     void display(bool verbose = false) const override;
-    
+
     /// return number of continuous degrees of freedom needed to specify transition
     unsigned int getNDF() const override { return 3; }
-    
+
     bool positron;                      ///< whether this is positron decay
     BetaSpectrumGenerator BSG;          ///< spectrum shape generator
-    
+
 protected:
     /// evaluate beta spectrum probability
     double evalBeta(double* x, double*);
@@ -262,13 +262,13 @@ public:
     void genDecayChain(vector<NucDecayEvent>& v, double* rnd = nullptr, unsigned int n = std::numeric_limits<unsigned int>::max(), double t0 = 0);
     /// rescale all probabilities
     void scale(double s);
-    
+
     /// return number of degrees of freedom needed to specify decay from given level
     unsigned int getNDF(unsigned int n = std::numeric_limits<unsigned int>::max()) const;
-    
+
     /// LaTeX name for generator
     string fancyname;
-    
+
 protected:
     /// get index for named level
     unsigned int levIndex(const string& s) const;
@@ -282,7 +282,7 @@ protected:
     void sumFluxInOut(size_t l);
     /// normalize input/output fluxes to consistency
     void normalizeFluxInOut();
-    
+
     BindingEnergyLibrary const&  BEL;           ///< electron binding energy info
     double tcut;                                ///< cutoff time for splitting events
     vector<NucLevel> levels;                    ///< levels, enumerated
@@ -306,11 +306,11 @@ public:
     bool hasGenerator(const string& gennm);
     /// get decay generator by name
     NucDecaySystem& getGenerator(const string& gennm);
-    
+
     string datpath;                     ///< path to data folder
     double tcut;                        ///< event generator default cutoff time
     BindingEnergyLibrary  BEL;          ///< electron binding energy info
-    
+
 protected:
     map<string,NucDecaySystem*> NDs;    ///< loaded decay systems
     set<string> cantdothis;             ///< list of decay systems that can't be loaded

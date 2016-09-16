@@ -30,8 +30,8 @@ public:
     /// END TRANSACTION command
     int endTransaction() { return exec("END TRANSACTION"); }
 
-    
-protected:    
+
+protected:
     /// set up query for use
     int setQuery(const char* qry, sqlite3_stmt*& stmt);
     /// load a cached statement
@@ -42,12 +42,12 @@ protected:
     int exec(const string& qry, bool checkOK = true);
     /// put column i string into rslt, or leave unchanged if null; return whether non-nullptr
     static bool get_string(sqlite3_stmt* stmt, unsigned int i, string& rslt);
-        
+
     /// extract a vector<double> from a blob column
     void getVecBlob(vector<double>& v, sqlite3_stmt*& stmt, int col);
     /// bind a vector<double> as a blob to a statement parameter
     int bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v);
-    
+
     sqlite3* db = nullptr;                     ///< database connection
     map<string, sqlite3_stmt*> statements;  ///< prepared statements awaiting deletion
 

@@ -15,13 +15,13 @@ void KDTreeSet::finalize() {
 }
 
 void KDTreeSet::fillPointRange(unsigned int npts, const float* xlo, const float* xhi, const float* dens) {
-    
+
     assert(!T);
-    
+
     ROOT::Math::QuasiRandomNiederreiter r(ndim);
     TRandom3 r0;
     vector<double> x(ndim);
-    
+
     // generate bin points
     printf("Generating %u point %u-dimensional cloud...\n", npts, ndim);
     unsigned int i = 0;

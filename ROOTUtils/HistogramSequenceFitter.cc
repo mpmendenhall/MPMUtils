@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2015
 
 #include "HistogramSequenceFitter.hh"
@@ -16,7 +16,7 @@
 
 
 IntervalIntegralFitter::IntervalIntegralFitter(unsigned int npar):
-N(npar), 
+N(npar),
 //myMin(ROOT::Math::kConjugateFR),
 myMin(ROOT::Math::kVectorBFGS),
 myf(this, &IntervalIntegralFitter::eval_error, npar) {
@@ -34,7 +34,7 @@ void IntervalIntegralFitter::fit() {
     myMin.SetMaxFunctionCalls(10000);
     myMin.SetMaxIterations(10000);
     myMin.SetTolerance(0.1);
-    
+
     const char* varletters = "xyztuvwabcdefghijklmnopqrs";
     for(unsigned int i=0; i<N; i++) {
         const char vname[] = {varletters[i],0};
@@ -42,13 +42,13 @@ void IntervalIntegralFitter::fit() {
         myMin.SetVariable(i, vname, myParams[i], mySteps[i]);
     }
     myMin.SetVariableLimits(1,-1e-3,1e-3);
-    
+
     if(dIntegrals.size() != integrals.size()) {
         dIntegrals = vector<double>(integrals.size(), 1.0);
     }
-    
-    myMin.Minimize(); 
-    
+
+    myMin.Minimize();
+
     const double* xs = myMin.X();
     for(unsigned int i=0; i<N; i++) {
         myParams[i] = xs[i];
@@ -60,7 +60,7 @@ double IntervalIntegralFitter::eval_error(const double* params) const {
     assert(intervals.size() == integrals.size());
     assert(intervals.size() == dIntegrals.size());
     //printf("p ="); for(unsigned int i=0; i<N; i++) printf("\t%g",params[i]); printf("\n");
-    
+
     double ss = 0;
     for(size_t i = 0; i<intervals.size(); i++) {
         if(!dIntegrals[i]) continue;
@@ -104,7 +104,7 @@ double ExponentialIntegralFitter::integ_f(double t, const double* params) const 
     }
 }
 
-void ExponentialIntegralFitter::init_params() {    
+void ExponentialIntegralFitter::init_params() {
     //printf("Estimating initial exponential parameters...\n");
     TGraphErrors g(intervals.size());
     for(size_t i=0; i<intervals.size(); i++) {
@@ -173,12 +173,12 @@ void HistogramSequenceFitter::addData(const TH1* h, const intervalList& dt) {
 void HistogramSequenceFitter::fit() {
     assert(myFitter);
     assert(hs.size() >= myFitter->N);
-    
+
     myFitter->intervals = dts;
     myFitter->integrals.resize(hs.size());
     myFitter->dIntegrals.resize(hs.size());
     fts.clear();
-    
+
     unsigned int nbins = hs[0]->GetNbinsX();
     //unsigned int nbins = dynamic_cast<const TArray*>(hs[0])->GetSize();
     printf("Fitting sequence of %i histograms with %i bins...\n", (int)hs.size(), nbins);
@@ -199,12 +199,12 @@ TH1* HistogramSequenceFitter::interpolate(const intervalList& dt, TH1* h) const 
     if(!h) h = (TH1*)hs[0]->Clone();
     //else assert(dynamic_cast<const TArray*>(h)->GetSize() == fts.size());
     else assert(size_t(h->GetNbinsX()+2) == fts.size());
-    
+
     //TVectorD ig(npar);
-    
+
     for(unsigned int i=0; i<fts.size(); i++) {
         h->SetBinContent(i, (*myFitter)(dt, &fts[i][0]));
-        
+
         // TODO error calculation
         //TMatrixDSym covMatrix = fts[i]->GetCovarianceMatrix();
         //for(unsigned int j=0; j<npar; j++) {
@@ -215,9 +215,9 @@ TH1* HistogramSequenceFitter::interpolate(const intervalList& dt, TH1* h) const 
         //    }
         //}
         //h->SetBinError(i+1, sqrt(covMatrix.Similarity(ig)));
-    
+
     }
-    
+
     return h;
 }
 

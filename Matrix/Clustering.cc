@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2015
 
 #include "Clustering.hh"
@@ -82,7 +82,7 @@ void EMClusterer::initFromKMeans(const KMeansCalculator& K) {
     classification.resize(n);
     mu = K.class_means;
     tau = convertType<unsigned int, double>(K.class_counts)/n;
-    
+
     iSigma.clear();
     Sigma.clear();
     detSigma.clear();
@@ -92,7 +92,7 @@ void EMClusterer::initFromKMeans(const KMeansCalculator& K) {
         iSigma.push_back(VarMat<double>::identity(k, 1./sig2[j], 0));
         detSigma.push_back(1./pow(sig2[j],k));
     }
-    
+
     f = VarMat<double>(n,m);
     T = VarMat<double>(m,n);
 }
@@ -128,14 +128,14 @@ void EMClusterer::M_step() {
         mu[j].zero();
         for(size_t i=0; i<n; i++) mu[j] += points[i]*T(j,i);
         mu[j] /= n*tau[j];
-        
+
         Sigma[j].zero();
         for(size_t i=0; i<n; i++) {
             auto xu = points[i]-mu[j];
             Sigma[j] += outer(xu,xu)*T(j,i);
         }
         Sigma[j] /= n*tau[j];
-        
+
         iSigma[j] = Sigma[j]; iSigma[j].invert();
         detSigma[j] = Sigma[j].det();
     }

@@ -61,7 +61,7 @@ double drawSimulHistos(vector<TH1*>& hists, const string& opt, const string& new
             h->Draw("SAME");
     }
     printf(" Done.\n");
-            
+
             maxHist->SetTitle(oldTitle.c_str());
             return maxHist->GetMaximum();
 }
@@ -99,7 +99,7 @@ void combo_draw_objs(const vector<TObject*>& hs, const string& outp, const char*
         nbase = dropLast(nbase,".");
         outpath = dropLast(outpath,"/");
     } else nbase = "";
-    
+
     vector<string> hNames;
     for(auto h: hs) {
         if(!h) continue;
@@ -197,7 +197,7 @@ void makeGrayscalepalette(bool b2w) {
 void makeRBpalette() {
     const Int_t NRGBs = 5;
     const Int_t NCont = 255;
-    
+
     Double_t stops[NRGBs] = { 0.00, 0.25, 0.50, 0.75, 1.00 };
     Double_t red[NRGBs]   = { 0.00, 0.00, 1.00, 0.75, 1.00 };
     Double_t green[NRGBs] = { 0.00, 0.25, 1.00, 0.00, 0.80 };
@@ -213,13 +213,13 @@ void setupSlideStyle(TStyle* S) {
     //S->SetLabelOffset(0.02, "X");
     S->SetPadBottomMargin(0.14);
     S->SetPadLeftMargin(0.15);
-    
+
     S->SetTitleSize(0.05,"xyz");
     S->SetTitleOffset(1.25,"z");
     S->SetTitleOffset(1.2,"y");
     S->SetTitleOffset(0.95,"x");
     S->SetTitleBorderSize(0);
-    
+
     S->SetTitleW(1.0);
     S->SetTitleY(0.992);
     S->SetFillColor(0);

@@ -1,4 +1,4 @@
-/* 
+/*
  * CMatrix.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -43,25 +43,25 @@ public:
     cmatrix_fft(size_t m);
     /// destructor
     ~cmatrix_fft() { delete[] realspace; delete[] kspace; }
-    
+
     const size_t M;             ///< number of elements
     fftw_plan forwardplan;      ///< FFTW data for forward Fourier Transforms of this size
     fftw_plan reverseplan;      ///< FFTW data for inverse Fourier Transforms of this size
     double* realspace;          ///< array for holding real-space side of transform data
     complex<double>* kspace;    ///< array for holding kspace-side of transform data
-    
+
     /// get FFTer for dimension m
     static cmatrix_fft& get_ffter(size_t m);
-    
+
 protected:
-    
+
     static map<size_t,cmatrix_fft*> ffters;  ///< loaded FFTers
 };
 
 namespace VarVec_element_IO {
     template<>
     inline void writeToFile(const complex<double>& t, ostream& o) { o.write((char*)&t, sizeof(t)); }
-    
+
     template<>
     inline complex<double> readFromFile(std::istream& s) { complex<double> x; s.read((char*)&x, sizeof(x)); return x; }
 }
@@ -82,33 +82,33 @@ class CMatrix: public BinaryOutputObject {
 public:
     /// Constructor
     CMatrix(size_t m = 0): M(m), data(M,0.), kdata(M/2+1,0.), has_realspace(true), has_kspace(true) { }
-    
+
     /// generate an identity CMatrix
     static CMatrix identity(size_t m);
     /// Fill this CMatrix with random numbers in [0,1]
     static CMatrix random(size_t m);
-    
+
     size_t nRows() const { return M; }
     size_t nCols() const { return M; }
     size_t size() const { return M*M; }
-    
+
     /// Print this CMatrix to stdout
     void display() const;
     /// Print kspace data for this CMatrix to stdout
     void displayK() const;
-    
+
     /// immutable element access
     double operator[](size_t n) const;
     /// mutable element access
     double& operator[](size_t n);
-    
+
     /// L2 (Spectral) norm of circulant matrix
     double norm_L2() const;
     /// determinant of circulant matrix
     double det() const;
     /// trace of circulant matrix
     double trace() const;
-    
+
     /// Return a pointer to the CMatrix's Fourier representation
     vector< complex<double> >& getKData();
     /// Return a pointer to the CMatrix's Fourier representation (read only)
@@ -117,17 +117,17 @@ public:
     vector<double>&  getRealData();
     /// Return a pointer to the CMatrix's real-space representation (read only)
     const vector<double>& getRealData() const;
-    
+
     /// Calculate the inverse of this CMatrix
     const CMatrix inverse() const;
     /// Invert this CMatrix inplace
     CMatrix& invert();
     /// Return the transpose of this CMatrix
     const CMatrix transpose() const;
-    
+
     /// unary minus
     const CMatrix operator-() const;
-    
+
     /// Product with a scalar, inplace
     CMatrix& operator*=(double c);
     /// Product with another CMatrix (circulant matrices are commutative!)
@@ -138,7 +138,7 @@ public:
     const CMatrix operator*(const CMatrix& m) const;
     /// Multiply a vector on the right
     const VarVec<double> operator*(const VarVec<double>& v) const;
-    
+
     /// add another CMatrix to this one
     CMatrix& operator+=(const CMatrix& rhs);
     /// sum of two CMatrices
@@ -147,27 +147,27 @@ public:
     CMatrix& operator-=(const CMatrix& rhs);
     /// difference of two CMatrices
     const CMatrix operator-(const CMatrix& rhs) const;
-    
+
     /// Print the rth row of the matrix to stdout
     void printRow(int r) const;
-    
+
     /// Dump binary data to file
     void writeToFile(ostream& o) const;
     /// Read binary data from file
     static CMatrix readFromFile(std::istream& s);
-    
+
 private:
-    
+
     size_t M;     ///< number of cycles
-    
+
     /// calculate K-space data from real space
     void calculateKData() const;
     /// calculate real-space data from K-space
     void calculateRealData() const;
-    
+
     /// zero all entries in this CMatrix
     void zero() const;
-    
+
     mutable vector<double> data;                ///< real-space data
     mutable vector< complex<double> > kdata;    ///< K-space data
     mutable bool has_realspace;                 ///< whether the real-space representation of this matrix has been calculated

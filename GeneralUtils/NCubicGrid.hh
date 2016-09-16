@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2015
 
 #include <stddef.h>
@@ -19,7 +19,7 @@ class NCubicGrid {
 public:
     /// Constructor
     NCubicGrid();
-    
+
     /// boundary conditions for interpolation
     enum IBC {
         IB_CYCLIC,      ///< cyclic edges
@@ -34,7 +34,7 @@ public:
     void setUserRange(const T r0[N], const T r1[N], const T e[N] = nullptr);
     /// set grid point value (adds guard values for boundary conditions as needed)
     void set(const size_t i[N], T v);
-    
+
     /// evaluate at given position
     T operator()(const T x[N]) const;
     /// evaluate at given position: linear interpolation
@@ -43,13 +43,13 @@ public:
     T at(const size_t i[N]) const { return dat[idx(i) + g_offset]; }
     /// get user coordinate for (user) grid point
     void gridpos(const size_t i[N], T x[N]) const { for(size_t a = 0; a < N; a++) x[a] = (i[a]+2)/sx[a] + ox[a]; }
-    
-    
+
+
     /// binary file dump
     virtual void write(ostream& o) const;
     /// binary file load
     virtual void read(istream& is);
-    
+
     static const size_t N_INTERP_PTS = 4;
     vector<T> dat;      ///< data, with guard values
     size_t NX[N];       ///< grid dimensions, not counting guard values
@@ -57,7 +57,7 @@ public:
     size_t g_offset;    ///< offset to skip guard points
     T sx[N];            ///< user coordinates scale for each dimension
     T ox[N];            ///< user coordinates offset for each dimension
-    
+
     /// index for coordinate
     size_t idx(const size_t i[N]) const;
     /// interpolate point in grid coordinates
@@ -80,7 +80,7 @@ bool increment_counter(size_t c[N]) {
     return i < N;
 }
 
-/// increment N-dimensional counter with variable limit 
+/// increment N-dimensional counter with variable limit
 template<size_t N>
 bool increment_counter(size_t c[N], const size_t m[N]) {
     size_t i = 0;
@@ -136,7 +136,7 @@ template<size_t N, typename T>
 void NCubicGrid<N,T>::set(const size_t i[N], T v) {
     size_t ii = idx(i);
     dat[ii + g_offset] = v;
-    // TODO set guard points for boundary conditions        
+    // TODO set guard points for boundary conditions
 }
 
 template<size_t N, typename T>
@@ -172,7 +172,7 @@ inline T sumMcoeffs(const T* dat, const T* coeffs) {
 template<typename T, size_t N, size_t M>
 inline T sumreduce_block(const T* dat, const T coeffs[N*M]) {
     if(N==1) return sumMcoeffs<T, M>(dat, coeffs);
-    
+
     T datreduced[pow_nm<M,N? N-1 : 0>()];
     for(size_t i=0; i<pow_nm<M,N? N-1 : 0>(); i++)
         datreduced[i] = sumMcoeffs<T,M>(dat+M*i, coeffs);
@@ -198,17 +198,17 @@ inline T NCubicGrid<N,T>::eval_interpolated(const T x[N]) const {
         ix[a] = int(x[a]);
         fx[a] = x[a]-ix[a];
         if(fx[a]<0) { fx[a] += 1; ix[a] -= 1; }
-        
+
         // range check
         if(ix[a] < 1 || ix[a] > int(NX[a]+1)) {
             //if(edgeBC[a]==IB_CYCLIC) ix[a] = ((ix[a]-2)+100*NX[a])%NX[a] + 2;
             return 0;
         }
         assert(1<=ix[a] && ix[a]<=int(NX[a]+1));
-        
+
         i0 += (ix[a]-1)*NStep[a];
     }
-    
+
     // cubic interpolating polynomials at each axis' fractional component
     T px[N*N_INTERP_PTS];
     for(size_t a = 0; a < N; a++) {
@@ -220,7 +220,7 @@ inline T NCubicGrid<N,T>::eval_interpolated(const T x[N]) const {
         px[a*4+2] = 0.5*x + 2*xx - 1.5*xxx;
         px[a*4+3] = 0.5*(xxx-xx);
     }
-    
+
     T interpdat[pow_nm<4,N>()];
     transferMN<T,N,4>(i0, interpdat, NStep);
     return sumreduce_block<T,N,4>(interpdat, px);
@@ -237,24 +237,24 @@ inline T NCubicGrid<N,T>::eval_linear(const T x[N]) const {
         ix[a] = int(xx[a]);
         fx[a] = xx[a]-ix[a];
         if(fx[a]<0) { fx[a] += 1; ix[a] -= 1; }
-        
+
         // range check
         if(ix[a] < 1 || ix[a] > int(NX[a]+1)) {
             //if(edgeBC[a]==IB_CYCLIC) ix[a] = ((ix[a]-2)+100*NX[a])%NX[a] + 2;
             return 0;
         }
         assert(1<=ix[a] && ix[a]<=int(NX[a]+1));
-        
+
         i0 += ix[a]*NStep[a];
     }
-    
+
     T px[N*2];
     for(size_t a = 0; a < N; a++) {
         const T& x = fx[a];
         px[a*2+0] = 1-x;
         px[a*2+1] = x;
     }
-    
+
     T interpdat[pow_nm<2,N>()];
     transferMN<T,N,2>(i0, interpdat, NStep);
     return sumreduce_block<T,N,2>(interpdat, px);

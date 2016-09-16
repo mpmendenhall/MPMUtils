@@ -1,5 +1,5 @@
 /// \file SegmentSaver.hh Mechanism for loading pre-defined histograms from file
-/* 
+/*
  * SegmentSaver.hh, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -46,7 +46,7 @@ public:
     const string& getInflName() const { return inflname; }
     /// get age of analyzer's input file
     double getInflAge() const { return inflAge; }
-    
+
     /// generate or restore from file a saved TH1F histogram
     TH1* registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax);
     /// generate or restore from file a saved TH2F histogram
@@ -64,7 +64,7 @@ public:
     TObjString* registerAttrString(const string& nm, const string& val);
     /// clone or restore from file a template TObject
     TObject* registerObject(const string& onm, const TObject& oTemplate);
-    
+
     /// get core histogram by name
     TH1* getSavedHist(const string& hname);
     /// get saved histogram by name, const version
@@ -79,22 +79,22 @@ public:
     virtual void scaleData(double s);
     /// check whether normalization has been performed
     virtual bool isNormalized() const { return normalization->GetNrows(); }
-    
+
     /// add histograms, cumulatives from another SegmentSaver of the same type
     virtual void addSegment(const SegmentSaver& S, double sc = 1.);
     /// check if this is equivalent layout to another SegmentSaver
     virtual bool isEquivalent(const SegmentSaver& S, bool throwit = false) const;
     /// load and add a list of segment files; return number loaded
     virtual size_t addFiles(const vector<string>& inflnames);
-    
+
     bool ignoreMissingHistos;   ///< whether to quietly ignore missing histograms in input file
-    
-    
+
+
     // ----- Subclass me! ----- //
-    
+
     /// create a new instance of this object(nm,inflname) (cloning self settings) for given directory
     virtual SegmentSaver* makeAnalyzer(const string&, const string&) { assert(false); return nullptr; }
-    
+
     /// optional setup at start of data loading
     virtual void startData() { }
     /// optional event processing hook
@@ -109,18 +109,18 @@ public:
     virtual void makePlots() {}
     /// virtual routine for comparing to other analyzers (of this type or nullptr; meaning implementation-dependent)
     virtual void compare(const vector<SegmentSaver*>&) { }
-    
+
     TFile* fIn;                 ///< input file to read in histograms from
     TDirectory* dirIn = nullptr;   ///< particular sub-directory for reading histograms
     string inflname;            ///< where to look for input file
     bool isCalculated;          ///< flag for whether calculation step has been completed
     TVectorD* normalization;    ///< normalization information; meaning defined in subclasses
-    
+
 protected:
-    
+
     /// attempt to load named object from file, registering and returning if successful
     TObject* tryLoad(const string& oname);
-    
+
     map<string,TH1*> saveHists;         ///< saved cumulative histograms
     map<string,TCumulative*> cumDat;    ///< non-TH1-derived cumulative datatypes
     double inflAge;                     ///< age of input file [s]; 0 for brand-new files

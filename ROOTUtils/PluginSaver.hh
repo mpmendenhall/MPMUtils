@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2015
 
 #ifndef PLUGINSAVER_HH
@@ -20,10 +20,10 @@ class PluginBuilder {
 public:
     /// Destructor
     virtual ~PluginBuilder() { }
-    
+
     /// instantiate plugin SegmentSaver
     virtual void makePlugin(SegmentSaver* pnt) = 0;
-    
+
     shared_ptr<SegmentSaver> thePlugin = nullptr; ///< instantiated plugin
 };
 
@@ -49,17 +49,17 @@ class PluginSaver: public SegmentSaver {
 public:
     /// Constructor, optionally with input filename
     PluginSaver(OutputManager* pnt, const string& nm = "PluginSaver", const string& inflName = "");
-    
+
     /// get plugin by name
     shared_ptr<SegmentSaver> getPlugin(const string& nm) const;
-    
+
     /// zero out all saved histograms
     void zeroSavedHists() override;
     /// scale all saved histograms by a factor
     void scaleData(double s) override;
     /// add histograms from another SegmentSaver of the same type
     void addSegment(const SegmentSaver& S, double sc = 1.) override;
-    
+
     /// optional setup at start of data loading
     void startData() override;
     /// optional event processing hook
@@ -76,16 +76,16 @@ public:
     void makePlots() override;
     /// virtual routine for comparing to other analyzers (of this type or nullptr; meaning implementation-dependent)
     void compare(const vector<SegmentSaver*>& v) override;
-    
+
     /// write items to current directory or subdirectory of provided
     TDirectory* writeItems(TDirectory* d = nullptr) override;
     /// clear (delete) items
     void clearItems() override;
-    
+
 protected:
     /// build plugins appropriate for input file; call in subclass after setting up myBuilders
     virtual void buildPlugins();
-    
+
     map<string, shared_ptr<PluginBuilder>> myBuilders;  ///< available named plugins list
     TObjString* filePlugins;                            ///< list of plugin names from file
 };

@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2015
 
 #include "PluginSaver.hh"
@@ -83,7 +83,7 @@ void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
 
 void PluginSaver::makePlots() {
     defaultCanvas.cd();
-    SegmentSaver::makePlots(); 
+    SegmentSaver::makePlots();
     for(auto& kv: myBuilders) {
         if(kv.second->thePlugin) {
             kv.second->thePlugin->defaultCanvas.cd();
@@ -103,7 +103,7 @@ void PluginSaver::processEvent() {
         if(kv.second->thePlugin)
             kv.second->thePlugin->processEvent();
 }
-    
+
 void PluginSaver::finishData() {
     for(auto& kv: myBuilders)
         if(kv.second->thePlugin)
@@ -112,10 +112,10 @@ void PluginSaver::finishData() {
 
 void PluginSaver::compare(const vector<SegmentSaver*>& v) {
     SegmentSaver::compare(v);
-    
+
     vector<PluginSaver*> vP;
     for(auto SS: v) vP.push_back(dynamic_cast<PluginSaver*>(SS));
-    
+
     for(auto& kv: myBuilders) {
         if(!kv.second->thePlugin) continue;
         vector<SegmentSaver*> vPi;

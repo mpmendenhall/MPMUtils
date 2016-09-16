@@ -1,4 +1,4 @@
-/* 
+/*
  * Permutation.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -36,20 +36,20 @@ public:
     Permutation(size_t n);
     /// Destructor
     ~Permutation() {}
-    
+
     /// get size
     size_t size() const { return data.size(); }
     /// immutable element access
     size_t operator[](size_t n) const { assert(n<size()); return data[n]; }
     /// mutable element access
     size_t& operator[](size_t n) { assert(n<size()); return data[n]; }
-    
+
     /// Set to permutation matrix needed by ShieldPhysics
     Permutation& nshuffle(int n);
-    
+
     /// Permute two elements
     void swap(size_t a, size_t b);
-    
+
     /// Return the inverse (=transpose) of the matrix
     Permutation inverse() const;
     /// Return the transpose (=inverse) of the matrix
@@ -58,10 +58,10 @@ public:
     Permutation& invert();
     /// Transpose (=invert) the matrix inplace
     Permutation& transpose() {return invert(); }
-    
+
     /// Multiply another Permutation to the right
     const Permutation operator*(const Permutation& p) const;
-    
+
 private:
     vector<size_t> data; ///< the permutation data
 };

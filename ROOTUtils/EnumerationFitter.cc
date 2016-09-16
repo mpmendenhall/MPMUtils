@@ -1,5 +1,5 @@
 /// \file EnumerationFitter.cc
-/* 
+/*
  * EnumerationFitter.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -60,7 +60,7 @@ TGraphErrors* EnumerationFitter::loadFitFile(const string& fname) {
         e.insert("filename",fname);
         throw(e);
     }
-    
+
     std::ifstream fin(fname.c_str());
     string s;
     vector<double> datenum;
@@ -71,7 +71,7 @@ TGraphErrors* EnumerationFitter::loadFitFile(const string& fname) {
         delete fitter;
         fitter = nullptr;
     }
-    
+
     printf("Loading data from '%s'...\n",fname.c_str());
     while (fin.good()) {
         std::getline(fin,s);
@@ -90,8 +90,8 @@ TGraphErrors* EnumerationFitter::loadFitFile(const string& fname) {
         }
     }
     fin.close();
-    
+
     printf("Loaded %i fit points and %i parameters\n",(int)dat.size(),(int)fterms.size());
-    
+
     return new TGraphErrors(dat.size(),&datenum[0],&dat[0],nullptr,&daterr[0]);
 }

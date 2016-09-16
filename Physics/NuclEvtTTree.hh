@@ -12,13 +12,13 @@ public:
     virtual int addFile(const std::string& filename);
     /// load next event into vector; return number of primaries
     unsigned int loadEvt(vector<NucDecayEvent>& v);
-    
+
     bool firstpass;     ///< whether read is on first pass through data
-    
+
 protected:
     /// set tree readpoints
     virtual void setReadpoints(TTree* T);
-    
+
     NucDecayEvent evt;  ///< event readpoint
     unsigned int prevN; ///< previous event number
 };
@@ -30,7 +30,7 @@ public:
     PositionGenerator() {}
     /// destructor
     virtual ~PositionGenerator() {}
-    
+
     /// get number of random DF consumed
     virtual unsigned int getNDF() const { return 3; }
     /// generate vertex position
@@ -47,7 +47,7 @@ public:
     CylPosGen(double zlength, double radius): dz(zlength), r(radius) {}
     /// generate vertex position
     virtual void genPos(double* v, double* rnd = nullptr) const;
-    
+
     double dz;  ///< length of cylinder
     double r;   ///< radius of cylinder
 };
@@ -70,7 +70,7 @@ public:
     virtual void genPos(double* v, double* = nullptr) const { v[0]=x; v[1]=y; v[2]=z; }
     /// get number of random DF consumed
     virtual unsigned int getNDF() const { return 0; }
-    
+
     double x;
     double y;
     double z;

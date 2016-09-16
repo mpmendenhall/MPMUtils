@@ -1,5 +1,5 @@
 /// \file TChainScanner.cc
-/* 
+/*
  * TChainScanner.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *
@@ -59,7 +59,7 @@ void TChainScanner::gotoEvent(unsigned int e) {
     nLocalEvents = noffset = 0;
 }
 
-void TChainScanner::startScan(bool startRandom) { 
+void TChainScanner::startScan(bool startRandom) {
     if(!nEvents) {
         printf("Starting scan with no data... ");
         fflush(stdout);

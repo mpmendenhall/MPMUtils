@@ -1,5 +1,5 @@
 /// \file PathUtils.cc
-/* 
+/*
  * PathUtils.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall
  *

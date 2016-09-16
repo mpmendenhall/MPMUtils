@@ -1,5 +1,5 @@
 /// \file Permutation.cc
-/* 
+/*
  * Permutation.cc, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -27,7 +27,7 @@ Permutation::Permutation(size_t n): data(vector<size_t>(n)) {
 }
 
 Permutation& Permutation::nshuffle(int n) {
-    for(size_t i=0; i<size()/n; i++) 
+    for(size_t i=0; i<size()/n; i++)
         for(int j=0; j<n; j++)
             data[j*size()/n+i] = i*n+j;
         return *this;

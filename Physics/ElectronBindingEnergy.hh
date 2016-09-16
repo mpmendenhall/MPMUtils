@@ -23,9 +23,9 @@ public:
     unsigned int getZ() const { return Z; }
     /// get element name
     string getName() const { return nm; }
-    
+
     static const string shellnames;
-    
+
 protected:
     unsigned int Z;                     ///< element number
     string nm;                          ///< element name abbrev.

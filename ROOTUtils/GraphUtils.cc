@@ -2,7 +2,7 @@
 #include "GraphUtils.hh"
 #include "StringManip.hh"
 #include "SMExcept.hh"
-#include <math.h> 
+#include <math.h>
 #include <TROOT.h>
 #include <TMath.h>
 #include <TDirectory.h>
@@ -141,7 +141,7 @@ TH1F* stringmapToTH1F(const Stringmap& m) {
     smassert(binEdges.size()==nBins+1);
     smassert(binConts.size()==nBins+2);
     smassert(binErrs.size()==nBins+2);
-    
+
     // TODO does this work right?
     TH1F* h = new TH1F(hName.c_str(),hTitle.c_str(),nBins,&binEdges[0]);
     for(unsigned int i=0; i<=nBins+1; i++) {
@@ -253,7 +253,7 @@ TH1* cumulativeHist(const TH1& h, bool normalize, bool reverse) {
             c->SetBinError(i,sqrt(ecum2));
         }
     }
-    
+
     if(normalize) c->Scale(1.0/c->GetBinContent(reverse?1:n));
     return c;
 }
@@ -317,7 +317,7 @@ void drawTogether(vector<TGraphErrors*>& gs, float ymin, float ymax, TCanvas* C,
     for(unsigned int i=1; i<gs.size(); i++)
         gs[i]->Draw("P");
     C->Print(outname);
-    
+
 }
 
 
@@ -427,10 +427,10 @@ TGraphErrors* interpolate(TGraphErrors& tg, float dx) {
     vector<float> ynew;
     vector<float> dynew;
     double x0,x1,y,dy0,dy1;
-    
+
     // sort input points by x value
     tg.Sort();
-    
+
     // interpolate each interval of the original graph
     for(int i=0; i<tg.GetN()-1; i++) {
         tg.GetPoint(i,x0,y);
@@ -446,7 +446,7 @@ TGraphErrors* interpolate(TGraphErrors& tg, float dx) {
             dynew.push_back(sqrt(ninterp)*((1-l)*dy0+l*dy1));
         }
     }
-    
+
     // fill interpolated output graph
     TGraphErrors* gout = new TGraphErrors(xnew.size());
     for(unsigned int i=0; i<xnew.size(); i++) {
@@ -499,14 +499,14 @@ TH1F* axisHist(const TH2& h, const string& hname,  AxisDirection d) {
 
 vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d) {
     smassert(d<=Z_DIRECTION);
-    
+
     const TAxis* Ax1 = d==X_DIRECTION?h3.GetYaxis():h3.GetXaxis();
     const TAxis* Ax2 = d==Z_DIRECTION?h3.GetYaxis():h3.GetZaxis();
     const TAxis* Ax3 = d==X_DIRECTION?h3.GetXaxis():d==Y_DIRECTION?h3.GetYaxis():h3.GetZaxis();
     const unsigned int n1 = Ax1->GetNbins();
     const unsigned int n2 = Ax2->GetNbins();
     const unsigned int n3 = Ax3->GetNbins();
-    
+
     vector<TH2F*> h2s;
     for(unsigned int z = 0; z <= n3+1; z++) {
         TH2F* h2 = new TH2F((std::string(h3.GetName())+"_"+to_str(z)).c_str(),
@@ -546,7 +546,7 @@ vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection d, bool includeOverflow) {
     const unsigned int ny = h2.GetNbinsY();
     const unsigned int nz = d==X_DIRECTION?nx:ny;
     const unsigned int nn = d==X_DIRECTION?ny:nx;
-    
+
     for(unsigned int z = 0; z <= nz+1; z++) {
         if(!includeOverflow && (z==0 || z==nz+1)) continue;
         TH1F* h1 = axisHist(h2, h2.GetName()+("_"+to_str(z)), d==X_DIRECTION? Y_DIRECTION : X_DIRECTION);
@@ -555,7 +555,7 @@ vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection d, bool includeOverflow) {
             if(d==X_DIRECTION) {
                 h1->SetBinContent(n,h2.GetBinContent(z,n));
                 h1->SetBinError(n,h2.GetBinError(z,n));
-            } else { 
+            } else {
                 h1->SetBinContent(n,h2.GetBinContent(n,z));
                 h1->SetBinError(n,h2.GetBinError(n,z));
             }
@@ -569,7 +569,7 @@ vector<unsigned int> equipartition(const vector<float>& elems, unsigned int n) {
     vector<float> cumlist;
     for(unsigned int i=0; i<elems.size(); i++)
         cumlist.push_back(i?cumlist[i-1]+elems[i]:elems[i]);
-    
+
     vector<unsigned int> part;
     part.push_back(0);
     for(unsigned int i=1; i<n; i++) {

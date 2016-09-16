@@ -89,7 +89,7 @@ void DecayAtom::load(const Stringmap& m) {
         else if(kv.first[0]=='k') Ikxr += atof(kv.second.c_str())/100.0;
     }
     Iauger = m.getDefault("Iauger",0)/100.0;
-    
+
     pAuger = Iauger/(Iauger+Ikxr);
     IMissing = Iauger+Ikxr-ICEK;
     if(!Iauger) IMissing = pAuger = 0;
@@ -228,7 +228,7 @@ void ConversionGamma::scale(double s) {
 
 //-----------------------------------------
 
-AlphaDecayTrans::AlphaDecayTrans(NucLevel& f, NucLevel& t, const Stringmap& m): TransitionBase(f,t) { 
+AlphaDecayTrans::AlphaDecayTrans(NucLevel& f, NucLevel& t, const Stringmap& m): TransitionBase(f,t) {
     Ealpha = m.getDefault("E", from.E-to.E);
     Itotal = m.getDefault("I", 0)/100.;
 }
@@ -290,9 +290,9 @@ void ECapture::run(vector<NucDecayEvent>&, double*) {
 bool sortLevels(const NucLevel& a, const NucLevel& b) { return (a.E < b.E); }
 
 NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, double t): BEL(B) {
-    
+
     fancyname = Q.getDefault("fileinfo","fancyname","");
-    
+
     // load levels data
     for(auto& l: Q.retrieve("level")) {
         levels.push_back(NucLevel(l));
@@ -311,11 +311,11 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
         l.n = nlev++;
         levelIndex.emplace(l.name, l.n);
     }
-    
+
     // set up internal conversions
     for(auto& g: Q.retrieve("gamma"))
         addTransition(new ConversionGamma(levels[levIndex(g.getDefault("from",""))],levels[levIndex(g.getDefault("to",""))],g));
-    
+
     if(Q.getDefault("norm","gamma","") == "groundstate") {
         double gsflux = 0;
         for(auto& l: levels)
@@ -323,7 +323,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
             for(auto& tr: transitions) tr->scale(1./gsflux);
             for(auto& l: levels) l.scale(1./gsflux);
     }
-    
+
     // set up Augers
     for(auto& tr: transitions) tr->toAtom->ICEK += tr->getPVacant(0)*tr->Itotal;
     for(auto& a: Q.retrieve("AugerK")) {
@@ -335,11 +335,11 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
         }
         getAtom(Z)->load(a);
     }
-    
+
     // set up alpha decays
     for(auto& al: Q.retrieve("alpha"))
         addTransition(new AlphaDecayTrans(levels[levIndex(al.getDefault("from",""))],levels[levIndex(al.getDefault("to",""))],al));
-    
+
     // set up beta decays
     for(auto& bt: Q.retrieve("beta")) {
         BetaDecayTrans* BD = new BetaDecayTrans(levels[levIndex(bt.getDefault("from",""))],
@@ -352,7 +352,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
         }
         addTransition(BD);
     }
-    
+
     // set up electron captures
     for(auto& ec: Q.retrieve("ecapt")) {
         NucLevel& Lorig = levels[levIndex(ec.getDefault("from",""))];
@@ -375,10 +375,10 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
             addTransition(EC);
         }
     }
-    
+
     set<unsigned int> c;
     for(unsigned int n=0; n<levels.size(); n++) circle_check(n,c);
-    
+
     normalizeFluxInOut();
     setCutoff(t);
 }
@@ -393,7 +393,7 @@ void NucDecaySystem::circle_check(unsigned int n, set<unsigned int>& passed, set
     for(auto tr: transOut[n]) if(!passed.count(tr->to.n)) circle_check(tr->to.n, passed, pnts);
     passed.insert(n);
 }
-        
+
 NucDecaySystem::~NucDecaySystem() {
     for(auto& t: transitions) delete t;
     for(auto& kv: atoms) delete kv.second;
@@ -423,7 +423,7 @@ void NucDecaySystem::setCutoff(double t) {
     for(unsigned int n=0; n<levels.size(); n++) {
         levelDecays[n] = PSelector();
         for(auto tr : transOut[n]) levelDecays[n].addProb(tr->Itotal);
-        
+
         double pStart = (n+1==levels.size());
         if(!pStart && levels[n].hl > tcut && transOut[n].size())
             for(auto tr: transIn[n]) pStart += tr->Itotal;
@@ -476,20 +476,20 @@ void NucDecaySystem::genDecayChain(vector<NucDecayEvent>& v, double* rnd, unsign
     if(init)
         n = lStart.select(rnd);
     if(!levels[n].fluxOut || (!init && levels[n].hl > tcut)) return;
-    
+
     size_t n_prev_evt = v.size();
-    
+
     TransitionBase* T = transOut[n][levelDecays[n].select(rnd)];
     T->run(v, rnd);
     if(rnd) rnd += T->getNDF(); // remove random numbers "consumed" by continuous processes
     unsigned int nAugerK = T->nVacant(0);
     while(nAugerK--)
         getAtom(T->to.Z)->genAuger(v);
-    
+
     // determine and apply time delay for this decay stage
     if(!init) t0 += -(levels[n].hl/log(2))*log(1.-gRandom->Uniform());
     for(size_t i=n_prev_evt; i<v.size(); i++) v[i].t += t0;
-    
+
     genDecayChain(v, rnd, T->to.n, t0);
 }
 
@@ -497,7 +497,7 @@ unsigned int NucDecaySystem::getNDF(unsigned int n) const {
     static map<unsigned int, unsigned int> ndf_cache;
     auto it = ndf_cache.find(n);
     if(it != ndf_cache.end()) return it->second;
-    
+
     unsigned int ndf = 0;
     if(n>=levels.size()) {
         // maximum DF over all starting levels
@@ -559,7 +559,7 @@ NucDecayLibrary::~NucDecayLibrary() {
 NucDecaySystem& NucDecayLibrary::getGenerator(const std::string& gennm) {
     auto it = NDs.find(gennm);
     if(it != NDs.end()) return *(it->second);
-    string fname = datpath+"/"+gennm+".txt"; 
+    string fname = datpath+"/"+gennm+".txt";
     if(!fileExists(fname)) {
         SMExcept e("MissingDecayData");
         e.insert("fname",fname);

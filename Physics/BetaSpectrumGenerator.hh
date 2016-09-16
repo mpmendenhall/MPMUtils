@@ -7,13 +7,13 @@ class BetaSpectrumGenerator {
 public:
     /// constructor
     BetaSpectrumGenerator(double a, double z, double ep);
-    
+
     /// shape correction to basic phase space
     double spectrumCorrectionFactor(double W) const;
-    
+
     /// decay probability at given KE
     double decayProb(double KE) const;
-    
+
     double A;                   ///< number of nucleons
     double Z;                   ///< number of protons
     double EP;                  ///< endpoint kinetic energy, keV

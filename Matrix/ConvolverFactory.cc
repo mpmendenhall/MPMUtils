@@ -2,7 +2,7 @@
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).
-// 
+//
 // -- Michael P. Mendenhall, 2015
 
 #include "ConvolverFactory.hh"
@@ -19,13 +19,13 @@ bool better(const vector<int>& a, const vector<int>& b) {
         if(a[i-1] < b[i-1]) return true;
     return false;
 }
-    
+
 int fftw_best_nearest_size(int i, int dmax) {
     static map< pair<int,int>, int > m;
-    
+
     auto it = m.find(pair<int,int>(i,dmax));
     if(it != m.end()) return it->second;
-    
+
     int jbest = i;
     const int factors[6] = {2,3,5,7,11,13};
     vector<int> powcount(7);
@@ -35,7 +35,7 @@ int fftw_best_nearest_size(int i, int dmax) {
         int resid = j;
         for(int n=0; n<6; n++) while(!(resid%factors[n])) { powcount[n]++; resid /= factors[n]; }
         powcount.back() = resid;
-        if(better(powcount,bestcount)) { bestcount = powcount; jbest = j; } 
+        if(better(powcount,bestcount)) { bestcount = powcount; jbest = j; }
     }
     m.emplace(pair<int,int>(i,dmax),jbest);
     return jbest;
@@ -44,10 +44,10 @@ int fftw_best_nearest_size(int i, int dmax) {
 map<unsigned int,Convolver_FFT*> Convolver_FFT::ffters;
 
 Convolver_FFT::Convolver_FFT(unsigned int m): M(m), realspace(new double[M]), kspace(new complex<double>[M/2+1]) {
-    
+
     printf("Calculating convolver plan for N=%u...",m);
     fflush(stdout);
-    
+
     bool hasWisdom = false;
     FILE* fin = fopen("fftw_wisdom","r");
     if(fin) {
@@ -55,7 +55,7 @@ Convolver_FFT::Convolver_FFT(unsigned int m): M(m), realspace(new double[M]), ks
         flock(fileno(fin), LOCK_UN);
         fclose(fin);
     }
-    
+
     forwardplan = fftw_plan_dft_r2c_1d(M,
                                        realspace,
                                        (fftw_complex*)kspace,
@@ -64,7 +64,7 @@ Convolver_FFT::Convolver_FFT(unsigned int m): M(m), realspace(new double[M]), ks
                                        (fftw_complex*)kspace,
                                        realspace,
                                        FFTW_MEASURE);
-    
+
     bool savedWisdom = false;
     FILE* fout = fopen("fftw_wisdom","w");
     if(fout) {
@@ -100,10 +100,10 @@ void ConvolverFactory::convolve(vector<double>& v) {
 const vector< complex<double> >& ConvolverFactory::getKernel(unsigned int i) {
     auto it = kdata.find(i);
     if(it != kdata.end()) return it->second;
-    
+
     it = kdata.emplace(i, vector< complex<double> >(i/2+1)).first;
     vector<double> kern = calcKernel(i);
-    
+
     Convolver_FFT& ffter = Convolver_FFT::get_ffter(i);
     std::copy(kern.begin(), kern.end(), ffter.realspace);
     fftw_execute(ffter.forwardplan);
