@@ -55,10 +55,10 @@ namespace SVG {
     class line: public XMLBuilder {
     public:
         line(double x1, double y1, double x2, double y2, const string& style = ""): XMLBuilder("line") {
-            attrs["x1"] = to_str(x1);
-            attrs["y1"] = to_str(y1);
-            attrs["x2"] = to_str(x2);
-            attrs["y2"] = to_str(y2);
+            addAttr("x1",x1);
+            addAttr("y1",y1);
+            addAttr("x2",x2);
+            addAttr("y2",y2);
             if(style.size()) attrs["style"] = style;
         }
     };
@@ -68,14 +68,35 @@ namespace SVG {
         rect(double x, double y, double dx, double dy, const string& style = ""): XMLBuilder("rect") {
             if(dx < 0) { x += dx; dx = fabs(dx); }
             if(dy < 0) { y += dy; dy = fabs(dy); }
-            attrs["x"] = to_str(x);
-            attrs["y"] = to_str(y);
-            attrs["width"] = to_str(dx);
-            attrs["height"] = to_str(dy);
+            addAttr("x",x);
+            addAttr("y",y);
+            addAttr("width",dx);
+            addAttr("height",dy);
             if(style.size()) attrs["style"] = style;
         }
     };
 
+    class circle: public XMLBuilder {
+    public:
+        circle(double cx, double cy, double r, const string& style = ""): XMLBuilder("circle") {
+            addAttr("cx",cx);
+            addAttr("cy",cy);
+            addAttr("r",r);
+            if(style.size()) attrs["style"] = style;
+        }
+    };
+    
+    class ellipse: public XMLBuilder {
+    public:
+        ellipse(double cx, double cy, double rx, double ry, const string& style = ""): XMLBuilder("ellipse") {
+            addAttr("cx",cx);
+            addAttr("cy",cy);
+            addAttr("rx",rx);
+            addAttr("rx",ry);
+            if(style.size()) attrs["style"] = style;
+        }
+    };
+    
     class polyline: public XMLBuilder {
     public:
         polyline(const string& style = ""): XMLBuilder("polyline") { if(style.size()) attrs["style"] = style; }
@@ -98,9 +119,9 @@ namespace SVG {
     class gradstop: public XMLBuilder {
     public:
         gradstop(double l, color::rgb c): XMLBuilder("stop") {
-            attrs["offset"] = to_str(l);
+            addAttr("offset",l);
             attrs["stop-color"] = "#"+c.asHexString();
-            if(c.a != 1) attrs["stop-opacity:"] = to_str(c.a);
+            if(c.a != 1) addAttr("stop-opacity",c.a);
         }
     };
 
@@ -108,10 +129,10 @@ namespace SVG {
     public:
         lingradient(const color::Gradient& G, const string& id, double x1, double y1, double x2, double y2): XMLBuilder("linearGradient") {
             attrs["id"] = id;
-            attrs["x1"] = to_str(x1);
-            attrs["y1"] = to_str(y1);
-            attrs["x2"] = to_str(x2);
-            attrs["y2"] = to_str(y2);
+            addAttr("x1",x1);
+            addAttr("y1",y1);
+            addAttr("x2",x2);
+            addAttr("y2",y2);
             for(auto const& s: G.getStops()) addChild(make_shared<gradstop>(s.first, s.second.first));
         }
 
@@ -121,14 +142,19 @@ namespace SVG {
     class text: public XMLBuilder {
     public:
         text(const string& t, double x, double y, const string& fill = "black"): XMLBuilder("text"), myText(make_shared<XMLText>(t)) {
-            attrs["x"] = to_str(x);
-            attrs["y"] = to_str(y);
+            addAttr("x",x);
+            addAttr("y",y);
             attrs["fill"] = fill;
             oneline = true;
             addChild(myText);
         }
         shared_ptr<XMLText> myText;
     };
+    
+    inline void set_fill(shared_ptr<XMLBuilder> x, const color::rgb& c) {
+        x->attrs["fill"] = "#"+c.asHexString();
+        if(c.a != 1) x->addAttr("fill-opacity",c.a);
+    }
 }
 
 #endif

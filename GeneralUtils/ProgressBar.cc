@@ -1,7 +1,7 @@
 /// \file ProgressBar.cc
 /*
  * ProgressBar.cpp, part of the MPMUtils package
- * Copyright (c) 2007-2014 Michael P. Mendenhall
+ * Copyright (c) 2007-2016 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,13 +23,11 @@
 
 ProgressBar::ProgressBar(uint64_t nt, unsigned int ns, bool v, const std::string& label):
 ntotal(nt), nsteps(ns), c(0), s(0), verbose(v) {
-    if(verbose) {
-        printf("%s+",label.c_str());
-        for(unsigned int i=0; i<nsteps; i++)
-            printf("-");
-        printf("\n|");
-        fflush(stdout);
-    }
+    if(!verbose) return;
+    printf("%s+",label.c_str());
+    for(unsigned int i=0; i<nsteps; i++) printf("-");
+    printf("\n|");
+    fflush(stdout);
 }
 
 void ProgressBar::update(uint64_t i) {
@@ -37,10 +35,10 @@ void ProgressBar::update(uint64_t i) {
     c = i;
 
     unsigned int smax = (uint64_t(nsteps)*c)/ntotal;
-    for(; s < smax; s++) {
-        if(verbose) {
+    if(verbose) {
+        while(s++ < smax) {
             printf("*");
             fflush(stdout);
         }
-    }
+    } else s = smax;
 }

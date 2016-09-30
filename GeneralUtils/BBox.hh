@@ -25,6 +25,14 @@ public:
         }
     }
 
+    /// expand by margin on all sides
+    void expand(T x) {
+        for(size_t i=0; i<D; i++) {
+            lo[i] -= x;
+            hi[i] += x;
+        }
+    }
+
     /// check if point in half-open [lo, hi) interior
     bool inside(const T* x) {
         for(size_t i=0; i<D; i++)
