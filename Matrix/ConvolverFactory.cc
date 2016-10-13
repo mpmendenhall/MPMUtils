@@ -11,6 +11,19 @@
 #include <cassert>
 #include <sys/file.h>
 
+size_t fftw_expansion_size(size_t i) {
+    static thread_local vector<size_t> goodsizes = {2};   // good array sizes
+    static thread_local size_t ktry = 2; // largest size tested
+    while(i > goodsizes.back()) {
+        ktry += 2;
+        size_t kf = ktry;
+        for(size_t f: {2,3}) while(!(kf%f)) kf /= f;
+        if(kf==1) goodsizes.push_back(ktry);
+    }
+    auto it = lower_bound(goodsizes.begin(), goodsizes.end(), i);
+    return *it;
+}
+
 using std::pair;
 
 bool better(const vector<int>& a, const vector<int>& b) {
@@ -68,8 +81,8 @@ Convolver_FFT::Convolver_FFT(unsigned int m): M(m), realspace(new double[M]), ks
     bool savedWisdom = false;
     FILE* fout = fopen("fftw_wisdom","w");
     if(fout) {
-        if( (savedWisdom = !flock(fileno(fin), LOCK_EX)) ) fftw_export_wisdom_to_file(fout);
-        flock(fileno(fin), LOCK_UN);
+        if( (savedWisdom = !flock(fileno(fout), LOCK_EX)) ) fftw_export_wisdom_to_file(fout);
+        flock(fileno(fout), LOCK_UN);
         fclose(fout);
     }
     printf("%s%sDone.\n", hasWisdom?"Loaded wisdom; ":"", savedWisdom?"Saved wisdom; ":"");

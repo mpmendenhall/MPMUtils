@@ -19,6 +19,8 @@ using std::complex;
 
 /// calculate nearest "FFTW-friendly" size within dmax of i
 int fftw_best_nearest_size(int i, int dmax);
+/// calculate next "FFTW-friendly" size >= i
+size_t fftw_expansion_size(size_t i);
 
 /// Stores fftw data for FFT'ing
 class Convolver_FFT {
@@ -47,10 +49,8 @@ class ConvolverFactory {
 public:
     /// Constructor
     ConvolverFactory() { }
-
     /// Destructor
     virtual ~ConvolverFactory() { }
-
     /// perform convolution
     void convolve(vector<double>& v);
 
@@ -69,17 +69,16 @@ class GaussConvolverFactory: public ConvolverFactory {
 public:
     /// Constructor
     GaussConvolverFactory(double rr): r(rr) { }
-
     const double r;     ///< convolution radius in samples
-
 protected:
     /// calculate convolution kernel for given size
-    virtual vector<double> calcKernel(unsigned int i) const;
+    vector<double> calcKernel(unsigned int i) const override;
 };
 
 /// Convolutions generator with template shape
 class TemplateConvolverFactory: public ConvolverFactory {
 public:
+    /// Constructor
     TemplateConvolverFactory() { }
     vector<double> v;   ///< convolving samples
     int s0 = 0;         ///< "zero" sample position
@@ -87,7 +86,7 @@ public:
     void flip();
 protected:
     /// calculate convolution kernel for given size
-    virtual vector<double> calcKernel(unsigned int i) const;
+    vector<double> calcKernel(unsigned int i) const override;
 };
 
 #endif
