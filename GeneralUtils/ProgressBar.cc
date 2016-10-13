@@ -33,10 +33,10 @@ ntotal(nt), nsteps(ns), c(0), s(0), verbose(v) {
 void ProgressBar::update(uint64_t i) {
     if(i<=c) return;
     c = i;
-
     unsigned int smax = (uint64_t(nsteps)*c)/ntotal;
     if(verbose) {
-        while(s++ < smax) {
+        while(smax > s) {
+            ++s;
             printf("*");
             fflush(stdout);
         }
