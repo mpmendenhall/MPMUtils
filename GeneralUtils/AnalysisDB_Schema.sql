@@ -3,6 +3,7 @@
 
 -- Analysis run identifier
 CREATE TABLE analysis_runs (
+    run_id INTEGER PRIMARY KEY, -- database ID
     dataname TEXT,      -- identifier for dataset/file input
     anatime REAL        -- timestamp for when analysis was performed
 );
@@ -10,6 +11,7 @@ CREATE UNIQUE INDEX idx_analysis_runs ON analysis_runs(dataname,anatime);
 
 -- Analysis quantity identifier
 CREATE TABLE analysis_vars (
+    var_id INTEGER PRIMARY KEY, -- database ID
     name TEXT,          -- name of analysis quantity
     unit TEXT,          -- units for quantity
     descrip TEXT        -- longer description
@@ -18,12 +20,15 @@ CREATE UNIQUE INDEX idx_analysis_vars ON analysis_vars(name,descrip);
 
 -- Analysis results quantities
 CREATE TABLE analysis_results (
-    run INTEGER,        -- row_id from analysis_runs
-    var INTEGER,        -- rowid from analysis_vars
+    run_id INTEGER,     -- from analysis_runs
+    var_id INTEGER,     -- rowid from analysis_vars
     val REAL,           -- result value
-    err REAL            -- result uncertainty
+    err REAL,           -- result uncertainty
+    FOREIGN KEY(run_id) REFERENCES analysis_runs(run_id) ON DELETE CASCADE,
+    FOREIGN KEY(var_id) REFERENCES analysis_vars(var_id) ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX idx_analysis_results ON analysis_results(run,var);
+CREATE UNIQUE INDEX idx_analysis_results ON analysis_results(run_id, var_id);
+CREATE INDEX idx_anaresults_var ON analysis_results(var_id);
 
 ---------------------------------------
 ---------------------------------------
