@@ -119,7 +119,7 @@ class LinearFitter:
         self.M = None
         
         # merge variable and fixed terms
-        self.coeffs = range(len(self.terms))
+        self.coeffs = list(range(len(self.terms)))
         for (n,t) in enumerate(varterms):
             self.coeffs[t] = varcoeffs[n,0]
         for n in self.fixparams:
@@ -142,7 +142,7 @@ class LinearFitter:
             s = "%f\t"%sqrt(ccov[i,i])
             for j in range(ccov.shape[0]):
                 s += "%f\t"%(ccov[i,j]/sqrt(ccov[i,i]*ccov[j,j]))
-            print s
+            print(s)
 
     def __call__(self,x):
         """evaluate fit function at position x"""
