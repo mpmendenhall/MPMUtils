@@ -92,6 +92,14 @@ class changesymbol(graph.style.symbol):
                                privatedata.symbolattrs + [color])
                                
 
+def residgraph(w,h0,h1,ax,ay0,ay1,k=None):
+    """Canvas with linked-axis graphs for residuals plot"""
+    c = canvas.canvas()
+    g0 = c.insert(graph.graphxy(width=w, height=h0, x=ax, y=ay0))
+    g1 = c.insert(graph.graphxy(width=w, height=h1, ypos=g0.height+0.1, key=k,
+                                x=graph.axis.linkedaxis(g0.axes["x"]), y=ay1))
+    return c,g0,g1
+
 if 0:
     
     class colortext(graph.style.text):

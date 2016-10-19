@@ -85,10 +85,9 @@ class LinearFitter:
         """make weights and covariance matrix for diagonal (uncorrelated) terms"""
         self.weights = diag(wts)
         self.Cov = diag([1./w for w in wts])
-         
-    def fit(self,xydat,cols=(0,1),errorbarWeights=False):
-        """perform linear fit with on (x,y) pair data (using specified columns)"""
-        
+    
+    def setdata(self,xydat,cols=(0,1),errorbarWeights=False):
+        """set data, for fit and residuals calculations"""
         self.xdat = [x[cols[0]] for x in xydat]
         self.ydat = matrix([ x[cols[1]] for x in xydat]).transpose()
         
@@ -101,6 +100,10 @@ class LinearFitter:
                 self.makeDiagWeights([ 1./x[cols[2]]**2 for x in xydat])
             else:
                 self.makeDiagWeights([ x[cols[2]] for x in xydat])
+
+    def fit(self,xydat,cols=(0,1),errorbarWeights=False):
+        """perform linear fit with on (x,y) pair data (using specified columns)"""
+        self.setdata(xydat,cols,errorbarWeights) 
         
         # non-fixed terms to use in fit
         varterms = [ n for n in range(len(self.terms)) if n not in self.fixparams ]
@@ -162,8 +165,8 @@ class LinearFitter:
         return self.ydat.shape[0]-self.X.shape[1]
 
     def fittedpoints(self,dosort = True):
-        """get a list of the fitted points along with the fit value"""
-        fp = [ [self.xdat[i],self.ydat[i],self(self.xdat[i])] for i in range(len(self.xdat))]
+        """get a list of the fitted points along with the fit value and residual"""
+        fp = [ [self.xdat[i], self.ydat[i], self(self.xdat[i]), self.ydat[i]-self(self.xdat[i])] for i in range(len(self.xdat))]
         if dosort:
             fp.sort()
         return fp
