@@ -228,7 +228,7 @@ def cycle_launcher(conn,qsettings,twait=60):
 if __name__ == "__main__":
     parser = OptionParser()
 
-    parser.add_option("--account",  help="submission user account")
+    parser.add_option("--account",  help="submission billing account")
     parser.add_option("--queue",  help="submission queue")
     parser.add_option("--limit",  type="int", default=10, help="concurrent jobs limit")
     parser.add_option("--db",  help="jobs database")
@@ -238,6 +238,9 @@ if __name__ == "__main__":
     parser.add_option("--status", action="store_true", help="update and display status")
     parser.add_option("--cancel", action="store_true", help="cancel queued jobs")
     parser.add_option("--clear", action="store_true", help="clear completed jobs")
+    parser.add_option("--jobfile", help="run one-liners in file")
+    parser.add_option("--walltime", type="int", help="wall time for 1-liner jobs in seconds")
+    parser.add_option("--nodes", type="int", default=1, help="nodes for 1-liner jobs")
 
     options, args = parser.parse_args()
 
@@ -250,5 +253,10 @@ if __name__ == "__main__":
     if options.cancel: cancel_queued_jobs(conn)
     if options.clear: clear_completed(conn)
     if options.cycle: cycle_launcher(conn,qs)
+    if options.jobfile and options.walltime:
+        jcmds = [l.strip() for l in open(options.jobfile,"r").readlines() if l[0]!='#']
+        make_upload_jobs(conn.cursor(), options.jobfile, jcmds, options.walltime, options.nodes)
+        conn.commit()
 
     conn.close()
+
