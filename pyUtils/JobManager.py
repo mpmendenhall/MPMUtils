@@ -7,7 +7,7 @@ from optparse import OptionParser
 from time import sleep
 
 jobstates = {"Idle":2,"Starting":3,"Running":3,"Completed":4,"Unknown":5,"Removed":6,"Bundled":7}
-statenames = {-1:"hold", 0:"waiting", 1:"sumitted", 2:"queued", 3:"running", 4: "done" }
+statenames = {-1:"hold", 0:"waiting", 1:"sumitted", 2:"queued", 3:"running", 4: "done", 6:"removed", 7:"bundled" }
 def statename(i): return statenames.get(i,"status %i"%i)
 
 def get_showq_runstatus():
@@ -170,8 +170,12 @@ def make_upload_jobs(curs, jname, jcmds, walltime, nodes=1):
     joblist = []
     for (n,jc) in enumerate(jcmds):
         jfl = jobdir + "/job_%i.sh"%n
-        open(jfl,"w").write(jc[0])
-        joblist.append((jname,jfl,jc[1],nodes,walltime))
+        logfl = jobdir+"/log_%i.txt"%n
+        if type(jc)==type(""): open(jfl,"w").write(jc)
+        else:
+            logfl = jc[1]
+            open(jfl,"w").write(jc[0])
+        joblist.append((jname, jfl, logfl, nodes, walltime))
     upload_jobs(curs,joblist)
 
 def choose_bundles(ts, tmax, nmax):
@@ -214,7 +218,7 @@ def rebundle(curs,jname,bundledir,tmax,nmax=1000):
 def clear_completed(conn):
     curs = conn.cursor()
     curs.execute("PRAGMA foreign_keys = ON")
-    curs.execute("DELETE FROM jobs WHERE status=4 OR status=6")
+    curs.execute("DELETE FROM jobs WHERE status=4 OR status=6 OR status=7")
     conn.commit()
 
 def cycle_launcher(conn,qsettings,twait=60):
@@ -241,6 +245,7 @@ if __name__ == "__main__":
     parser.add_option("--jobfile", help="run one-liners in file")
     parser.add_option("--walltime", type="int", help="wall time for 1-liner jobs in seconds")
     parser.add_option("--nodes", type="int", default=1, help="nodes for 1-liner jobs")
+    parser.add_option("--bundle", help="bundle job name; specify bundled walltime")
 
     options, args = parser.parse_args()
 
@@ -253,9 +258,14 @@ if __name__ == "__main__":
     if options.cancel: cancel_queued_jobs(conn)
     if options.clear: clear_completed(conn)
     if options.cycle: cycle_launcher(conn,qs)
+
     if options.jobfile and options.walltime:
         jcmds = [l.strip() for l in open(options.jobfile,"r").readlines() if l[0]!='#']
         make_upload_jobs(conn.cursor(), options.jobfile, jcmds, options.walltime, options.nodes)
+        conn.commit()
+
+    if options.bundle and options.walltime:
+        rebundle(conn.cursor(), options.bundle, os.environ["HOME"]+"/jobs/%s/"%options.bundle, options.walltime)
         conn.commit()
 
     conn.close()
