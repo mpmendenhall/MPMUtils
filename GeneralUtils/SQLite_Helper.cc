@@ -83,7 +83,7 @@ int SQLite_Helper::busyRetry(sqlite3_stmt*& stmt) {
 }
 
 int SQLite_Helper::exec(const string& qry, bool checkOK) {
-    sqlite3_stmt* stmt = loadStatement(qry);
+    auto stmt = loadStatement(qry);
     int rc = busyRetry(stmt);
     sqlite3_reset(stmt);
     if(checkOK && !(rc == SQLITE_OK || rc == SQLITE_DONE)) {

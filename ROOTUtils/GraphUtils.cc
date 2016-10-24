@@ -387,12 +387,17 @@ TGraph* matchHistoShapes(const TH1F& h1, const TH1F& h2) {
     return T;
 }
 
-void scale(TGraphErrors& tg, float s) {
+void scale(TGraphErrors& tg, float s, bool xaxis) {
     double x,y;
     for(int i=0; i<tg.GetN(); i++) {
         tg.GetPoint(i,x,y);
-        tg.SetPoint(i,x,s*y);
-        tg.SetPointError(i,tg.GetErrorX(i),s*tg.GetErrorY(i));
+	if(xaxis) {
+            tg.SetPoint(i, x*s, s);
+            tg.SetPointError(i, tg.GetErrorX(i)*s, tg.GetErrorY(i));
+	} else {
+            tg.SetPoint(i, x, s*y);
+            tg.SetPointError(i, tg.GetErrorX(i), s*tg.GetErrorY(i));
+        }
     }
 }
 

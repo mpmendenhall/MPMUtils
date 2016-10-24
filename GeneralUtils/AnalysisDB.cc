@@ -29,7 +29,7 @@ sqlite3_int64 AnalysisDB::createAnaRun(const string& dataname) {
 }
 
 sqlite3_int64 AnalysisDB::getAnaVar(const string& name, const string& unit, const string& descrip) {
-    sqlite3_stmt* stmt = loadStatement("INSERT OR IGNORE INTO analysis_vars(name,unit,descrip) VALUES (?1,?2,?3)");
+    auto stmt = loadStatement("INSERT OR IGNORE INTO analysis_vars(name,unit,descrip) VALUES (?1,?2,?3)");
     sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, unit.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, descrip.c_str(), -1, SQLITE_STATIC);
@@ -47,7 +47,7 @@ sqlite3_int64 AnalysisDB::getAnaVar(const string& name, const string& unit, cons
 }
 
 void AnalysisDB::uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, double val, double err) {
-    sqlite3_stmt* stmt = loadStatement("INSERT INTO analysis_results(run_id,var_id,val,err) VALUES (?1,?2,?3,?4)");
+    auto stmt = loadStatement("INSERT INTO analysis_results(run_id,var_id,val,err) VALUES (?1,?2,?3,?4)");
 
     sqlite3_bind_int64(stmt, 1, run_id);
     sqlite3_bind_int64(stmt, 2, var_id);
