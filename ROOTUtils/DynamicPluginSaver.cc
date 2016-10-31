@@ -5,9 +5,10 @@ map<string, PluginRegistrar*> DynamicPluginSaver::builderTable;
 
 void DynamicPluginSaver::Configure(Config& cfg) {
     if(cfg.exists("plugins")) {
-        auto& pcfgs = cfg.lookup("plugins");
-        for(auto pcfg = pcfgs.begin(); pcfg != pcfgs.end(); pcfg++) {
-            string pname = pcfg->getName();
+        auto& plugs = cfg.lookup("plugins");
+        auto nplugs = plugs.getLength();
+	for(int i=0; i<nplugs; i++) {
+            string pname = plugs[i].getName();
             auto it = builderTable.find(pname);
             if(it == builderTable.end()) {
                 fprintf(stderr,"Unknown plugin type '%s' configured! I die!\n", pname.c_str());
@@ -16,7 +17,7 @@ void DynamicPluginSaver::Configure(Config& cfg) {
                 printf("--------------------\n");
                 throw;
             }
-            myBuilders[pname] = it->second->makeBuilder(*pcfg);
+            myBuilders[pname] = it->second->makeBuilder(plugs[i]);
         }
     }
 
