@@ -58,7 +58,7 @@ TDirectory* OutputManager::writeItems(TDirectory* d) {
     return TObjCollector::writeItems(d);
 }
 
-void OutputManager::writeROOT(TDirectory* parentDir) {
+void OutputManager::writeROOT(TDirectory* parentDir, bool clear) {
     printf("\n--------- Building output .root file... ----------\n");
     TFile* rootOut = nullptr;
     if(parentDir) writeItems(parentDir);
@@ -70,7 +70,7 @@ void OutputManager::writeROOT(TDirectory* parentDir) {
         rootOut->cd();
         writeItems(nullptr);
     }
-    clearItems();
+    if(clear) clearItems();
     delete rootOut;
     printf("---------          Done.          ----------\n");
 }

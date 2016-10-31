@@ -34,6 +34,7 @@ public:
     ConfigPluginBuilder(Setting& c): cfg(c) { }
     /// Plugin construction... assumes proper constructor for Plug
     void makePlugin(SegmentSaver* pnt) override {
+        assert(pnt);
         auto PBase = dynamic_cast<Base*>(pnt);
         assert(PBase);
         thePlugin = make_shared<Plug>(PBase, cfg);
@@ -52,14 +53,19 @@ public:
 class DynamicPluginSaver: public PluginSaver {
 public:
     /// Constructor
-    DynamicPluginSaver(OutputManager* pnt, const string& nm = "DynamicPluginSaver", const string& inflName = ""): PluginSaver(pnt,nm,inflName) { }
+    DynamicPluginSaver(OutputManager* pnt, const string& nm = "DynamicPluginSaver", const string& inflName = "");
     /// Configure from libconfig object, dynamically loading plugins
-    virtual void Configure(Config& cfg);
+    virtual void Configure(Setting& cfg);
     /// Configure, loading config by filename
     void LoadConfig(const string& fname);
+    /// Configure, loading from input file
+    void Reconfigure();
 
     /// global map of available plugins
     static map<string, PluginRegistrar*> builderTable;
+
+protected:
+    TObjString* configstr;  ///< configuration file string
 };
 
 /// Compile-time registration of dynamically-loadable plugins

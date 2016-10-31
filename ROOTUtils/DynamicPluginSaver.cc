@@ -1,9 +1,32 @@
 /// \file DynamicPluginSaver.cc
 #include "DynamicPluginSaver.hh"
+#include <TObjString.h>
+#include <StringManip.hh>
+#include <cassert>
 
 map<string, PluginRegistrar*> DynamicPluginSaver::builderTable;
 
-void DynamicPluginSaver::Configure(Config& cfg) {
+DynamicPluginSaver::DynamicPluginSaver(OutputManager* pnt, const string& nm, const string& inflName): PluginSaver(pnt,nm,inflName) {
+    configstr = registerAttrString("configstr", "");
+    assert(configstr);
+}
+
+void DynamicPluginSaver::Reconfigure() {
+    if(configstr->String().Length()) {
+        Config cfg;
+        cfg.setAutoConvert(true);
+        string s = configstr->String().Data();
+        cfg.readString(s);
+        Configure(cfg.getRoot());
+    } else printf("No configuration found in loaded file!\n");
+}
+
+void DynamicPluginSaver::Configure(Setting& cfg) {
+    // save copy of config to output
+    auto srcfl = cfg.getSourceFile();
+    if(srcfl) configstr->SetString(loadFileString(srcfl).c_str());
+
+    // configure plugins
     if(cfg.exists("plugins")) {
         auto& plugs = cfg.lookup("plugins");
         auto nplugs = plugs.getLength();
@@ -20,7 +43,6 @@ void DynamicPluginSaver::Configure(Config& cfg) {
             myBuilders[pname] = it->second->makeBuilder(plugs[i]);
         }
     }
-
     buildPlugins();
 }
 
@@ -28,5 +50,5 @@ void DynamicPluginSaver::LoadConfig(const string& fname) {
     Config cfg;
     cfg.setAutoConvert(true);
     cfg.readFile(fname.c_str());
-    Configure(cfg);
+    Configure(cfg.getRoot());
 }
