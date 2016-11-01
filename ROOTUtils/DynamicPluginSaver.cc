@@ -28,7 +28,7 @@ void DynamicPluginSaver::Configure(Setting& cfg) {
 
     // configure plugins
     if(cfg.exists("plugins")) {
-        auto& plugs = cfg.lookup("plugins");
+        auto& plugs = cfg["plugins"];
         auto nplugs = plugs.getLength();
 	for(int i=0; i<nplugs; i++) {
             string pname = plugs[i].getName();
