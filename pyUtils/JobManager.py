@@ -237,7 +237,7 @@ def run_local(conn):
     jcmds = []
     for r in conn.fetchall:
         jcmd = "nice -n 15 source "+r[0]
-        if(r[1]) jcmd += " > %s 2>&1"
+        if r[1]: jcmd += " > %s 2>&1"
         jcmds.append(jcmd)
     pool = multiprocessing.Pool()
     pool.map(os.system, jcmds)
