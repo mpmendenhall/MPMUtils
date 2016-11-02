@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /bin/env python
 
 from SpectrumUtils import *
 from SpectrumPlots import *
@@ -20,14 +20,14 @@ class SensorResponseLoader:
     def __init__(self):
         self.csquares = {}
         self.cc24_swatches = load_specfile("CC24_Reflect.txt")
-        
+
     def load_XYZ_file(self,fname):
         flines = [l.split() for l in open(fname,"r").readlines() if len(l.split())>=5 and l[0]!='#']
         for l in flines:
             RGBval = XYZ_to_CIRGB_LMat*matrix([float(x) for x in l[2:]]).transpose()
             skey = (l[0],int(l[1]))
             self.csquares[skey] = self.csquares.setdefault(skey,[]) + [RGBval[i,0] for i in range(3)]
-            
+
     def get_swatchnames(self):
         swkeys = self.csquares.keys()
         swkeys.sort()
@@ -41,7 +41,7 @@ class SensorResponseLoader:
             else:
                 raise
         return swlist
-        
+
     def get_swatches_obs(self,swlist=None):
         if swlist is None:
             swlist = self.get_swatchnames()
@@ -61,7 +61,7 @@ def CC24_blackpoint_estimate(csquares):
                  x=graph.axis.lin(title="Expected Luminance"),
                  y=graph.axis.lin(title="Channel Output"),
                  key = None)
-    
+
     bPoint = matrix(zeros((nchans,1)))
     for i in range(nchans):
         c = (color.rgb.red,color.rgb.green,color.rgb.blue)[i%3]
@@ -84,7 +84,7 @@ def writeCalFile(f,Q2RGB,bP=None):
     if bP is None:
         bP = matrix(zeros((3*nGroups,1)))
     assert bP.shape == (3*nGroups,1)
-    
+
     for c in range(nGroups):
         Qi = Q2RGB[:,3*c:3*c+3]
         bPi = Qi*bP[3*c:3*c+3]
@@ -100,7 +100,7 @@ def writeCalFile(f,Q2RGB,bP=None):
         f.write("\n")
 
 
-        
+
 def LAB_optimal_fit(SensDat,targ_illum,bPoint=None,cAdapt=None):
     """Optimize combination of input spectra to minimize LAB deviation over spectrum"""
 
@@ -108,28 +108,28 @@ def LAB_optimal_fit(SensDat,targ_illum,bPoint=None,cAdapt=None):
     Y0 = XnYnZn[1]
     XnYnZn = [XnYnZn[i]/Y0 for i in range(3)]
     print("White point XYZ =",XnYnZn)
-    
+
     calSwatches = SensDat.get_swatches_exp()
     ObsCols = SensDat.get_swatches_obs()
     if bPoint is not None:
         ObsCols = [c-bPoint for c in ObsCols]
-    
+
     n = len(ObsCols[0]) # for a,b range
     m = len(XnYnZn) # for i,j range
     M = matrix(zeros((m*n,m*n)))
     V = matrix(zeros((m*n,1)))
-    
+
     l0,l1 = 350,700
-    
+
     # cai layout order: c00 ... cn0 c01 ... cn1 c02 ... cn2
     XYZcols = []
     LABcols = []
-    
+
     for (ns,sw) in enumerate(calSwatches):
-        
+
         # Calculate response to swatch color
         Qna = ObsCols[ns]
-        
+
         Xnl = matrix(zeros((m,1)))
         for i in range(m):
             Xnl[i] = fdot(product_spectrum([sw,targ_illum]),cieXYZ_spectra[i],l0,l1)/Y0
@@ -142,12 +142,12 @@ def LAB_optimal_fit(SensDat,targ_illum,bPoint=None,cAdapt=None):
 
         XYZcols.append(XYZ)
         LABcols.append(CIE_XYZ_to_LAB(XYZ,XnYnZn))
-        
+
         print("Calibration swatch %i:"%ns)
         print("\tInput:",array(Qna.transpose())[0])
         print("\tXYZ:",XYZcols[-1])
         print("\tLAB:",LABcols[-1])
-    
+
         # add terms to mixing matrix
         for a in range(n):
             for i in range(m):
@@ -155,10 +155,10 @@ def LAB_optimal_fit(SensDat,targ_illum,bPoint=None,cAdapt=None):
                         V[a+n*i] += Qna[a,0]*MTM[i,l]*Xnl[l,0]
                         for b in range(n):
                             M[a+n*i,b+n*l] += Qna[a,0]*MTM[i,l]*Qna[b,0]
-                    
+
 
     print("\n\n----------------------------------------\n")
-                                
+
     cFold = linalg.lstsq(M,V)[0]
     cOut = matrix(zeros((m,n)))
     for i in range(m):
@@ -166,7 +166,7 @@ def LAB_optimal_fit(SensDat,targ_illum,bPoint=None,cAdapt=None):
             cOut[i,a] = cFold[a+n*i]
     print("Q->XYZ Conversion Coefficients:")
     print(cOut)
-        
+
     sRGB_cols = [CIE_XYZ_to_sRGB(c,XnYnZn) for c in XYZcols]
     ObsXYZ = [array((cOut*c).transpose())[0] for c in ObsCols]
     Obs_sRGB = [CIE_XYZ_to_sRGB(c,XnYnZn) for c in ObsXYZ]
@@ -207,9 +207,9 @@ def LAB_optimal_fit(SensDat,targ_illum,bPoint=None,cAdapt=None):
 
 
 if __name__=="__main__":
-    
+
     bpath = os.environ["HOME"]+"/Desktop/MultiColor/"
-        
+
     # sensor/filter combinations
     if 1:
         sensRGB = load_specfile("Canon_5D_Spectral_Sensitivity.txt")
@@ -221,22 +221,22 @@ if __name__=="__main__":
 
         lp495 = [product_spectrum([longpass_spectrum(495,10),s]) for s in sensRGB]
         lp515 = [product_spectrum([longpass_spectrum(515,10),s]) for s in sensRGB]
-        
+
         kb20 = [product_spectrum([load_specfile("B+W_KB20_Tx.txt")[0],s]) for s in sensRGB]
         bw061 = [product_spectrum([load_specfile("B+W_061_Tx.txt")[0],s]) for s in sensRGB]
         bw470 = [product_spectrum([load_specfile("B+W_470_Tx.txt")[0],s]) for s in sensRGB]
         dd491 = [product_spectrum([load_specfile("B+W_491_Tx.txt")[0],s]) for s in sensRGB]
         hpn13 = [product_spectrum([load_specfile("Heliopan_13_Tx.txt")[0],s]) for s in sensRGB]
-        
+
         wr47b = [product_spectrum([load_specfile("Wratten_47b_Tx.txt")[0],s]) for s in sensRGB]
         superB = wr47b[-1]
         wr58 = [product_spectrum([load_specfile("Wratten_58_Tx.txt")[0],s]) for s in sensRGB]
         wr56 = [product_spectrum([load_specfile("Wratten_56_Tx.txt")[0],s]) for s in sensRGB]
-        
+
         mag40 = [product_spectrum([load_specfile("Wratten_CC40M_Tx.txt")[0],s]) for s in sensRGB]
         mag50 = [product_spectrum([load_specfile("Wratten_CC50M_Tx.txt")[0],s]) for s in sensRGB]
         mag70 = [product_spectrum([pow_spectrum(load_specfile("Wratten_CC50M_Tx.txt")[0],7./5.),s]) for s in sensRGB]
-    
+
     ###### define calculation ######
     comboname = "RGB+47B"
     sensors = sensRGB+[superB, mag70[-1]]
@@ -254,8 +254,7 @@ if __name__=="__main__":
     ObsCols.load_XYZ_file(os.environ["HOME"]+"/Desktop/Z/IMG_2713_charts_XYZ.txt")
     ObsCols.load_XYZ_file(os.environ["HOME"]+"/Desktop/Z/IMG_2715_charts_XYZ.txt")
     bPoint = CC24_blackpoint_estimate(ObsCols.get_CC24_grayscale())
-    
+
     gLAB,Obs_sRGB,Exp_sRGB = LAB_optimal_fit(ObsCols,img_illum,bPoint,cAdapt)
     gLAB.writetofile(bpath+"/cc24_lab_%s.pdf"%comboname)
     draw_colorgrid(Obs_sRGB,6).writetofile(bpath+"/CC24_%s.pdf"%comboname, margin=0., bboxenlarge=0.)
-    

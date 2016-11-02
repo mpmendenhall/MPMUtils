@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#! /bin/env python3
 """@package ENSDF_ParsedDB
 Parsed interpretation layer for ENSDF cards pulled into database"""
 
@@ -18,18 +18,18 @@ def parse_stderr(s1,s2):
     s1 = s1.strip()
     s2 = s2.strip()
     if not s1: return (None,None)
-    
+
     try:
         v = float(s1)
     except:
         return (s1,None)
-    
+
     if not s2: return (v,None)
     try:
         u = int(s2)
     except:
         return (v,s2)
-    
+
     dvs = list(s1)
     i = s1.find("E")-1
     if i < 0: i = len(dvs)-1
@@ -48,7 +48,7 @@ def parse_unit_stderr(s1,s2):
         return s1,s2
     s1s = s1.split(' ')
     v,e = parse_stderr(s1s[0],s2)
-    
+
     unit = s1s[1].strip().upper() if len(s1s) == 2 else ""
 
     uvals = {"Y":365.25636*24*3600, "D": 24*3600, "H":3600,
@@ -58,12 +58,12 @@ def parse_unit_stderr(s1,s2):
                 "%":0.01, "":1}
     if unit not in uvals: return s1,s2
     umul = uvals[unit]
-    
+
     if v: v *= umul
     if type(e) == type(1.0): e *= umul
     return (v,e)
-    
-def upload_C_record(curs,l,pL):    
+
+def upload_C_record(curs,l,pL):
     """Parse and upload comment record"""
     assert l.rectp[1] in 'CDTcdt'
     assert pL
@@ -83,7 +83,7 @@ def upload_xdata(curs,l,pL):
     """Parse and upload continuation records"""
     assert pL                           # previous record being continued exists
     assert l.rectp[2] == pL.rectp[2]    # continuation of correct record type
-    
+
     # special mode for H records
     if l.rectp[2] == "H":
         for s in l.txt[1:].split("$"):
@@ -93,26 +93,26 @@ def upload_xdata(curs,l,pL):
             val = s[n+1:].strip()
             curs.execute("INSERT INTO record_xdata VALUES (?,?,?,?,?)", (pL.lid, quant, "=", val, None))
         return
-    
+
     ops = ["<=",">=","=","<",">","~"]
-    
+
     def beforeop(ss):
         ns = str(ss)
         for o in ops: ns = ns.split(o)[0]
         return ns
-    
+
     def nextop(ss):
         for o in ops:
             if ss[:len(o)] == o: return o
         return None
-    
+
     def is_xreflist(ss):
         refels = [s.strip() for s in ss.split(",")]
         for s in refels[:1]:
             if len(s) < 6 or s.isdigit() or not s.isalnum():
                 return False
         return True
-        
+
     for s in l.txt[1:].split("$"):
         if not s.strip():
             continue
@@ -146,34 +146,34 @@ class DBRecord:
         self.dbrow = dict(row)
         self.__dict__.update(row)
         self.xdata = {}
-        
+
         if hasattr(self, "line"):
             l = DBRecord(curs, "ENSDF_lines", self.line)
             self.mass = l.mass
             self.elem = l.elem
             self.rectp = l.rectp
             if loadall: self.load_extras(curs)
-    
+
     def load_extras(self,curs):
         """Load associated continuation and comment data"""
         curs.execute("SELECT * FROM record_xdata WHERE line = ?", (self.line,))
         for r in curs.fetchall(): self.xdata.setdefault(r["quant"], []).append((r["op"],r["val"],r["refs"]))
-        
+
         curs.execute("SELECT rowid FROM comment_records WHERE line = ?", (self.line,))
         self.comments = [ParsedCommentRecord(curs,r[0]) for r in curs.fetchall()]
-        
+
     def isot(self):
         """Isotope identifier"""
         try: return (self.mass, self.elem)
         except: return None
-    
+
     def repr_xdat(self):
         s = []
         for k,v in self.xdata.items():
             s.append("%s"%k + ",".join([str(u[0])+str(u[1]) for u in v]))
             if v[0][-1]: s[-1] += " (%s)"%v[0][-1]
         return "{ "+" | ".join(s)+" }"
-    
+
     def repr_comments(self):
         return "\n".join([str(c) for c in self.comments])
 
@@ -181,7 +181,7 @@ class DBRecord:
         t = "< " + " | ".join(["%s:%s"%(k,v) for k,v in self.dbrow.items() if v not in [None,'',' '] and k != "line"])
         if self.xdata: t += " "+self.repr_xdat()
         return t + " >"
-    
+
     def displayform(self):
         s = str(self)
         return s if not self.comments else s+"\n"+self.repr_comments()
@@ -194,12 +194,12 @@ class ParsedCommentRecord(DBRecord):
         if self.RTYPE != ' ': t += "%s) "%self.RTYPE
         if self.SYM: t += "%s: "%self.SYM
         return t + "\n//  ".join(self.CTEXT.split("\n"))
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
 def upload_A_record(curs,l):
     """Parse and upload Alpha record from raw line"""
     t = l.txt
@@ -212,7 +212,7 @@ def upload_A_record(curs,l):
     Q = t[71:72]
     wlid = l.withlevel.rowid if l.withlevel else None
     curs.execute("INSERT INTO alpha_records VALUES (?,?,?,?,?,?,?,?,?,?)", (l.lid,wlid,E,DE,IA,DIA,HF,DHF,C,Q))
-    
+
 def upload_B_record(curs,l):
     """Parse and upload Beta- record from raw line"""
     t = l.txt
@@ -233,7 +233,7 @@ def upload_D_record(curs,l):
     particle = t[:1]
     E,DE = parse_stderr(t[1:11], t[11:13])
     IP,DIP = parse_stderr(t[13:21], t[21:23])
-    EI = optfloat(t[23:31]) 
+    EI = optfloat(t[23:31])
     T,DT = parse_stderr(t[31:41],t[41:47])
     L = t[47:56].strip()
     # 56:68 "Blank"; but not "must be blank"
@@ -257,7 +257,7 @@ def upload_E_record(curs,l):
     Q = t[71:72]
     wlid = l.withlevel.rowid if l.withlevel else None
     curs.execute("INSERT INTO ec_records VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", (l.lid,wlid,E,DE,IB,DIB,IE,DIE,LOGFT,DFT,TI,DTI,C,UN,Q))
-    
+
 def upload_G_record(curs,l):
     """Parse and upload Gamma record from raw line"""
     t = l.txt
@@ -288,9 +288,9 @@ def upload_I_record(curs,l):
     PUB = t[57:66].strip()
     EDATE = int(t[66:72]) if t[66:72].strip() else 0
     curs.execute("INSERT INTO identification_records VALUES (?,?,?,?,?)", (l.lid,DSID,DSREF,PUB,EDATE))
-    
+
 def upload_L_record(curs,l):
-    """Parse and upload Level record from raw line""" 
+    """Parse and upload Level record from raw line"""
     t = l.txt
     E,DE = parse_stderr(t[1:11], t[11:13])
     J = t[13:31].strip()
@@ -345,7 +345,7 @@ def upload_X_record(curs,l):
     DSID = t[1:31].strip()
     # [31:72] blank
     curs.execute("INSERT INTO xref_records VALUES (?,?,?)", (l.lid,DSSYM,DSID))
-    
+
 def upload_N_record(curs,l):
     """Parse and upload Normalization record from raw line"""
     t = l.txt
@@ -357,7 +357,7 @@ def upload_N_record(curs,l):
     NP,DNP = parse_stderr(t[47:54], t[54:56])
     assert not t[56:72].strip()
     curs.execute("INSERT INTO normalization_records VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", (l.lid, n, NR,DNR, NT,DNT, BR,DBR, NB,DNB, NP,DNP))
-    
+
 def upload_PN_record(curs,l):
     """Parse and upload Production Normalization record from raw line"""
     t = l.txt
@@ -391,7 +391,7 @@ def clearOrphaned(curs):
         cmd = cmd0%tbl
         print(cmd)
         curs.execute(cmd)
-        
+
 def deleteCard(curs,cid):
     """Delete all data for card"""
     clearParsed(curs,cid)
@@ -400,14 +400,14 @@ def deleteCard(curs,cid):
 
 def parseCard(curs, C):
     """Generate "parsed" information for card"""
-    
+
     prevLine = None     # previous commentable/continuable line
     prevComment = None  # previous comment line, used to glom continuations
     levels = []         # levels, in order of loading
     isotLevels = {}     # levels, lists per isotope
     gammas = []         # gammas (id, from-id, energy)
-    
-    
+
+
     rectps = {  'A': upload_A_record,
                 'B': upload_B_record,
                 'D': upload_D_record,
@@ -421,7 +421,7 @@ def parseCard(curs, C):
                 'Q': upload_Q_record,
                 'R': upload_R_record,
                 'X': upload_X_record }
-    
+
     for l in C.lines:
         try:
             if l.rectp[0] != ' ': # continuation data
@@ -452,12 +452,12 @@ def parseCard(curs, C):
         except:
             print("Failed line:",l)
             raise
-        
+
     if prevComment is not None: upload_C_record(curs, prevComment, prevComment.myline)
-    
+
     # rowid-sorted level index
     levels = dict([(l.rowid,l) for l in levels])
-    
+
     # Assign probable levels for gamma transitions
     isotEs= {}
     for k,ll in isotLevels.items():
@@ -465,13 +465,13 @@ def parseCard(curs, C):
             if type(l.E) != type(1.): l.E = float("inf")
         ll.sort(key=(lambda l: l.E))
         isotEs[k] = [l.E for l in ll]
-    
+
     for g in gammas:
         if g.fromlvl is None: continue
         if type(g.E) != type(1.): continue
         isot = g.isot()
         if isot not in isotLevels: continue
-        
+
         E = levels[g.fromlvl].E - g.E
         i = bisect_left(isotEs[isot], E)
         if i == 0:
@@ -482,11 +482,11 @@ def parseCard(curs, C):
             before = isotEs[isot][i-1]
             after = isotEs[isot][i]
             g.probto = isotLevels[isot][i if after - E < E - before else i-1].rowid
-        
+
         curs.execute("UPDATE gamma_records SET probto = ? WHERE rowid = ?", (g.probto,g.rowid))
         dE = levels[g.probto].E - E
         #if dE > 10: print("Uncertain level assignment dE = %g / %g"%(dE,g.E))
-        
+
 ###########################
 ###########################
 
@@ -508,7 +508,7 @@ class ParsedNormRecord(DBRecord):
     def __repr__(self):
         t = "[Normalization %s]"%DBRecord.__repr__(self)
         return t
-    
+
 class ParsedParentRecord(DBRecord):
     def __init__(self,curs,cid):
         DBRecord.__init__(self,curs,"parent_records",cid,True)
@@ -518,7 +518,7 @@ class ParsedParentRecord(DBRecord):
         t += "]"
         if self.xdata: t += " " + self.repr_xdat()
         return t
-    
+
 class ParsedLevelRecord(DBRecord):
     def __init__(self,curs,cid):
         DBRecord.__init__(self,curs,"level_records",cid,True)
@@ -534,7 +534,7 @@ class ParsedAlphrecord(DBRecord):
         t = "[Alpha E=%s, intensity=%s]"%(rep_num(self.E,self.DE), rep_num(self.IA,self.DIA))
         if self.xdata: t += " " + self.repr_xdat()
         return t
-    
+
 class ParsedBetaRecord(DBRecord):
     def __init__(self,curs,cid):
         DBRecord.__init__(self,curs,"beta_records",cid,True)
@@ -559,12 +559,12 @@ class ParsedECRecord(DBRecord):
         if self.E: t += "Emeas=%s, "%rep_num(self.E,self.DE)
         t += "IE=%s, IB=%s%s]"%(rep_num(self.IE,self.DIE), rep_num(self.IB,self.DIB), " %s"%self.UN if self.UN.strip() else "")
         if self.xdata: t += " " + self.repr_xdat()
-        return t  
+        return t
 
 class ParsedCard:
     """ENSDF card information, parsed to object"""
     def __init__(self, curs, cid):
-        
+
         def cardlines(tbl, tp=None):
             """select lines for this card from specified table"""
             curs.execute("SELECT rowid FROM %s WHERE line IN (SELECT rowid FROM ENSDF_lines WHERE card = ?) ORDER BY rowid"%tbl,(cid,))
@@ -572,7 +572,7 @@ class ParsedCard:
             else: rs = [tp(curs, r[0]) for r in curs.fetchall()]
             for r in rs: r.card = self
             return rs
-        
+
         self.cid = cid
         self.idrec = cardlines("identification_records", ParsedIDRecord)
         assert len(self.idrec) == 1
@@ -580,25 +580,25 @@ class ParsedCard:
         self.history = cardlines("history_records")
         self.refs = cardlines("reference_records")
         self.xrefs = cardlines("xref_records")
-        
+
         self.qvals = cardlines("qval_records")
         self.parents = cardlines("parent_records", ParsedParentRecord)
         self.norms = cardlines("normalization_records", ParsedNormRecord)
         self.prodnorms = cardlines("prodnorm_records")
-        
+
         self.levellist = cardlines("level_records", ParsedLevelRecord)
         self.levellist.sort(key=(lambda l: l.E))
         self.levels = dict([(l.rowid,l) for l in self.levellist]) # index levels for transitions
         # top and bottom level link points
         self.linkpts = list(self.parents)
         if self.levellist: self.linkpts.append(self.levellist[0])
-        
+
         self.alphas = cardlines("alpha_records", ParsedAlphrecord)
         self.betas = cardlines("beta_records", ParsedBetaRecord)
         self.gammas = cardlines("gamma_records", ParsedGammaRecord)
         self.dptcls = cardlines("dptcl_records")
         self.ecapts = cardlines("ec_records", ParsedECRecord)
-        
+
         # connect normalizations, parents
         if not self.prodnorms or len(self.norms) == len(self.prodnorms):
             for (i,nrm) in enumerate(self.norms):
@@ -607,12 +607,12 @@ class ParsedCard:
                 except: nrm.NRxBR = 1
                 try: nrm.NRxBR = float(self.prodnorms[i].NRxBR)
                 except: pass
-                
+
                 try: nrm.NBxBR = nrm.NB * nrm.BR
                 except: nrm.NBxBR = 1
                 try: nrm.NBxBR = float(self.prodnorms[i].NBxBR)
                 except: pass
-                
+
                 for p in self.parents:
                     if p.n == nrm.n:
                         p.norm = nrm
@@ -629,7 +629,7 @@ class ParsedCard:
             if g.fromlvl: g.fromlvl = self.levels[g.fromlvl]
             if g.probto: g.tolvl = self.levels[g.probto]
             else: g.tolvl = None
-            
+
         # calculate transition absolute rates
         nrm = self.norms[0] if len(self.norms) else None
         for a in self.alphas:
@@ -646,7 +646,7 @@ class ParsedCard:
             except: e.Ibeta = 0
             try: e.Iec = e.IE * nrm.NBxBR
             except: e.Iec = 0
-            
+
     def display(self):
         print(self.idrec.displayform())
         for a in self.history: print(a.displayform())
@@ -688,7 +688,7 @@ if __name__ == "__main__":
     conn = sqlite3.connect(datdir+"ENSDF.db")
     conn.row_factory = sqlite3.Row # fast name-based access to columns
     curs = conn.cursor()
-    
+
     if False:
         #curs.execute("SELECT rowid FROM ENSDF_cards WHERE DSID LIKE '%219AT%'")
         #cids = [r[0] for r in curs.fetchall()]
@@ -700,9 +700,9 @@ if __name__ == "__main__":
     else:
         deleteCard(curs,17223)
         conn.commit()
-        
+
     exit(0)
-    
+
     #curs.execute('select rowid from ENSDF_cards WHERE 1 ORDER BY rowid')
     clearOrphaned(curs)
     curs.execute('SELECT rowid FROM ENSDF_cards WHERE rowid not in (SELECT card FROM identification_records,ENSDF_lines WHERE line=ENSDF_lines.rowid) ORDER BY ENSDF_cards.rowid')
@@ -717,7 +717,7 @@ if __name__ == "__main__":
             print(C.to_text())
             traceback.print_exc(file=sys.stdout)
             #raise
-            
+
     curs.execute('analyze')
     conn.commit()
     conn.close()

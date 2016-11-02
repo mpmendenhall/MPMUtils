@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#! /bin/env python3
 """@package AtomsDB
 Atom information resources --- currently dumb elements list"""
 
@@ -12,14 +12,14 @@ class ElementNames:
         self.byNum = dict([(e[0],e) for e in self.dat])
         self.bySymb = dict([(e[1].lower(),e) for e in self.dat])
         self.byName = dict([(e[2].lower(),e) for e in self.dat])
-        
+
     def elNum(self, s):
         """Element Z by name or symbol, case-insensitive"""
         s = s.lower()
         n = self.bySymb.get(s,None)
         n = n if n else self.byName.get(s,None)
         return n[0] if n else None
-    
+
     def elSym(self,Z):
         """Element symbol by Z"""
         return self.byNum.get(Z,(None,None,None))[1]
@@ -64,19 +64,18 @@ def fill_Isotopes_DB(curs):
             else: atwt[Z] = (aw,daw)
         except:
             print(i)
-            
+
     curs.executemany("INSERT INTO Isotopes VALUES (?,?,?,?,?,?,?)", isotdat)
-    
+
     eldat = []
     E = ElementNames()
     for Z in E.byNum:
         eldat.append((Z,E.elSym(Z),E.byNum[Z][2])+atwt.get(Z,(None,None)))
     curs.executemany("INSERT INTO Elements VALUES (?,?,?,?,?)", eldat)
-    
+
 if __name__=="__main__":
     conn = sqlite3.connect("Isotopes.db")
     curs = conn.cursor()
     fill_Isotopes_DB(curs)
     curs.execute("analyze")
     conn.commit()
-    

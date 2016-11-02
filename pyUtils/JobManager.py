@@ -1,3 +1,4 @@
+#! /bin/env python3
 ## @file JobManager.py job submission manager for cluster computing environments
 
 import sqlite3
@@ -5,6 +6,7 @@ import subprocess
 import os
 from optparse import OptionParser
 from time import sleep
+import multiprocessing
 
 jobstates = {"Idle":2,"Starting":3,"Running":3,"Completed":4,"Unknown":5,"Removed":6,"Bundled":7}
 statenames = {-1:"hold", 0:"waiting", 1:"sumitted", 2:"queued", 3:"running", 4: "done", 6:"removed", 7:"bundled" }
@@ -228,6 +230,20 @@ def cycle_launcher(conn,qsettings,twait=60):
         update_and_launch(conn,qsettings)
         sleep(twait)
 
+def run_local(conn):
+    """Run jobs on local node"""
+    curs = conn.cursor()
+    curs.execute("SELECT jobfile,outlog FROM jobs WHERE status=0")
+    jcmds = []
+    for r in conn.fetchall:
+        jcmd = "nice -n 15 source "+r[0]
+        if(r[1]) jcmd += " > %s 2>&1"
+        jcmds.append(jcmd)
+    pool = multiprocessing.Pool()
+    pool.map(os.system, jcmds)
+    curs.execute("UPDATE jobs SET status=4 WHERE status=0")
+    conn.commit()
+
 ###################
 ###################
 ###################
@@ -235,19 +251,20 @@ if __name__ == "__main__":
     parser = OptionParser()
 
     parser.add_option("--account",  help="submission billing account")
-    parser.add_option("--queue",  help="submission queue")
-    parser.add_option("--limit",  type="int", default=10, help="concurrent jobs limit")
-    parser.add_option("--db",  help="jobs database")
+    parser.add_option("--queue",    help="submission queue")
+    parser.add_option("--limit",    type="int", default=10, help="concurrent jobs limit")
+    parser.add_option("--db",       help="jobs database")
 
-    parser.add_option("--launch", action="store_true", help="update and launch")
-    parser.add_option("--cycle", action="store_true", help="continuously re-check jobs")
-    parser.add_option("--status", action="store_true", help="update and display status")
-    parser.add_option("--cancel", action="store_true", help="cancel queued jobs")
-    parser.add_option("--clear", action="store_true", help="clear completed jobs")
-    parser.add_option("--jobfile", help="run one-liners in file")
+    parser.add_option("--launch",   action="store_true", help="update and launch")
+    parser.add_option("--cycle",    action="store_true", help="continuously re-check jobs")
+    parser.add_option("--status",   action="store_true", help="update and display status")
+    parser.add_option("--cancel",   action="store_true", help="cancel queued jobs")
+    parser.add_option("--clear",    action="store_true", help="clear completed jobs")
+    parser.add_option("--jobfile",  help="run one-liners in file")
     parser.add_option("--walltime", type="int", help="wall time for 1-liner jobs in seconds")
-    parser.add_option("--nodes", type="int", default=1, help="nodes for 1-liner jobs")
-    parser.add_option("--bundle", help="bundle job name; specify bundled walltime")
+    parser.add_option("--nodes",    type="int", default=1, help="nodes for 1-liner jobs")
+    parser.add_option("--bundle",   help="bundle job name; specify bundled walltime")
+    parser.add_option("--runlocal", action="store_true", help="run all waiting jobs locally")
 
     options, args = parser.parse_args()
 
@@ -260,6 +277,7 @@ if __name__ == "__main__":
     if options.cancel: cancel_queued_jobs(conn)
     if options.clear: clear_completed(conn)
     if options.cycle: cycle_launcher(conn,qs)
+    if options.runlocal: run_local(conn)
 
     if options.jobfile and options.walltime:
         jcmds = [l.strip() for l in open(options.jobfile,"r").readlines() if l[0]!='#']
