@@ -36,7 +36,7 @@ sqlite3_int64 AnalysisDB::getAnaVar(const string& name, const string& unit, cons
     busyRetry(stmt);
     sqlite3_reset(stmt);
 
-    sqlite3_stmt* stmt2 = loadStatement("SELECT var_id FROM analysis_vars WHERE name = ?1 AND descrip = ?2");
+    auto stmt2 = loadStatement("SELECT var_id FROM analysis_vars WHERE name = ?1 AND descrip = ?2");
     sqlite3_bind_text(stmt2, 1, name.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt2, 2, descrip.c_str(), -1, SQLITE_STATIC);
     int rc = busyRetry(stmt2);

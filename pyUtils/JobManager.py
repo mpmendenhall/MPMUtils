@@ -203,7 +203,9 @@ def make_bundle_jobs(curs,nnodes,jname,bundledir,jlist,tmax,nmax):
         tsum = 0
         for i in jb:
             tsum += jlist[i][4]
-            bjobfile.write("source %s > %s 2>&1\n"%(jlist[i][1], jlist[i][2]))
+            bcmd = "source %s"%jlist[i][1]
+            if jlist[i][2]: bcmd += " > %s 2>&1"%jlist[i][2]
+            bjobfile.write(bcmd+"\n")
         bjobfile.close()
         bundle_id = upload_onejob(curs, "bundle_"+jname, bfname, bfname+"_log.txt", nnodes, tsum)
         for i in jb: curs.execute("UPDATE jobs SET status=7,associated=? WHERE job_id=?",(bundle_id,jlist[i][0]))
