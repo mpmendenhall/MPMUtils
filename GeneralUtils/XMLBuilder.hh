@@ -38,12 +38,11 @@ public:
     virtual void addAttr(const string& nm, double val) { addAttr(nm, to_str(val)); }
 
     /// Write output
-    virtual void write(ostream& o, unsigned int ndeep = 0);
+    virtual void write(ostream& o, unsigned int ndeep = 0, const string& indent = "    ");
 
     string name;                        ///< tag head
     bool oneline = false;               ///< whether to force single-line output
     map<string,string> attrs;           ///< tag attributes
-    static string indent;               ///< indentation string
 
 protected:
 
@@ -61,7 +60,7 @@ public:
     /// Constructor
     XMLText(const string& c): contents(c) { }
     /// write output
-    virtual void write(ostream& o, unsigned int ndeep = 0) { while(ndeep--) o << indent; o << contents; }
+    void write(ostream& o, unsigned int ndeep = 0, const string& indent = "    ") override { while(ndeep--) o << indent; o << contents; }
     string contents;    ///< text to include between tags
 };
 

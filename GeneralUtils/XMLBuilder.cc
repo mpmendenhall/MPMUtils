@@ -7,9 +7,7 @@
 
 #include "XMLBuilder.hh"
 
-string XMLBuilder::indent = "    ";
-
-void XMLBuilder::write(ostream& o, unsigned int ndeep) {
+void XMLBuilder::write(ostream& o, unsigned int ndeep, const string& indent) {
     prepare();
     for(unsigned int i=0; i<ndeep; i++) o << indent;
     o << "<" << name;
@@ -19,11 +17,11 @@ void XMLBuilder::write(ostream& o, unsigned int ndeep) {
             o << ">";
             for(auto c: children) {
                 c->oneline = true;
-                c->write(o,0);
+                c->write(o,0,indent);
             }
         } else {
             o << ">\n";
-            for(auto c: children) { c->write(o,ndeep+1); o << "\n"; }
+            for(auto c: children) { c->write(o,ndeep+1,indent); o << "\n"; }
             while(ndeep--) o << indent;
         }
         closeTag(o);
