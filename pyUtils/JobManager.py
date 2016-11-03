@@ -235,10 +235,12 @@ def run_local(conn):
     curs = conn.cursor()
     curs.execute("SELECT jobfile,outlog FROM jobs WHERE status=0")
     jcmds = []
-    for r in conn.fetchall:
-        jcmd = "nice -n 15 source "+r[0]
+    for r in curs.fetchall():
+        os.system("chmod +x "+r[0])
+        jcmd = "nice -n 15 "+r[0]
         if r[1]: jcmd += " > %s 2>&1"
         jcmds.append(jcmd)
+        print(jcmd)
     pool = multiprocessing.Pool()
     pool.map(os.system, jcmds)
     curs.execute("UPDATE jobs SET status=4 WHERE status=0")
