@@ -23,7 +23,7 @@
 #define DYNAMICPLUGINSAVER_HH
 
 #include "PluginSaver.hh"
-#include <libconfig.h++>
+#include "libconfig.h++"
 using namespace libconfig;
 
 /// Template for PluginBuilder using config file

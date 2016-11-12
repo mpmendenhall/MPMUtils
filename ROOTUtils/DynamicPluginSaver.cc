@@ -1,7 +1,7 @@
 /// \file DynamicPluginSaver.cc
 #include "DynamicPluginSaver.hh"
 #include <TObjString.h>
-#include <StringManip.hh>
+#include "StringManip.hh"
 #include <cassert>
 
 map<string, PluginRegistrar*> DynamicPluginSaver::builderTable;
