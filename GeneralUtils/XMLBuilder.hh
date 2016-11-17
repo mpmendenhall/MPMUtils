@@ -9,8 +9,8 @@
 #ifndef XMLBUILDER_HH
 #define XMLBUILDER_HH
 
-#include "StringManip.hh"
-
+#include <string>
+using std::string;
 #include <memory>
 using std::shared_ptr;
 using std::make_shared;
@@ -21,6 +21,7 @@ using std::vector;
 #include <cassert>
 #include <iostream>
 using std::ostream;
+#include <sstream>
 
 /// Reference-counted XML tag
 class XMLBuilder {
@@ -29,6 +30,10 @@ public:
     XMLBuilder(const string& nm = ""): name(nm) { }
     /// Destructor
     virtual ~XMLBuilder() { }
+
+    /// utility function for converting to string
+    template<typename T>
+    static string to_str(T x) { std::stringstream ss; ss << x; return ss.str(); }
 
     /// Add child node
     virtual void addChild(const shared_ptr<XMLBuilder>& C) { children.push_back(C); }
@@ -80,7 +85,7 @@ public:
     /// Add a tag attribute
     virtual void addAttr(const string& nm, const string& val) { xattrs[nm] = val; }
     /// Add numerical attribute
-    virtual void addAttr(const string& nm, double val) { addAttr(nm, to_str(val)); }
+    virtual void addAttr(const string& nm, double val) { addAttr(nm, XMLBuilder::to_str(val)); }
 
     string tagname;                     ///< this item's tag name
 

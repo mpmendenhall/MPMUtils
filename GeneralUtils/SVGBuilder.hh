@@ -10,12 +10,15 @@
 #define SVGBUILDER_HH
 
 #include "XMLBuilder.hh"
-#include "StringManip.hh"
 #include "ColorSpec.hh"
 #include "BBox.hh"
 #include <cmath>
 
 namespace SVG {
+
+    /// utility function for converting to string
+    template<typename T>
+    string to_str(T x) { std::stringstream ss; ss << x; return ss.str(); }
 
     class svg: public XMLBuilder {
     public:
@@ -85,7 +88,7 @@ namespace SVG {
             if(style.size()) attrs["style"] = style;
         }
     };
-    
+
     class ellipse: public XMLBuilder {
     public:
         ellipse(double cx, double cy, double rx, double ry, const string& style = ""): XMLBuilder("ellipse") {
@@ -96,7 +99,7 @@ namespace SVG {
             if(style.size()) attrs["style"] = style;
         }
     };
-    
+
     class polyline: public XMLBuilder {
     public:
         polyline(const string& style = ""): XMLBuilder("polyline") { if(style.size()) attrs["style"] = style; }
@@ -150,7 +153,7 @@ namespace SVG {
         }
         shared_ptr<XMLText> myText;
     };
-    
+
     inline void set_fill(shared_ptr<XMLBuilder> x, const color::rgb& c) {
         x->attrs["fill"] = "#"+c.asHexString();
         if(c.a != 1) x->addAttr("fill-opacity",c.a);

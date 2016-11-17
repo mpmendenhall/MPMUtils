@@ -9,7 +9,6 @@
 #define SVGGRADIENTAXIS_HH
 
 #include "SVGBuilder.hh"
-#include "BBox.hh"
 #include <set>
 using std::set;
 
