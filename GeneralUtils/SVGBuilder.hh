@@ -12,6 +12,7 @@
 #include "XMLBuilder.hh"
 #include "ColorSpec.hh"
 #include "BBox.hh"
+#include <fstream>
 #include <cmath>
 
 namespace SVG {
@@ -158,6 +159,22 @@ namespace SVG {
         x->attrs["fill"] = "#"+c.asHexString();
         if(c.a != 1) x->addAttr("fill-opacity",c.a);
     }
+
+    /// SVG document outline convenience class
+    class SVGDoc {
+    public:
+        svg body;                                       ///< main body element
+        BBox<2,double> BB = empty_double_bbox<2>();     ///< view bounding box
+        /// write to file
+        void write(const string& fname, double x2cm = 1) {
+            std::ofstream o;
+            o.open (fname);
+            svg::make_standalone_header(o);
+            body.setView(BB, x2cm);
+            body.write(o,0,"\t");
+            o.close();
+        }
+    };
 }
 
 #endif
