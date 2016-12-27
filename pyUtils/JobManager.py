@@ -14,7 +14,7 @@ def statename(i): return statenames.get(i,"status %i"%i)
 
 def get_showq_runstatus():
     """Get queue status according to showq"""
-    cmd = 'showq -w user=$USER'
+    cmd = 'showq -u $USER'
     qdat = subprocess.getoutput(cmd)
     print(cmd)
     print(qdat)
@@ -68,6 +68,7 @@ def msub_job(curs, jid, qsettings, mcmds=["-j oe", "-V"]):
     jobin = open(j[1],"r").read()
     jobout = open(j[1],"w")
 
+    jobout.write("#!/usr/bin/bash\n")
     jobout.write("#MSUB -A %s\n"%qsettings["account"])
     if j[2]: jobout.write("#MSUB -o %s\n"%j[2])
     if j[0]: jobout.write("#MSUB -N %s\n"%j[0])
