@@ -42,7 +42,9 @@ def checkjob(jid):
         if not j: continue
         if len(j)==2: jdat[j[0].strip()] = j[1].strip()
         elif j[0]=="Completion Code": jdat["ret_code"] = int(j[1].split()[0])
-        elif j[0]=="WallTime": jdat["walltime"] = 3600*int(j[1]) + 60*int(j[2]) + int(j[3].split()[0])
+        elif j[0]=="WallTime":
+            try: jdat["walltime"] = 3600*int(j[1]) + 60*int(j[2]) + int(j[3].split()[0])
+            except: jdat["walltime"] = -1
     jdat["status"] = jobstates.get(jdat.get("State","unknown"),5)
     print(jdat)
     return jdat
