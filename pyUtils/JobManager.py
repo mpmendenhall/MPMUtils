@@ -84,7 +84,7 @@ def msub_job(curs, jid, qsettings, mcmds=["-j oe", "-V"]):
 
     o = subprocess.getoutput('msub "%s"'%j[1]).strip()
     print("Job '%s' submitted as '%s'"%(j[0],o))
-    qid = int(o.split(".")[0])
+    qid = int(o.split()[-1].(".")[0])
     curs.execute("UPDATE jobs SET queue_id=?, status=1 WHERE job_id = ?",(qid,jid))
 
 def get_nmore(curs,n):
