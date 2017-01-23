@@ -7,6 +7,7 @@ import os
 from optparse import OptionParser
 from time import sleep
 import multiprocessing
+from datetime import *
 
 jobstates = {"Idle":2,"Starting":3,"Running":3,"Completed":4,"Unknown":5,"Removed":6,"Bundled":7}
 statenames = {-1:"hold", 0:"waiting", 1:"sumitted", 2:"queued", 3:"running", 4: "done", 6:"removed", 7:"bundled" }
@@ -36,15 +37,21 @@ def summarize_DB_runstatus(curs):
 
 def checkjob(jid):
     """Get info from checkjob"""
+    print("Checking job status for",jid)
     jdat = {}
     for j in subprocess.getoutput("checkjob %i"%jid).split("\n"):
-        j = j.split(":")
-        if not j: continue
-        if len(j)==2: jdat[j[0].strip()] = j[1].strip()
-        elif j[0]=="Completion Code": jdat["ret_code"] = int(j[1].split()[0])
-        elif j[0]=="WallTime":
-            try: jdat["walltime"] = 3600*int(j[1]) + 60*int(j[2]) + int(j[3].split()[0])
+        print(j)
+        i = j.find(":")
+        if i<1: continue
+        var = j[:i].strip()
+        val = j[i+1:].strip()
+        if not var or not val: continue
+        if var=="Completion Code": jdat["ret_code"] = int(val.split()[0])
+        elif var=="WallTime":
+            val = val.split(":")
+            try: jdat["walltime"] = 3600*int(val[0]) + 60*int(val[1]) + int(val[2].split()[0])
             except: jdat["walltime"] = -1
+        else: jdat[var]=val
     jdat["status"] = jobstates.get(jdat.get("State","unknown"),5)
     print(jdat)
     return jdat
@@ -84,7 +91,7 @@ def msub_job(curs, jid, qsettings, mcmds=["-j oe", "-V"]):
 
     o = subprocess.getoutput('msub "%s"'%j[1]).strip()
     print("Job '%s' submitted as '%s'"%(j[0],o))
-    qid = int(o.split()[-1].(".")[0])
+    qid = int(o.split()[-1].split(".")[0])
     curs.execute("UPDATE jobs SET queue_id=?, status=1 WHERE job_id = ?",(qid,jid))
 
 def get_nmore(curs,n):
@@ -124,8 +131,13 @@ def update_and_launch(conn,qsettings):
     if ncpu < qsettings["limit"]:
         jnext = get_nmore(curs,qsettings["limit"]-ncpu)
         print("Submitting %i new jobs."%len(jnext))
+        t0 = datetime.now() if "trickle" in qsettings else None
         for j in jnext:
-            msub_job(curs,j,qsettings)
+            mcmds=["-j oe", "-V"]
+            if t0:
+                t0 += timedelta(seconds=qsettings["trickle"])
+                mcmds.append("-a "+t0.strftime("%Y%m%d%H%M.%S"))
+            msub_job(curs,j,qs,mcmds)
             conn.commit()
 
     summarize_DB_runstatus(curs)
@@ -258,6 +270,7 @@ if __name__ == "__main__":
     parser.add_option("--account",  help="submission billing account")
     parser.add_option("--queue",    help="submission queue")
     parser.add_option("--limit",    type="int", default=10, help="concurrent jobs limit")
+    parser.add_option("--trickle",  type="float", help="time delay [s] between nominal run starts")
     parser.add_option("--db",       help="jobs database")
 
     parser.add_option("--launch",   action="store_true", help="update and launch")
@@ -273,7 +286,7 @@ if __name__ == "__main__":
 
     options, args = parser.parse_args()
 
-    qs = {"account":options.account, "queue":options.queue, "limit":options.limit, "db":options.db}
+    qs = {"account":options.account, "queue":options.queue, "limit":options.limit, "db":options.db, "trickle":options.trickle}
     conn = sqlite3.connect(options.db)
 
     if options.launch: update_and_launch(conn,qs)
