@@ -21,7 +21,7 @@ namespace color {
             return;
         }
 
-        double h = fmod(c.h, 2*M_PI);
+        double h = c.h < 0? 2*M_PI-fmod(fabs(c.h),2*M_PI) : fmod(c.h, 2*M_PI);
         double var_h = 3*h/M_PI;
         int var_i = (int)floor(var_h);
         double var_1 = c.v * ( 1 - c.s );
