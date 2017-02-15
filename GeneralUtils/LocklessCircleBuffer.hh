@@ -6,6 +6,7 @@
 #include <vector>
 #include <unistd.h>     // for usleep
 #include <pthread.h>
+#include <cassert>
 
 /// pthreads function for launching read process
 template<class MyBufferType>
@@ -34,13 +35,29 @@ public:
         ready.resize(n);
     }
 
-    /// write to next buffer space, failing if unavailable
-    bool write(const T& a) {
-        if(ready[write_idx]) { n_write_fails++; return false; }
-        buf[write_idx] = a;
+    /// get pointer to next buffer space; nullptr if unavailable
+    T* get_writepoint() {
+        assert(!writept);
+        if(writept || ready[write_idx]) { n_write_fails++; return nullptr; }
+        return writept = &buf[write_idx];
+    }
+
+    /// call after completing access to write point, appending to processing queue
+    void finish_write() {
+        assert(writept);
+        if(!writept) return;
         __sync_synchronize();
         ready[write_idx] = true;
         write_idx = (write_idx + 1)%buf.size();
+        writept = nullptr;
+    }
+
+    /// write to next buffer space, failing if unavailable
+    bool push_buffer(const T& a) {
+        auto w = get_writepoint();
+        if(!w) return false;
+        *w = a;
+        finish_write();
         return true;
     }
 
@@ -96,6 +113,7 @@ public:
 protected:
     std::vector<T> buf;             ///< data buffer
     std::vector<int> ready;         ///< read indicator; int to encourage atomic updating
+    T* writept = nullptr;           ///< current item being modified
     T current;                      ///< current item to process
     size_t write_idx = 0;           ///< write point marker
     size_t read_idx = 0;            ///< read point marker
