@@ -1,0 +1,126 @@
+/// \file ThreadDataSerializer.hh FIFO processing queue for serializing data from multiple threads
+
+#ifndef THREADDATASERIALIZER_HH
+#define THREADDATASERIALIZER_HH
+
+#include <vector>
+#include <mutex>
+#include <condition_variable>
+#include <pthread.h>
+
+/// pthreads function for launching processing loop
+template<class MyTDSType>
+void* queueprocess_thread(void* p) {
+    ((MyTDSType*)p)->process_queued();
+    return nullptr;
+}
+
+/// FIFO processing queue for collecting/serializing input from multiple threads
+template<typename T>
+class ThreadDataSerializer {
+public:
+    /// Constructor
+    ThreadDataSerializer() { }
+    /// Destructor
+    virtual ~ThreadDataSerializer() { clear_pool(); }
+
+    /// Thread-safe get allocated object space, or nullptr if allocation rejected
+    virtual T* get_allocated(void* /*opts*/ = nullptr) {
+        std::lock_guard<std::mutex> plk(pmutex);
+        if(!pool.size()) return allocate_new();
+        auto obj = pool.back();
+        pool.pop_back();
+        return obj;
+    }
+
+    /// Thread-safe return object for processing; pass nullptr to end processing
+    void return_allocated(T* obj) {
+        std::lock_guard<std::mutex> lk(qmutex);  // get lock on queue
+        queue.push_back(obj);   // add item to queue
+        qready.notify_one();    // notify that queue item is ready for processing
+        // lock is released on exiting this scope
+    }
+
+    /// receive and process items as they are placed in queue; terminate on nullptr
+    void process_queued() {
+        std::vector<T*> v;
+        bool end_processing = false;
+        while(!end_processing) {
+            { // scope for queue lock
+                std::unique_lock<std::mutex> lk(qmutex); // acquire unique_lock on queue
+                qready.wait(lk, [this]{return queue.size();}); // unlock until queue items available
+                // copy items from queue up to end or nullptr; lock released at end of scope
+                v.clear();
+                auto itq = queue.begin();
+                for(; itq != queue.end(); itq++) {
+                    if(!*itq) break;
+                    v.push_back(*itq);
+                }
+                end_processing = itq != queue.end();
+                auto itq2 = queue.begin();
+                for(; itq < queue.end(); itq++) *(itq2++) = *itq;
+                queue.resize(itq2 - queue.begin());
+            }
+
+            // process queued items
+            auto itv = v.begin();
+            for(auto p: v) {
+                p = process_item(p);
+                if(p) *(itv++) = p;
+            }
+
+            // bulk return to pool
+            if(itv != v.begin()) {
+                std::lock_guard<std::mutex> plk(pmutex);
+                for(auto it = v.begin(); it != itv; it++) {
+                    if(!*it) continue;
+                    reset_allocated(**it);
+                    pool.push_back(*it);
+                }
+            }
+        }
+    }
+
+    /// process item received in queue
+    /// return object if we are done with processing, or nullptr if we will return_pool later
+    virtual T* process_item(T* obj) { return obj; }
+
+    /// launch buffer thread
+    virtual int launch_mythread() {
+        is_launched = true;
+        return pthread_create(&mythread, nullptr, queueprocess_thread<typename std::remove_reference<decltype(*this)>::type>, this);
+    }
+
+    pthread_t mythread;             ///< identifier for queue processing thread
+    bool is_launched = false;       ///< marker for whether thread is launched
+
+protected:
+    /// creation of new allocation objects
+    virtual T* allocate_new() { return new T; }
+    /// final deallocation of pool objects
+    virtual void deallocate(T* obj) { delete obj; }
+    /// clear re-usable returned objects
+    virtual void reset_allocated(T& /*obj*/) { }
+    /// thread-safe return of one item to pool
+    void return_pool(T* obj) {
+        reset_allocated(*obj);
+        std::lock_guard<std::mutex> plk(pmutex);
+        pool.push_back(obj);
+    }
+    /// deallocate all pooled objects
+    void clear_pool() {
+        std::lock_guard<std::mutex> plk(pmutex);
+        for(auto p: pool) deallocate(p);
+        pool.clear();
+    }
+
+    std::vector<T*> pool;       ///< re-usable allocated objects pool
+    std::vector<T*> queue;      ///< items received in processing queue
+
+    std::mutex pmutex;          ///< mutex for pool access
+    std::mutex qmutex;          ///< mutex for queue access
+    std::condition_variable qready; ///< check for items available in queue
+};
+
+#endif
+

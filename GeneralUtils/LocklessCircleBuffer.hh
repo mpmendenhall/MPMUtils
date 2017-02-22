@@ -12,7 +12,7 @@
 template<class MyBufferType>
 void* run_buffer_thread(void* p) {
     auto B = (MyBufferType*)p;
-    while(!B->all_done) { B->flush(); usleep(B->sleep_us); }
+    while(!B->all_done) { if(!B->flush()) usleep(B->sleep_us); }
     B->flush();
     return nullptr;
 }
