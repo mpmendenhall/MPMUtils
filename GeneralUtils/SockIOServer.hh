@@ -77,6 +77,8 @@ protected:
     virtual char* alloc_block(int32_t bsize);
     /// Process data after buffer read; return false to end communication
     virtual bool process(int32_t bsize);
+    /// end-of-handling routine
+    virtual void end_of_handling() { }
 
     dblock* theblock = nullptr; ///< default buffer space
 };

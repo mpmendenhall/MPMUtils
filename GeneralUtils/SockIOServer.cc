@@ -82,15 +82,16 @@ void ConnHandler::handle() {
 void BlockHandler::handle() {
     int32_t bsize;
     while(1) {
-        // TODO ioctl to check for disconnection
         bsize = 0;
         int len = read(sockfd, &bsize, sizeof(bsize));
+        if(len < 0) break; // error condition, e.g connection closed
         if(!len) { usleep(1000); continue; }
         assert(len==sizeof(bsize));
 
         if(bsize > 0) read_block(bsize);
         if(!process(bsize)) break;
     }
+    end_of_handling();
 }
 
 void BlockHandler::read_block(int32_t bsize) {

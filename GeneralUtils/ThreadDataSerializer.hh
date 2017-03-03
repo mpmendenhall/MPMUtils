@@ -42,6 +42,7 @@ public:
     }
 
     /// receive and process items as they are placed in queue; terminate on nullptr
+    /// call directly or spawn in separate thread by launch_mythread
     void process_queued() {
         std::vector<T*> v;
         bool end_processing = false;
@@ -65,8 +66,7 @@ public:
             // process queued items
             auto itv = v.begin();
             for(auto p: v) {
-                p = process_item(p);
-                if(p) *(itv++) = p;
+                if(process_item(*p)) *(itv++) = p;
             }
 
             // bulk return to pool
@@ -79,11 +79,8 @@ public:
                 }
             }
         }
+        end_of_processing();
     }
-
-    /// process item received in queue
-    /// return object if we are done with processing, or nullptr if we will return_pool later
-    virtual T* process_item(T* obj) { return obj; }
 
     /// launch buffer thread
     virtual int launch_mythread() {
@@ -95,6 +92,13 @@ public:
     bool is_launched = false;       ///< marker for whether thread is launched
 
 protected:
+
+    /// process item received in queue
+    /// return 'true' to return_pool now, or 'false' if we will manually return_pool later
+    virtual bool process_item(T& /*obj*/) { return true; }
+    /// run at termination of processing loop
+    virtual void end_of_processing() { }
+
     /// creation of new allocation objects
     virtual T* allocate_new() { return new T; }
     /// final deallocation of pool objects
