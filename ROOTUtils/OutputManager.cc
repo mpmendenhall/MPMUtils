@@ -90,12 +90,22 @@ TH2F* OutputManager::registeredTH2F(string hname, string htitle, unsigned int nb
     return (TH2F*)addObject(new TH2F(hname.c_str(),htitle.c_str(),nbinsx,x0,x1,nbinsy,y0,y1));
 }
 
-string OutputManager::printCanvas(string fname, string suffix) const {
+string OutputManager::printCanvas(const string& fname, string suffix) const {
+    if(suffix=="DEFAULT") suffix = printsfx;
     printf("Printing canvas '%s' in '%s'\n",(fname+suffix).c_str(), plotPath.c_str());
     if(squelchAllPrinting) { printf("Printing squelched!\n"); return ""; }
+
     makePath(plotPath+"/"+fname+suffix,true);
     string fout = plotPath+"/"+fname+suffix;
-    defaultCanvas.Print(fout.c_str());
+
+    if(suffix == ".svgz") {
+        string svgout = plotPath+"/"+fname+".svg";
+        defaultCanvas.Print(svgout.c_str());
+        system(("gzip "+svgout+"; mv "+svgout+".gz "+fout).c_str());
+    } else {
+        defaultCanvas.Print(fout.c_str());
+    }
+
     return fout;
 }
 

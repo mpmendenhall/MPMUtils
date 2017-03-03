@@ -54,7 +54,7 @@ public:
     /// generate a TH2F registered with this runs output objects list
     TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
     /// print current canvas; return filename printed
-    virtual string printCanvas(string fname, string suffix=".pdf") const;
+    virtual string printCanvas(const string& fname, string suffix="DEFAULT") const;
 
     /// write items to currently open directory, or specified
     TDirectory* writeItems(TDirectory* d = nullptr) override;
@@ -68,6 +68,7 @@ public:
     string dataPath;                    ///< specific output path for output data
     string rootPath;                    ///< specific output path for ROOT files
     string name;                        ///< name for this subsystem
+    string printsfx = ".pdf";           ///< printCanvas default suffix
 
     static bool squelchAllPrinting;     ///< whether to cancel all printCanvas output
 };
