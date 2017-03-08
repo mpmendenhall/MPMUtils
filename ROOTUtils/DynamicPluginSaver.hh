@@ -62,7 +62,7 @@ public:
     void Reconfigure();
 
     /// global map of available plugins
-    static map<string, PluginRegistrar*> builderTable;
+    static map<string, PluginRegistrar*>& builderTable();
 
 protected:
     TObjString* configstr;  ///< configuration file string
@@ -72,7 +72,7 @@ protected:
 #define REGISTER_PLUGIN(NAME,BASE) \
 class _##NAME##_Registrar: public PluginRegistrar { \
 public: \
-    _##NAME##_Registrar() { DynamicPluginSaver::builderTable.emplace(#NAME,this); } \
+    _##NAME##_Registrar() { DynamicPluginSaver::builderTable().emplace(#NAME,this); } \
     shared_ptr<PluginBuilder> makeBuilder(Setting& c) const override { return make_shared<ConfigPluginBuilder<NAME,BASE>>(c); } \
 }; \
 static _##NAME##_Registrar the_##NAME##_Registrar;

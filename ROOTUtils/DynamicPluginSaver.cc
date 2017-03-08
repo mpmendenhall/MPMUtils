@@ -4,7 +4,10 @@
 #include "StringManip.hh"
 #include <cassert>
 
-map<string, PluginRegistrar*> DynamicPluginSaver::builderTable;
+map<string, PluginRegistrar*>& DynamicPluginSaver::builderTable() {
+    static map<string, PluginRegistrar*> BT;
+    return BT;
+}
 
 DynamicPluginSaver::DynamicPluginSaver(OutputManager* pnt, const string& nm, const string& inflName): PluginSaver(pnt,nm,inflName) {
     configstr = registerAttrString("configstr", "");
@@ -32,11 +35,11 @@ void DynamicPluginSaver::Configure(Setting& cfg) {
         auto nplugs = plugs.getLength();
 	for(int i=0; i<nplugs; i++) {
             string pname = plugs[i].getName();
-            auto it = builderTable.find(pname);
-            if(it == builderTable.end()) {
+            auto it = builderTable().find(pname);
+            if(it == builderTable().end()) {
                 fprintf(stderr,"Unknown plugin type '%s' configured! I die!\n", pname.c_str());
                 printf("Available plugins:\n");
-                for(auto kv: builderTable) printf("\t%s\n", kv.first.c_str());
+                for(auto kv: builderTable()) printf("\t%s\n", kv.first.c_str());
                 printf("--------------------\n");
                 throw;
             }
