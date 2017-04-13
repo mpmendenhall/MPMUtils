@@ -24,7 +24,7 @@ void DynamicPluginSaver::Reconfigure() {
     } else printf("No configuration found in loaded file!\n");
 }
 
-void DynamicPluginSaver::Configure(Setting& cfg) {
+void DynamicPluginSaver::Configure(const Setting& cfg) {
     // save copy of config to output
     auto srcfl = cfg.getSourceFile();
     if(srcfl) configstr->SetString(loadFileString(srcfl).c_str());
