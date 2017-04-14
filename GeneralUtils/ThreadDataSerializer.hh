@@ -41,26 +41,39 @@ public:
         // lock is released on exiting this scope
     }
 
+    /// Thread-safe toggle of halt flag
+    void set_halt(bool h) {
+        std::lock_guard<std::mutex> lk(qmutex); // get lock on queue
+        halt = h;
+        if(halt) qready.notify_one();           // notification to catch halt
+        // lock is released on exiting this scope
+    }
+
     /// receive and process items as they are placed in queue; terminate on nullptr
     /// call directly or spawn in separate thread by launch_mythread
     void process_queued() {
         std::vector<T*> v;
-        bool end_processing = false;
-        while(!end_processing) {
+        bool gothalt = false; // received halt flag?
+        bool qbreak = false; // encountered nullptr break in queue?
+        while(!gothalt && !qbreak) {
             { // scope for queue lock
-                std::unique_lock<std::mutex> lk(qmutex); // acquire unique_lock on queue
-                qready.wait(lk, [this]{return queue.size();}); // unlock until queue items available
-                // copy items from queue up to end or nullptr; lock released at end of scope
-                v.clear();
-                auto itq = queue.begin();
-                for(; itq != queue.end(); itq++) {
-                    if(!*itq) break;
-                    v.push_back(*itq);
+                std::unique_lock<std::mutex> lk(qmutex); // acquire unique_lock on queue in this scope
+                qready.wait(lk, [this]{return queue.size() || halt;}); // unlock until notified
+
+                if(halt) gothalt = true;
+                else {
+                    // copy items from queue up to end or nullptr
+                    auto itq = queue.begin();
+                    for(; itq != queue.end(); itq++) {
+                        if(!*itq) break;
+                        v.push_back(*itq);
+                    }
+                    qbreak = itq != queue.end();
+                    // shift remaining items to start of queue
+                    auto itq2 = queue.begin();
+                    for(; itq < queue.end(); itq++) *(itq2++) = *itq;
+                    queue.resize(itq2 - queue.begin());
                 }
-                end_processing = itq != queue.end();
-                auto itq2 = queue.begin();
-                for(; itq < queue.end(); itq++) *(itq2++) = *itq;
-                queue.resize(itq2 - queue.begin());
             }
 
             // process queued items
@@ -78,8 +91,11 @@ public:
                     pool.push_back(*it);
                 }
             }
+
+            v.clear(); // re-usable in next round
         }
-        end_of_processing();
+        if(qbreak) end_of_processing();
+        is_launched = false;
     }
 
     /// launch buffer thread
@@ -123,7 +139,8 @@ protected:
 
     std::mutex pmutex;          ///< mutex for pool access
     std::mutex qmutex;          ///< mutex for queue access
-    std::condition_variable qready; ///< check for items available in queue
+    std::condition_variable qready; ///< wait for queue items or hault
+    bool halt = false;          ///< processing halt flag (needs qmutex)
 };
 
 #endif

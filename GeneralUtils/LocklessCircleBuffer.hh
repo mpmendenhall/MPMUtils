@@ -7,6 +7,7 @@
 #include <unistd.h>     // for usleep
 #include <pthread.h>
 #include <cassert>
+#include <chrono>       // for timeouts
 
 /// pthreads function for launching read process
 template<class MyBufferType>
@@ -40,6 +41,19 @@ public:
         assert(!writept);
         if(writept || ready[write_idx]) { n_write_fails++; return nullptr; }
         return writept = &buf[write_idx];
+    }
+
+    /// get pointer to next buffer space, with timeout in s; nullptr if unavailable
+    T* get_writepoint(double t_s) {
+        assert(!writept);
+        if(writept) return nullptr; // shouldn't happen!
+        auto t = std::chrono::steady_clock::now() + std::chrono::milliseconds(int(1e3*t_s));
+        do {
+            if(ready[write_idx]) { usleep(sleep_us); continue; }
+            writept = &buf[write_idx];
+        } while(!writept && std::chrono::steady_clock::now() < t);
+        if(!writept) n_write_fails++;
+        return writept;
     }
 
     /// call after completing access to write point, appending to processing queue
