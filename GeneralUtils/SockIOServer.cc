@@ -17,9 +17,15 @@ bool SockIOServer::process_connections(const string& host, int port) {
     }
 
     // bind server to socket
+    struct hostent* hostinfo = gethostbyname(host.c_str());
+    if(hostinfo == nullptr) {
+        fprintf (stderr, "Unknown host '%s'\n", host.c_str());
+        return false;
+    }
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    //serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_addr = *(struct in_addr*) hostinfo->h_addr;
     serv_addr.sin_port = htons(port); // host to network byte order
     int rc = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
     if(rc < 0) {
