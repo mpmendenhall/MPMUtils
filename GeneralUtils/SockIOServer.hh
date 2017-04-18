@@ -3,7 +3,6 @@
 #ifndef SOCKIOSERVER_HH
 #define SOCKIOSERVER_HH
 
-#include <netdb.h> // for sockaddr_in, hostent
 #include <string>
 using std::string;
 #include <vector>

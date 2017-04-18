@@ -1,9 +1,10 @@
 /// \file SockIOServer.cc
 
 #include "SockIOServer.hh"
-#include <string.h> // for bzero(...)
-#include <unistd.h> // for write(...), usleep(n)
-#include <stdio.h>  // for printf(...)
+#include <netdb.h>     // for sockaddr_in, hostent
+#include <string.h>    // for bzero(...)
+#include <unistd.h>    // for write(...), usleep(n)
+#include <stdio.h>     // for printf(...)
 #include <sys/ioctl.h> // for ioctl(...)
 #include <pthread.h>
 #include <cassert>
