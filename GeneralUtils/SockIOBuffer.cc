@@ -35,8 +35,12 @@ bool SockIOBuffer::open_socket(const string& host, int port) {
 void SockIOBuffer::process_item() {
     if(sockfd) {
         int32_t bsize = current.size();
-        write(sockfd, &bsize, sizeof(bsize));
-        write(sockfd, current.data(), bsize);
+        auto ret = write(sockfd, &bsize, sizeof(bsize));
+        if(ret >= 0) ret = write(sockfd, current.data(), bsize);
+        if(ret < 0) {
+            fprintf(stderr, "ERROR %li writing to socket descriptor %i; connection closed!\n", ret, sockfd);
+            close_socket();
+        }
     }
     current.clear();
 }

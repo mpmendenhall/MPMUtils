@@ -9,6 +9,7 @@
 #include <pthread.h>
 #include <cassert>
 
+
 bool SockIOServer::process_connections(const string& host, int port) {
     // open socket file descriptor
     auto sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -18,15 +19,16 @@ bool SockIOServer::process_connections(const string& host, int port) {
     }
 
     // bind server to socket
-    struct hostent* hostinfo = gethostbyname(host.c_str());
-    if(hostinfo == nullptr) {
-        fprintf (stderr, "Unknown host '%s'\n", host.c_str());
-        return false;
-    }
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
-    //serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_addr = *(struct in_addr*) hostinfo->h_addr;
+    if(host.size()) {
+        struct hostent* hostinfo = gethostbyname(host.c_str());
+        if(hostinfo == nullptr) {
+            fprintf (stderr, "ERROR unknown hostname '%s'\n", host.c_str());
+            return false;
+        }
+        serv_addr.sin_addr = *(struct in_addr*) hostinfo->h_addr;
+    } else serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // default for this machine
     serv_addr.sin_port = htons(port); // host to network byte order
     int rc = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
     if(rc < 0) {
@@ -34,6 +36,7 @@ bool SockIOServer::process_connections(const string& host, int port) {
         close(sockfd);
         return false;
     }
+
     // listen on socket for connections, allowing a backlog of 10
     listen(sockfd, 10);
     printf("Listening for connections on port %i (socket fd %i)\n", port, sockfd);
@@ -91,9 +94,7 @@ void BlockHandler::handle() {
     while(1) {
         bsize = 0;
         int len = read(sockfd, &bsize, sizeof(bsize));
-        if(len < 0) break; // error condition, e.g connection closed
-        if(!len) { usleep(1000); continue; }
-        assert(len==sizeof(bsize));
+        if(len != sizeof(bsize)) break; // error condition, e.g connection closed
 
         if(bsize > 0) read_block(bsize);
         if(!process(bsize)) break;
