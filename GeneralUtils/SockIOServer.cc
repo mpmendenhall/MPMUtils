@@ -1,11 +1,16 @@
 /// \file SockIOServer.cc
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE // for POLLRDHUP in poll()
+#endif
+
 #include "SockIOServer.hh"
 #include <netdb.h>     // for sockaddr_in, hostent
 #include <string.h>    // for bzero(...)
 #include <unistd.h>    // for write(...), usleep(n)
 #include <stdio.h>     // for printf(...)
 #include <sys/ioctl.h> // for ioctl(...)
+#include <poll.h>      // for poll(...)
 #include <pthread.h>
 #include <cassert>
 
@@ -91,27 +96,40 @@ void ConnHandler::handle() {
 
 void BlockHandler::handle() {
     int32_t bsize;
+    struct pollfd pfd;
+    pfd.fd = sockfd;
+    pfd.events = POLLIN | POLLRDHUP;
     while(1) {
+        int ret = poll(&pfd, 1 /*entries in pfd[]*/, block_timeout_ms);
+        if(ret != 1 || !(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL | POLLRDHUP))) break; // timeout or error
         bsize = 0;
         int len = read(sockfd, &bsize, sizeof(bsize));
         if(len != sizeof(bsize)) break; // error condition, e.g connection closed
 
-        if(bsize > 0) read_block(bsize);
+        if(bsize > 0 && !read_block(bsize)) break;
         if(!process(bsize)) break;
     }
     end_of_handling();
 }
 
-void BlockHandler::read_block(int32_t bsize) {
+bool BlockHandler::read_block(int32_t bsize) {
     auto buff = alloc_block(bsize);
-    if(!buff) return;
+    if(!buff) return false;
+
     int32_t nread = 0;
+    struct pollfd pfd;
+    pfd.fd = sockfd;
+    pfd.events = POLLIN | POLLRDHUP;
     while(nread < bsize) {
+        int ret = poll(&pfd, 1 /*entries in pfd[]*/, read_timeout_ms);
+        if(ret != 1 || !(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL | POLLRDHUP))) break; // timeout or error
+
         auto len = read(sockfd, buff+nread, bsize-nread);
-        if(len < 0) break;
+        if(len < 0) return false;
         nread += len;
         if(nread != bsize) usleep(1000);
     }
+    return true;
 }
 
 bool BlockHandler::process(int32_t bsize) {

@@ -64,9 +64,12 @@ public:
         vector<char> data;  ///< data location
     };
 
+    int block_timeout_ms = 10000;   ///< timeout between receiving blocks [ms]
+    int read_timeout_ms = 2000;     ///< timeout for read after getting block header
+
 protected:
-    /// Read block data of expected size
-    virtual void read_block(int32_t bsize);
+    /// Read block data of expected size; return if successful
+    virtual bool read_block(int32_t bsize);
     /// Set theblock to write point, or null if unavailable
     virtual void request_block(int32_t /*bsize*/) { if(!theblock) theblock = new dblock; }
     /// Return completed block to whence it came
