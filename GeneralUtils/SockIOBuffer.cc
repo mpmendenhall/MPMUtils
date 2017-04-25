@@ -4,6 +4,8 @@
 #include <string.h> // for bzero(...)
 #include <unistd.h> // for write(...)
 #include <stdio.h>  // for printf(...)
+#include <signal.h> // for SIGPIPE
+#include <errno.h>  // for errno
 
 bool SockIOBuffer::open_socket(const string& host, int port) {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -29,16 +31,38 @@ bool SockIOBuffer::open_socket(const string& host, int port) {
         return false;
     }
 
+    signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE errors; handle by return in code
+
     return true;
+}
+
+int sockwrite(int fd, char* buff, size_t nbytes) {
+    int nwritten = 0;
+    int nretries = 3;
+    while(nbytes) {
+        auto ret = write(fd, buff, nbytes);
+        if(ret <= 0) {
+            if(nretries--) {
+                usleep(1000);
+                continue;
+            }
+            perror("Error writing to socket");
+            return ret;
+        }
+        nwritten += ret;
+        nbytes -= ret;
+        buff += ret;
+    }
+    return nwritten; 
 }
 
 void SockIOBuffer::process_item() {
     if(sockfd) {
         int32_t bsize = current.size();
-        auto ret = write(sockfd, &bsize, sizeof(bsize));
-        if(ret >= 0) ret = write(sockfd, current.data(), bsize);
-        if(ret < 0) {
-            fprintf(stderr, "ERROR %li writing to socket descriptor %i; connection closed!\n", ret, sockfd);
+        auto ret = sockwrite(sockfd, (char*)&bsize, sizeof(bsize));
+        if(ret > 0 && bsize) ret = sockwrite(sockfd, current.data(), bsize);
+        if(ret <= 0) {
+            fprintf(stderr, "ERROR %i writing to socket descriptor %i; connection closed!\n", errno, sockfd);
             close_socket();
         }
     }
