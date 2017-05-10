@@ -9,6 +9,7 @@
 #define BBOX_HH
 
 #include <limits>
+#include <array>
 
 /// Templatized D-dimensional bounding box
 template<size_t D, typename T>
@@ -25,12 +26,30 @@ public:
         }
     }
 
+    /// expand to include point (from array)
+    void expand(const std::array<T,D>& a) { expand(a.data()); }
+
+    /// offset by vector
+    void offset(const T* x) {
+        for(size_t i=0; i<D; i++) {
+            lo[i] += x[i];
+            hi[i] += x[i];
+        }
+    }
+
+    /// offset by vector
+    void offset(const std::array<T,D>& a) { offset(a.data()); }
+
+    /// expand to include BBox
+    void operator+=(const BBox<D,T>& B) {
+        expand(B.lo);
+        expand(B.hi);
+    }
+
     /// expand by margin on all sides
     void expand(T x) {
-        for(size_t i=0; i<D; i++) {
-            lo[i] -= x;
-            hi[i] += x;
-        }
+        for(auto& v: lo) v -= x;
+        for(auto& v: hi) v += x;
     }
 
     /// check if point in half-open [lo, hi) interior
@@ -45,18 +64,16 @@ public:
     /// local coordinate along axis, 0->lo and 1->hi
     T pos(T x, size_t i) const { return lo[i] + x*dl(i); }
 
-    T lo[D];    /// lower bounds
-    T hi[D];    /// upper bounds
+    std::array<T,D> lo; /// lower bounds
+    std::array<T,D> hi; /// upper bounds
 };
 
 /// create BBox<D,double> with "null" bounds
 template<size_t D>
 BBox<D,double> empty_double_bbox() {
     BBox<D,double> b;
-    for(size_t i=0; i<D; i++) {
-        b.lo[i] = std::numeric_limits<double>::max();
-        b.hi[i] = -std::numeric_limits<double>::max();
-    }
+    for(auto& v: b.lo) v = std::numeric_limits<double>::max();
+    for(auto& v: b.hi) v = -std::numeric_limits<double>::max();
     return b;
 }
 

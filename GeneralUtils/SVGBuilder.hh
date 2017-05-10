@@ -1,10 +1,5 @@
 /// \file SVGBuilder.hh Scalable Vector Graphics XML tags
-
-// This file was produced under the employ of the United States Government,
-// and is consequently in the PUBLIC DOMAIN, free from all provisions of
-// US Copyright Law (per USC Title 17, Section 105).
-//
-// -- Michael P. Mendenhall, 2015
+// Michael P. Mendenhall, LLNL 2017
 
 #ifndef SVGBUILDER_HH
 #define SVGBUILDER_HH
@@ -21,29 +16,57 @@ namespace SVG {
     template<typename T>
     string to_str(T x) { std::stringstream ss; ss << x; return ss.str(); }
 
-    class svg: public XMLBuilder {
+    /// convenience typedef for 2D point
+    typedef std::array<double,2> xypoint;
+
+    /// XML builder object with a bounding box calculation
+    class BBXML: public XMLBuilder {
     public:
-        svg(): XMLBuilder("svg") {
+        /// Constructor
+        BBXML(const string& nm): XMLBuilder(nm) { }
+        /// Get (override to calculate) bounding box
+        virtual BBox<2,double> getBB() { return BB; }
+    protected:
+        /// Contents bounding box
+        BBox<2,double> BB = empty_double_bbox<2>();
+        /// Calculate BBox from children
+        void calcChildrenBB() {
+            BB = empty_double_bbox<2>();
+            for(auto& c: children) {
+                auto cc = std::dynamic_pointer_cast<BBXML>(c);
+                if(cc) BB += cc->getBB();
+            }
+        }
+    };
+
+    class svg: public BBXML {
+    public:
+        svg(): BBXML("svg") {
             attrs["version"] = "1.1";
             attrs["xmlns"] = "http://www.w3.org/2000/svg";
             attrs["xmlns:xlink"] = "http://www.w3.org/1999/xlink";
         }
 
-        void setView(BBox<2,double> BB, double xToCm) {
-            attrs["viewBox"] = to_str(BB.lo[0])+","+to_str(BB.lo[1])+","+to_str(BB.dl(0))+","+to_str(BB.dl(1));
-            attrs["width"] = to_str(BB.dl(0)*xToCm)+"cm";
-            attrs["height"] = to_str(BB.dl(1)*xToCm)+"cm";
+        void setView(BBox<2,double> BV, double xToCm) {
+            attrs["viewBox"] = to_str(BV.lo[0])+","+to_str(BV.lo[1])+","+to_str(BV.dl(0))+","+to_str(BV.dl(1));
+            attrs["width"] = to_str(BV.dl(0)*xToCm)+"cm";
+            attrs["height"] = to_str(BV.dl(1)*xToCm)+"cm";
         }
 
         static  void make_standalone_header(ostream& o) {
             o << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
             o << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n";
         }
+
+        /// Calculate bounding box from contents
+        BBox<2,double> getBB() override { calcChildrenBB(); return BB; }
     };
 
-    class group: public XMLBuilder {
+    class group: public BBXML {
     public:
-        group(): XMLBuilder("g") { }
+        group(): BBXML("g") { }
+        /// Calculate bounding box from contents
+        BBox<2,double> getBB() override { calcChildrenBB(); return BB; }
     };
 
     class defs: public XMLBuilder {
@@ -56,20 +79,25 @@ namespace SVG {
         title(const string& t): XMLBuilder("title") { addChild(make_shared<XMLText>(t)); oneline = true; }
     };
 
-    class line: public XMLBuilder {
+    class line: public BBXML {
     public:
-        line(double x1, double y1, double x2, double y2, const string& style = ""): XMLBuilder("line") {
+        line(double x1, double y1, double x2, double y2, const string& style = ""): BBXML("line") {
             addAttr("x1",x1);
             addAttr("y1",y1);
             addAttr("x2",x2);
             addAttr("y2",y2);
             if(style.size()) attrs["style"] = style;
+
+            xypoint p0 = {x1,y1};
+            xypoint p1 = {x2,y2};
+            BB.expand(p0);
+            BB.expand(p1);
         }
     };
 
-    class rect: public XMLBuilder {
+    class rect: public BBXML {
     public:
-        rect(double x, double y, double dx, double dy, const string& style = ""): XMLBuilder("rect") {
+        rect(double x, double y, double dx, double dy, const string& style = ""): BBXML("rect") {
             if(dx < 0) { x += dx; dx = fabs(dx); }
             if(dy < 0) { y += dy; dy = fabs(dy); }
             addAttr("x",x);
@@ -77,39 +105,60 @@ namespace SVG {
             addAttr("width",dx);
             addAttr("height",dy);
             if(style.size()) attrs["style"] = style;
+
+            xypoint p0 = {x,y};
+            xypoint p1 = {x+dx,y+dy};
+            BB.expand(p0);
+            BB.expand(p1);
         }
     };
 
-    class circle: public XMLBuilder {
+    class circle: public BBXML {
     public:
-        circle(double cx, double cy, double r, const string& style = ""): XMLBuilder("circle") {
+        circle(double cx, double cy, double r, const string& style = ""): BBXML("circle") {
             addAttr("cx",cx);
             addAttr("cy",cy);
             addAttr("r",r);
             if(style.size()) attrs["style"] = style;
+
+            xypoint p0 = {cx-r,cy-r};
+            xypoint p1 = {cx+r,cy+r};
+            BB.expand(p0);
+            BB.expand(p1);
         }
     };
 
-    class ellipse: public XMLBuilder {
+    class ellipse: public BBXML {
     public:
-        ellipse(double cx, double cy, double rx, double ry, const string& style = ""): XMLBuilder("ellipse") {
+        ellipse(double cx, double cy, double rx, double ry, const string& style = ""): BBXML("ellipse") {
             addAttr("cx",cx);
             addAttr("cy",cy);
             addAttr("rx",rx);
             addAttr("rx",ry);
             if(style.size()) attrs["style"] = style;
+
+            xypoint p0 = {cx-rx,cy-ry};
+            xypoint p1 = {cx+rx,cy+ry};
+            BB.expand(p0);
+            BB.expand(p1);
         }
     };
 
-    class polyline: public XMLBuilder {
+    class polyline: public BBXML {
     public:
-        polyline(const string& style = ""): XMLBuilder("polyline") { if(style.size()) attrs["style"] = style; }
-        void addpt(double x, double y) { pts.push_back(pair<double,double>(x,y)); }
-        vector< pair<double,double> > pts;
+        polyline(const string& style = ""): BBXML("polyline") { if(style.size()) attrs["style"] = style; }
+        void addpt(double x, double y) { xypoint p{x,y}; pts.push_back(p); }
+        vector<xypoint> pts;
+        /// Calculate bounding box from contents
+        BBox<2,double> getBB() override {
+            BB = empty_double_bbox<2>();
+            for(auto p: pts) BB.expand(p);
+            return BB;
+        }
     protected:
         virtual void prepare() {
             string s = "";
-            for(auto const& pt: pts) s += to_str(pt.first) + "," +  to_str(pt.second) + " ";
+            for(auto const& pt: pts) s += to_str(pt[0]) + "," +  to_str(pt[1]) + " ";
             attrs["points"] = s;
         }
     };
@@ -155,10 +204,13 @@ namespace SVG {
         shared_ptr<XMLText> myText;
     };
 
-    inline void set_fill(shared_ptr<XMLBuilder> x, const color::rgb& c) {
-        x->attrs["fill"] = "#"+c.asHexString();
-        if(c.a != 1) x->addAttr("fill-opacity",c.a);
+
+    inline void set_fill(map<string,string>& attrs, const color::rgb& c) {
+        attrs["fill"] = "#"+c.asHexString();
+        if(c.a != 1) attrs["fill-opacity"] = to_str(c.a);
     }
+
+    inline void set_fill(XMLBuilder& X, const color::rgb& c) { set_fill(X.attrs,c); }
 
     /// SVG document outline convenience class
     class SVGDoc {
