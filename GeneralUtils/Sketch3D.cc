@@ -54,6 +54,8 @@ void ProjectablePoly::setPerspective(const Perspective& P) {
     auto pg = make_shared<SVG::polyline>();
     P.projectPoly(pts, pg->pts, s, z);
     if(closed) pg->name = "polygon";
+    myXML = pg;
+    setAttrs();
 }
 
 /////////////////////////////////
@@ -81,19 +83,14 @@ void SketchLayer::makeStereo(Perspective& P, const string& fname, double xborder
     auto BB2 = g2->getBB();
     BB1.expand(xborder);
     BB2.expand(xborder);
-    std::array<double,2> dx1 = {xborder-BB1.lo[0], 0};
-    std::array<double,2> dx2 = {-BB2.hi[0]-xborder, 0};
-    BB1.offset(dx1);
-    BB2.offset(dx2);
-    g1->attrs["transform"] = "translate("+SVG::to_str(dx1[0])+")";
-    g2->attrs["transform"] = "translate("+SVG::to_str(dx2[0])+")";
+    g1->translation = {xborder-BB1.lo[0], 0};
+    g2->translation = {-BB2.hi[0]-xborder, 0};
 
     SVG::SVGDoc D;
     if(ttl.size()) D.body.addChild(make_shared<SVG::title>(ttl));
     D.body.addChild(g1);
     D.body.addChild(g2);
-    D.BB += BB1;
-    D.BB += BB2;
+    D.BB = D.body.getBB();
 
     D.write(fname);
 }
@@ -116,5 +113,5 @@ bool compare_projectables(const unique_ptr<ProjectablePrimitive>& lhs,
 void PrimitivesLayer::drawInto(XMLBuilder& X, const Perspective& P) {
     for(auto& o: myObjs) { assert(o); o->setPerspective(P); }
     std::sort(myObjs.begin(), myObjs.end(), &compare_projectables);
-    for(auto& o: myObjs) X.addChild(o->myXML);
+    for(auto& o: myObjs) { assert(o->myXML); X.addChild(o->myXML); }
 }

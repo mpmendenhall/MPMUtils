@@ -66,7 +66,20 @@ namespace SVG {
     public:
         group(): BBXML("g") { }
         /// Calculate bounding box from contents
-        BBox<2,double> getBB() override { calcChildrenBB(); return BB; }
+        BBox<2,double> getBB() override {
+            calcChildrenBB();
+            BB.offset(translation);
+            return BB;
+        }
+        xypoint translation;    /// offset translation of element
+    protected:
+        void prepare() override {
+            if(translation[0] || translation[1]) {
+                string s = "translate("+to_str(translation[0]);
+                if(translation[1]) s += ","+to_str(translation[1]);
+                attrs["transform"]=s+")";
+            }
+        }
     };
 
     class defs: public XMLBuilder {
@@ -156,7 +169,7 @@ namespace SVG {
             return BB;
         }
     protected:
-        virtual void prepare() {
+        void prepare() override {
             string s = "";
             for(auto const& pt: pts) s += to_str(pt[0]) + "," +  to_str(pt[1]) + " ";
             attrs["points"] = s;
@@ -210,7 +223,7 @@ namespace SVG {
         if(c.a != 1) attrs["fill-opacity"] = to_str(c.a);
     }
 
-    inline void set_fill(XMLBuilder& X, const color::rgb& c) { set_fill(X.attrs,c); }
+    inline void set_fill(XMLBuilder& X, const color::rgb& c) { set_fill(X.attrs, c); }
 
     /// SVG document outline convenience class
     class SVGDoc {
