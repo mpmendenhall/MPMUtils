@@ -94,15 +94,21 @@ void ConnHandler::handle() {
 ////////////////////
 ////////////////////
 
+#ifdef __APPLE__
+#define OR_POLLRDHUP 
+#else
+#define OR_POLLRDHUP | POLLRDHUP
+#endif
+
 void BlockHandler::handle() {
     int32_t bsize;
     struct pollfd pfd;
     pfd.fd = sockfd;
-    pfd.events = POLLIN | POLLRDHUP;
+    pfd.events = POLLIN OR_POLLRDHUP;
     while(1) {
         int ret = poll(&pfd, 1 /*entries in pfd[]*/, block_timeout_ms);
-        if(ret != 1 || !(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL | POLLRDHUP))) break; // timeout or error
-        bsize = 0;
+        if(ret != 1 || !(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL OR_POLLRDHUP))) break; // timeout or error
+	bsize = 0;
         int len = read(sockfd, &bsize, sizeof(bsize));
         if(len != sizeof(bsize)) break; // error condition, e.g connection closed
 
@@ -119,10 +125,10 @@ bool BlockHandler::read_block(int32_t bsize) {
     int32_t nread = 0;
     struct pollfd pfd;
     pfd.fd = sockfd;
-    pfd.events = POLLIN | POLLRDHUP;
+    pfd.events = POLLIN OR_POLLRDHUP;
     while(nread < bsize) {
         int ret = poll(&pfd, 1 /*entries in pfd[]*/, read_timeout_ms);
-        if(ret != 1 || !(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL | POLLRDHUP))) break; // timeout or error
+        if(ret != 1 || !(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL OR_POLLRDHUP))) break; // timeout or error
 
         auto len = read(sockfd, buff+nread, bsize-nread);
         if(len < 0) return false;
