@@ -101,10 +101,8 @@ namespace SVG {
             addAttr("y2",y2);
             if(style.size()) attrs["style"] = style;
 
-            xypoint p0 = {x1,y1};
-            xypoint p1 = {x2,y2};
-            BB.expand(p0);
-            BB.expand(p1);
+            BB.expand({{x1,y1}});
+            BB.expand({{x2,y2}});
         }
     };
 
@@ -119,10 +117,8 @@ namespace SVG {
             addAttr("height",dy);
             if(style.size()) attrs["style"] = style;
 
-            xypoint p0 = {x,y};
-            xypoint p1 = {x+dx,y+dy};
-            BB.expand(p0);
-            BB.expand(p1);
+            BB.expand({{x,y}});
+            BB.expand({{x+dx,y+dy}});
         }
     };
 
@@ -134,10 +130,8 @@ namespace SVG {
             addAttr("r",r);
             if(style.size()) attrs["style"] = style;
 
-            xypoint p0 = {cx-r,cy-r};
-            xypoint p1 = {cx+r,cy+r};
-            BB.expand(p0);
-            BB.expand(p1);
+            BB.expand({{cx-r,cy-r}});
+            BB.expand({{cx+r,cy+r}});
         }
     };
 
@@ -150,17 +144,15 @@ namespace SVG {
             addAttr("rx",ry);
             if(style.size()) attrs["style"] = style;
 
-            xypoint p0 = {cx-rx,cy-ry};
-            xypoint p1 = {cx+rx,cy+ry};
-            BB.expand(p0);
-            BB.expand(p1);
+            BB.expand({{cx-rx,cy-ry}});
+            BB.expand({{cx+rx,cy+ry}});
         }
     };
 
     class polyline: public BBXML {
     public:
         polyline(const string& style = ""): BBXML("polyline") { if(style.size()) attrs["style"] = style; }
-        void addpt(double x, double y) { xypoint p{x,y}; pts.push_back(p); }
+        void addpt(double x, double y) { pts.push_back({{x,y}}); }
         vector<xypoint> pts;
         /// Calculate bounding box from contents
         BBox<2,double> getBB() override {

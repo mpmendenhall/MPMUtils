@@ -33,7 +33,7 @@ void DynamicPluginSaver::Configure(const Setting& cfg) {
     if(cfg.exists("plugins")) {
         auto& plugs = cfg["plugins"];
         auto nplugs = plugs.getLength();
-	for(int i=0; i<nplugs; i++) {
+        for(int i=0; i<nplugs; i++) {
             string pname = plugs[i].getName();
             auto it = builderTable().find(pname);
             if(it == builderTable().end()) {

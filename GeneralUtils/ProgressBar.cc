@@ -1,6 +1,6 @@
 /// \file ProgressBar.cc
 /*
- * ProgressBar.cpp, part of the MPMUtils package
+ * ProgressBar.cc, part of the MPMUtils package
  * Copyright (c) 2007-2016 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
