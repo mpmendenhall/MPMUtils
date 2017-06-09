@@ -49,6 +49,7 @@ public:
     virtual void setPerspective(const Perspective& P) = 0;
 
     shared_ptr<XMLBuilder> myXML;   ///< generated XML
+    double z0 = 0;                  ///< depth-sorting shift for all projections
     double z = 0;                   ///< depth-sorting z in projected state
     double s = 0;                   ///< overall scale factor
     map<string,string> attrs;       ///< non-scaled attributes
