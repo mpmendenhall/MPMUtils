@@ -53,7 +53,7 @@ public:
     };
 
     bool logscale = false;                                      ///< log scale setting
-    BBox<1,double> range = empty_double_bbox<1>();              ///< axis range
+    BBox<1,double> range = BBox<1,double>::nullBox();           ///< axis range
     set<tick> axticks;                                          ///< axis tick locations
     shared_ptr<SVG::group> axisGroup = make_shared<SVG::group>();       ///< group containing axis information
 

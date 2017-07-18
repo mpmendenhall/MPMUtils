@@ -53,7 +53,7 @@ public:
     }
 
     /// check if point in half-open [lo, hi) interior
-    bool inside(const T* x) {
+    bool inside(const T* x) const {
         for(size_t i=0; i<D; i++)
             if(!(lo[i] <= x[i] && x[i] < hi[i])) return false;
         return true;
@@ -66,15 +66,14 @@ public:
 
     std::array<T,D> lo; /// lower bounds
     std::array<T,D> hi; /// upper bounds
-};
 
-/// create BBox<D,double> with "null" bounds
-template<size_t D>
-BBox<D,double> empty_double_bbox() {
-    BBox<D,double> b;
-    for(auto& v: b.lo) v = std::numeric_limits<double>::max();
-    for(auto& v: b.hi) v = -std::numeric_limits<double>::max();
-    return b;
-}
+    /// create BBox with "null" bounds
+    static BBox nullBox() {
+        BBox<D,double> b;
+        for(auto& v: b.lo) v = std::numeric_limits<T>::max();
+        for(auto& v: b.hi) v = -std::numeric_limits<T>::max();
+        return b;
+    }
+};
 
 #endif

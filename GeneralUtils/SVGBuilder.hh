@@ -22,16 +22,18 @@ namespace SVG {
     /// XML builder object with a bounding box calculation
     class BBXML: public XMLBuilder {
     public:
+	/// Convenience typedef for 2D bounding boxes
+	typedef BBox<2,double> BBox2;
         /// Constructor
         BBXML(const string& nm): XMLBuilder(nm) { }
         /// Get (override to calculate) bounding box
-        virtual BBox<2,double> getBB() { return BB; }
+        virtual BBox2 getBB() { return BB; }
     protected:
         /// Contents bounding box
-        BBox<2,double> BB = empty_double_bbox<2>();
+        BBox2 BB = BBox2::nullBox();
         /// Calculate BBox from children
         void calcChildrenBB() {
-            BB = empty_double_bbox<2>();
+            BB = BBox2::nullBox();
             for(auto& c: children) {
                 auto cc = std::dynamic_pointer_cast<BBXML>(c);
                 if(cc) BB += cc->getBB();
@@ -47,7 +49,7 @@ namespace SVG {
             attrs["xmlns:xlink"] = "http://www.w3.org/1999/xlink";
         }
 
-        void setView(BBox<2,double> BV, double xToCm) {
+        void setView(BBox2 BV, double xToCm) {
             attrs["viewBox"] = to_str(BV.lo[0])+","+to_str(BV.lo[1])+","+to_str(BV.dl(0))+","+to_str(BV.dl(1));
             attrs["width"] = to_str(BV.dl(0)*xToCm)+"cm";
             attrs["height"] = to_str(BV.dl(1)*xToCm)+"cm";
@@ -59,14 +61,14 @@ namespace SVG {
         }
 
         /// Calculate bounding box from contents
-        BBox<2,double> getBB() override { calcChildrenBB(); return BB; }
+        BBox2 getBB() override { calcChildrenBB(); return BB; }
     };
 
     class group: public BBXML {
     public:
         group(): BBXML("g") { }
         /// Calculate bounding box from contents
-        BBox<2,double> getBB() override {
+        BBox2 getBB() override {
             calcChildrenBB();
             BB.offset(translation);
             return BB;
@@ -155,8 +157,8 @@ namespace SVG {
         void addpt(double x, double y) { pts.push_back({{x,y}}); }
         vector<xypoint> pts;
         /// Calculate bounding box from contents
-        BBox<2,double> getBB() override {
-            BB = empty_double_bbox<2>();
+        BBox2 getBB() override {
+            BB = BBox2::nullBox();
             for(auto p: pts) BB.expand(p);
             return BB;
         }
@@ -221,7 +223,7 @@ namespace SVG {
     class SVGDoc {
     public:
         svg body;                                       ///< main body element
-        BBox<2,double> BB = empty_double_bbox<2>();     ///< view bounding box
+        BBXML::BBox2 BB = BBXML::BBox2::nullBox();      ///< view bounding box
         /// write to file
         void write(const string& fname, double x2cm = 1) {
             std::ofstream o;
