@@ -21,13 +21,14 @@ void errorLogCallback(void*, int iErrCode, const char* zMsg){
 
 bool SQLite_Helper::errlog_configured = false;
 
-SQLite_Helper::SQLite_Helper(const string& dbname) {
+SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly) {
     if(!errlog_configured) {
         sqlite3_config(SQLITE_CONFIG_LOG, &errorLogCallback, nullptr);
         errlog_configured = true;
     }
     printf("Opening SQLite3 DB '%s'...\n",dbname.c_str());
-    int err = sqlite3_open(dbname.c_str(), &db);
+    int err = sqlite3_open_v2(dbname.c_str(), &db,
+                              readonly? SQLITE_OPEN_READONLY:SQLITE_OPEN_READWRITE, nullptr);
     if(err) {
         SMExcept e("failed_db_open");
         e.insert("dbname",dbname);

@@ -70,17 +70,27 @@ namespace SVG {
         /// Calculate bounding box from contents
         BBox2 getBB() override {
             calcChildrenBB();
+            for(auto i:{0,1}) { BB.lo[i] *= scale[i]; BB.hi[i] *= scale[i]; }
             BB.offset(translation);
             return BB;
         }
-        xypoint translation;    /// offset translation of element
+        xypoint translation;        ///< offset translation of element
+        xypoint scale{{1.,1.}};     ///< transform re-scaling
     protected:
         void prepare() override {
+            string s = "";
             if(translation[0] || translation[1]) {
-                string s = "translate("+to_str(translation[0]);
+                s += "translate("+to_str(translation[0]);
                 if(translation[1]) s += ","+to_str(translation[1]);
-                attrs["transform"]=s+")";
+                s+=")";
             }
+            if(scale[0] != 1 || scale[1] != 1) {
+                if(s.size()) s += " ";
+                s += "scale("+to_str(scale[0]);
+                if(scale[1] != scale[0]) s += ","+to_str(scale[1]);
+                s+=")";
+            }
+            if(s.size()) attrs["transform"] = s;
         }
     };
 

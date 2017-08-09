@@ -31,16 +31,18 @@ template <class Plug, class Base>
 class ConfigPluginBuilder: public PluginBuilder {
 public:
     /// Constructor
-    ConfigPluginBuilder(Setting& c): cfg(c) { }
+    ConfigPluginBuilder(const Setting& c): cfg(c) { }
     /// Plugin construction... assumes proper constructor for Plug
     void makePlugin(SegmentSaver* pnt) override {
         assert(pnt);
         auto PBase = dynamic_cast<Base*>(pnt);
         assert(PBase);
+        auto t0 = steady_clock::now();
         thePlugin = make_shared<Plug>(PBase, cfg);
+        thePlugin->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
     }
 protected:
-    Setting& cfg;    ///< configuration info to pass to plugin
+    const Setting& cfg;    ///< configuration info to pass to plugin
 };
 
 /// Base class for registering a plugin to global table

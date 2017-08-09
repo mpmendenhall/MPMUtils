@@ -16,7 +16,19 @@ SVGGradientAxis::SVGGradientAxis() {
         double l = double(i)/(ngradstops-1);
         G.addStop(l, color::hsv((1-l)*1.5*M_PI,1,1));
     }
+}
 
+double SVGGradientAxis::axisUnits(double x) const {
+    if(logscale) return x > 0? log(x/range.lo[0]) / log(range.hi[0]/range.lo[0]) : -100;
+    return (x-range.lo[0])/range.dl(0);
+}
+
+double SVGGradientAxis::dAxisUnits(double) const {
+    assert(!logscale);
+    return 1./range.dl(0);
+}
+
+void SVGGradientAxis::finalize() {
     // base gradient
     base_gradient = make_shared<lingradient>(G, "zaxis", 0, 0, 1, 0);
     base_gradient->attrs["gradientUnits"] = "userSpaceOnUse";
@@ -33,19 +45,7 @@ SVGGradientAxis::SVGGradientAxis() {
     axisGroup->addChild(r);
 
     axisGroup->attrs["font-size"] = "0.07";
-}
 
-double SVGGradientAxis::axisUnits(double x) const {
-    if(logscale) return x > 0? log(x/range.lo[0]) / log(range.hi[0]/range.lo[0]) : -100;
-    return (x-range.lo[0])/range.dl(0);
-}
-
-double SVGGradientAxis::dAxisUnits(double) const {
-    assert(!logscale);
-    return 1./range.dl(0);
-}
-
-void SVGGradientAxis::finalize() {
     if(logscale) {
         if(range.lo[0] < 1e-6*range.hi[0]) range.lo[0] = 1e-6*range.hi[0];
     }

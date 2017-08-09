@@ -86,8 +86,10 @@ void PluginSaver::makePlots() {
     SegmentSaver::makePlots();
     for(auto& kv: myBuilders) {
         if(kv.second->thePlugin) {
+            auto t0 = steady_clock::now();
             kv.second->thePlugin->defaultCanvas.cd();
             kv.second->thePlugin->makePlots();
+            kv.second->thePlugin->tPlot += std::chrono::duration<double>(steady_clock::now()-t0).count();
         }
     }
 }
@@ -105,9 +107,13 @@ void PluginSaver::processEvent() {
 }
 
 void PluginSaver::finishData() {
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
+    for(auto& kv: myBuilders) {
+        if(kv.second->thePlugin) {
+            auto t0 = steady_clock::now();
             kv.second->thePlugin->finishData();
+            kv.second->thePlugin->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
+        }
+    }
 }
 
 void PluginSaver::compare(const vector<SegmentSaver*>& v) {
@@ -130,9 +136,39 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
 
 void PluginSaver::calculateResults() {
     SegmentSaver::calculateResults();
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
+    for(auto& kv: myBuilders) {
+        if(kv.second->thePlugin) {
+            auto t0 = steady_clock::now();
             kv.second->thePlugin->calculateResults();
+            kv.second->thePlugin->tCalc += std::chrono::duration<double>(steady_clock::now()-t0).count();
+        }
+    }
+}
+
+void PluginSaver::displayTimeUse() const {
+    printf("\n-------------- Plugin time use\n");
+    printf("\tsetup\tprocess\tcalc\tplot\t\ttotal\n");
+    double tall = 0;
+    double p_tSetup = 0;
+    double p_tProcess = 0;
+    double p_tCalc = 0;
+    double p_tPlot = 0;
+    for(auto& kv: myBuilders) {
+        auto& pb = kv.second->thePlugin;
+        if(pb) {
+            double ttot = pb->tSetup + pb->tProcess + pb->tCalc + pb->tPlot;
+            printf("* %s\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f\n", kv.first.c_str(),
+                   pb->tSetup, pb->tProcess, pb->tCalc, pb->tPlot, ttot);
+            p_tSetup += pb->tSetup;
+            p_tProcess += pb->tProcess;
+            p_tCalc += pb->tCalc;
+            p_tPlot += pb->tPlot;
+            tall += ttot;
+        }
+    }
+    printf("----- Total ------\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f\n",
+           p_tSetup, p_tProcess, p_tCalc, p_tPlot, tall);
+    return tall;
 }
 
 TDirectory* PluginSaver::writeItems(TDirectory* d) {

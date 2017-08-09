@@ -116,6 +116,11 @@ public:
     bool isCalculated;          ///< flag for whether calculation step has been completed
     TVectorD* normalization;    ///< normalization information; meaning defined in subclasses
 
+    double tSetup = 0;          ///< performance profiling: time to run constructor
+    double tProcess = 0;        ///< permormance profiling: time to process data
+    double tCalc = 0;           ///< performance profiling: time for calculateResults
+    double tPlot = 0;           ///< performance profiling: time for makePlots
+
 protected:
 
     /// attempt to load named object from file, registering and returning if successful
