@@ -69,6 +69,8 @@ public:
     void startData() override;
     /// optional event processing hook
     void processEvent() override;
+    /// optional mid-processing status updates
+    void checkStatus() override;
     /// optional cleanup at end of data loading
     void finishData() override;
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!

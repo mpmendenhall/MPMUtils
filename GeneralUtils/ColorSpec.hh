@@ -32,6 +32,8 @@ namespace color {
         rgb(double R, double G, double B, double A=1): r(R), g(G), b(B), a(A) { }
         /// Constructor from hsv specification
         rgb(const hsv& c);
+        /// Construct from 8-bit integer values
+        static rgb hex(int R, int G, int B, int A=255.) { return rgb(R/255.,G/255.,B/255.,A/255); }
 
         /// Color as 0xRgGgBb 24-bit number
         int32_t as24bit() const;
@@ -60,6 +62,8 @@ namespace color {
         /// Constructor
         Gradient() { }
 
+        /// clear stops
+        void clearStops() { stops.clear(); }
         /// add rgb color stop
         void addStop(double x, const rgb& c) { stops[x] = pair<rgb,hsv>(c, hsv(c)); }
         /// add hsv color stop

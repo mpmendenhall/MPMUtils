@@ -56,7 +56,7 @@ namespace SVG {
         }
 
         static  void make_standalone_header(ostream& o) {
-            o << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
+            o << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
             o << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n";
         }
 
@@ -74,8 +74,8 @@ namespace SVG {
             BB.offset(translation);
             return BB;
         }
-        xypoint translation;        ///< offset translation of element
-        xypoint scale{{1.,1.}};     ///< transform re-scaling
+        xypoint translation{{0.,0.}};   ///< offset translation of element
+        xypoint scale{{1.,1.}};         ///< transform re-scaling
     protected:
         void prepare() override {
             string s = "";

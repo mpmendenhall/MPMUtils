@@ -99,6 +99,8 @@ public:
     virtual void startData() { }
     /// optional event processing hook
     virtual void processEvent() { }
+    /// optional mid-processing status check calculations/results/plots
+    virtual void checkStatus() { }
     /// optional cleanup at end of data loading
     virtual void finishData() { }
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!

@@ -55,6 +55,17 @@ void PluginSaver::zeroSavedHists() {
             kv.second->thePlugin->zeroSavedHists();
 }
 
+void PluginSaver::checkStatus() {
+    for(auto& kv: myBuilders) {
+        if(kv.second->thePlugin) {
+            auto t0 = steady_clock::now();
+            kv.second->thePlugin->defaultCanvas.cd();
+            kv.second->thePlugin->checkStatus();
+            kv.second->thePlugin->tPlot += std::chrono::duration<double>(steady_clock::now()-t0).count();
+        }
+    }
+}
+
 void PluginSaver::scaleData(double s) {
     SegmentSaver::scaleData(s);
     for(auto& kv: myBuilders)
@@ -145,7 +156,7 @@ void PluginSaver::calculateResults() {
     }
 }
 
-void PluginSaver::displayTimeUse() const {
+double PluginSaver::displayTimeUse() const {
     printf("\n-------------- Plugin time use\n");
     printf("\tsetup\tprocess\tcalc\tplot\t\ttotal\n");
     double tall = 0;
@@ -157,7 +168,7 @@ void PluginSaver::displayTimeUse() const {
         auto& pb = kv.second->thePlugin;
         if(pb) {
             double ttot = pb->tSetup + pb->tProcess + pb->tCalc + pb->tPlot;
-            printf("* %s\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f\n", kv.first.c_str(),
+            printf("* %s\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f s\n", kv.first.c_str(),
                    pb->tSetup, pb->tProcess, pb->tCalc, pb->tPlot, ttot);
             p_tSetup += pb->tSetup;
             p_tProcess += pb->tProcess;
@@ -166,7 +177,7 @@ void PluginSaver::displayTimeUse() const {
             tall += ttot;
         }
     }
-    printf("----- Total ------\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f\n",
+    printf("----- Total ------\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f s\n",
            p_tSetup, p_tProcess, p_tCalc, p_tPlot, tall);
     return tall;
 }

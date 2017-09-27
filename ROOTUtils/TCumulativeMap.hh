@@ -40,6 +40,12 @@ public:
     size_t Size() const { return fDat.size(); }
     /// get data entry
     V_& operator[](const K_& k) { return fDat[k]; }
+    /// get counts for key
+    V_ operator()(const K_& k) const {
+        auto it = fDat.find(k);
+        if(it == fDat.end()) return 0;
+        return it->second;
+    }
     /// Get sum total of all contents
     V_ GetTotal() const { V_ sm = V_(); for(auto& kv: fDat) sm += kv.second; return sm; }
     /// Get internal data
