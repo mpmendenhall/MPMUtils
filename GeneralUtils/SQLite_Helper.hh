@@ -26,7 +26,7 @@ public:
     virtual ~SQLite_Helper();
 
     /// BEGIN TRANSACTION command
-    int beginTransaction() { return exec("BEGIN TRANSACTION"); }
+    int beginTransaction(bool exclusive=false) { return exec(exclusive? "BEGIN EXCLUSIVE TRANSACTION" : "BEGIN TRANSACTION"); }
     /// END TRANSACTION command
     int endTransaction() { return exec("END TRANSACTION"); }
 

@@ -38,6 +38,8 @@ SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly) {
         db = nullptr;
         throw e;
     }
+
+    sqlite3_busy_timeout(db, 100);
 }
 
 SQLite_Helper::~SQLite_Helper() {
