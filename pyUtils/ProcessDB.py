@@ -3,6 +3,9 @@
 
 import sqlite3
 import os
+from JobManager import *
+
+pdb_state_names = {0: "setup", 1: "in progress", 2: "done", 3: "failed"}
 
 def connect_ProcessDB(fname):
     """Get cursor and connection for ProcessDB"""
@@ -48,16 +51,30 @@ def get_process_info(curs, pid):
 
 def set_status(curs, eid, pid, s):
     """Set status of process for entity"""
-    curs.execute("INSERT OR REPLACE INTO status(entity_id, process_id, state, time) values (?,?,?,strftime('%s', 'now'))", (eid,pid,s))
+    curs.execute("INSERT OR IGNORE INTO status(entity_id, process_id) VALUES  (?,?)", (eid,pid))
+    curs.execute("UPDATE status SET state = ?, stattime = strftime('%s', 'now') WHERE entity_id = ? AND process_id = ?", (s,eid,pid))
 
+def display_pdb_summary(curs):
+    """Summary stats for process DB"""
+    print("--- Process DB Status ---")
+    curs.execute("SELECT COUNT(*) FROM entity")
+    print("\t",curs.fetchone()[0],"entities")
+    curs.execute("SELECT COUNT(*) FROM process")
+    print("\t",curs.fetchone()[0],"processes defined")
+    for i in range(4):
+        curs.execute("SELECT COUNT(*) FROM status WHERE state = ?", (i,))
+        print("\t",curs.fetchone()[0],"operations are",pdb_state_names[i])
 
 class ProcessStep:
     """Base class for a step with pre-requisites"""
     def __init__(self, curs, name, descrip):
         self.curs = curs
+        self.name = name
         self.pid = get_process_id(curs,name,descrip)
         self.info = get_process_info(curs,self.pid)
         self.prereqs = [] # required completed process IDs to apply this step
+        self.res_use = [("cores",1),]
+        self.dryrun = False
 
     def find_ready(self):
         """Find entities ready for this step"""
@@ -69,9 +86,49 @@ class ProcessStep:
         self.curs.execute(cquery, self.prereqs+[self.pid,])
         return [r[0] for r in self.curs.fetchall()]
 
+    def set_status(self, eid, s):
+        """Set entity status for this process"""
+        set_status(self.curs, eid, self.pid, s)
+
+    def check_progress(self, rdbcurs):
+        """Check in-progress operations at this step for completion/failure"""
+        self.curs.execute("SELECT entity_id, job_id FROM status WHERE state = 1 AND process_id = ?", (self.pid,))
+        for eid,jid in self.curs.fetchall():
+            assert jid is not None
+            rdbcurs.execute("SELECT status, use_walltime, return_code FROM jobs WHERE job_id = ?", (jid,))
+            res = rdbcurs.fetchall()
+            if len(res) != 1:
+                print("** WARNING ** process '%s' on '%s' submitted but not found in JobsDB [%i]!"%(self.name, get_entity_info(self.curs,eid)[0],jid))
+                self.set_status(eid, 3)
+                continue
+            res = res[0]
+            if res[0] == 4: # job is finished
+                isdone = self.check_if_already_done(eid)
+                success = res[2] == 0 and isdone
+                if not success: print("** WARNING ** process '%s' on '%s' failed ( return code %i, done check"%(self.name, get_entity_info(self.curs,eid)[0], res[2]), isdone, ")")
+                self.set_status(eid, 2 if success else 3)
+                self.curs.execute("UPDATE status SET  calctime = ? WHERE entity_id = ? AND process_id = ?", (res[1], eid, self.pid))
+
     def check_if_already_done(self, eid):
         """Placeholder; check whether processing has already been done"""
-        return False
+        return True
+
+    def start_process(self, rdbcurs, eid):
+        """Start job for process (handed off to JobManager)"""
+        einfo = get_entity_info(self.curs, eid)
+        jcmd = self.job_command(eid, einfo[0])
+        print(self.name,"starting process for",einfo[0])
+        print(jcmd)
+        if self.dryrun: return
+        self.set_status(eid, 0)
+        jid = make_job_script(rdbcurs, self.name, jcmd, self.res_use)
+        assert jid is not None
+        self.curs.execute("UPDATE status SET job_id = ? WHERE entity_id = ? AND process_id = ?", (jid, eid, self.pid))
+        self.set_status(eid, 1)
+
+    def job_command(self, eid, ename):
+        """Placeholder: job command to run to process entity"""
+        return """echo '%s says Hello World for %s'"""%(self.name, ename)
 
 ##########################
 if __name__ == "__main__":

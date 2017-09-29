@@ -22,11 +22,12 @@ CREATE UNIQUE INDEX idx_process ON process(name);
 CREATE TABLE status (
     entity_id INTEGER,  -- entity being processed
     process_id INTEGER, -- process being applied
-    state INTEGER,      -- state of processing: 1 = "in progress", 2 = "done", 3 = "failed"
-    time REAL,          -- time when state specified
+    state INTEGER,      -- state of processing: 0 = "setup", 1 = "in progress", 2 = "done", 3 = "failed"
+    job_id INTEGER,     -- process identifier from external job launcher system
+    stattime REAL,      -- time when state specified [UNIX timestamp]
+    calctime REAL,      -- processing runtime [s]
     FOREIGN KEY(entity_id) REFERENCES entity(entity_id) ON DELETE CASCADE,
     FOREIGN KEY(process_id) REFERENCES process(process_id) ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX idx_status ON status(entity_id,process_id);
 CREATE INDEX idx_status_2 ON status(state,process_id);
-
