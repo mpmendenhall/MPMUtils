@@ -406,6 +406,7 @@ def cycle_launcher(conn, trickle=0, runlocal=False, twait=15):
         else: update_and_launch_q(conn, trickle)
         conn.commit()
         sleep(twait)
+    conn.commit()
 
 ###################
 ###################

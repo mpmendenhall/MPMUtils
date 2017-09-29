@@ -114,13 +114,14 @@ class ProcessStep:
                 continue
             res = res[0]
             if res[0] == 4: # job is finished
-                isdone = self.check_if_already_done(eid)
+                ename = get_entity_info(self.curs, eid)[0]
+                isdone = self.check_if_already_done(eid, ename)
                 success = res[2] == 0 and isdone
                 if not success: print("** WARNING ** process '%s' on '%s' failed ( return code %i, done check"%(self.name, get_entity_info(self.curs,eid)[0], res[2]), isdone, ")")
                 self.set_status(eid, 2 if success else 3)
                 self.curs.execute("UPDATE status SET  calctime = ? WHERE entity_id = ? AND process_id = ?", (res[1], eid, self.pid))
 
-    def check_if_already_done(self, eid):
+    def check_if_already_done(self, eid, ename):
         """Placeholder; check whether processing has already been done"""
         return True
 
@@ -140,6 +141,34 @@ class ProcessStep:
     def job_command(self, eid, ename):
         """Placeholder: job command to run to process entity"""
         return """echo '%s says Hello World for %s'"""%(self.name, ename)
+
+    def input_file(self, eid, ename):
+        """Placeholder: return input file name"""
+        return None
+
+    def output_file(self, eid, ename):
+        """Placeholder: return output filename"""
+        return None
+
+    class JobProfile:
+        """Collection of summary data for a completed job"""
+        def __init__(self, PS, eid, ename):
+            self.ename = ename
+            self.infile = PS.input_file(eid,ename)
+            self.outfile = PS.output_file(eid,ename)
+            self.inflsize = os.path.getsize(self.infile) if self.infile else None
+            self.outflsize = os.path.getsize(self.outfile) if self.outfile else None
+
+    def profile_jobs(self):
+        """Return list of completed job profiles"""
+        self.curs.execute("SELECT entity_id,stattime,calctime FROM status WHERE process_id = ? AND state = 2", (self.pid,))
+        jps = []
+        for eid,st,ct in self.curs.fetchall():
+            ename = get_entity_info(self.curs, eid)[0]
+            jps.append(self.JobProfile(self,eid,ename))
+            jps[-1].rundate = st
+            jps[-1].calctime = ct
+        return jps
 
 ##########################
 if __name__ == "__main__":

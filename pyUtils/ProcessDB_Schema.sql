@@ -31,3 +31,11 @@ CREATE TABLE status (
 );
 CREATE UNIQUE INDEX idx_status ON status(entity_id,process_id);
 CREATE INDEX idx_status_2 ON status(state,process_id);
+
+/*
+check status for a particular process:
+SELECT * FROM status NATURAL JOIN entity WHERE process_id = 2;
+
+remove "failed" or "setup" status to re-try step:
+DELETE FROM status WHERE (state = 0 OR state = 3) AND process_id = 2;
+*/
