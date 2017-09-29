@@ -56,14 +56,25 @@ def set_status(curs, eid, pid, s):
 
 def display_pdb_summary(curs):
     """Summary stats for process DB"""
-    print("--- Process DB Status ---")
+    print("\n--- Process DB Status ---")
+
+    curs.execute("SELECT process_id FROM process")
+    pids = [r[0] for r in curs.fetchall()]
+
+    for pid in pids:
+        print("* %s: %s"%get_process_info(curs, pid))
+        for i in range(4):
+            curs.execute("SELECT COUNT(*) FROM status WHERE process_id = ? AND state = ?", (pid, i))
+            nstate = curs.fetchone()[0]
+            if nstate: print("\t%i\toperations"%nstate,pdb_state_names[i])
+
+    print("--- total ----")
     curs.execute("SELECT COUNT(*) FROM entity")
-    print("\t",curs.fetchone()[0],"entities")
-    curs.execute("SELECT COUNT(*) FROM process")
-    print("\t",curs.fetchone()[0],"processes defined")
+    print(curs.fetchone()[0],"entities")
     for i in range(4):
         curs.execute("SELECT COUNT(*) FROM status WHERE state = ?", (i,))
-        print("\t",curs.fetchone()[0],"operations are",pdb_state_names[i])
+        print("%i\toperations"%curs.fetchone()[0],pdb_state_names[i])
+    print()
 
 class ProcessStep:
     """Base class for a step with pre-requisites"""

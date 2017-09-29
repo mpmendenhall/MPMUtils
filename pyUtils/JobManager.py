@@ -375,11 +375,11 @@ def rebundle(curs,jname,bundledir,tmax,nmax=1000):
     for n in njobs: make_bundle_jobs(curs, n, jname, bundledir, njobs[n], tmax, nmax)
 
 def run_local(curs, trickle = 0):
-    """Run jobs on local node"""
+    """Run jobs on local node; return number of jobs submitted."""
     check_running_localjobs(curs)
     js = get_possible_submissions(curs)
-    print("Local launch of", len(js), "jobs")
-    if not len(js): return
+    if not len(js): return 0
+    print("Launching", len(js), "jobs locally.")
 
     for j in js:
         curs.execute("SELECT jobfile,outlog FROM jobs WHERE job_id = ?", (j[0],))
@@ -393,12 +393,15 @@ def run_local(curs, trickle = 0):
         pid = subprocess.Popen([jcmd,], shell=True, preexec_fn=(lambda : os.nice(15))).pid
         curs.execute("UPDATE jobs SET status = 3, queue_id = ? WHERE job_id = ? AND status != 4", (pid, j[0]))
         if trickle: sleep(trickle)
+    return len(js)
 
 def cycle_launcher(conn, trickle=0, runlocal=False, twait=15):
     curs = conn.cursor()
     while 1:
         curs.execute("SELECT COUNT(*) FROM jobs WHERE status=0")
-        if not curs.fetchone()[0]: break
+        nleft = curs.fetchone()[0]
+        print(nleft, "jobs left to be run.")
+        if not nleft: break
         if runlocal: run_local(curs, trickle)
         else: update_and_launch_q(conn, trickle)
         conn.commit()
