@@ -52,7 +52,7 @@ def get_process_info(curs, pid):
 def set_status(curs, eid, pid, s):
     """Set status of process for entity"""
     curs.execute("INSERT OR IGNORE INTO status(entity_id, process_id) VALUES  (?,?)", (eid,pid))
-    curs.execute("UPDATE status SET state = ?, stattime = strftime('%s', 'now') WHERE entity_id = ? AND process_id = ?", (s,eid,pid))
+    curs.execute("UPDATE status SET state = ?, stattime = ? WHERE entity_id = ? AND process_id = ?", (s,time.time(),eid,pid))
 
 def display_pdb_summary(curs):
     """Summary stats for process DB"""
@@ -127,13 +127,15 @@ class ProcessStep:
 
     def start_process(self, rdbcurs, eid):
         """Start job for process (handed off to JobManager)"""
-        einfo = get_entity_info(self.curs, eid)
-        jcmd = self.job_command(eid, einfo[0])
-        print(self.name,"starting process for",einfo[0])
+        ename = get_entity_info(self.curs, eid)[0]
+        jcmd = self.job_command(eid, ename)
+        print(self.name,"starting process for",ename)
         print(jcmd)
         if self.dryrun: return
         self.set_status(eid, 0)
-        jid = make_job_script(rdbcurs, self.name, jcmd, self.res_use)
+        estrt = self.estimate_runtime(eid,ename)
+        if estrt is None: estrt = 1800
+        jid = make_job_script(rdbcurs, self.name, jcmd, self.res_use + [("walltime",estrt)])
         assert jid is not None
         self.curs.execute("UPDATE status SET job_id = ? WHERE entity_id = ? AND process_id = ?", (jid, eid, self.pid))
         self.set_status(eid, 1)
@@ -148,6 +150,10 @@ class ProcessStep:
 
     def output_file(self, eid, ename):
         """Placeholder: return output filename"""
+        return None
+
+    def estimate_runtime(self, eid, ename):
+        """Placeholder: return estimate for job run time [seconds]"""
         return None
 
     class JobProfile:
