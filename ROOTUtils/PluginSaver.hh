@@ -15,6 +15,7 @@ using std::chrono::steady_clock;
 #include <memory>
 using std::shared_ptr;
 using std::make_shared;
+#include "StringManip.hh"
 
 /// Base class for optionally constructing SegmentSaver plugins "on demand"
 class PluginBuilder {
@@ -25,7 +26,8 @@ public:
     /// instantiate plugin SegmentSaver
     virtual void makePlugin(SegmentSaver* pnt) = 0;
 
-    shared_ptr<SegmentSaver> thePlugin = nullptr; ///< instantiated plugin
+    int copynum = -1;                               ///< clone number for "identical" plugins
+    shared_ptr<SegmentSaver> thePlugin = nullptr;   ///< instantiated plugin
 };
 
 /// Simple templatized PluginBuilder, checking for correct parent type
@@ -39,6 +41,7 @@ public:
         auto PBase = dynamic_cast<Base*>(pnt);
         assert(PBase);
         thePlugin = _makePlugin(PBase);
+        if(copynum >= 0 && thePlugin) thePlugin->rename(thePlugin->name+"_"+to_str(copynum));
     }
     /// Create appropriate plugin type
     virtual shared_ptr<SegmentSaver> _makePlugin(Base* PBase) {
@@ -58,6 +61,8 @@ public:
     /// get plugin by name
     shared_ptr<SegmentSaver> getPlugin(const string& nm) const;
 
+    /// set printCanvas suffix (filetype)
+    void setPrintSuffix(const string& sfx) override;
     /// zero out all saved histograms
     void zeroSavedHists() override;
     /// scale all saved histograms by a factor

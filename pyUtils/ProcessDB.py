@@ -31,11 +31,16 @@ def get_entity_id(curs, name, descrip):
     if eid is not None: return eid
     return create_entity(curs, name, descrip)
 
-def get_process_id(curs, name, descrip):
-    """Find or create new named process; return ID"""
+def find_process_id(curs, name):
+    """Find process ID by name"""
     curs.execute("SELECT process_id FROM process WHERE name = ?", (name,))
     res = curs.fetchall()
-    if len(res) == 1 : return res[0][0]
+    return res[0][0] if len(res) == 1 else None
+
+def get_process_id(curs, name, descrip):
+    """Find or create new named process; return ID"""
+    pid = find_process_id(curs,name)
+    if pid is not None: return pid
     curs.execute("INSERT INTO process(name,descrip) VALUES (?,?)", (name, descrip))
     return curs.lastrowid
 
@@ -53,6 +58,10 @@ def set_status(curs, eid, pid, s):
     """Set status of process for entity"""
     curs.execute("INSERT OR IGNORE INTO status(entity_id, process_id) VALUES  (?,?)", (eid,pid))
     curs.execute("UPDATE status SET state = ?, stattime = ? WHERE entity_id = ? AND process_id = ?", (s,time.time(),eid,pid))
+
+def clear_process_status(curs, pid):
+    """Delete status info for processing, to cause re-processing"""
+    curs.execute("DELETE FROM status WHERE process_id = ?", (pid,))
 
 def display_pdb_summary(curs):
     """Summary stats for process DB"""
@@ -86,11 +95,12 @@ class ProcessStep:
         self.prereqs = [] # required completed process IDs to apply this step
         self.res_use = [("cores",1),]
         self.dryrun = False
+        self.input_tmax = datetime.datetime(2100, 1, 1, 0, 0, 0).timestamp() # upper limit on input prereq time
 
     def find_ready(self):
         """Find entities ready for this step"""
         cquery = "SELECT entity_id FROM "
-        if self.prereqs: cquery += " INTERSECT ".join(["(SELECT entity_id FROM status WHERE process_id = ? AND state = 2)" for pid in self.prereqs])
+        if self.prereqs: cquery += " INTERSECT ".join(["(SELECT entity_id FROM status WHERE process_id = ? AND state = 2 AND stattime < %i)"%self.input_tmax for pid in self.prereqs])
         else: cquery += "entity"
         cquery += " WHERE entity_id NOT IN (SELECT entity_id FROM status WHERE process_id = ?)"
         # print(cquery)
@@ -162,8 +172,8 @@ class ProcessStep:
             self.ename = ename
             self.infile = PS.input_file(eid,ename)
             self.outfile = PS.output_file(eid,ename)
-            self.inflsize = os.path.getsize(self.infile) if self.infile else None
-            self.outflsize = os.path.getsize(self.outfile) if self.outfile else None
+            self.inflsize = os.path.getsize(self.infile) if self.infile and os.path.exists(self.infile) else None
+            self.outflsize = os.path.getsize(self.outfile) if self.outfile and os.path.exists(self.outfile) else None
 
     def profile_jobs(self):
         """Return list of completed job profiles"""

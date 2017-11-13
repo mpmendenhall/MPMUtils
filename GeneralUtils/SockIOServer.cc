@@ -95,7 +95,7 @@ void ConnHandler::handle() {
 ////////////////////
 
 #ifdef __APPLE__
-#define OR_POLLRDHUP 
+#define OR_POLLRDHUP
 #else
 #define OR_POLLRDHUP | POLLRDHUP
 #endif
@@ -106,9 +106,10 @@ void BlockHandler::handle() {
     pfd.fd = sockfd;
     pfd.events = POLLIN OR_POLLRDHUP;
     while(1) {
+        if(abort) break;
         int ret = poll(&pfd, 1 /*entries in pfd[]*/, block_timeout_ms);
         if(ret != 1 || !(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL OR_POLLRDHUP))) break; // timeout or error
-	bsize = 0;
+        bsize = 0;
         int len = read(sockfd, &bsize, sizeof(bsize));
         if(len != sizeof(bsize)) break; // error condition, e.g connection closed
 

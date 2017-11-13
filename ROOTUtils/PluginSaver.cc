@@ -48,6 +48,13 @@ shared_ptr<SegmentSaver> PluginSaver::getPlugin(const string& nm) const {
     return PB->second->thePlugin;
 }
 
+void PluginSaver::setPrintSuffix(const string& sfx) {
+    SegmentSaver::setPrintSuffix(sfx);
+    for(auto& kv: myBuilders)
+        if(kv.second->thePlugin)
+            kv.second->thePlugin->setPrintSuffix(sfx);
+}
+
 void PluginSaver::zeroSavedHists() {
     SegmentSaver::zeroSavedHists();
     for(auto& kv: myBuilders)

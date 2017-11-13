@@ -24,6 +24,7 @@
 
 #include "TObjCollector.hh"
 #include <TCanvas.h>
+#include <TPad.h>
 #include <TH1.h>
 #include <TH1F.h>
 #include <TH2F.h>
@@ -54,15 +55,19 @@ public:
     /// generate a TH2F registered with this runs output objects list
     TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
     /// print current canvas; return filename printed
-    virtual string printCanvas(const string& fname, string suffix="DEFAULT") const;
+    virtual string printCanvas(const string& fname, const TPad* P = nullptr, string suffix="") const;
+    /// set printCanvas suffix (filetype)
+    virtual void setPrintSuffix(const string& sfx) { printsfx = sfx; }
 
+    /// change name, and subpaths if in parent
+    void rename(const string& nm);
     /// write items to currently open directory, or specified
     TDirectory* writeItems(TDirectory* d = nullptr) override;
     /// write output ROOT file, or to new directory within parent; deletes ALL REGISTERED OBJECTS by default
     void writeROOT(TDirectory* parentDir = nullptr, bool clear=true);
 
     TCanvas defaultCanvas;              ///< canvas for drawing plots
-    OutputManager* parent = nullptr;       ///< parent output manager
+    OutputManager* parent = nullptr;    ///< parent output manager
     string basePath;                    ///< general output path
     string plotPath;                    ///< specific output path for plots
     string dataPath;                    ///< specific output path for output data

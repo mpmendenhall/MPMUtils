@@ -31,7 +31,7 @@ template <class Plug, class Base>
 class ConfigPluginBuilder: public PluginBuilder {
 public:
     /// Constructor
-    ConfigPluginBuilder(const Setting& c): cfg(c) { }
+    ConfigPluginBuilder(const Setting& c, int n = -1): copynum(n), cfg(c) { }
     /// Plugin construction... assumes proper constructor for Plug
     void makePlugin(SegmentSaver* pnt) override {
         assert(pnt);
@@ -39,17 +39,19 @@ public:
         assert(PBase);
         auto t0 = steady_clock::now();
         thePlugin = make_shared<Plug>(PBase, cfg);
+        if(copynum >= 0) thePlugin->rename(thePlugin->name+"_"+to_str(copynum));
         thePlugin->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
     }
 protected:
-    const Setting& cfg;    ///< configuration info to pass to plugin
+    int copynum;            ///< copy number for multiple instances of same plugin class
+    const Setting& cfg;     ///< configuration info to pass to plugin
 };
 
 /// Base class for registering a plugin to global table
 class PluginRegistrar {
 public:
     /// generate appropriate builder class
-    virtual shared_ptr<PluginBuilder> makeBuilder(Setting& c) const = 0;
+    virtual shared_ptr<PluginBuilder> makeBuilder(Setting& c, int n = -1) const = 0;
 };
 
 class DynamicPluginSaver: public PluginSaver {
@@ -75,7 +77,7 @@ protected:
 class _##NAME##_Registrar: public PluginRegistrar { \
 public: \
     _##NAME##_Registrar() { DynamicPluginSaver::builderTable().emplace(#NAME,this); } \
-    shared_ptr<PluginBuilder> makeBuilder(Setting& c) const override { return make_shared<ConfigPluginBuilder<NAME,BASE>>(c); } \
+    shared_ptr<PluginBuilder> makeBuilder(Setting& c, int n = -1) const override { return make_shared<ConfigPluginBuilder<NAME,BASE>>(c,n); } \
 }; \
 static _##NAME##_Registrar the_##NAME##_Registrar;
 

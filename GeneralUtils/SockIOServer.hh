@@ -64,6 +64,7 @@ public:
         vector<char> data;  ///< data location
     };
 
+    bool abort = false;             ///< set to force end of handling
     int block_timeout_ms = 10000;   ///< timeout between receiving blocks [ms]
     int read_timeout_ms = 2000;     ///< timeout for read after getting block header
 

@@ -9,7 +9,8 @@ map<string, PluginRegistrar*>& DynamicPluginSaver::builderTable() {
     return BT;
 }
 
-DynamicPluginSaver::DynamicPluginSaver(OutputManager* pnt, const string& nm, const string& inflName): PluginSaver(pnt,nm,inflName) {
+DynamicPluginSaver::DynamicPluginSaver(OutputManager* pnt, const string& nm, const string& inflName):
+PluginSaver(pnt, nm, inflName) {
     configstr = registerAttrString("configstr", "");
     assert(configstr);
 }
@@ -43,7 +44,14 @@ void DynamicPluginSaver::Configure(const Setting& cfg) {
                 printf("--------------------\n");
                 throw;
             }
-            myBuilders[pname] = it->second->makeBuilder(plugs[i]);
+
+            if(plugs[i].isList()) {
+                int copynum = 0;
+                for(auto& c: plugs[i]) {
+                    myBuilders[pname+"_"+to_str(copynum)] = it->second->makeBuilder(c, copynum);
+                    copynum++;
+                }
+            } else myBuilders[pname] = it->second->makeBuilder(plugs[i]);
         }
     }
     buildPlugins();

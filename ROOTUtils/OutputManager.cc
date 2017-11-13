@@ -37,17 +37,22 @@ parent(nullptr), name(nm) {
 #ifdef PUBLICATION_PLOTS
     defaultCanvas.SetGrayscale(true);
 #endif
-    basePath = plotPath = dataPath = rootPath = bp;
+    plotPath = dataPath = basePath = rootPath = bp;
 }
 
 OutputManager::OutputManager(string nm, OutputManager* pnt):
-parent(pnt), name(nm) {
+parent(pnt) {
     TH1::AddDirectory(kFALSE);
     // set up output canvas
     defaultCanvas.SetCanvasSize(200,200);
 #ifdef PUBLICATION_PLOTS
     defaultCanvas.SetGrayscale(true);
 #endif
+    rename(nm);
+}
+
+void OutputManager::rename(const string& nm) {
+    name = nm;
     if(parent) plotPath = dataPath = basePath = rootPath = parent->basePath+"/"+name+"/";
 }
 
@@ -90,20 +95,22 @@ TH2F* OutputManager::registeredTH2F(string hname, string htitle, unsigned int nb
     return (TH2F*)addObject(new TH2F(hname.c_str(),htitle.c_str(),nbinsx,x0,x1,nbinsy,y0,y1));
 }
 
-string OutputManager::printCanvas(const string& fname, string suffix) const {
-    if(suffix=="DEFAULT") suffix = printsfx;
+string OutputManager::printCanvas(const string& fname, const TPad* C, string suffix) const {
+    if(!suffix.size()) suffix = printsfx;
     printf("Printing canvas '%s' in '%s'\n",(fname+suffix).c_str(), plotPath.c_str());
     if(squelchAllPrinting) { printf("Printing squelched!\n"); return ""; }
 
     makePath(plotPath+"/"+fname+suffix,true);
     string fout = plotPath+"/"+fname+suffix;
 
+    if(!C) C = &defaultCanvas;
     if(suffix == ".svgz") {
         string svgout = plotPath+"/"+fname+".svg";
-        defaultCanvas.Print(svgout.c_str());
-        system(("gzip "+svgout+"; mv "+svgout+".gz "+fout).c_str());
+        C->Print(svgout.c_str());
+        int ret = system(("gzip "+svgout+"; mv "+svgout+".gz "+fout).c_str());
+        if(ret) printf("Error gzipping svg -> svgz\n");
     } else {
-        defaultCanvas.Print(fout.c_str());
+        C->Print(fout.c_str());
     }
 
     return fout;

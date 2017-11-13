@@ -298,7 +298,7 @@ def check_running_localjobs(curs):
     curs.execute("SELECT job_id,queue_id FROM jobs WHERE status = 3")
     for j in curs.fetchall():
         try: os.kill(j[1], 0)
-        except: curs.execute("UPDATE jobs SET status = 4, return_code = -1 WHERE job_id = ? AND status = 3", (j[0],))
+        except: curs.execute("UPDATE jobs SET status = 4, return_code = -999 WHERE job_id = ? AND status = 3", (j[0],))
 
 ##
 ## job launching
@@ -402,7 +402,7 @@ def rebundle(curs,jname,bundledir,tmax,nmax=1000):
 def run_local(curs, trickle = 0):
     """Run jobs on local node; return number of jobs submitted."""
     check_running_localjobs(curs)
-    js = get_possible_submissions(curs)
+    js = get_possible_submissions(curs, 2*multiprocessing.cpu_count())
     if not len(js): return 0
     print("Launching", len(js), "jobs locally.")
 
@@ -474,12 +474,12 @@ def run_commandline():
         while retries:
             try:
                 set_job_status(curs, options.jid, options.setstatus, options.setreturn, walltime="auto")
-                break
+                conn.commit()
+                conn.close()
+                return
             except:
                 time.sleep(1)
                 retries -= 1
-        conn.commit()
-        conn.close()
         return
 
     cores_resource_id = get_resource_id(curs,"cores","number of cores")
