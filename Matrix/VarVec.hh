@@ -93,7 +93,7 @@ public:
     void display() const { std::cout << "< "; for(size_t i=0; i<size(); i++) std::cout << data[i] << " "; std::cout << ">\n"; }
 
     /// throw error if dimensions mismatches
-    void checkDimensions(const VarVec& v) const throw(DimensionMismatchError) { if(v.size() != size()) throw(DimensionMismatchError()); }
+    void checkDimensions(const VarVec& v) const { if(v.size() != size()) throw(DimensionMismatchError()); }
 
     /// dot product with another vector
     T dot(const VarVec<T>& v) const {
@@ -337,7 +337,7 @@ bool VarVec<T>::operator==(const VarVec<T>& rhs) const {
     for(size_t i=0; i<size(); i++)
         if(data[i] != rhs.data[i])
             return false;
-        return true;
+    return true;
 }
 
 template<typename T>

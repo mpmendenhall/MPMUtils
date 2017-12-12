@@ -30,7 +30,7 @@ Permutation& Permutation::nshuffle(int n) {
     for(size_t i=0; i<size()/n; i++)
         for(int j=0; j<n; j++)
             data[j*size()/n+i] = i*n+j;
-        return *this;
+    return *this;
 }
 
 void Permutation::swap(size_t a, size_t b) {

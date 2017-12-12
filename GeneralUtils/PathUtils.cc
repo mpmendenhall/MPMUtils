@@ -83,7 +83,7 @@ vector<string> listdir(const string& dir, bool includeHidden, bool fullPath) {
     while((entry = readdir(dp)))
         if(includeHidden || entry->d_name[0] != '.')
             dirs.push_back((fullPath?dir+"/":"")+entry->d_name);
-        closedir(dp);
+    closedir(dp);
     std::sort(dirs.begin(),dirs.end());
     return dirs;
 }

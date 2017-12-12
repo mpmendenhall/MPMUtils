@@ -138,7 +138,7 @@ Matrix<N,M,T> Matrix<M,N,T>::transposed() const {
     for(size_t r=0; r<M; r++)
         for(size_t c=0; c<N; c++)
             foo(c,r) = (*this)(r,c);
-        return foo;
+    return foo;
 }
 
 template<size_t M, size_t N, typename T>

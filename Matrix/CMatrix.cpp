@@ -323,10 +323,10 @@ CMatrix& CMatrix::operator*=(double c) {
     if(has_realspace)
         for(size_t i=0; i<data.size(); i++) data[i] *= c;
         
-        if(has_kspace)
-            for(size_t i=0; i<kdata.size(); i++) kdata[i] *= c;
+    if(has_kspace)
+        for(size_t i=0; i<kdata.size(); i++) kdata[i] *= c;
             
-            return *this;
+    return *this;
 }
 
 

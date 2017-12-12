@@ -102,7 +102,7 @@ public:
     T trace() const;
 
     /// throw error if dimensions mismatches
-    void checkDimensions(const VarMat& m) const throw(DimensionMismatchError) { if(m.nRows() != M || m.nCols() != N) throw(DimensionMismatchError()); }
+    void checkDimensions(const VarMat& m) const { if(m.nRows() != M || m.nCols() != N) throw(DimensionMismatchError()); }
 
     /// inplace multiplication by a constant
     void operator*=(const T& c) { vv *= c; }
@@ -171,7 +171,7 @@ VarMat<T> VarMat<T>::transposed() const {
     for(size_t r=0; r<M; r++)
         for(size_t c=0; c<N; c++)
             foo(c,r) = (*this)(r,c);
-        return foo;
+    return foo;
 }
 
 template<typename T>

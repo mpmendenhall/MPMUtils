@@ -598,7 +598,7 @@ TH1* projectTH2(const TH2& h, double nb, double cx, double cy) {
     for(int bx=1; bx<=Ax->GetNbins(); bx++)
         for(int by=1; by<=Ay->GetNbins(); by++)
             hOut->Fill(cx*Ax->GetBinCenter(bx)+cy*Ay->GetBinCenter(by),h.GetBinContent(bx,by));
-        return hOut;
+    return hOut;
 }
 
 TH1* histsep(const TH1& h1, const TH1& h2) {

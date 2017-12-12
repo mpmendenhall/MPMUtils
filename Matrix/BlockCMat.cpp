@@ -33,7 +33,7 @@ BlockCMat makeBlockCMatRandom(size_t n, size_t mc) {
     for(size_t r=0; r<n; r++)
         for(size_t c=0; c<n; c++)
             foo(r,c) = CMatrix::random(mc);
-        return foo;
+    return foo;
 }
 
 //-----------------------------------

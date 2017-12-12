@@ -106,7 +106,7 @@ const Polynomial<N,T> Polynomial<N,T>::operator()(const Vec< N,Polynomial<N,T> >
         for(unsigned int i = 0; i<N; i++)
             for(unsigned int j=0; j<kv.first[i]; j++)
                 Q *= v[i];
-            P += Q;
+        P += Q;
     }
     return P;
 }
@@ -182,7 +182,7 @@ Polynomial<N,T>& Polynomial<N,T>::operator*=(const Polynomial<N,T>& rhs) {
     for(auto const& kv: terms)
         for(auto const& kv2: rhs.terms)
             newterms[kv.first + kv2.first] += kv.second*kv2.second;
-        terms = newterms;
+    terms = newterms;
     return *this;
 }
 
@@ -212,7 +212,7 @@ Polynomial<N,T>& Polynomial<N,T>::prune(T c) {
     for(auto const& kv: terms)
         if(kv.second > c || kv.second < -c)
             newterms[kv.first] += kv.second;
-        terms = newterms;
+    terms = newterms;
     return *this;
 }
 
