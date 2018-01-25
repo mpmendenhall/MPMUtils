@@ -4,6 +4,8 @@
 import sqlite3
 import os
 from JobManager import *
+import shlex
+import time
 
 pdb_state_names = {0: "setup", 1: "in progress", 2: "done", 3: "failed"}
 
@@ -12,6 +14,7 @@ def connect_ProcessDB(fname):
     conn = sqlite3.connect(fname)
     curs = conn.cursor()
     curs.execute("PRAGMA foreign_keys = ON")
+    curs.execute("PRAGMA journal_mode = WAL")
     return curs,conn
 
 def find_entity_id(curs, name):
@@ -59,9 +62,20 @@ def set_status(curs, eid, pid, s):
     curs.execute("INSERT OR IGNORE INTO status(entity_id, process_id) VALUES  (?,?)", (eid,pid))
     curs.execute("UPDATE status SET state = ?, stattime = ? WHERE entity_id = ? AND process_id = ?", (s,time.time(),eid,pid))
 
+def unset_status(curs, eid, pid):
+    """Delete status entry for entity/process"""
+    curs.execute("DELETE FROM status WHERE entity_id = ? AND process_id = ?", (eid,pid))
+
 def clear_process_status(curs, pid):
     """Delete status info for processing, to cause re-processing"""
+    if type(pid) == type(""): pid = find_process_id(curs,pid)
     curs.execute("DELETE FROM status WHERE process_id = ?", (pid,))
+
+def get_entities_by_stepstate(curs, pid, state):
+    """Select entity IDs in state for process"""
+    if type(pid) == type(""): pid = find_process_id(curs,pid)
+    curs.execute("SELECT entity_id FROM status WHERE process_id = ? AND state = ?", (pid,state))
+    return [r[0] for r in curs.fetchall()]
 
 def display_pdb_summary(curs):
     """Summary stats for process DB"""
@@ -84,6 +98,10 @@ def display_pdb_summary(curs):
         curs.execute("SELECT COUNT(*) FROM status WHERE state = ?", (i,))
         print("%i\toperations"%curs.fetchone()[0],pdb_state_names[i])
     print()
+
+def total_file_size(flist):
+    """sum file sizes [Bytes] in list of files"""
+    return sum([os.path.getsize(f) for f in flist if os.path.exists(f)])
 
 class ProcessStep:
     """Base class for a step with pre-requisites"""
@@ -129,10 +147,14 @@ class ProcessStep:
                 success = res[2] == 0 and isdone
                 if not success: print("** WARNING ** process '%s' on '%s' failed ( return code %i, done check"%(self.name, get_entity_info(self.curs,eid)[0], res[2]), isdone, ")")
                 self.set_status(eid, 2 if success else 3)
-                self.curs.execute("UPDATE status SET  calctime = ? WHERE entity_id = ? AND process_id = ?", (res[1], eid, self.pid))
+                self.curs.execute("UPDATE status SET  calctime = ?, output_size = ? WHERE entity_id = ? AND process_id = ?", (res[1], self.calc_outflsize(eid, ename), eid, self.pid))
 
     def check_if_already_done(self, eid, ename):
         """Placeholder; check whether processing has already been done"""
+        oflist = self.output_flist(eid,ename)
+        if not oflist: return False
+        for f in oflist:
+            if not os.path.exists(f): return False
         return True
 
     def start_process(self, rdbcurs, eid):
@@ -147,7 +169,7 @@ class ProcessStep:
         if estrt is None: estrt = 1800
         jid = make_job_script(rdbcurs, self.name, jcmd, self.res_use + [("walltime",estrt)])
         assert jid is not None
-        self.curs.execute("UPDATE status SET job_id = ? WHERE entity_id = ? AND process_id = ?", (jid, eid, self.pid))
+        self.curs.execute("UPDATE status SET job_id = ?, input_size = ? WHERE entity_id = ? AND process_id = ?", (jid, self.calc_inflsize(eid, ename), eid, self.pid))
         self.set_status(eid, 1)
 
     def job_command(self, eid, ename):
@@ -158,33 +180,69 @@ class ProcessStep:
         """Placeholder: return input file name"""
         return None
 
+    def input_flist(self, eid, ename):
+        """Placeholder: list of input files"""
+        if0 = self.input_file(eid,ename)
+        return [if0,] if if0 else []
+
     def output_file(self, eid, ename):
         """Placeholder: return output filename"""
         return None
+
+    def output_flist(self, eid, ename):
+        """Placeholder: list of output files"""
+        of0 = self.output_file(eid,ename)
+        return [of0,] if of0 else []
 
     def estimate_runtime(self, eid, ename):
         """Placeholder: return estimate for job run time [seconds]"""
         return None
 
-    class JobProfile:
-        """Collection of summary data for a completed job"""
-        def __init__(self, PS, eid, ename):
-            self.ename = ename
-            self.infile = PS.input_file(eid,ename)
-            self.outfile = PS.output_file(eid,ename)
-            self.inflsize = os.path.getsize(self.infile) if self.infile and os.path.exists(self.infile) else None
-            self.outflsize = os.path.getsize(self.outfile) if self.outfile and os.path.exists(self.outfile) else None
+    def calc_inflsize(self, eid, ename):
+        """Input file size in B"""
+        return total_file_size(self.input_flist(eid,ename))
 
-    def profile_jobs(self):
-        """Return list of completed job profiles"""
-        self.curs.execute("SELECT entity_id,stattime,calctime FROM status WHERE process_id = ? AND state = 2", (self.pid,))
-        jps = []
-        for eid,st,ct in self.curs.fetchall():
+    def calc_outflsize(self, eid, ename):
+        """Output file size in B"""
+        return total_file_size(self.output_flist(eid,ename))
+
+    def recalc_filesizes(self):
+        """Update input/output file size entries for completed jobs"""
+        self.curs.execute("SELECT entity_id FROM status WHERE process_id = ? AND state = 2", (self.pid,))
+        for eid in self.curs.fetchall():
+            eid = eid[0]
             ename = get_entity_info(self.curs, eid)[0]
-            jps.append(self.JobProfile(self,eid,ename))
-            jps[-1].rundate = st
-            jps[-1].calctime = ct
-        return jps
+            self.curs.execute("UPDATE status SET input_size = ?, output_size = ? WHERE entity_id = ? AND process_id = ?",
+                              (self.calc_inflsize(eid, ename), self.calc_outflsize(eid, ename), eid, self.pid))
+
+class LocalProcessStep(ProcessStep):
+    """Process step that runs in-place locally"""
+
+    def __init__(self, curs, name, descrip):
+        ProcessStep.__init__(self, curs, name, descrip)
+
+    def start_process(self, rdbcurs, eid):
+        """Run job locally"""
+        ename = get_entity_info(self.curs, eid)[0]
+        print(self.name,"Running inline process for",ename)
+        if self.dryrun: return
+
+        self.set_status(eid, 1)
+
+        t0 = time.time()
+        try: rc = self.run_job(eid, ename)
+        except: rc = -1
+        dt = time.time() - t0
+
+        if rc: self.set_status(eid, 3)
+        else: self.set_status(eid, 2)
+        self.curs.execute("UPDATE status SET calctime = ?, input_size = ?, output_size = ? WHERE entity_id = ? AND process_id = ?", (dt, self.calc_inflsize(eid, ename), self.calc_outflsize(eid, ename), eid, self.pid))
+
+    def run_job(self, eid, ename):
+        """Override me for non-shell-command jobs! Return 0 on success."""
+        jcmd = self.job_command(eid, ename)
+        print(jcmd)
+        return subprocess.call(jcmd, shell=True)
 
 ##########################
 if __name__ == "__main__":

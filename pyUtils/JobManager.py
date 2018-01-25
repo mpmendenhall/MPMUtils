@@ -21,6 +21,7 @@ def connect_JobsDB(fname):
     conn = sqlite3.connect(fname)
     curs = conn.cursor()
     curs.execute("PRAGMA foreign_keys = ON")
+    curs.execute("PRAGMA journal_mode = WAL")
     return curs,conn
 
 ##
@@ -134,11 +135,12 @@ def get_job_resources(curs, jid):
     curs.execute("SELECT resource_id,quantity FROM resource_use WHERE job_id = ?", (jid,))
     return curs.fetchall()
 
-def get_possible_submissions(curs, nmax = 1000000):
+def get_possible_submissions(curs, nmax = 1000000, lifo = True):
     """Select list of waiting (jobs, resources) that could be submitted within resource limits"""
     jout = []
     resuse = {}
-    curs.execute("SELECT job_id FROM jobs WHERE status = 0 LIMIT ?",(nmax,))
+    if lifo: curs.execute("SELECT job_id FROM jobs WHERE status = 0 ORDER BY -job_id LIMIT ?",(nmax,))
+    else: curs.execute("SELECT job_id FROM jobs WHERE status = 0 LIMIT ?",(nmax,))
     for jid in [r[0] for r in curs.fetchall()]:
         res_ok = True
         job_rs = get_job_resources(curs, jid)
@@ -413,7 +415,7 @@ def run_local(curs, trickle = 0):
         jcmd = r[0]
         if r[1]: jcmd += " > %s 2>&1"%r[1]
         jcmd += "; python3 %s --db %s --jid %i --setreturn $? --setstatus 4"%(__file__, dbfile, j[0])
-        print(jcmd)
+        print(jcmd, flush=True)
         curs.execute("UPDATE jobs SET status = 1, t_submit = ? WHERE job_id = ?", (time.time(), j[0]))
         pid = subprocess.Popen([jcmd,], shell=True, preexec_fn=(lambda : os.nice(15))).pid
         curs.execute("UPDATE jobs SET status = 3, queue_id = ? WHERE job_id = ? AND status != 4", (pid, j[0]))
@@ -425,7 +427,7 @@ def cycle_launcher(conn, trickle=0, runlocal=False, twait=15, account=None, qnam
     while 1:
         curs.execute("SELECT COUNT(*) FROM jobs WHERE status=0")
         nleft = curs.fetchone()[0]
-        print(nleft, "jobs left to be run.")
+        print(nleft, "jobs left to be run.", flush=True)
         if not nleft: break
         if runlocal: run_local(curs, trickle)
         else: update_and_launch_q(conn, account, qname, trickle)
@@ -462,6 +464,9 @@ def run_commandline():
     parser.add_option("--setreturn",type="int", help=SUPPRESS_HELP) # help="set job return code")
     parser.add_option("--setstatus",type="int", help=SUPPRESS_HELP) # help="set job status code")
 
+    parser.add_option("--hold",     action="store_true",    help="place all waiting jobs on hold status")
+    parser.add_option("--unhold",   action="store_true",    help="move all held jobs to waiting")
+
     options, args = parser.parse_args()
 
     qs = {"account":options.account, "queue":options.queue}
@@ -480,6 +485,15 @@ def run_commandline():
             except:
                 time.sleep(1)
                 retries -= 1
+        return
+
+    if options.hold:
+        curs.execute("UPDATE jobs SET status = -1 WHERE status = 0")
+        conn.commit()
+        return
+    if options.unhold:
+        curs.execute("UPDATE jobs SET status = 0 WHERE status = -1")
+        conn.commit()
         return
 
     cores_resource_id = get_resource_id(curs,"cores","number of cores")

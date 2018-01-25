@@ -39,7 +39,7 @@ using std::string;
 class SegmentSaver: public OutputManager {
 public:
     /// constructor, optionally with input filename
-    SegmentSaver(OutputManager* pnt, const string& nm = "SegmentSaver", const string& inflName = "");
+    explicit SegmentSaver(OutputManager* pnt, const string& nm = "SegmentSaver", const string& inflName = "");
     /// destructor
     virtual ~SegmentSaver();
     /// get location of this analyzer's input file

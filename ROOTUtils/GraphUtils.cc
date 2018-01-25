@@ -401,6 +401,14 @@ void scale(TGraphErrors& tg, float s, bool xaxis) {
     }
 }
 
+void shift(TGraph& g, double dx, double dy) {
+    double x,y;
+    for(int i=0; i<g.GetN(); i++) {
+        g.GetPoint(i,x,y);
+        g.SetPoint(i, x+dx, y+dy);
+    }
+}
+
 TGraph* derivative(TGraph& g) {
     g.Sort();
     TGraph* d = new TGraph(g.GetN()-1);

@@ -63,13 +63,14 @@ TDirectory* OutputManager::writeItems(TDirectory* d) {
     return TObjCollector::writeItems(d);
 }
 
-void OutputManager::writeROOT(TDirectory* parentDir, bool clear) {
+string OutputManager::writeROOT(TDirectory* parentDir, bool clear) {
     printf("\n--------- Building output .root file... ----------\n");
     TFile* rootOut = nullptr;
+    string outfname = "";
     if(parentDir) writeItems(parentDir);
     else {
         makePath(rootPath);
-        string outfname = rootPath+"/"+name+".root";
+        outfname = rootPath+"/"+name+".root";
         printf("Writing to '%s'\n", outfname.c_str());
         rootOut = new TFile(outfname.c_str(),"RECREATE");
         rootOut->cd();
@@ -78,6 +79,7 @@ void OutputManager::writeROOT(TDirectory* parentDir, bool clear) {
     if(clear) clearItems();
     delete rootOut;
     printf("---------          Done.          ----------\n");
+    return outfname;
 }
 
 

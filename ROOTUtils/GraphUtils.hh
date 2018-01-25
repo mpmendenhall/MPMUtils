@@ -80,6 +80,9 @@ TGraph* matchHistoShapes(const TH1F& h1, const TH1F& h2);
 /// scale a TGraphErrors, on y (default) or x axis
 void scale(TGraphErrors& tg, float s, bool xaxis=false);
 
+/// shift all TGraph points
+void shift(TGraph& g, double dx, double dy);
+
 /// Add projection to all rows (columns) of TH2
 void addProjection(TH2& h, const TH1& hP, double s = 1., bool xaxis = true);
 

@@ -191,7 +191,7 @@ double PluginSaver::displayTimeUse() const {
 
 TDirectory* PluginSaver::writeItems(TDirectory* d) {
     d = SegmentSaver::writeItems(d);
-    printf("Writing plugins '%s'\n", filePlugins->String().Data());
+    if(myBuilders.size()) printf("Writing plugins '%s'\n", filePlugins->String().Data());
     for(auto& kv: myBuilders)
         if(kv.second->thePlugin)
             kv.second->thePlugin->writeItems(d);

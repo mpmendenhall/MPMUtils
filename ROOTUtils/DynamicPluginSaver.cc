@@ -1,5 +1,6 @@
 /// \file DynamicPluginSaver.cc
 #include "DynamicPluginSaver.hh"
+#include "libconfig_readerr.hh"
 #include <TObjString.h>
 #include "StringManip.hh"
 #include <cassert>
@@ -59,7 +60,5 @@ void DynamicPluginSaver::Configure(const Setting& cfg) {
 
 void DynamicPluginSaver::LoadConfig(const string& fname) {
     Config cfg;
-    cfg.setAutoConvert(true);
-    cfg.readFile(fname.c_str());
-    Configure(cfg.getRoot());
+    readConfigFile(cfg, fname);
 }

@@ -30,6 +30,8 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
+#include <set>
+using std::set;
 
 bool fileExists(string f) {
     return !system(("test -r '" + f + "'").c_str());
@@ -50,6 +52,10 @@ void makePath(string p, bool forFile) {
         thepath += "/";
     for(unsigned int i=0; i<pathels.size(); i++) {
         thepath += pathels[i] + "/";
+
+        static set<string> madepaths;
+        if(madepaths.count(thepath)) continue;
+        madepaths.insert(thepath);
         if(!dirExists(thepath)) {
             string cmd = "mkdir -p '"+thepath+"'";
             int err = system(cmd.c_str());

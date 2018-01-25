@@ -180,7 +180,8 @@ bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
         if(!S.saveHists.count(kv.first)) {
             if(throwit) {
                 SMExcept e("mismatched_histogram");
-                e.insert("name", kv.first);
+                e.insert("segname", name);
+                e.insert("hname", kv.first);
                 throw e;
             }
             return false;
@@ -190,7 +191,8 @@ bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
         if(!S.cumDat.count(kv.first)) {
             if(throwit) {
                 SMExcept e("mismatched_cumulative");
-                e.insert("name", kv.first);
+                e.insert("segname", name);
+                e.insert("cumname", kv.first);
                 throw e;
             }
             return false;
