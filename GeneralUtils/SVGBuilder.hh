@@ -221,26 +221,39 @@ namespace SVG {
         shared_ptr<XMLText> myText;
     };
 
-
+    /// set fill color
     inline void set_fill(map<string,string>& attrs, const color::rgb& c) {
         attrs["fill"] = "#"+c.asHexString();
         if(c.a != 1) attrs["fill-opacity"] = to_str(c.a);
     }
-
+    /// set fill color
     inline void set_fill(XMLBuilder& X, const color::rgb& c) { set_fill(X.attrs, c); }
+    /// set stroke color
+    inline void set_stroke(map<string,string>& attrs, const color::rgb& c) {
+        attrs["stroke"] = "#"+c.asHexString();
+        if(c.a != 1) attrs["stroke-opacity"] = to_str(c.a);
+    }
+    /// set stroke color
+    inline void set_stroke(XMLBuilder& X, const color::rgb& c) { set_stroke(X.attrs, c); }
 
     /// SVG document outline convenience class
     class SVGDoc {
     public:
         svg body;                                       ///< main body element
         BBXML::BBox2 BB = BBXML::BBox2::nullBox();      ///< view bounding box
-        /// write to file
-        void write(const string& fname, double x2cm = 1) {
-            std::ofstream o;
-            o.open (fname);
+        double x2cm = 1.;                               ///< output scale factor
+
+        /// write to ostream
+        void write(std::ostream& o) {
             svg::make_standalone_header(o);
             body.setView(BB, x2cm);
             body.write(o,0,"\t");
+        }
+        /// write to file
+        void write(const string& fname) {
+            std::ofstream o;
+            o.open(fname);
+            write(o);
             o.close();
         }
     };

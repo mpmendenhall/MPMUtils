@@ -88,6 +88,8 @@ public:
     void makePlots() override;
     /// virtual routine for comparing to other analyzers (of this type or nullptr; meaning implementation-dependent)
     void compare(const vector<SegmentSaver*>& v) override;
+    /// virtual routine to calculate incremental changes from preceding timestep
+    void checkpoint(const SegmentSaver& Sprev) override;
 
     /// display plugin run time profiling; return total accounted-for time
     double displayTimeUse() const;

@@ -21,7 +21,7 @@ CREATE UNIQUE INDEX idx_analysis_vars ON analysis_vars(name,descrip);
 -- Analysis results quantities
 CREATE TABLE analysis_results (
     run_id INTEGER,     -- from analysis_runs
-    var_id INTEGER,     -- rowid from analysis_vars
+    var_id INTEGER,     -- from analysis_vars
     val REAL,           -- result value
     err REAL,           -- result uncertainty
     FOREIGN KEY(run_id) REFERENCES analysis_runs(run_id) ON DELETE CASCADE,
@@ -35,7 +35,7 @@ CREATE INDEX idx_anaresults_var ON analysis_results(var_id);
 -- query recipes
 --
 -- tables joined:
--- SELECT * FROM analysis_runs,analysis_vars,analysis_results WHERE run = analysis_runs.rowid AND var = analysis_vars.rowid;
+-- SELECT * FROM analysis_runs,analysis_vars,analysis_results WHERE analysis_results.run_id = analysis_runs.run_id AND analysis_results.var_id = analysis_vars.var_id;
 --
 -- newest analysis for every run:
 -- SELECT * FROM analysis_runs GROUP BY dataname ORDER BY anatime;
@@ -44,6 +44,6 @@ CREATE INDEX idx_anaresults_var ON analysis_results(var_id);
 -- SELECT * FROM analysis_runs WHERE dataname = "<dataset name>" GROUP BY dataname ORDER BY anatime;
 --
 -- newest results for particular run:
--- SELECT * FROM analysis_runs,analysis_vars,analysis_results WHERE run = analysis_runs.rowid AND var = analysis_vars.rowid
--- AND analysis_runs.rowid = (SELECT rowid FROM analysis_runs WHERE dataname = "<dataset name>" GROUP BY dataname ORDER BY anatime);
+-- SELECT * FROM analysis_runs,analysis_vars,analysis_results WHERE analysis_results.run_id = analysis_runs.run_id AND analysis_results.var_id = analysis_vars.var_id
+-- AND analysis_runs.run_id = (SELECT run_id FROM analysis_runs WHERE dataname = "<dataset name>" GROUP BY dataname ORDER BY anatime);
 --

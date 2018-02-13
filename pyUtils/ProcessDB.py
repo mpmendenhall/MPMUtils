@@ -118,7 +118,7 @@ class ProcessStep:
     def find_ready(self):
         """Find entities ready for this step"""
         cquery = "SELECT entity_id FROM "
-        if self.prereqs: cquery += " INTERSECT ".join(["(SELECT entity_id FROM status WHERE process_id = ? AND state = 2 AND stattime < %i)"%self.input_tmax for pid in self.prereqs])
+        if self.prereqs: cquery += "("+" INTERSECT ".join(["SELECT entity_id FROM status WHERE process_id = ? AND state = 2 AND stattime < %i"%self.input_tmax for pid in self.prereqs])+")"
         else: cquery += "entity"
         cquery += " WHERE entity_id NOT IN (SELECT entity_id FROM status WHERE process_id = ?)"
         # print(cquery)
@@ -145,7 +145,8 @@ class ProcessStep:
                 ename = get_entity_info(self.curs, eid)[0]
                 isdone = self.check_if_already_done(eid, ename)
                 success = res[2] == 0 and isdone
-                if not success: print("** WARNING ** process '%s' on '%s' failed ( return code %i, done check"%(self.name, get_entity_info(self.curs,eid)[0], res[2]), isdone, ")")
+                if success: print("Process '%s' on '%s' completed."%(self.name, get_entity_info(self.curs,eid)[0]), flush=True)
+                else: print("** WARNING ** process '%s' on '%s' failed ( return code %i, done check"%(self.name, get_entity_info(self.curs,eid)[0], res[2]), isdone, ")", flush=True)
                 self.set_status(eid, 2 if success else 3)
                 self.curs.execute("UPDATE status SET  calctime = ?, output_size = ? WHERE entity_id = ? AND process_id = ?", (res[1], self.calc_outflsize(eid, ename), eid, self.pid))
 
@@ -161,7 +162,7 @@ class ProcessStep:
         """Start job for process (handed off to JobManager)"""
         ename = get_entity_info(self.curs, eid)[0]
         jcmd = self.job_command(eid, ename)
-        print(self.name,"starting process for",ename)
+        print(self.name, "starting process for", ename, flush=True)
         print(jcmd)
         if self.dryrun: return
         self.set_status(eid, 0)
@@ -224,7 +225,7 @@ class LocalProcessStep(ProcessStep):
     def start_process(self, rdbcurs, eid):
         """Run job locally"""
         ename = get_entity_info(self.curs, eid)[0]
-        print(self.name,"Running inline process for",ename)
+        print(self.name,"Running inline process for",ename, flush=True)
         if self.dryrun: return
 
         self.set_status(eid, 1)

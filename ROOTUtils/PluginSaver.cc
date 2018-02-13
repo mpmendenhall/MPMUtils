@@ -99,6 +99,17 @@ void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
     }
 }
 
+void PluginSaver::checkpoint(const SegmentSaver& Sprev) {
+    auto& PS = dynamic_cast<const PluginSaver&>(Sprev);
+    for(auto& kv: myBuilders) {
+        if(kv.second->thePlugin) {
+            auto Si = PS.getPlugin(kv.first);
+            if(Si) kv.second->thePlugin->checkpoint(*Si);
+            else printf("Warning: PluginSaver::checkpoint missing matching plugin for '%s'\n", kv.first.c_str());
+        }
+    }
+}
+
 void PluginSaver::makePlots() {
     defaultCanvas.cd();
     SegmentSaver::makePlots();

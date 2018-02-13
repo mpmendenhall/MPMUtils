@@ -14,8 +14,7 @@
 #include <pthread.h>
 #include <cassert>
 
-
-bool SockIOServer::process_connections(const string& host, int port) {
+bool SockIOServer::process_connections() {
     // open socket file descriptor
     auto sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
@@ -46,9 +45,9 @@ bool SockIOServer::process_connections(const string& host, int port) {
     listen(sockfd, 10);
     printf("Listening for connections on port %i (socket fd %i)\n", port, sockfd);
 
-
     // block until new socket created for connection
-    while(1) {
+    accept_connections = true;
+    while(accept_connections) {
         struct sockaddr cli_addr;
         socklen_t clilen = sizeof(cli_addr); // returns actual size of client address
         auto newsockfd = accept(sockfd, &cli_addr, &clilen);
@@ -66,6 +65,16 @@ bool SockIOServer::process_connections(const string& host, int port) {
 void SockIOServer::handle_connection(int csockfd) {
     printf("Accepting new connection %i ... and closing it.\n", csockfd);
     close(csockfd);
+}
+
+void* sockioserver_thread(void* p) {
+    auto& A = *(SockIOServer*)p;
+    auto isListening = A.process_connections();
+    if(!isListening) exit(EXIT_FAILURE);
+    return nullptr;
+}
+void SockIOServer::process_connections_thread() {
+    pthread_create(&sockthread, nullptr, sockioserver_thread, this);
 }
 
 ////////////////////
@@ -120,6 +129,7 @@ void BlockHandler::handle() {
 }
 
 bool BlockHandler::read_block(int32_t bsize) {
+    //printf("Reading block size %i\n", bsize);
     auto buff = alloc_block(bsize);
     if(!buff) return false;
 
@@ -141,20 +151,23 @@ bool BlockHandler::read_block(int32_t bsize) {
 
 bool BlockHandler::process(int32_t bsize) {
     if(!bsize || !theblock) return false;
+    bool b = process(theblock->data);
+    return_block();
+    return b;
+}
+
+bool BlockHandler::process(const vector<char>& v) {
     static size_t received = 0;
     static int nprocessed = 0;
     nprocessed++;
-    received += bsize;
-
+    received += v.size();
     if(nprocessed<100 || !(nprocessed % int(nprocessed/100))) {
-        printf("%i[%i:%i]> '", sockfd, bsize, (int)theblock->data.size());
-        assert(bsize < 0 || bsize == (int32_t)theblock->data.size());
-        if(bsize > 0 && bsize < 1024) for(auto c: theblock->data) printf("%c",c);
+        printf("%i[%zu]> '", sockfd, v.size());
+        if(v.size() < 1024) for(auto c: v) printf("%c",c);
         else printf("%.1f MB", received/(1024*1024.));
         printf("'\n");
     }
-    return_block();
-    return bsize > 0;
+    return v.size();
 }
 
 char* BlockHandler::alloc_block(int32_t bsize) {
@@ -172,20 +185,32 @@ char* BlockHandler::alloc_block(int32_t bsize) {
 void* run_sockio_thread(void* p) {
     auto h = (ConnHandler*)p;
     h->handle();
+    if(h->myServer) h->myServer->handlerClosed(h);
     close(h->sockfd);
     delete h;
     return nullptr;
 }
 
 void ThreadedSockIOServer::handle_connection(int csockfd) {
+    std::lock_guard<std::mutex> cl(connsLock);
     pthread_t mythread;
+    auto h = makeHandler(csockfd);
+    myConns.insert(h);
     pthread_create(&mythread, nullptr, // thread attributes
-                   run_sockio_thread, makeHandler(csockfd));
+                   run_sockio_thread, h);
+}
+
+void ThreadedSockIOServer::handlerClosed(ConnHandler* h) {
+    std::lock_guard<std::mutex> cl(connsLock);
+    printf("Removing handler for sockfd %i\n", h->sockfd);
+    myConns.erase(h);
 }
 
 ////////////////////
 ////////////////////
 ////////////////////
+
+SockBlockSerializerHandler::SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS): BlockHandler(sfd, SBS), myServer(SBS) { }
 
 void SockBlockSerializerHandler::request_block(int32_t /*bsize*/) { theblock = myServer->get_allocated(); }
 void SockBlockSerializerHandler::return_block() { if(theblock) myServer->return_allocated(theblock); }

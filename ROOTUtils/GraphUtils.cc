@@ -482,6 +482,20 @@ double invCDF(TH1* h, double p) {
     return h->GetBinLowEdge(mybin)*(1.0-l)+h->GetBinLowEdge(mybin+1)*l;
 }
 
+double hcount_from_end(const TH1& h, double c) {
+    double s = 0;
+    double bc = 0;
+    int i = h.GetNbinsX();
+    for(; i>1; i--) {
+        bc = h.GetBinContent(i);
+        s += bc;
+        if(s >= c) break;
+    }
+    if(s < c || !bc) return h.GetBinLowEdge(1);
+    auto fb = (s-c)/bc;
+    return h.GetBinLowEdge(i)*fb + (1-fb)*h.GetBinLowEdge(i+1);
+}
+
 void fixNaNs(TH1* h) {
     unsigned int nb = h->GetNbinsX();
     for(unsigned int i=0; i<=nb+1; i++) {

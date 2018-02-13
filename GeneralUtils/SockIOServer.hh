@@ -7,6 +7,11 @@
 using std::string;
 #include <vector>
 using std::vector;
+#include <set>
+using std::set;
+#include <mutex>
+
+class ConnHandler;
 
 /// Base class listening and handling connections to port
 class SockIOServer {
@@ -16,35 +21,53 @@ public:
     /// Destructor
     virtual ~SockIOServer() { }
 
+    string host = "localhost";          ///< host to serve on
+    int port = 0;                       ///< port to serve on
+    bool accept_connections = false;    ///< whether to accept new connections
+
     /// receive and process connections to host and port
-    bool process_connections(const string& host, int port);
+    bool process_connections();
+    /// launch process_connections in a separate thread
+    void process_connections_thread();
+    /// callback on connection handler close
+    virtual void handlerClosed(ConnHandler*) { }
 
 protected:
     /// handle each new connection --- subclass me!
     virtual void handle_connection(int csockfd);
+    /// handler creating thread
+    pthread_t sockthread;
 };
 
 /// Base class for handling one accepted connection
 class ConnHandler {
 public:
     /// Constructor
-    ConnHandler(int sfd): sockfd(sfd) { }
+    ConnHandler(int sfd, SockIOServer* s = nullptr): sockfd(sfd), myServer(s) { }
     /// Destructor
     virtual ~ConnHandler() { }
     /// Communicate with accepted connection
     virtual void handle();
 
-    int sockfd; ///< accepted connection file descriptor
+    int sockfd;             ///< accepted connection file descriptor
+    SockIOServer* myServer; ///< spawning parent server
 };
 
 /// Socket server spawning threads for each connection
 class ThreadedSockIOServer: public SockIOServer {
+public:
+
+    /// callback on connection handler close
+    void handlerClosed(ConnHandler* h) override;
 
 protected:
     /// create correct handler type
-    virtual ConnHandler* makeHandler(int sfd) { return new ConnHandler(sfd); }
+    virtual ConnHandler* makeHandler(int sfd) { return new ConnHandler(sfd, this); }
     /// handle each new connection
     void handle_connection(int csockfd) override;
+
+    set<ConnHandler*> myConns;  ///< list of active connections
+    std::mutex connsLock;       ///< lock on myConns
 };
 
 //////////////////////////////
@@ -54,7 +77,7 @@ protected:
 class BlockHandler: public ConnHandler {
 public:
     /// Constructor
-    BlockHandler(int sfd): ConnHandler(sfd) { }
+    BlockHandler(int sfd, SockIOServer* s = nullptr): ConnHandler(sfd, s) { }
     /// Receive block size and whole of expected data
     void handle() override;
 
@@ -80,6 +103,8 @@ protected:
     virtual char* alloc_block(int32_t bsize);
     /// Process data after buffer read; return false to end communication
     virtual bool process(int32_t bsize);
+    /// Process data after buffer read; return false to end communication
+    virtual bool process(const vector<char>&);
     /// end-of-handling routine
     virtual void end_of_handling() { }
 
@@ -96,7 +121,7 @@ class SockBlockSerializerServer;
 class SockBlockSerializerHandler: public BlockHandler {
 public:
     /// Constructor
-    SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS): BlockHandler(sfd), myServer(SBS) { }
+    SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS);
 protected:
     /// Set theblock to write point, or null if unavailable
     void request_block(int32_t /*bsize*/) override;

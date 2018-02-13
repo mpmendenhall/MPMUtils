@@ -111,6 +111,8 @@ public:
     virtual void makePlots() {}
     /// virtual routine for comparing to other analyzers (of this type or nullptr; meaning implementation-dependent)
     virtual void compare(const vector<SegmentSaver*>&) { }
+    /// virtual routine to calculate incremental changes from preceding timestep
+    virtual void checkpoint(const SegmentSaver&) { }
 
     TFile* fIn;                 ///< input file to read in histograms from
     TDirectory* dirIn = nullptr;   ///< particular sub-directory for reading histograms

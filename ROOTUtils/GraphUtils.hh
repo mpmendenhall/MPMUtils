@@ -24,9 +24,11 @@ TH1x* logHist(const string& name, const string& descrip, unsigned int nbins, dou
 }
 /// log-lin binned 2D histogram
 template<class TH2x = TH2F>
-TH2x* loglinHist(const string& name, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax) {
-    return new TH2x(name.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data(), nby, ymin, ymax);
+TH2x* loglinHist(const string& name, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax, bool logx = true) {
+    if(logx) return new TH2x(name.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data(), nby, ymin, ymax);
+    return new TH2x(name.c_str(), descrip.c_str(), nbins, bmin, bmax, nby, logbinedges(nbins,ymin,ymax).data());
 }
+
 /// log-log binned 2D histogram
 template<class TH2x = TH2F>
 TH2x* loglogHist(const string& name, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax) {
@@ -53,6 +55,9 @@ TGraphErrors* TProf2TGraph(const TProfile& P, unsigned int minpts = 0);
 
 /// make cumulative histogram
 TH1* cumulativeHist(const TH1& h, bool normalize = false, bool reverse = false);
+
+/// find position with specified cumulative counts from high end
+double hcount_from_end(const TH1& h, double c);
 
 /// Divide out histogram bin width, for differential spectrum (with optional extra scale factor)
 void normalize_to_bin_width(TH1* f, double xscale = 1.);
