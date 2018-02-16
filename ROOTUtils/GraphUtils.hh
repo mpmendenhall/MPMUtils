@@ -26,7 +26,7 @@ TH1x* logHist(const string& name, const string& descrip, unsigned int nbins, dou
 template<class TH2x = TH2F>
 TH2x* loglinHist(const string& name, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax, bool logx = true) {
     if(logx) return new TH2x(name.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data(), nby, ymin, ymax);
-    return new TH2x(name.c_str(), descrip.c_str(), nbins, bmin, bmax, nby, logbinedges(nbins,ymin,ymax).data());
+    return new TH2x(name.c_str(), descrip.c_str(), nbins, bmin, bmax, nby, logbinedges(nby,ymin,ymax).data());
 }
 
 /// log-log binned 2D histogram
