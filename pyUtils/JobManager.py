@@ -4,7 +4,7 @@
 import sqlite3
 import subprocess
 import os
-from optparse import OptionParser, SUPPRESS_HELP
+from argparse import ArgumentParser, SUPPRESS
 import time
 import multiprocessing
 import datetime
@@ -16,8 +16,9 @@ dbfile = None # path to database file
 jobscript_dir = os.environ["HOME"]+"/jobs/"
 resource_ids = { } # cached resource IDs by name
 
-def connect_JobsDB(fname):
+def connect_JobsDB(fname, remake = False):
     """Get cursor and connection for Jobs DB"""
+    if remake and not os.path.exists(fname): os.system("sqlite3 %s < %s/pyUtils/JobsDB_Schema.sql"%(fname, os.environ["MPMUTILS"]))
     conn = sqlite3.connect(fname)
     curs = conn.cursor()
     curs.execute("PRAGMA foreign_keys = ON")
@@ -183,7 +184,9 @@ def checkjob(jid):
         var = j[:i].strip()
         val = j[i+1:].strip()
         if not var or not val: continue
-        if var=="Completion Code": jdat["ret_code"] = int(val.split()[0])
+        if var == "State":
+            jdat[var] = val
+            jdat["ret_code"] = 0 if val=='Completed' else -1
         elif var=="WallTime":
             val = val.split(":")
             try: jdat["walltime"] = 3600*int(val[0]) + 60*int(val[1]) + int(val[2].split()[0])
@@ -219,7 +222,6 @@ def msub_job(curs, jid, account, qname, mcmds=["-j oe", "-V"]):
 
     jobout.write(jobin)
     jobout.close()
-
     o = subprocess.getoutput('msub "%s"'%j[1]).strip()
     print("Job '%s' submitted as '%s'"%(j[0],o))
     qid = int(o.split()[-1].split(".")[0])
@@ -239,8 +241,6 @@ def check_running_qjobs(conn):
     """Check (formerly) running jobs; update DB status appropriately"""
     jstatus = get_showq_runstatus()
     curs = conn.cursor()
-    #conn.isolation_level = 'EXCLUSIVE'
-    #conn.execute('BEGIN EXCLUSIVE')
     update_DB_qrunstatus(curs,jstatus)
     conn.commit()
 
@@ -248,8 +248,6 @@ def update_qstatus(conn):
     """Update database job status"""
     jstatus = get_showq_runstatus()
     curs = conn.cursor()
-    #conn.isolation_level = 'EXCLUSIVE'
-    #conn.execute('BEGIN EXCLUSIVE')
     update_DB_qrunstatus(curs,jstatus)
     conn.commit()
 
@@ -259,15 +257,12 @@ def update_and_launch_q(conn, account, qname, trickle = 0):
 
     curs = conn.cursor()
 
-    #conn.isolation_level = 'EXCLUSIVE'
-    #conn.execute('BEGIN EXCLUSIVE')
-
     update_DB_qrunstatus(curs,jstatus)
     conn.commit()
     jnext = get_possible_submissions(curs)
     if len(jnext):
         print("Submitting %i new jobs."%len(jnext))
-        t0 = datetime.now() if trickle else None
+        t0 = datetime.datetime.now() if trickle else None
         for j in jnext:
             mcmds=["-j oe", "-V"]
             if t0:
@@ -315,7 +310,7 @@ def upload_onejob(curs, name, infile, logfile, res_list):
 
 def upload_jobs(curs,joblist):
     """Upload a list of jobs to run; return list of database IDs"""
-    # job specifier: (name,input,log,res_list)
+    # job specifier: (name, input, log, [("resource", amount),...])
     res_ids = {}
     jids = []
     print("Uploading jobs")
@@ -330,7 +325,6 @@ def upload_jobs(curs,joblist):
 
 def make_upload_jobs(curs, jname, jcmds, res_use):
     """Generate jobfiles for "one liners" and upload to DB"""
-    # jcmds = (contents, logfile)
     jobdir = jobscript_dir + "/" + jname
     os.makedirs(jobdir, exist_ok=True)
     joblist = []
@@ -342,7 +336,7 @@ def make_upload_jobs(curs, jname, jcmds, res_use):
             logfl = jc[1]
             open(jfl,"w").write(jc[0])
         joblist.append((jname, jfl, logfl, res_use))
-    return upload_jobs(curs,joblist)
+    return upload_jobs(curs, joblist)
 
 def make_job_script(curs, jname, jcmd, res_use):
     """Create script and logfile for "one-liner" job"""
@@ -440,34 +434,34 @@ def cycle_launcher(conn, trickle=0, runlocal=False, twait=15, account=None, qnam
 ###################
 
 def run_commandline():
-    parser = OptionParser()
+    parser = ArgumentParser()
 
-    parser.add_option("--account",  help="submission billing account")
-    parser.add_option("--queue",    help="submission queue")
-    parser.add_option("--limit",    type="int", default=multiprocessing.cpu_count(), help="concurrent jobs limit")
-    parser.add_option("--trickle",  type="float", help="time delay [s] between nominal run starts")
-    parser.add_option("--db",       help="jobs database")
+    parser.add_argument("--account",  help="submission billing account")
+    parser.add_argument("--queue",    help="submission queue")
+    parser.add_argument("--limit",    type=int, default=multiprocessing.cpu_count(), help="concurrent jobs limit")
+    parser.add_argument("--trickle",  type=float, help="time delay [s] between nominal run starts")
+    parser.add_argument("--db",       help="jobs database")
 
-    parser.add_option("--launch",   action="store_true", help="update and launch")
-    parser.add_option("--cycle",    type="float", help="continuously re-check/launch jobs at specified interval")
-    parser.add_option("--status",   action="store_true", help="update and display status")
-    parser.add_option("--cancel",   action="store_true", help="cancel queued jobs")
-    parser.add_option("--clear",    action="store_true", help="clear completed jobs")
-    parser.add_option("--jobfile",  help="run one-liners in file")
-    parser.add_option("--walltime", type="int", help="wall time for 1-liner jobs in seconds")
-    parser.add_option("--nodes",    type="int", default=1, help="nodes for 1-liner jobs")
-    parser.add_option("--bundle",   help="bundle job name; specify bundled walltime")
-    parser.add_option("--runlocal", action="store_true", help="run all waiting jobs locally")
-    parser.add_option("--test",     type="int", help="run test idle jobs")
+    parser.add_argument("--launch",   action="store_true", help="update and launch")
+    parser.add_argument("--cycle",    type=float, help="continuously re-check/launch jobs at specified interval")
+    parser.add_argument("--status",   action="store_true", help="update and display status")
+    parser.add_argument("--cancel",   action="store_true", help="cancel queued jobs")
+    parser.add_argument("--clear",    action="store_true", help="clear completed jobs")
+    parser.add_argument("--jobfile",  help="run one-liners in file")
+    parser.add_argument("--walltime", type=int, help="wall time for 1-liner jobs in seconds")
+    parser.add_argument("--nodes",    type=int, default=1, help="nodes for 1-liner jobs")
+    parser.add_argument("--bundle",   help="bundle job name; specify bundled walltime")
+    parser.add_argument("--runlocal", action="store_true", help="run all waiting jobs locally")
+    parser.add_argument("--test",     type=int, help="run test idle jobs")
 
-    parser.add_option("--jid",      type="int", help=SUPPRESS_HELP) # help="job ID in database")
-    parser.add_option("--setreturn",type="int", help=SUPPRESS_HELP) # help="set job return code")
-    parser.add_option("--setstatus",type="int", help=SUPPRESS_HELP) # help="set job status code")
+    parser.add_argument("--jid",      type=int, help=SUPPRESS) # help="job ID in database")
+    parser.add_argument("--setreturn",type=int, help=SUPPRESS) # help="set job return code")
+    parser.add_argument("--setstatus",type=int, help=SUPPRESS) # help="set job status code")
 
-    parser.add_option("--hold",     action="store_true",    help="place all waiting jobs on hold status")
-    parser.add_option("--unhold",   action="store_true",    help="move all held jobs to waiting")
+    parser.add_argument("--hold",     action="store_true",    help="place all waiting jobs on hold status")
+    parser.add_argument("--unhold",   action="store_true",    help="move all held jobs to waiting")
 
-    options, args = parser.parse_args()
+    options = parser.parse_args()
 
     qs = {"account":options.account, "queue":options.queue}
     global dbfile
