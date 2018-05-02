@@ -279,8 +279,7 @@ def cancel_queued_jobs(conn):
 
     curs = conn.cursor()
     curs.execute("SELECT queue_id FROM jobs WHERE queue_id > 0 AND status <= 2")
-    for j in curs.fetchall():
-        os.system("mjobctl -F %i"%j)
+    for j in curs.fetchall(): os.system("mjobctl -c %i"%j)
     curs.execute("UPDATE jobs SET status = 6 WHERE status = 0")
     conn.commit()
     summarize_DB_runstatus(curs)
