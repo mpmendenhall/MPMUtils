@@ -285,6 +285,10 @@ def cancel_queued_jobs(conn):
     summarize_DB_runstatus(curs)
 
 
+def kill_jobs(conn, usr, account):
+    os.system("scancel -u %s -A %s"%(usr, account))
+    update_qstatus(conn)
+
 ##
 ## local jobs
 ##
@@ -445,6 +449,7 @@ def run_commandline():
     parser.add_argument("--cycle",    type=float, help="continuously re-check/launch jobs at specified interval")
     parser.add_argument("--status",   action="store_true", help="update and display status")
     parser.add_argument("--cancel",   action="store_true", help="cancel queued jobs")
+    parser.add_argument("--kill",     action="store_true", help="kill running jobs")
     parser.add_argument("--clear",    action="store_true", help="clear completed jobs")
     parser.add_argument("--jobfile",  help="run one-liners in file")
     parser.add_argument("--walltime", type=int, help="wall time for 1-liner jobs in seconds")
@@ -495,18 +500,19 @@ def run_commandline():
     display_resource_use(curs)
     summarize_DB_runstatus(curs)
 
-    if options.test: make_test_jobs(curs, options.test); conn.commit()
-    if options.launch and not options.runlocal: update_and_launch_q(conn, options.account, options.queue, options.trickle)
-    if options.status: update_qstatus(conn)
-    if options.cancel: cancel_queued_jobs(conn)
-    if options.clear: clear_completed(conn)
-    if options.cycle: cycle_launcher(conn, options.trickle, options.runlocal, twait=options.cycle, account=options.account, qname=options.queue)
-    elif options.runlocal: run_local(curs, options.trickle); conn.commit()
-
     if options.jobfile and options.walltime:
         jcmds = [l.strip() for l in open(options.jobfile,"r").readlines() if l[0]!='#']
         make_upload_jobs(conn.cursor(), options.jobfile, jcmds, [("walltime",options.walltime), ("cores",options.nodes)])
         conn.commit()
+
+    if options.test: make_test_jobs(curs, options.test); conn.commit()
+    if options.launch and not options.runlocal: update_and_launch_q(conn, options.account, options.queue, options.trickle)
+    if options.status: update_qstatus(conn)
+    if options.cancel: cancel_queued_jobs(conn)
+    if options.kill: kill_jobs(conn, os.environ["USER"], qs["account"])
+    if options.clear: clear_completed(conn)
+    if options.cycle: cycle_launcher(conn, options.trickle, options.runlocal, twait=options.cycle, account=options.account, qname=options.queue)
+    elif options.runlocal: run_local(curs, options.trickle); conn.commit()
 
     if options.bundle and options.walltime:
         rebundle(conn.cursor(), options.bundle, os.environ["HOME"]+"/jobs/%s/"%options.bundle, options.walltime)
