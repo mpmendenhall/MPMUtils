@@ -104,6 +104,7 @@ protected:
     virtual void buildPlugins();
 
     map<string, shared_ptr<PluginBuilder>> myBuilders;  ///< available named plugins list
+    vector<SegmentSaver*> myPlugins;                    ///< plugins in run order
     TObjString* filePlugins;                            ///< list of plugin names from file
 };
 

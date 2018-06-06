@@ -9,7 +9,7 @@ import time
 import multiprocessing
 import datetime
 
-jobstates = {"Idle":2,"Starting":3,"Running":3,"Completed":4,"Unknown":5,"Removed":6,"Bundled":7}
+jobstates = {"Idle":2, "ReqNodeNotA":2, "Starting":3, "Running":3, "Completed":4, "Unknown":5, "Removed":6, "Bundled":7}
 statenames = {-1:"hold", 0:"waiting", 1:"sumitted", 2:"queued", 3:"running", 4: "done", 6:"removed", 7:"bundled" }
 def statename(i): return statenames.get(i,"status %i"%i)
 dbfile = None # path to database file
@@ -190,8 +190,14 @@ def checkjob(jid):
         elif var=="WallTime":
             val = val.split(":")
             try: jdat["walltime"] = 3600*int(val[0]) + 60*int(val[1]) + int(val[2].split()[0])
-            except: jdat["walltime"] = -1
+            except: jdat["walltime"] = None
         else: jdat[var]=val
+    if "StartTime" in jdat:
+        Y = datetime.datetime.strftime(datetime.datetime.now(), "%Y ")
+        try: jdat["xStartTime"] = datetime.datetime.strptime(Y + jdat["StartTime"], "%Y %a %b %d %H:%M:%S")
+        except: pass
+    if jdat.get("Walltime", None) == None:
+        if "xStartTime" in jdat: jdat["walltime"] = (datetime.datetime.now() - jdat["xStartTime"]).total_seconds()
     jdat["status"] = jobstates.get(jdat.get("State","unknown"),5)
     print(jdat)
     return jdat
@@ -214,7 +220,7 @@ def msub_job(curs, jid, account, qname, mcmds=["-j oe", "-V"]):
     jobout.write("#!/usr/bin/bash\n")
     jobout.write("#MSUB -A %s\n"%account)
     if j[2]: jobout.write("#MSUB -o %s\n"%j[2])
-    if j[0]: jobout.write("#MSUB -N %s\n"%j[0])
+    if j[0]: jobout.write("#MSUB -N %s_%i\n"%(j[0],jid))
     jobout.write("#MSUB -q %s\n"%qname)
     jobout.write("#MSUB -l nodes=%i\n"%ncores)
     jobout.write("#MSUB -l walltime=%i\n"%wtreq)
@@ -422,9 +428,9 @@ def run_local(curs, trickle = 0):
 def cycle_launcher(conn, trickle=0, runlocal=False, twait=15, account=None, qname=None):
     curs = conn.cursor()
     while 1:
-        curs.execute("SELECT COUNT(*) FROM jobs WHERE status=0")
+        curs.execute("SELECT COUNT(*) FROM jobs WHERE status IN (0,1,2,3)")
         nleft = curs.fetchone()[0]
-        print(nleft, "jobs left to be run.", flush=True)
+        print(nleft, "jobs uncompleted.", flush=True)
         if not nleft: break
         if runlocal: run_local(curs, trickle)
         else: update_and_launch_q(conn, account, qname, trickle)

@@ -146,7 +146,7 @@ class ProcessStep:
                 isdone = self.check_if_already_done(eid, ename)
                 success = res[2] == 0 and isdone
                 if success: print("Process '%s' on '%s' completed."%(self.name, get_entity_info(self.curs,eid)[0]), flush=True)
-                else: print("** WARNING ** process '%s' on '%s' failed ( return code %i, done check"%(self.name, get_entity_info(self.curs,eid)[0], res[2]), isdone, ")", flush=True)
+                else: print("** WARNING ** process '%s' (job %i) on '%s' failed ( return code %i, done check"%(self.name,jid, get_entity_info(self.curs,eid)[0], res[2]), isdone, ")", flush=True)
                 self.set_status(eid, 2 if success else 3)
                 self.curs.execute("UPDATE status SET  calctime = ?, output_size = ? WHERE entity_id = ? AND process_id = ?", (res[1], self.calc_outflsize(eid, ename), eid, self.pid))
 

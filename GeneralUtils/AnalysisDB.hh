@@ -27,6 +27,8 @@ public:
     sqlite3_int64 getAnaVar(const string& name, const string& unit, const string& descrip);
     /// upload analysis result
     void uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, double val, double err);
+    /// upload text analysis result
+    void uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, const string& val);
 
 protected:
     /// Constructor
@@ -39,14 +41,17 @@ protected:
 struct AnaResult {
     /// Constructor
     AnaResult(const string& nm, const string& u, const string& dsc, double v, double e): name(nm), unit(u), descrip(dsc), val(v), err(e) { }
+    /// Constructor for text value
+    AnaResult(const string& nm, const string& u, const string& dsc, const string& v): name(nm), unit(u), descrip(dsc), val(0), err(0), xval(v) { }
     /// Display contents
-    void display() const { printf("%s [%s]:\t%g ~ %g %s\n", name.c_str(), descrip.c_str(), val, err, unit.c_str()); }
+    void display() const;
 
     string name;        ///< name
     string unit;        ///< units
     string descrip;     ///< description
     double val;         ///< value
     double err;         ///< uncertainty on value
+    string xval;        ///< text value (supercedes val/err)
 };
 
 #endif

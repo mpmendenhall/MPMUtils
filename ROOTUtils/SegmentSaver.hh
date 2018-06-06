@@ -124,6 +124,7 @@ public:
     double tProcess = 0;        ///< permormance profiling: time to process data
     double tCalc = 0;           ///< performance profiling: time for calculateResults
     double tPlot = 0;           ///< performance profiling: time for makePlots
+    double order = 0;           ///< run sort ordering number
 
 protected:
 

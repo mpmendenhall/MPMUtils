@@ -26,10 +26,9 @@ public:
     virtual ~SQLite_Helper();
 
     /// BEGIN TRANSACTION command
-    int beginTransaction(bool exclusive=false) { return exec(exclusive? "BEGIN EXCLUSIVE TRANSACTION" : "BEGIN TRANSACTION"); }
+    int beginTransaction(bool exclusive=false) { return (txdepth++)? SQLITE_OK : exec(exclusive? "BEGIN EXCLUSIVE TRANSACTION" : "BEGIN TRANSACTION"); }
     /// END TRANSACTION command
-    int endTransaction() { return exec("END TRANSACTION"); }
-
+    int endTransaction() { return (--txdepth)? SQLITE_OK : exec("END TRANSACTION"); }
 
 protected:
     /// set up query for use
@@ -48,6 +47,7 @@ protected:
     /// bind a vector<double> as a blob to a statement parameter
     int bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v);
 
+    int txdepth = 0;                        ///< depth of transaction calls
     sqlite3* db = nullptr;                  ///< database connection
     map<string, sqlite3_stmt*> statements;  ///< prepared statements awaiting deletion
 

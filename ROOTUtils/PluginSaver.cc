@@ -25,6 +25,7 @@ void PluginSaver::buildPlugins() {
                 continue;
             }
             PB->second->makePlugin(this);
+            if(PB->second->thePlugin) myPlugins.push_back(PB->second->thePlugin.get());
         }
     } else {
         /// construct all plugins
@@ -32,14 +33,18 @@ void PluginSaver::buildPlugins() {
         for(auto& kv: myBuilders) {
             assert(kv.second);
             kv.second->makePlugin(this);
-            if(kv.second->thePlugin) pnames.push_back(kv.first);
-            else assert(false);
+            if(kv.second->thePlugin) {
+                pnames.push_back(kv.first);
+                myPlugins.push_back(kv.second->thePlugin.get());
+            } else assert(false);
         }
         assert(filePlugins);
         string pstr = join(pnames,",");
         printf("Set up plugins '%s'\n", pstr.c_str());
         filePlugins->SetString(pstr.c_str());
     }
+    std::sort(myPlugins.begin(), myPlugins.end(),
+              [](SegmentSaver* a, SegmentSaver* b) { return a->order < b->order; });
 }
 
 shared_ptr<SegmentSaver> PluginSaver::getPlugin(const string& nm) const {
@@ -50,98 +55,80 @@ shared_ptr<SegmentSaver> PluginSaver::getPlugin(const string& nm) const {
 
 void PluginSaver::setPrintSuffix(const string& sfx) {
     SegmentSaver::setPrintSuffix(sfx);
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
-            kv.second->thePlugin->setPrintSuffix(sfx);
+    for(auto P: myPlugins) P->setPrintSuffix(sfx);
 }
 
 void PluginSaver::zeroSavedHists() {
     SegmentSaver::zeroSavedHists();
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
-            kv.second->thePlugin->zeroSavedHists();
+    for(auto P: myPlugins) P->zeroSavedHists();
 }
 
 void PluginSaver::checkStatus() {
-    for(auto& kv: myBuilders) {
-        if(kv.second->thePlugin) {
-            auto t0 = steady_clock::now();
-            kv.second->thePlugin->defaultCanvas.cd();
-            kv.second->thePlugin->checkStatus();
-            kv.second->thePlugin->tPlot += std::chrono::duration<double>(steady_clock::now()-t0).count();
-        }
+    for(auto P: myPlugins) {
+        auto t0 = steady_clock::now();
+        P->defaultCanvas.cd();
+        P->checkStatus();
+        P->tPlot += std::chrono::duration<double>(steady_clock::now()-t0).count();
     }
 }
 
 void PluginSaver::scaleData(double s) {
     SegmentSaver::scaleData(s);
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
-            kv.second->thePlugin->scaleData(s);
+    for(auto P: myPlugins) P->scaleData(s);
 }
 
 void PluginSaver::normalize() {
     _normalize();
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
-            kv.second->thePlugin->normalize();
+    for(auto P: myPlugins) P->normalize();
 }
 
 void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
     SegmentSaver::addSegment(S);
     const PluginSaver& PS = dynamic_cast<const PluginSaver&>(S);
-    for(auto& kv: myBuilders) {
-        if(kv.second->thePlugin) {
-            auto Si = PS.getPlugin(kv.first);
-            if(Si) kv.second->thePlugin->addSegment(*Si,sc);
-            else printf("Warning: PluginSaver::addSegment missing matching plugin for '%s'\n", kv.first.c_str());
-        }
+    for(auto P: myPlugins) {
+        auto Si = PS.getPlugin(P->name);
+        if(Si) P->addSegment(*Si,sc);
+        else printf("Warning: PluginSaver::addSegment missing matching plugin for '%s'\n", P->name.c_str());
     }
 }
 
 void PluginSaver::checkpoint(const SegmentSaver& Sprev) {
     auto& PS = dynamic_cast<const PluginSaver&>(Sprev);
-    for(auto& kv: myBuilders) {
-        if(kv.second->thePlugin) {
-            auto Si = PS.getPlugin(kv.first);
-            if(Si) kv.second->thePlugin->checkpoint(*Si);
-            else printf("Warning: PluginSaver::checkpoint missing matching plugin for '%s'\n", kv.first.c_str());
-        }
+    for(auto P: myPlugins) {
+        auto Si = PS.getPlugin(P->name);
+        if(Si) P->checkpoint(*Si);
+        else printf("Warning: PluginSaver::checkpoint missing matching plugin for '%s'\n", P->name.c_str());
     }
 }
 
 void PluginSaver::makePlots() {
     defaultCanvas.cd();
     SegmentSaver::makePlots();
-    for(auto& kv: myBuilders) {
-        if(kv.second->thePlugin) {
-            auto t0 = steady_clock::now();
-            kv.second->thePlugin->defaultCanvas.cd();
-            kv.second->thePlugin->makePlots();
-            kv.second->thePlugin->tPlot += std::chrono::duration<double>(steady_clock::now()-t0).count();
-        }
+    for(auto P: myPlugins) {
+        auto t0 = steady_clock::now();
+        P->defaultCanvas.cd();
+        P->makePlots();
+        P->tPlot += std::chrono::duration<double>(steady_clock::now()-t0).count();
     }
 }
 
 void PluginSaver::startData() {
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
-            kv.second->thePlugin->startData();
+    for(auto P: myPlugins) {
+        auto t0 = steady_clock::now();
+        P->startData();
+        P->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
+    }
 }
 
 void PluginSaver::processEvent() {
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
-            kv.second->thePlugin->processEvent();
+    for(auto P: myPlugins) P->processEvent();
 }
 
 void PluginSaver::finishData() {
-    for(auto& kv: myBuilders) {
-        if(kv.second->thePlugin) {
-            auto t0 = steady_clock::now();
-            kv.second->thePlugin->finishData();
-            kv.second->thePlugin->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
-        }
+    for(auto P: myPlugins) {
+        auto t0 = steady_clock::now();
+        P->finishData();
+        P->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
     }
 }
 
@@ -151,26 +138,24 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
     vector<PluginSaver*> vP;
     for(auto SS: v) vP.push_back(dynamic_cast<PluginSaver*>(SS));
 
-    for(auto& kv: myBuilders) {
-        if(!kv.second->thePlugin) continue;
+    for(auto P: myPlugins) {
         vector<SegmentSaver*> vPi;
         for(auto PS: vP) {
             if(!PS) vPi.push_back(nullptr);
-            else vPi.push_back(PS->getPlugin(kv.first).get());
+            else vPi.push_back(PS->getPlugin(P->name).get());
         }
-        kv.second->thePlugin->defaultCanvas.cd();
-        kv.second->thePlugin->compare(vPi);
+        P->defaultCanvas.cd();
+        P->compare(vPi);
     }
 }
 
 void PluginSaver::calculateResults() {
     SegmentSaver::calculateResults();
-    for(auto& kv: myBuilders) {
-        if(kv.second->thePlugin) {
-            auto t0 = steady_clock::now();
-            kv.second->thePlugin->calculateResults();
-            kv.second->thePlugin->tCalc += std::chrono::duration<double>(steady_clock::now()-t0).count();
-        }
+    for(auto P: myPlugins) {
+        auto t0 = steady_clock::now();
+        printf("\n## PLUGIN %s CalculateResults ##\n\n", P->name.c_str());
+        P->calculateResults();
+        P->tCalc += std::chrono::duration<double>(steady_clock::now()-t0).count();
     }
 }
 
@@ -182,18 +167,15 @@ double PluginSaver::displayTimeUse() const {
     double p_tProcess = 0;
     double p_tCalc = 0;
     double p_tPlot = 0;
-    for(auto& kv: myBuilders) {
-        auto& pb = kv.second->thePlugin;
-        if(pb) {
-            double ttot = pb->tSetup + pb->tProcess + pb->tCalc + pb->tPlot;
-            printf("* %s\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f s\n", kv.first.c_str(),
-                   pb->tSetup, pb->tProcess, pb->tCalc, pb->tPlot, ttot);
-            p_tSetup += pb->tSetup;
-            p_tProcess += pb->tProcess;
-            p_tCalc += pb->tCalc;
-            p_tPlot += pb->tPlot;
-            tall += ttot;
-        }
+    for(auto pb: myPlugins) {
+        double ttot = pb->tSetup + pb->tProcess + pb->tCalc + pb->tPlot;
+        printf("* %s\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f s\n", pb->name.c_str(),
+                pb->tSetup, pb->tProcess, pb->tCalc, pb->tPlot, ttot);
+        p_tSetup += pb->tSetup;
+        p_tProcess += pb->tProcess;
+        p_tCalc += pb->tCalc;
+        p_tPlot += pb->tPlot;
+        tall += ttot;
     }
     printf("----- Total ------\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f s\n",
            p_tSetup, p_tProcess, p_tCalc, p_tPlot, tall);
@@ -203,15 +185,11 @@ double PluginSaver::displayTimeUse() const {
 TDirectory* PluginSaver::writeItems(TDirectory* d) {
     d = SegmentSaver::writeItems(d);
     if(myBuilders.size()) printf("Writing plugins '%s'\n", filePlugins->String().Data());
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
-            kv.second->thePlugin->writeItems(d);
+    for(auto P: myPlugins) P->writeItems(d);
     return d;
 }
 
 void PluginSaver::clearItems() {
     SegmentSaver::clearItems();
-    for(auto& kv: myBuilders)
-        if(kv.second->thePlugin)
-            kv.second->thePlugin->clearItems();
+    for(auto P: myPlugins) P->clearItems();
 }

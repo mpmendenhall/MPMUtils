@@ -28,7 +28,7 @@ SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly) {
     }
     printf("Opening SQLite3 DB '%s'...\n",dbname.c_str());
     int err = sqlite3_open_v2(dbname.c_str(), &db,
-                              readonly? SQLITE_OPEN_READONLY:SQLITE_OPEN_READWRITE, nullptr);
+                              readonly? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE, nullptr);
     if(err) {
         SMExcept e("failed_db_open");
         e.insert("dbname",dbname);

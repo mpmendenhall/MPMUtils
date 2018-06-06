@@ -60,7 +60,7 @@ public:
     virtual void setPrintSuffix(const string& sfx) { printsfx = sfx; }
 
     /// change name, and subpaths if in parent
-    void rename(const string& nm);
+    virtual void rename(const string& nm);
     /// write items to currently open directory, or specified
     TDirectory* writeItems(TDirectory* d = nullptr) override;
     /// write output ROOT file, or to new directory within parent; deletes ALL REGISTERED OBJECTS by default

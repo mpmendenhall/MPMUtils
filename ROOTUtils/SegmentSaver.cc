@@ -66,10 +66,12 @@ TObject* SegmentSaver::tryLoad(const string& oname) {
     if(!o && fIn) fIn->GetObject(oname.c_str(),o); // fall back to file base for backwards compatibility
     if(!o) {
         if(ignoreMissingHistos) {
-            printf("Warning: missing object '%s' in '%s'\n",oname.c_str(),inflname.c_str());
+            printf("Warning: missing object '%s' in '%s'\n",
+                   oname.c_str(), dirIn? dirIn->GetName() : fIn? fIn->GetName() : inflname.c_str());
         } else {
             SMExcept e("fileStructureMismatch");
-            e.insert("fileName",inflname);
+            if(fIn) e.insert("fileName", fIn->GetName());
+            if(dirIn) e.insert("dir", dirIn->GetName());
             e.insert("objectName",oname);
             throw(e);
         }

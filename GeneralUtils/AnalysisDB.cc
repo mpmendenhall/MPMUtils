@@ -6,17 +6,21 @@
 // -- Michael P. Mendenhall, 2016
 
 #include "AnalysisDB.hh"
+#include "StringManip.hh"
 #include <time.h>
 #include <cassert>
+#include <functional>
 
 AnalysisDB* AnalysisDB::myDB = nullptr;
 string AnalysisDB::dbfile = "";
 
 sqlite3_int64 AnalysisDB::createAnaRun(const string& dataname) {
-    auto stmt = loadStatement("INSERT INTO analysis_runs(dataname,anatime) VALUES (?1,?2)");
-
-    sqlite3_bind_text(stmt, 1, dataname.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_double(stmt, 2, time(nullptr));
+    auto t = time(nullptr);
+    auto runid = std::hash<string>{}(dataname + to_str(t));
+    auto stmt = loadStatement("INSERT INTO analysis_runs(run_id,dataname,anatime) VALUES (?1,?2,?3)");
+    sqlite3_bind_int64(stmt, 1, runid);
+    sqlite3_bind_text(stmt, 2, dataname.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_double(stmt, 3, t);
     busyRetry(stmt);
     sqlite3_reset(stmt);
 
@@ -29,10 +33,11 @@ sqlite3_int64 AnalysisDB::createAnaRun(const string& dataname) {
 }
 
 sqlite3_int64 AnalysisDB::getAnaVar(const string& name, const string& unit, const string& descrip) {
-    auto stmt = loadStatement("INSERT OR IGNORE INTO analysis_vars(name,unit,descrip) VALUES (?1,?2,?3)");
-    sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, unit.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, descrip.c_str(), -1, SQLITE_STATIC);
+    auto stmt = loadStatement("INSERT OR IGNORE INTO analysis_vars(var_id,name,unit,descrip) VALUES (?1,?2,?3,?4)");
+    sqlite3_bind_int64(stmt, 1, std::hash<string>{}(name));
+    sqlite3_bind_text(stmt, 2, name.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, unit.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, descrip.c_str(), -1, SQLITE_STATIC);
     busyRetry(stmt);
     sqlite3_reset(stmt);
 
@@ -56,4 +61,21 @@ void AnalysisDB::uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, dou
 
     busyRetry(stmt);
     sqlite3_reset(stmt);
+}
+
+void AnalysisDB::uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, const string& val) {
+    auto stmt = loadStatement("INSERT INTO analysis_xresults(run_id,var_id,val) VALUES (?1,?2,?3)");
+
+    sqlite3_bind_int64(stmt, 1, run_id);
+    sqlite3_bind_int64(stmt, 2, var_id);
+    sqlite3_bind_text(stmt, 3, val.c_str(), -1, SQLITE_STATIC);
+
+    busyRetry(stmt);
+    sqlite3_reset(stmt);
+}
+
+void AnaResult::display() const {
+    printf("%s [%s]:\t", name.c_str(), descrip.c_str());
+    if(xval.size()) printf("%s [%s]\n", xval.c_str(), unit.c_str());
+    else printf("%g ~ %g %s\n", val, err, unit.c_str());
 }

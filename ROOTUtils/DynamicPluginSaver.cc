@@ -47,12 +47,20 @@ void DynamicPluginSaver::Configure(const Setting& cfg) {
             }
 
             if(plugs[i].isList()) {
-                int copynum = 0;
+                int copynum = -1;
                 for(auto& c: plugs[i]) {
-                    myBuilders[pname+"_"+to_str(copynum)] = it->second->makeBuilder(c, copynum);
-                    copynum++;
+                    string rename = pname;
+                    if(copynum >= 0) rename += "_"+to_str(copynum);
+                    string rn0 = rename;
+                    c.lookupValue("rename",rename);
+                    myBuilders[rename] = it->second->makeBuilder(c, rename);
+                    if(rn0 == rename) copynum++;
                 }
-            } else myBuilders[pname] = it->second->makeBuilder(plugs[i]);
+            } else {
+                string rename = pname;
+                plugs[i].lookupValue("rename",rename);
+                myBuilders[rename] = it->second->makeBuilder(plugs[i], rename);
+            }
         }
     }
     buildPlugins();

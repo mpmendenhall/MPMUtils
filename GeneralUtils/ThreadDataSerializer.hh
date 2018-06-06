@@ -25,9 +25,13 @@ public:
     virtual ~ThreadDataSerializer() { clear_pool(); }
 
     /// Thread-safe get allocated object space, or nullptr if allocation rejected
-    virtual T* get_allocated(void* /*opts*/ = nullptr) {
+    virtual T* get_allocated(int priority = 0) {
         std::lock_guard<std::mutex> plk(pmutex);
-        if(!pool.size()) return allocate_new();
+        if(!pool.size()) {
+            if(!priority && maxAllocate && nAllocated >= maxAllocate) return nullptr;
+            nAllocated++;
+            return allocate_new();
+        }
         auto obj = pool.back();
         pool.pop_back();
         return obj;
@@ -106,6 +110,7 @@ public:
 
     pthread_t mythread;             ///< identifier for queue processing thread
     bool is_launched = false;       ///< marker for whether thread is launched
+    size_t maxAllocate = 0;         ///< max events to allocate; 0 for unlimited
 
 protected:
 
@@ -140,6 +145,7 @@ protected:
     std::mutex pmutex;          ///< mutex for pool access
     std::mutex qmutex;          ///< mutex for queue access
     std::condition_variable qready; ///< wait for queue items or hault
+    size_t nAllocated = 0;      ///< number of items allocated
     bool halt = false;          ///< processing halt flag (needs qmutex)
 };
 
