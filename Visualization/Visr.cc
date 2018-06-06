@@ -32,6 +32,8 @@ bool Visualizable::vis_on = true;
 
 namespace vsr {
 
+    vec3 operator*(const vec3& v, double s) { return vec3{v[0]*s,v[1]*s,v[2]*s}; }
+
     struct qcmd {
         qcmd(void (*f)(std::vector<float>&)): fcn(f) {}
         void (*fcn)(std::vector<float>&);
@@ -270,7 +272,16 @@ namespace vsr {
     }
     void dot(vec3 v) {
         qcmd c(_dot);
-        appendv(c.v,v*scale);
+        appendv(c.v, v*scale);
+        addCmd(c);
+    }
+
+    void _teapot(std::vector<float>& v) {
+        glutWireTeapot(v[0]);
+    }
+    void teapot(double s) {
+        qcmd c(_teapot);
+        c.v.push_back(s);
         addCmd(c);
     }
 

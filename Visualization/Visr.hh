@@ -23,13 +23,13 @@
 /// Make sure this header is only loaded once
 #define VISCONTROLLER_HH
 
-#include "Vec.hh"
 #include <vector>
 #include <deque>
+#include <array>
 
 namespace vsr {
 
-    typedef Vec<3,double> vec3;
+    typedef std::array<double,3> vec3;
 
     /// initialize visualization window
     void initWindow(const std::string& title = "OpenGL Viewer Window", double s = 1.0);
@@ -63,6 +63,8 @@ namespace vsr {
     void filledquad(float* xyz);
     /// draw dot at location
     void dot(vec3 p);
+    /// draw teapot
+    void teapot(double s = 1.0);
 
     /// start a polygon/series-of-lines
     void startLines();
