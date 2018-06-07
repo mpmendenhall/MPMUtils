@@ -53,16 +53,20 @@ namespace vsr {
     void setClearColor(float r, float g, float b, float a=0);
     /// set color for subsequent draws
     void setColor(float r, float g, float b, float a = 1);
+    /// set solid/wireframe mode
+    void setWireframe(bool w);
     /// draw specified line
     void line(vec3 s, vec3 e);
     /// draw specified plane, centered at o, +/- x and y vectors
     void plane(vec3 o, vec3 dx, vec3 dy);
-    /// draw quadrangle outline
+    /// draw quadrangle (wireframe or filled)
     void quad(float* xyz);
-    /// draw filled quadrangle
-    void filledquad(float* xyz);
     /// draw dot at location
     void dot(vec3 p);
+    /// draw ball at location
+    void ball(vec3 p, double r, int nx = 8, int ny = 8);
+    /// draw circle (polygon) with center o, normal/radius n; i line segments
+    void circle(vec3 o, vec3 n, int i = 36);
     /// draw teapot
     void teapot(double s = 1.0);
 

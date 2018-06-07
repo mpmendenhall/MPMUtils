@@ -14,10 +14,13 @@ int main(int, char**) {
     pthread_t thread;
     pthread_create(&thread, NULL, &visthread, nullptr );
 
-    for(int i=0; i<10; i++) {
+    for(int i=1; i<11; i++) {
         vsr::startRecording();
-        vsr::teapot(0.1*(i+1));
-        vsr::dot({0.5,0.3,0.2*i});
+        vsr::setColor(0,0,0.7,0.2);
+        vsr::setWireframe(i%2);
+        vsr::teapot(0.1*i);
+        vsr::setColor(0.7,0,0.7,1.0);
+        vsr::ball({0.5,0.3,0.2*i}, 0.01*i);
         vsr::stopRecording();
         vsr::pause();
     }

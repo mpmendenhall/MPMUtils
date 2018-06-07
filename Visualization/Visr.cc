@@ -20,15 +20,11 @@
  */
 
 #include "Visr.hh"
+#include "GeomCalcUtils.hh"
 #include <stdio.h>
 #include <cassert>
 #include <string>
 #include <unistd.h>
-
-#ifdef WITH_OPENGL
-#include <GL/freeglut.h>
-
-bool Visualizable::vis_on = true;
 
 namespace vsr {
 
@@ -41,8 +37,6 @@ namespace vsr {
     };
     std::deque<qcmd> commands;
     pthread_mutex_t commandLock;
-    GLuint displayList;
-    std::vector<GLuint> displaySegs;
     float scale;
     int clickx0,clicky0;
     int modifier;
@@ -52,16 +46,49 @@ namespace vsr {
     float xtrans, ytrans;
     float ar;
     bool pause_display;
+    bool wireframe = true;
     bool kill_flag = false;
     float bgR, bgG, bgB, bgA;
 
-    void doGlutLoop() {
-        glutMainLoop();
+    void addCmd(qcmd c) {
+        pthread_mutex_lock(&commandLock);
+        commands.push_back(c);
+        pthread_mutex_unlock(&commandLock);
+    }
+    void appendv(std::vector<float>& v, vec3 a) {
+        v.push_back(a[0]);
+        v.push_back(a[1]);
+        v.push_back(a[2]);
     }
 
     void set_pause() { pause_display = true; }
     bool get_pause() { return pause_display; }
     void set_kill() { kill_flag = true; }
+    void _wireframe(std::vector<float>&) { wireframe = true; }
+    void _solid(std::vector<float>&) { wireframe = false; }
+    void setWireframe(bool w) { addCmd(w? _wireframe : _solid); }
+
+    void setClearColor(float r, float g, float b, float a) {
+        bgR = r;
+        bgG = g;
+        bgB = b;
+        bgA = a;
+    }
+}
+
+#ifdef WITH_OPENGL
+#include <GL/freeglut.h>
+
+bool Visualizable::vis_on = true;
+
+namespace vsr {
+
+    GLuint displayList;
+    std::vector<GLuint> displaySegs;
+
+    void doGlutLoop() {
+        glutMainLoop();
+    }
 
     void redrawDisplay() {
         glCallLists(displaySegs.size(),GL_UNSIGNED_INT,&displaySegs.front());
@@ -78,18 +105,6 @@ namespace vsr {
     void mouseTrackingAction(int x, int y);
     void redrawIfUnlocked();
 
-    void appendv(std::vector<float>& v, vec3 a) {
-        v.push_back(a[0]);
-        v.push_back(a[1]);
-        v.push_back(a[2]);
-    }
-
-    void addCmd(qcmd c) {
-        pthread_mutex_lock(&commandLock);
-        commands.push_back(c);
-        pthread_mutex_unlock(&commandLock);
-    }
-
     void _setColor(std::vector<float>& v) {
         assert(v.size()==4);
         glColor4f(v[0],v[1],v[2],v[3]);
@@ -101,12 +116,6 @@ namespace vsr {
         c.v.push_back(b);
         c.v.push_back(a);
         addCmd(c);
-    }
-    void setClearColor(float r, float g, float b, float a) {
-        bgR = r;
-        bgG = g;
-        bgB = b;
-        bgA = a;
     }
 
     void _clearWindow(std::vector<float>&) {
@@ -131,7 +140,7 @@ namespace vsr {
         glLineWidth(1.5/viewrange);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        glTranslatef(0,0,1.0*viewrange);
+        glTranslatef(0, 0, 1.0*viewrange);
         updateViewWindow();
     }
 
@@ -206,10 +215,10 @@ namespace vsr {
     void _plane(std::vector<float>& v) {
         assert(v.size()==9);
         glBegin(GL_QUADS);
-        glVertex3f(v[0]+0.5*v[3]+0.5*v[6],v[1]+0.5*v[4]+0.5*v[7],v[2]+0.5*v[5]+0.5*v[8]);
-        glVertex3f(v[0]-0.5*v[3]+0.5*v[6],v[1]-0.5*v[4]+0.5*v[7],v[2]-0.5*v[5]+0.5*v[8]);
-        glVertex3f(v[0]-0.5*v[3]-0.5*v[6],v[1]-0.5*v[4]-0.5*v[7],v[2]-0.5*v[5]-0.5*v[8]);
-        glVertex3f(v[0]+0.5*v[3]-0.5*v[6],v[1]+0.5*v[4]-0.5*v[7],v[2]+0.5*v[5]-0.5*v[8]);
+        glVertex3f(v[0]+0.5*v[3]+0.5*v[6], v[1]+0.5*v[4]+0.5*v[7], v[2]+0.5*v[5]+0.5*v[8]);
+        glVertex3f(v[0]-0.5*v[3]+0.5*v[6], v[1]-0.5*v[4]+0.5*v[7], v[2]-0.5*v[5]+0.5*v[8]);
+        glVertex3f(v[0]-0.5*v[3]-0.5*v[6], v[1]-0.5*v[4]-0.5*v[7], v[2]-0.5*v[5]-0.5*v[8]);
+        glVertex3f(v[0]+0.5*v[3]-0.5*v[6], v[1]+0.5*v[4]-0.5*v[7], v[2]+0.5*v[5]-0.5*v[8]);
         glEnd();
     }
     void plane(vec3 o, vec3 dx, vec3 dy) {
@@ -220,9 +229,38 @@ namespace vsr {
         addCmd(c);
     }
 
+    void _polyline(std::vector<float>& v) {
+        glBegin(GL_LINE_LOOP);
+        for(unsigned int i=0; i+2<v.size(); i += 3) glVertex3f(v[i],v[i+1],v[i+2]);
+        glEnd();
+    }
+
+    void circle(vec3 o, vec3 n, int i) {
+        int j0 = 0;
+        for(auto j: {1,2}) if(fabs(n[j]) > fabs(n[j0])) j0 = j;
+        double dz[] = {0,0,0};
+        dz[(j0+1)%3] = 1;
+
+        auto r = makeunit(n.data());
+        r *= scale;
+        double dx[3];
+        double dy[3];
+        ortho_frame(dz, n.data(), dx, dy);
+
+        qcmd cp(_polyline);
+        for(int p=0; p<i; p++) {
+            double th = p*2*M_PI/i;
+            double c = r*cos(th);
+            double s = r*sin(th);
+            for(auto j: {0,1,2}) cp.v.push_back(o[j]*scale+c*dx[j]+s*dy[j]);
+        }
+        addCmd(cp);
+    }
+
     void _quad(std::vector<float>& xyz) {
         assert(xyz.size()==12);
-        glBegin(GL_LINE_LOOP);
+        if(wireframe) glBegin(GL_LINE_LOOP);
+        else glBegin(GL_QUADS);
         glVertex3f(xyz[0],xyz[1],xyz[2]);
         glVertex3f(xyz[3],xyz[4],xyz[5]);
         glVertex3f(xyz[9],xyz[10],xyz[11]);
@@ -236,19 +274,20 @@ namespace vsr {
         addCmd(c);
     }
 
-    void _filledquad(std::vector<float>& xyz) {
-        assert(xyz.size()==12);
-        glBegin(GL_QUADS);
-        glVertex3f(xyz[0],xyz[1],xyz[2]);
-        glVertex3f(xyz[3],xyz[4],xyz[5]);
-        glVertex3f(xyz[9],xyz[10],xyz[11]);
-        glVertex3f(xyz[6],xyz[7],xyz[8]);
-        glEnd();
+    void _ball(std::vector<float>& v) {
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glTranslatef(v[0],v[1],v[2]);
+        if(wireframe) glutWireSphere(v[3], v[4], v[5]);
+        else glutSolidSphere(v[3], v[4], v[5]);
+        glPopMatrix();
     }
-    void filledquad(float* xyz) {
-        qcmd c(_filledquad);
-        c.v = std::vector<float>(xyz,xyz+12);
-        for(size_t i = 0; i < 12; i++) c.v[i] *= scale;
+    void ball(vec3 p, double r, int nx, int ny) {
+        qcmd c(_ball);
+        appendv(c.v, p*scale);
+        c.v.push_back(r*scale);
+        c.v.push_back(nx);
+        c.v.push_back(ny);
         addCmd(c);
     }
 
@@ -277,7 +316,8 @@ namespace vsr {
     }
 
     void _teapot(std::vector<float>& v) {
-        glutWireTeapot(v[0]);
+        if(wireframe) glutWireTeapot(v[0]);
+        else glutSolidTeapot(v[0]);
     }
     void teapot(double s) {
         qcmd c(_teapot);
@@ -367,9 +407,9 @@ namespace vsr {
     void updateViewWindow() {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glTranslated(0,0,1); // viewer sits at z=+1, looking in -z direction
-        // 		left,					right,					bottom,				top,				distance to near,	distance to far
-        glOrtho(-viewrange*ar + xtrans, viewrange*ar + xtrans, -viewrange + ytrans, viewrange + ytrans, 0, 					10);
+        glTranslatef(0,0,1); // viewer sits at z=+1, looking in -z direction
+        //      left,                   right,                 bottom,              top,                distance to near, distance to far
+        glOrtho(-viewrange*ar + xtrans, viewrange*ar + xtrans, -viewrange + ytrans, viewrange + ytrans, 0,                10);
     }
 
     void redrawIfUnlocked() {
@@ -452,23 +492,20 @@ namespace vsr {
     void startRecording(bool) {}
     void stopRecording() {}
     void pause() {}
-    void setClearColor(float, float, float, float) {}
     void setColor(float, float, float, float) {}
     void line(vec3, vec3) {}
     void plane(vec3, vec3, vec3) {}
     void quad(float*) {}
-    void filledquad(float*) {}
     void dot(vec3) {}
+    void ball(vec3, double, int, int) { }
+    void circle(vec3, vec3, int) { }
+    void teapot(double) { }
 
     void startLines() {}
     void vertex(vec3) {}
     void endLines() {}
 
     void doGlutLoop() {}
-
-    void set_pause() {}
-    bool get_pause() { return false; }
-    void set_kill() {}
 }
 
 #endif
