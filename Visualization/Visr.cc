@@ -1,23 +1,5 @@
 /// \file Visr.cc
-/*
- * Visr.cc, part of the MPMUtils package
- * Copyright (c) 2007-2014 Michael P. Mendenhall
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
+// Michael P. Mendenhall, 2018
 
 #include "Visr.hh"
 #include "GeomCalcUtils.hh"
@@ -40,7 +22,7 @@ namespace vsr {
     float scale;
     int clickx0,clicky0;
     int modifier;
-    float winwidth, winheight;
+    int winwidth, winheight;
     float viewrange;
     float xrot,yrot,zrot;
     float xtrans, ytrans;
@@ -49,8 +31,10 @@ namespace vsr {
     bool wireframe = true;
     bool kill_flag = false;
     float bgR, bgG, bgB, bgA;
+    bool window_open = false;
 
     void addCmd(qcmd c) {
+        if(!window_open) return;
         pthread_mutex_lock(&commandLock);
         commands.push_back(c);
         pthread_mutex_unlock(&commandLock);
@@ -128,6 +112,7 @@ namespace vsr {
     }
 
     void pause() {
+        if(!Visualizable::vis_on || !window_open) return;
         pause_display = true;
         printf("Press [enter] in visualization window to continue...\n");
         while(pause_display) usleep(50000);
@@ -157,6 +142,7 @@ namespace vsr {
         glNewList(displaySegs.back(), GL_COMPILE);
     }
     void startRecording(bool newseg) {
+        if(!window_open) return;
         pthread_mutex_lock(&commandLock);
         if(newseg) commands.clear();
         qcmd c(_startRecording);
@@ -172,8 +158,31 @@ namespace vsr {
 
     }
     void stopRecording() {
+        if(!window_open) return;
         addCmd(qcmd(_stopRecording));
         pthread_mutex_unlock(&commandLock);
+    }
+
+    std::string screendump_fname;
+    void _screendump(std::vector<float>&) {
+        if(!screendump_fname.size()) return;
+        printf("Saving screendump to '%s'\n", screendump_fname.c_str());
+        auto fout = fopen(screendump_fname.c_str(),"wb");
+        screendump_fname = "";
+
+        std::vector<char> pbuff(3*winwidth*winheight);
+        glReadBuffer(GL_FRONT);
+        glReadPixels(0, 0, winwidth, winheight, GL_BGR, GL_UNSIGNED_BYTE, pbuff.data());
+
+        short fhead[] = { 0, 2, 0, 0, 0, 0, short(winwidth), short(winheight), 24 }; // .tga file header
+        fwrite(fhead, sizeof(fhead), 1, fout);
+        fwrite(pbuff.data(), pbuff.size(), 1, fout);
+        fclose(fout);
+    }
+    void screendump(const char* fname) {
+        if(!window_open || screendump_fname.size()) return;
+        screendump_fname = fname;
+        addCmd(qcmd(_screendump));
     }
 
     void _line(std::vector<float>& v) {
@@ -383,6 +392,8 @@ namespace vsr {
         glutSpecialFunc(&specialKeypress);
         glutIdleFunc(&redrawIfUnlocked);
 
+        window_open = true;
+
         resetViewTransformation();
         setClearColor(1.0,1.0,1.0,0.0);
         startRecording(true);
@@ -426,11 +437,11 @@ namespace vsr {
         usleep(10000);
     }
 
-    void keypress(unsigned char key, int, int) {
-        if(key == 32 || key == 13) // spacebar or return
-            pause_display = false;
-        if(key == 27) // escape
-            resetViewTransformation();
+    void keypress(unsigned char key, int x, int y) {
+        if(key == 32 || key == 13) pause_display = false; // spacebar or return
+        else if(key == 27) resetViewTransformation();     // escape
+        else if(key == 100) screendump("screendump.tga"); // 'd'
+        else printf("Un-assigned keypress %u at %i,%i\n", key, x, y);
     }
 
     void specialKeypress(int, int, int) {
@@ -500,6 +511,7 @@ namespace vsr {
     void ball(vec3, double, int, int) { }
     void circle(vec3, vec3, int) { }
     void teapot(double) { }
+    void screendump(const char*) { }
 
     void startLines() {}
     void vertex(vec3) {}
