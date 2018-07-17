@@ -25,7 +25,7 @@
 #include <TString.h>
 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
-OutputManager(nm,pnt), inflname(inflName), isCalculated(false), inflAge(0) {
+OutputManager(nm,pnt), inflname(inflName) {
     // open file to load existing data
     fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : nullptr;
     smassert(!fIn || !fIn->IsZombie(),"unreadable_file");
@@ -34,23 +34,32 @@ OutputManager(nm,pnt), inflname(inflName), isCalculated(false), inflAge(0) {
         inflAge = fileAge(inflname);
         printf("Loading data from %s [%.1f hours old]...\n",inflname.c_str(),inflAge/3600.);
     } else { // try sub-directory of parent if file not specified
-        auto PSS = dynamic_cast<SegmentSaver*>(pnt);
-        if(PSS && PSS->dirIn) {
-            dirIn = PSS->dirIn->GetDirectory(nm.c_str());
-            if(!dirIn) dirIn = PSS->dirIn; // fallback for backwards compatibility prior to subdirectories
-        }
+        auto PSS = dynamic_cast<SegmentSaver*>(parent);
+        if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(nm.c_str());
     }
-
-    // load normalization data
-    ignoreMissingHistos = true;
-    normalization = registerNamedVector("normalization", 0);
-    ignoreMissingHistos = false;
 }
 
 SegmentSaver::~SegmentSaver() {
     if(fIn) {
         fIn->Close();
         delete fIn;
+    }
+}
+
+bool SegmentSaver::isNormalized() {
+    if(!normalization) {
+        ignoreMissingHistos = true;
+        normalization = registerNamedVector("normalization", 0);
+        ignoreMissingHistos = false;
+    }
+    return normalization->GetNrows();
+}
+
+void SegmentSaver::rename(const string& nm) {
+    OutputManager::rename(nm);
+    if(!fIn) {
+        auto PSS = dynamic_cast<SegmentSaver*>(parent);
+        if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(nm.c_str());
     }
 }
 

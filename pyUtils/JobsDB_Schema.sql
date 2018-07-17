@@ -28,6 +28,7 @@ CREATE TABLE resources (
     available REAL      -- resource amount available for all jobs
 );
 CREATE UNIQUE INDEX idx_resources ON resources(name);
+INSERT INTO resources(name,descrip,available) VALUES ("walltime","job walltime [s]",1e9);
 
 -- Resources requested by a job
 CREATE TABLE resource_use (

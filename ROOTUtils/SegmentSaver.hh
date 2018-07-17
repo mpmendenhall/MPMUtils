@@ -46,6 +46,8 @@ public:
     const string& getInflName() const { return inflname; }
     /// get age of analyzer's input file
     double getInflAge() const { return inflAge; }
+    /// change name, and subpaths if in parent
+    void rename(const string& nm) override;
 
     /// generate or restore from file a saved TH1F histogram
     TH1* registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax);
@@ -78,7 +80,7 @@ public:
     /// scale all saved histograms by a factor
     virtual void scaleData(double s);
     /// check whether normalization has been performed
-    virtual bool isNormalized() const { return normalization->GetNrows(); }
+    bool isNormalized();
 
     /// add histograms, cumulatives from another SegmentSaver of the same type
     virtual void addSegment(const SegmentSaver& S, double sc = 1.);
@@ -104,7 +106,7 @@ public:
     /// optional cleanup at end of data loading
     virtual void finishData() { }
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
-    virtual void normalize() {  normalization->ResizeTo(1); (*normalization)(0) = 1;  }
+    virtual void normalize() { if(!isNormalized()) { normalization->ResizeTo(1); (*normalization)(0) = 1; }  }
     /// virtual routine for generating calculated hists
     virtual void calculateResults() { isCalculated = true; }
     /// virtual routine for generating output plots
@@ -114,11 +116,11 @@ public:
     /// virtual routine to calculate incremental changes from preceding timestep
     virtual void checkpoint(const SegmentSaver&) { }
 
-    TFile* fIn;                 ///< input file to read in histograms from
-    TDirectory* dirIn = nullptr;   ///< particular sub-directory for reading histograms
-    string inflname;            ///< where to look for input file
-    bool isCalculated;          ///< flag for whether calculation step has been completed
-    TVectorD* normalization;    ///< normalization information; meaning defined in subclasses
+    TFile* fIn = nullptr;               ///< input file to read in histograms from
+    TDirectory* dirIn = nullptr;        ///< particular sub-directory for reading histograms
+    string inflname;                    ///< where to look for input file
+    bool isCalculated = false;          ///< flag for whether calculation step has been completed
+    TVectorD* normalization = nullptr;  ///< normalization information; meaning defined in subclasses
 
     double tSetup = 0;          ///< performance profiling: time to run constructor
     double tProcess = 0;        ///< permormance profiling: time to process data
@@ -133,7 +135,7 @@ protected:
 
     map<string,TH1*> saveHists;         ///< saved cumulative histograms
     map<string,TCumulative*> cumDat;    ///< non-TH1-derived cumulative datatypes
-    double inflAge;                     ///< age of input file [s]; 0 for brand-new files
+    double inflAge = 0;                 ///< age of input file [s]; 0 for brand-new files
 };
 
 /// utility function to remove color axis data, to force re-draw with current dimensions

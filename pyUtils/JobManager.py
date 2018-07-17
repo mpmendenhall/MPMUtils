@@ -77,13 +77,13 @@ def find_resource_id(curs, name):
     resource_ids[name] = res[0][0] if len(res) == 1 else None
     return resource_ids[name]
 
-def create_resource(curs, name, descrip, lim = 1.0):
+def create_resource(curs, name, descrip, lim = None):
     """Create named resource; return id"""
     curs.execute("INSERT INTO resources(name,descrip,available) VALUES (?,?,?)", (name, descrip, lim))
     resource_ids[name] = curs.lastrowid
     return resource_ids[name]
 
-def get_resource_id(curs, name, descrip, lim = 1.0):
+def get_resource_id(curs, name, descrip, lim = None):
     """Find or create new named resource; return ID"""
     eid = find_resource_id(curs, name)
     if eid is not None: return eid
@@ -340,6 +340,8 @@ def make_upload_jobs(curs, jname, jcmds, res_use):
     for (n,jc) in enumerate(jcmds):
         jfl = jobdir + "/job_%i.sh"%n
         logfl = jobdir+"/log_%i.txt"%n
+        try: os.remove(logfl)
+        except: pass
         if type(jc)==type(""): open(jfl,"w").write(jc)
         else:
             logfl = jc[1]
@@ -501,8 +503,8 @@ def run_commandline():
         return
 
     cores_resource_id = get_resource_id(curs,"cores","number of cores")
+    walltime_resource_id = get_resource_id(curs, "walltime", "run wall time [s]", 1e9)
     set_resource_limit(curs, cores_resource_id, options.limit)
-    get_walltime_requested(curs, 0) # force creation of walltime limit category
     display_resource_use(curs)
     summarize_DB_runstatus(curs)
 

@@ -22,7 +22,9 @@
 #ifndef STRINGMANIP_HH
 #define STRINGMANIP_HH
 
+/// convert text to const char* (used below with macro expansion)
 #define STRINGIFY2(X) #X
+/// convert #define variable contents to const char*
 #define STRINGIFY(X) STRINGIFY2(X)
 
 #include <string>

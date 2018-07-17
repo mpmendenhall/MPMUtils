@@ -60,7 +60,7 @@ TH1* cumulativeHist(const TH1& h, bool normalize = false, bool reverse = false);
 double hcount_from_end(const TH1& h, double c);
 
 /// Divide out histogram bin width, for differential spectrum (with optional extra scale factor)
-void normalize_to_bin_width(TH1* f, double xscale = 1.);
+void normalize_to_bin_width(TH1* f, double xscale = 1., const string& ytitle = "");
 /// Divide out 2D histogram bin area (with optional extra scale factor)
 void normalize_to_bin_area(TH2* h, double xscale = 1.);
 

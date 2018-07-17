@@ -144,7 +144,7 @@ protected:
 
     std::mutex pmutex;          ///< mutex for pool access
     std::mutex qmutex;          ///< mutex for queue access
-    std::condition_variable qready; ///< wait for queue items or hault
+    std::condition_variable qready; ///< wait for queue items or halt
     size_t nAllocated = 0;      ///< number of items allocated
     bool halt = false;          ///< processing halt flag (needs qmutex)
 };

@@ -53,13 +53,13 @@ void DynamicPluginSaver::Configure(const Setting& cfg) {
                     if(copynum >= 0) rename += "_"+to_str(copynum);
                     string rn0 = rename;
                     c.lookupValue("rename",rename);
-                    myBuilders[rename] = it->second->makeBuilder(c, rename);
+                    myBuilders[rename] = it->second->makeBuilder(c);
                     if(rn0 == rename) copynum++;
                 }
             } else {
                 string rename = pname;
                 plugs[i].lookupValue("rename",rename);
-                myBuilders[rename] = it->second->makeBuilder(plugs[i], rename);
+                myBuilders[rename] = it->second->makeBuilder(plugs[i]);
             }
         }
     }
