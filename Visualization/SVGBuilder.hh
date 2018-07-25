@@ -1,10 +1,10 @@
 /// \file SVGBuilder.hh Scalable Vector Graphics XML tags
-// Michael P. Mendenhall, LLNL 2017
+// Michael P. Mendenhall, 2017
 
 #ifndef SVGBUILDER_HH
 #define SVGBUILDER_HH
 
-#include "XMLBuilder.hh"
+#include "XMLTag.hh"
 #include "ColorSpec.hh"
 #include "BBox.hh"
 #include <fstream>
@@ -20,12 +20,12 @@ namespace SVG {
     typedef std::array<double,2> xypoint;
 
     /// XML builder object with a bounding box calculation
-    class BBXML: public XMLBuilder {
+    class BBXML: public XMLTag {
     public:
-	/// Convenience typedef for 2D bounding boxes
-	typedef BBox<2,double> BBox2;
+        /// Convenience typedef for 2D bounding boxes
+        typedef BBox<2,double> BBox2;
         /// Constructor
-        BBXML(const string& nm): XMLBuilder(nm) { }
+        BBXML(const string& nm): XMLTag(nm) { }
         /// Get (override to calculate) bounding box
         virtual BBox2 getBB() { return BB; }
     protected:
@@ -35,7 +35,7 @@ namespace SVG {
         void calcChildrenBB() {
             BB = BBox2::nullBox();
             for(auto& c: children) {
-                auto cc = std::dynamic_pointer_cast<BBXML>(c);
+                auto cc = dynamic_cast<BBXML*>(c);
                 if(cc) BB += cc->getBB();
             }
         }
@@ -70,6 +70,7 @@ namespace SVG {
         /// Calculate bounding box from contents
         BBox2 getBB() override {
             calcChildrenBB();
+            if(BB == BBox2::nullBox()) return BB;
             for(auto i:{0,1}) { BB.lo[i] *= scale[i]; BB.hi[i] *= scale[i]; }
             BB.offset(translation);
             return BB;
@@ -94,14 +95,14 @@ namespace SVG {
         }
     };
 
-    class defs: public XMLBuilder {
+    class defs: public XMLTag {
     public:
-        defs(): XMLBuilder("defs") { }
+        defs(): XMLTag("defs") { }
     };
 
-    class title: public XMLBuilder {
+    class title: public XMLTag {
     public:
-        title(const string& t): XMLBuilder("title") { addChild(make_shared<XMLText>(t)); oneline = true; }
+        title(const string& t): XMLTag("title") { addChild(new XMLText(t)); oneline = true; }
     };
 
     class line: public BBXML {
@@ -123,14 +124,21 @@ namespace SVG {
         rect(double x, double y, double dx, double dy, const string& style = ""): BBXML("rect") {
             if(dx < 0) { x += dx; dx = fabs(dx); }
             if(dy < 0) { y += dy; dy = fabs(dy); }
-            addAttr("x",x);
-            addAttr("y",y);
-            addAttr("width",dx);
-            addAttr("height",dy);
             if(style.size()) attrs["style"] = style;
-
             BB.expand({{x,y}});
             BB.expand({{x+dx,y+dy}});
+        }
+        rect(BBox2 B, const string& style = ""): BBXML("rect") {
+            if(style.size()) attrs["style"] = style;
+            BB = B;
+        }
+        void setBB(BBox2 B) { BB = B; }
+        void prepare() override {
+            BBXML::prepare();
+            addAttr("x", BB.pos(0,0));
+            addAttr("y", BB.pos(0,1));
+            addAttr("width", BB.dl(0));
+            addAttr("height", BB.dl(1));
         }
     };
 
@@ -186,39 +194,40 @@ namespace SVG {
     };
 
 
-    class gradstop: public XMLBuilder {
+    class gradstop: public XMLTag {
     public:
-        gradstop(double l, color::rgb c): XMLBuilder("stop") {
+        gradstop(double l, color::rgb c): XMLTag("stop") {
             addAttr("offset",l);
             attrs["stop-color"] = "#"+c.asHexString();
             if(c.a != 1) addAttr("stop-opacity",c.a);
         }
     };
 
-    class lingradient: public XMLBuilder {
+    class lingradient: public XMLTag {
     public:
-        lingradient(const color::Gradient& G, const string& id, double x1, double y1, double x2, double y2): XMLBuilder("linearGradient") {
+        lingradient(const color::Gradient& G, const string& id, double x1, double y1, double x2, double y2): XMLTag("linearGradient") {
             attrs["id"] = id;
             addAttr("x1",x1);
             addAttr("y1",y1);
             addAttr("x2",x2);
             addAttr("y2",y2);
-            for(auto const& s: G.getStops()) addChild(make_shared<gradstop>(s.first, s.second.first));
+            for(auto const& s: G.getStops()) addChild(new gradstop(s.first, s.second.first));
         }
 
         string idstr() const { return "url(#" + attrs.find("id")->second + ")"; }
     };
 
-    class text: public XMLBuilder {
+    class text: public BBXML {
     public:
-        text(const string& t, double x, double y, const string& fill = "black"): XMLBuilder("text"), myText(make_shared<XMLText>(t)) {
+        text(const string& t, double x, double y, const string& fill = "black"): BBXML("text"), myText(new XMLText(t)) {
             addAttr("x",x);
             addAttr("y",y);
             attrs["fill"] = fill;
             oneline = true;
             addChild(myText);
+            BB.expand({{x,y}});
         }
-        shared_ptr<XMLText> myText;
+        XMLText* myText;
     };
 
     /// set fill color
@@ -227,14 +236,14 @@ namespace SVG {
         if(c.a != 1) attrs["fill-opacity"] = to_str(c.a);
     }
     /// set fill color
-    inline void set_fill(XMLBuilder& X, const color::rgb& c) { set_fill(X.attrs, c); }
+    inline void set_fill(XMLTag& X, const color::rgb& c) { set_fill(X.attrs, c); }
     /// set stroke color
     inline void set_stroke(map<string,string>& attrs, const color::rgb& c) {
         attrs["stroke"] = "#"+c.asHexString();
         if(c.a != 1) attrs["stroke-opacity"] = to_str(c.a);
     }
     /// set stroke color
-    inline void set_stroke(XMLBuilder& X, const color::rgb& c) { set_stroke(X.attrs, c); }
+    inline void set_stroke(XMLTag& X, const color::rgb& c) { set_stroke(X.attrs, c); }
 
     /// SVG document outline convenience class
     class SVGDoc {

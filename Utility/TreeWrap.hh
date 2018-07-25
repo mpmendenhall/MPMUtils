@@ -1,5 +1,5 @@
 /// \file TreeWrap.hh Utility wrapper to organize node classes into tree structure
-// Michael P. Mendenhall, LLNL 2018
+// Michael P. Mendenhall, 2018
 
 #ifndef TREEWRAP_HH
 #define TREEWRAP_HH
