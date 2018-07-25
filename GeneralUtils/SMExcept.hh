@@ -1,7 +1,7 @@
 /// \file SMExcept.hh exception class
 /*
  * SMExcept.hh, part of the MPMUtils package.
- * Copyright (c) 2014 Michael P. Mendenhall
+ * Copyright (c) 2018 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,16 +30,17 @@
 class SMExcept: public std::exception, public Stringmap {
 public:
     /// constructor
-    SMExcept(const string& tp);
-    /// destructor
-    ~SMExcept() throw() {}
+    SMExcept(const string& tp) { insert("type",tp); }
     /// display error
-    virtual const char* what() const throw();
+    const char* what() const throw() override { return (msg = toString()).c_str(); }
     /// string for holding error message
     mutable string msg;
 };
 
 /// replacement for assert() that throws an SMExcept
-void smassert(bool b, const string& tp = "assert_error", const Stringmap& m = Stringmap());
+inline void smassert(bool b, const string& tp = "assert_error", const Stringmap& m = Stringmap()) {
+    if(b) return;
+    SMExcept e(tp); e += m; throw e;
+}
 
 #endif

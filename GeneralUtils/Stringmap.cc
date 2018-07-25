@@ -21,81 +21,21 @@
 
 #include "Stringmap.hh"
 
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <utility>
-#include "StringManip.hh"
-#include "PathUtils.hh"
-#include "SMExcept.hh"
-
 Stringmap::Stringmap(const string& str) {
     auto pairs = split(str,"\t");
     for(auto const& s: pairs) {
         auto keyval = split(s,"=");
-        if(keyval.size() != 2)
-            continue;
-        dat.emplace(strip(keyval[0]),strip(keyval[1]));
+        if(keyval.size() != 2) continue;
+        emplace(strip(keyval[0]),strip(keyval[1]));
     }
-}
-
-void Stringmap::insert(const string& s, const string& v) {
-    dat.emplace(s,v);
-}
-
-void Stringmap::insert(const string& s, double d) {
-    insert(s,to_str(d));
-}
-
-void Stringmap::erase(const string& s) { dat.erase(s); }
-
-vector<string> Stringmap::retrieve(const string& s) const {
-    vector<string> v;
-    for(multimap<string,string>::const_iterator it = dat.lower_bound(s); it != dat.upper_bound(s); it++)
-        v.push_back(it->second);
-    return v;
-}
-
-string Stringmap::getDefault(const string& s, const string& d) const {
-    multimap<string,string>::const_iterator it = dat.find(s);
-    if(it == dat.end())
-        return d;
-    return it->second;
 }
 
 string Stringmap::toString() const {
     string s;
-    for(auto const& kv: dat)
-        s += "\t" + kv.first + " = " + kv.second;
+    for(auto const& kv: *this) s += "\t" + kv.first + " = " + kv.second;
     return s;
 }
 
-void Stringmap::display(string linepfx) const {
-    for(auto const& kv: dat)
-        std::cout << linepfx << kv.first << ": " << kv.second << "\n";
-}
-
-
-double Stringmap::getDefault(const string& k, double d) const {
-    string s = getDefault(k,"");
-    if(!s.size())
-        return d;
-    std::stringstream ss(s);
-    ss >> d;
-    return d;
-}
-
-vector<double> Stringmap::retrieveDouble(const string& k) const {
-    vector<double> v;
-    double d;
-    for(auto const& ss: retrieve(k)) {
-        std::stringstream s(ss);
-        s >> d;
-        v.push_back(d);
-    }
-    return v;
-}
-
-void Stringmap::mergeInto(Stringmap& S) const {
-    for(auto const& kv: dat) S.insert(kv.first,kv.second);
+void Stringmap::display(const string& linepfx) const {
+    for(auto const& kv: *this) std::cout << linepfx << kv.first << ": " << kv.second << "\n";
 }

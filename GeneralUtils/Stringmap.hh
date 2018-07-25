@@ -1,7 +1,7 @@
 /// \file Stringmap.hh wrapper for multimap<string,string> with useful functions
 /*
  * Stringmap.hh, part of the MPMUtils package.
- * Copyright (c) 2014 Michael P. Mendenhall
+ * Copyright (c) 2018 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,56 +24,80 @@
 
 #include <map>
 #include <vector>
-#include <string>
+#include "StringManip.hh"
 
-using std::map;
 using std::multimap;
 using std::vector;
 using std::string;
 
-/// wrapper for multimap<string,string> with useful functions
-class Stringmap {
+/// wrapper for multimap with extra convenience functions
+template<class K, class V>
+class xmultimap: public multimap<K,V> {
+public:
+    /// get first key value (string) or default
+    V getDefault(const K& k, const V& d) const {
+        auto it = this->find(k);
+        return it == this->end()? d : it->second;
+    }
+
+    /// retrieve key values
+    vector<V> retrieve(const K& k) const {
+        vector<V> v;
+        for(auto it = this->lower_bound(k); it != this->upper_bound(k); it++) v.push_back(it->second);
+        return v;
+    }
+
+    /// insert key/(string)value pair
+    void insert(const K& k, const V& v) { this->emplace(k,v); }
+
+    /// merge data from another multimap
+    void operator+=(const multimap<K,V>& M) { for(auto& kv: M) this->emplace(kv); }
+};
+
+/// wrapper for map to string with double retrieval
+
+
+/// multimap converting between double, string
+template<class K>
+class xmultimapS: public xmultimap<K,string> {
+public:
+
+    using xmultimap<K,string>::insert;
+    using xmultimap<K,string>::getDefault;
+
+    /// insert key/(double)value
+    void insert(const K& k, double d) {  this->insert(k,to_str(d)); }
+
+    /// get first key value (double) or default
+    double getDefault(const K& k, double d) const {
+        string s = this->getDefault(k,"");
+        if(!s.size()) return d;
+        std::stringstream ss(s);
+        ss >> d;
+        return d;
+    }
+
+    /// retrieve key values as doubles
+    vector<double> retrieveDouble(const K& k) const {
+        vector<double> v;
+        double d;
+        for(auto const& ss: retrieve(k)) {
+            std::stringstream s(ss);
+            s >> d;
+            v.push_back(d);
+        }
+        return v;
+    }
+};
+
+class Stringmap: public xmultimapS<string> {
 public:
     /// constructor from a string
     Stringmap(const string& str = "");
-    /// destructor
-    virtual ~Stringmap() {}
-
-
-    /// insert key/(string)value pair
-    void insert(const string& str, const string& v);
-    /// insert key/(double)value
-    void insert(const string& str, double d);
-    /// retrieve key values
-    vector<string> retrieve(const string& str) const;
-    /// get first key value (string) or default
-    string getDefault(const string& str, const string& d) const;
-    /// return number of elements
-    unsigned int size() const { return dat.size(); }
-    /// return count of entries with key
-    unsigned int count(const string& str) const { return dat.count(str); }
-    /// serialize to a string
+    /// convert to string
     string toString() const;
-
-    /// get first key value (double) or default
-    double getDefault(const string& str, double d) const;
-    /// retrieve key values as doubles
-    vector<double> retrieveDouble(const string& str) const;
-    /// remove a key
-    void erase(const string& str);
-
-    /// display to screen
-    void display(string linepfx = "") const;
-
-    /// merge data from another stringmap
-    void operator+=(const Stringmap& S) { S.mergeInto(*this); }
-
-    multimap<string, string> dat;       ///< key-value multimap
-
-protected:
-
-    /// merge data into another stringmap
-    void mergeInto(Stringmap& S) const;
+    /// display to stdout
+    void display(const string& linepfx = "") const;
 };
 
 #endif
