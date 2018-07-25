@@ -5,6 +5,7 @@
 #define ORDEREDWINDOW_HH
 
 #include "RecastIt.hh"
+#include "SFINAEFuncs.hh"
 #include <deque>
 #include <cassert>
 #include <stdio.h>
@@ -73,14 +74,6 @@ protected:
     /// delete oldest object off "older" queue, calling dispose(); decrement imid to point to same item
     virtual void disposeLo();
 };
-
-template<typename T>
-auto disp_imp(const T& o, int) -> decltype(o.display(), void()) { o.display(); }
-template<typename T>
-auto disp_imp(const T& o, long) -> decltype(o, void()) { printf("object\n"); }
-/// SFINAE black magic to display object if T::display exists
-template<typename T>
-auto dispObj(const T& o) -> decltype(disp_imp(o,0), void()) { disp_imp(o,0); }
 
 /// "Coincidence window" analysis base class
 template<class T>
