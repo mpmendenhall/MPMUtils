@@ -66,4 +66,36 @@ public:
     string contents;    ///< text to include between tags
 };
 
+/// Base class for objects that can provide XML output ``on demand''
+class _XMLProvider {
+public:
+    /// Constructor
+    _XMLProvider(const string& name): tagname(name) { }
+    /// build XML output
+    virtual XMLTag* makeXML();
+    /// Add a tag attribute
+    virtual void addAttr(const string& nm, const string& val) { xattrs[nm] = val; }
+    /// Add numerical attribute
+    virtual void addAttr(const string& nm, double val) { addAttr(nm, XMLTag::to_str(val)); }
+
+    string tagname;                     ///< this item's tag name
+
+protected:
+    /// add class-specific XML data; subclass me!
+    virtual void _makeXML(XMLTag&) { }
+
+    map<string,string> xattrs;          ///< tag attributes
+};
+
+/// Tree of XML-providing objects
+class XMLProvider: public TreeWrap<_XMLProvider> {
+public:
+    /// Constructor
+    using TreeWrap<_XMLProvider>::TreeWrap;
+    /// Destructor, releasing ownership of child objects
+    virtual ~XMLProvider() { children.clear(); }
+    /// build XML output
+    XMLTag* makeXML() override;
+};
+
 #endif

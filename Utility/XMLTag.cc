@@ -37,3 +37,18 @@ void XMLTag::write(ostream& o, unsigned int ndeep, const string& indent) {
         closeTag(o,true);
     }
 }
+
+//////////////////////////////////////////////////
+
+XMLTag* _XMLProvider::makeXML() {
+    auto X = new XMLTag(tagname);
+    X->attrs = xattrs;
+    _makeXML(*X);
+    return X;
+}
+
+XMLTag* XMLProvider::makeXML() {
+    auto X = _XMLProvider::makeXML();
+    for(auto c: children) X->addChild(c->makeXML());
+    return X;
+}

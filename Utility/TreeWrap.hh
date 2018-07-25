@@ -4,14 +4,15 @@
 #ifndef TREEWRAP_HH
 #define TREEWRAP_HH
 
-#include <boost/core/noncopyable.hpp>
 #include <vector>
 using std::vector;
 
 /// Tree wrapper class
 template<class T>
-class TreeWrap: public T, private boost::noncopyable {
+class TreeWrap: public T {
 public:
+    /// Constructor inherited from base class
+    using T::T;
     /// Destructor, manages child nodes
     virtual ~TreeWrap() { for(auto c: children) delete c; }
 
@@ -60,7 +61,7 @@ public:
     TreeWrap<T>* getParent() { return parent; }
     /// convenience for adding children
     template<class U>
-    U* addChild(U* W) { if(W) { children.push_back(W); W->parent = this; } return W; }
+    U* addChild(U* W) { if(W) { children.push_back(W); W->TreeWrap<T>::parent = this; } return W; }
 
 protected:
     TreeWrap<T>* parent = nullptr;  ///< parent node
