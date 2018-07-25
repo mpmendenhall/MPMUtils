@@ -132,21 +132,18 @@ namespace vsr {
     void _startRecording(std::vector<float>& v) {
         glFlush();
         glFinish();
-        if(!v.size()) {
+        if(v.size()) {
             if(displaySegs.size() && glIsList(displaySegs.back()))
                 glDeleteLists(displaySegs.back(),1);
-            else
-                displaySegs.push_back(glGenLists(1));
-        } else
-            displaySegs.push_back(glGenLists(1));
+            else displaySegs.push_back(glGenLists(1));
+        } else displaySegs.push_back(glGenLists(1));
         glNewList(displaySegs.back(), GL_COMPILE);
     }
     void startRecording(bool newseg) {
         if(!window_open) return;
         pthread_mutex_lock(&commandLock);
-        if(newseg) commands.clear();
         qcmd c(_startRecording);
-        if(!newseg) c.v.push_back(1);
+        if(newseg) { c.v.push_back(1); commands.clear(); }
         addCmd(c);
     }
 
@@ -163,26 +160,27 @@ namespace vsr {
         pthread_mutex_unlock(&commandLock);
     }
 
-    std::string screendump_fname;
-    void _screendump(std::vector<float>&) {
-        if(!screendump_fname.size()) return;
-        printf("Saving screendump to '%s'\n", screendump_fname.c_str());
-        auto fout = fopen(screendump_fname.c_str(),"wb");
-        screendump_fname = "";
+    void screendump(const char* fname) {
+        if(!window_open || !fname) return;
+        pthread_mutex_lock(&commandLock);
+
+        printf("Saving %i x %i screendump to '%s'\n", winwidth, winheight, fname);
+        auto fout = fopen(fname,"wb");
 
         std::vector<char> pbuff(3*winwidth*winheight);
+        glGetError();
         glReadBuffer(GL_FRONT);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glReadPixels(0, 0, winwidth, winheight, GL_BGR, GL_UNSIGNED_BYTE, pbuff.data());
+        assert(glGetError() == GL_NO_ERROR);
 
         short fhead[] = { 0, 2, 0, 0, 0, 0, short(winwidth), short(winheight), 24 }; // .tga file header
         fwrite(fhead, sizeof(fhead), 1, fout);
         fwrite(pbuff.data(), pbuff.size(), 1, fout);
         fclose(fout);
-    }
-    void screendump(const char* fname) {
-        if(!window_open || screendump_fname.size()) return;
-        screendump_fname = fname;
-        addCmd(qcmd(_screendump));
+
+        pthread_mutex_unlock(&commandLock);
     }
 
     void _line(std::vector<float>& v) {
@@ -427,9 +425,8 @@ namespace vsr {
         if(kill_flag) exit(0);
         if(pthread_mutex_trylock(&commandLock)) return;
         while(commands.size()) {
-            void (*f)(std::vector<float>&) = commands.front().fcn;
-            if(f)
-                f(commands.front().v);
+            auto f = commands.front().fcn;
+            if(f) f(commands.front().v);
             commands.pop_front();
         }
         redrawDisplay();

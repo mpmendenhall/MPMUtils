@@ -41,7 +41,8 @@ public:
     void offset(const std::array<T,D>& a) { offset(a.data()); }
 
     /// expand to include BBox
-    void operator+=(const BBox<D,T>& B) {
+    void operator+=(const BBox& B) {
+        if(B.isNull()) return;
         expand(B.lo);
         expand(B.hi);
     }
@@ -74,6 +75,14 @@ public:
         for(auto& v: b.hi) v = -std::numeric_limits<T>::max();
         return b;
     }
+
+    bool isNull() const {
+        for(size_t i=0; i<D; i++) if(hi[i] < lo[i]) return true;
+        return false;
+    }
+
+    /// equality check
+    bool operator==(const BBox& B) const { return lo == B.lo && hi == B.hi; }
 };
 
 #endif

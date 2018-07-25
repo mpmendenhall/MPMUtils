@@ -1,13 +1,17 @@
 /// \file GeomCalcUtils.hh Geometry calculation utilities
+// Michael P. Mendenhall, 2018
 
 #ifndef GEOMCALCUTILS_HH
 #define GEOMCALCUTILS_HH
 
 #include <cmath>
 
-/// vector dot product
 template<typename T>
-inline T dot(const T a[3],  const T b[3]) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+using array_contents_t = std::remove_reference_t<decltype(std::declval<T&>()[0])>;
+
+template<typename T>
+inline array_contents_t<T> dot(const T& a,  const T& b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+
 /// vector cross product
 template<typename T>
 inline void cross(const T a[3], const T b[3], T c[3]) {
@@ -15,16 +19,26 @@ inline void cross(const T a[3], const T b[3], T c[3]) {
     c[1] = a[2]*b[0] - a[0]*b[2];
     c[2] = a[0]*b[1] - a[1]*b[0];
 }
+/// vector triple product
+template<typename T>
+inline array_contents_t<T> triple_prod(const T& a,  const T& b, const T& c) {
+    return a[0]*b[1]*c[2] + a[2]*b[0]*c[1] + a[1]*b[2]*c[0] - a[2]*b[1]*c[0] - a[1]*b[0]*c[2] - a[0]*b[2]*c[1];
+}
+/// vector magnitude squared
+template<typename T>
+inline array_contents_t<T> mag2(const T& v) { return dot(v,v); }
+/// vector magnitude
+template<typename T>
+inline array_contents_t<T> mag(const T& v) { return sqrt(dot(v,v)); }
 /// normalize to unit vector; return original length
 template<typename T>
-inline T makeunit(T v[3]) {
-    T d = sqrt(dot(v,v));
+inline array_contents_t<T> makeunit(T v) {
+    auto d = mag(v);
     v[0] /= d; v[1] /= d; v[2] /= d;
     return d;
 }
 
-
-/// height of triangle specified by three points
+/// height of triangle
 /**
  * @param b0 one point on triangle base
  * @param b1 other point on triangle base
@@ -32,13 +46,44 @@ inline T makeunit(T v[3]) {
  * @return distance squared of h from line through b0, b1
  */
 template<typename T>
-inline T triangle_height2(const T b0[3],  const T b1[3], const T h[3]) {
-    const T d[3] = { b1[0]-b0[0], b1[1]-b0[1], b1[2]-b0[2] };
-    const T v[3] = { h[0]-b0[0],  h[1]-b0[1],  h[2]-b0[2] };
-    const T d2 = dot(d,d);
-    const T v2 = dot(v,v);
-    const T x =  dot(d,v);
+inline array_contents_t<T> triangle_height2(const T& b0,  const T& b1, const T& h) {
+    const T d = { b1[0]-b0[0], b1[1]-b0[1], b1[2]-b0[2] };
+    const T v = { h[0]-b0[0],  h[1]-b0[1],  h[2]-b0[2] };
+    auto d2 = dot(d,d);
+    auto v2 = dot(v,v);
+    auto x =  dot(d,v);
     return v2-x*x/d2;
+}
+
+/// area of triangle
+/**
+ * @param b0 one point on triangle base
+ * @param b1 other point on triangle base
+ * @param h third triangle vertex
+ * @return area^2 of the triangle
+ */
+template<typename T>
+inline array_contents_t<T> triangle_area2(const T& b0,  const T& b1, const T& h) {
+    const T d = { b1[0]-b0[0], b1[1]-b0[1], b1[2]-b0[2] };
+    const T v = { h[0]-b0[0],  h[1]-b0[1],  h[2]-b0[2] };
+    auto d2 = dot(d,d);
+    auto v2 = dot(v,v);
+    auto x =  dot(d,v);
+    return 0.25*(v2*d2-x*x);
+}
+
+/// cosine of angle abc
+/**
+ * @param a starting point
+ * @param b mid point
+ * @param c end point
+ * @return norm(b-a) dot norm(c-b)
+ */
+template<typename T>
+inline array_contents_t<T> cos_abc(const T& a,  const T& b, const T& c) {
+    const T v0 = { b[0]-a[0], b[1]-a[1], b[2]-a[2] };
+    const T v1 = { c[0]-b[0], c[1]-b[1], c[2]-b[2] };
+    return dot(v0,v1)/sqrt(dot(v0,v0)*dot(v1,v1));
 }
 
 /// decompose coordinate into projection along and distance from line
@@ -50,8 +95,8 @@ inline T triangle_height2(const T b0[3],  const T b1[3], const T h[3]) {
  * @param r2 distance squared of x from closest point on line
  */
 template<typename T>
-inline void line_coords(const T c[3],  const T vn[3], const T x[3], T& z, T& r2) {
-    const T d[3] = { x[0]-c[0], x[1]-c[1], x[2]-c[2] };
+inline void line_coords(const T& c,  const T& vn, const T& x, array_contents_t<T>& z, array_contents_t<T>& r2) {
+    const T d = { x[0]-c[0], x[1]-c[1], x[2]-c[2] };
     z = dot(d,vn);
     r2 = fabs(dot(d,d) - z*z);
 }

@@ -28,7 +28,7 @@ namespace vsr {
     /// wait for [ENTER] to be pushed in vis window
     void pause();
     /// screendump to .tga-format file
-    void screendump(const char* fname);
+    void screendump(const char* fname = "screendump.tga");
 
     /// clear window to blank screen
     void clearWindow();
