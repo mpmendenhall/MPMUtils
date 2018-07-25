@@ -1,9 +1,4 @@
 /// \file SVGGradientAxis.cc
-// This file was produced under the employ of the United States Government,
-// and is consequently in the PUBLIC DOMAIN, free from all provisions of
-// US Copyright Law (per USC Title 17, Section 105).
-//
-// -- Michael P. Mendenhall, 2015
 
 #include "SVGGradientAxis.hh"
 #include <cassert>
@@ -30,17 +25,18 @@ double SVGGradientAxis::dAxisUnits(double) const {
 
 void SVGGradientAxis::finalize() {
     // base gradient
-    base_gradient = make_shared<lingradient>(G, "zaxis", 0, 0, 1, 0);
+    base_gradient = new lingradient(G, "zaxis", 0, 0, 1, 0);
     base_gradient->attrs["gradientUnits"] = "userSpaceOnUse";
 
     // derived axis gradient
+    auto Gaxis = new XMLTag("linearGradient");
     Gaxis->attrs["id"] = "Gaxis";
     Gaxis->attrs["gradientTransform"] = "rotate(-90) translate(-1 0)";
     Gaxis->attrs["xlink:href"] = "#"+base_gradient->attrs["id"];
     axisGroup->addChild(Gaxis);
 
     // gradient rectangle
-    auto r = make_shared<rect>(0, 0, 0.1, 1);
+    auto r = new rect(0, 0, 0.1, 1);
     r->attrs["style"] = "fill:url(#" + Gaxis->attrs["id"] + ");stroke:black;stroke-width:0.002";
     axisGroup->addChild(r);
 
@@ -58,13 +54,13 @@ void SVGGradientAxis::finalize() {
     for(auto const& t: axticks) {
         double zz = 1-axisUnits(t.z);
         if(zz < 0 || zz > 1) continue;
-        auto tln = make_shared<line>(0.1-0.03*pow(0.66,t.level), zz, .1 + 0.01*pow(0.5,t.level), zz, "stroke:black;stroke-width:"+to_str(0.005*pow(2,-t.level)));
+        auto tln = new line(0.1-0.03*pow(0.66,t.level), zz, .1 + 0.01*pow(0.5,t.level), zz, "stroke:black;stroke-width:"+to_str(0.005*pow(2,-t.level)));
         axisGroup->addChild(tln);
         if(!t.label.size()) continue;
         if(zz < 0.06) zz = 0.06;
         else if(zz > 0.995) zz = 0.995;
         else zz += 0.025;        // ugly manual tweak to center text
-        auto tktxt = make_shared<text>(t.label, 0.115, zz);
+        auto tktxt = new text(t.label, 0.115, zz);
         //tktxt->attrs["dominant-baseline"]="middle"; // unfortunately unsupported
         axisGroup->addChild(tktxt);
     }

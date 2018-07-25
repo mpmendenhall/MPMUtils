@@ -1,9 +1,5 @@
 /// \file SVGGradientAxis.hh Color gradient z-axis for SVG plots
-// This file was produced under the employ of the United States Government,
-// and is consequently in the PUBLIC DOMAIN, free from all provisions of
-// US Copyright Law (per USC Title 17, Section 105).
-//
-// -- Michael P. Mendenhall, 2015
+// -- Michael P. Mendenhall, 2018
 
 #ifndef SVGGRADIENTAXIS_HH
 #define SVGGRADIENTAXIS_HH
@@ -55,11 +51,9 @@ public:
     bool logscale = false;                                      ///< log scale setting
     BBox<1,double> range = BBox<1,double>::nullBox();           ///< axis range
     set<tick> axticks;                                          ///< axis tick locations
-    shared_ptr<SVG::group> axisGroup = make_shared<SVG::group>();       ///< group containing axis information
-
+    SVG::group* axisGroup = new SVG::group;                     ///< group containing axis information
+    SVG::lingradient* base_gradient = nullptr;                  ///< SVG gradient specification
     color::Gradient G;                                          ///< gradient color definition
-    shared_ptr<XMLBuilder> Gaxis = make_shared<XMLBuilder>("linearGradient");       ///< axis plot SVG
-    shared_ptr<SVG::lingradient> base_gradient;                 ///< gradient in SVG form
 };
 
 #endif

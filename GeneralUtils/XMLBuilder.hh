@@ -58,7 +58,7 @@ protected:
     /// generate closing tag
     void closeTag(ostream& o, bool abbrev = false);
 };
-
+/*
 /// "verbatim contents" XML-includable text
 class XMLText: public XMLBuilder {
 public:
@@ -68,7 +68,7 @@ public:
     void write(ostream& o, unsigned int ndeep = 0, const string& indent = "    ") override { while(ndeep--) o << indent; o << contents; }
     string contents;    ///< text to include between tags
 };
-
+*/
 /// Base class for objects that can provide XML output ``on demand''
 class XMLProvider {
 public:
