@@ -21,17 +21,17 @@ public:
         if(!pool.size()) { nAlloc++; return new T; }
         auto i = pool.back();
         pool.pop_back();
-        assert(i);
-        i->clear();
         return i;
     }
     /// Return allocated item
     void put(T* p) {
-        assert(p);
-        pool.push_back(p);
+        p->clear();
+        if(pool.size() < maxPool) pool.push_back(p);
+        else delete p;
     }
 protected:
     size_t nAlloc = 0;      ///< total number of items allocated
+    size_t maxPool = 4096;  ///< maximum pool size before deletion
     vector<T*> pool;        ///< allocated object pool
 };
 
@@ -49,13 +49,12 @@ public:
             if(!pool.size()) { nAlloc++; return new T; }
             i = pool.back();
             pool.pop_back();
-            i->clear();
         }
         return i;
     }
     /// Return allocated item
     void put(T* p) {
-        assert(p);
+        p->clear();
         std::unique_lock<std::mutex> lk(poolLock);
         pool.push_back(p);
     }

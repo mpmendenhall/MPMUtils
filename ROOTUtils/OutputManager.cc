@@ -28,7 +28,7 @@
 #include <cassert>
 
 bool OutputManager::squelchAllPrinting = false;
-
+TFile* OutputManager::rootOut = nullptr;
 OutputManager::OutputManager(string nm, string bp):
 parent(nullptr), name(nm) {
     TH1::AddDirectory(kFALSE);
@@ -63,21 +63,30 @@ TDirectory* OutputManager::writeItems(TDirectory* d) {
     return TObjCollector::writeItems(d);
 }
 
+void OutputManager::openROOT(OutputManager* base){
+	if(!base) base = this;
+    if(!rootOut) {
+        makePath(base->rootPath);
+        string outfname = base->rootPath+"/"+base->name+".root";
+        printf("Writing to '%s'\n", outfname.c_str());
+        rootOut = new TFile(outfname.c_str(),"RECREATE");
+        rootOut->cd();
+    }
+}
+
 string OutputManager::writeROOT(TDirectory* parentDir, bool clear) {
     printf("\n--------- Building output .root file... ----------\n");
-    TFile* rootOut = nullptr;
     string outfname = "";
     if(parentDir) writeItems(parentDir);
     else {
-        makePath(rootPath);
-        outfname = rootPath+"/"+name+".root";
-        printf("Writing to '%s'\n", outfname.c_str());
-        rootOut = new TFile(outfname.c_str(),"RECREATE");
+        if(!rootOut) openROOT();
         rootOut->cd();
         writeItems(nullptr);
     }
     if(clear) clearItems();
     delete rootOut;
+    rootOut = nullptr;
+
     printf("---------          Done.          ----------\n");
     return outfname;
 }

@@ -59,6 +59,7 @@ void OrderedWindowBase::nextmid() {
 void OrderedWindowBase::disposeLo() {
     assert(imid); // never dispose of mid!
     auto o = front();
+    _processOld(o);
     if(verbose >= 4) { printf("Deleting old "); dispObj(o); }
     pop_front();
     imid--;       // move imid to continue pointing to same object

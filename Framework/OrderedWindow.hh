@@ -6,6 +6,7 @@
 
 #include "RecastIt.hh"
 #include "SFINAEFuncs.hh"
+#include "AllocPool.hh"
 #include <deque>
 #include <cassert>
 #include <stdio.h>
@@ -24,7 +25,7 @@ public:
     virtual ~OrderedWindowBase() { assert(!size()); assert(!imid); }
 
     /// clear remaining objects through window (at end of run, etc.)
-    void clearWindow();
+    virtual void clearWindow();
     /// Flush as if inserting new highest at x
     void flushHi(double x);
     /// Flush until lowest > x (or queue empty)
@@ -43,7 +44,6 @@ public:
     double hwidth;      ///< half-length of analysis window kept around "mid" object
     int verbose = 0;    ///< verbose level
     int nProcessed = 0; ///< number of objects processed through window
-    bool ownsItems = false; ///< whether window is responsible for memory-managing items
 
 protected:
     friend class MultiWindow;
@@ -59,6 +59,8 @@ protected:
     virtual void _processNew(void* o) = 0;
     /// processing hook for each object as it passes through middle of window
     virtual void _processMid(void* o) = 0;
+    /// processing hook for objects leaving the window
+    virtual void _processOld(void* o) = 0;
 
     /// extract ordering parameter from object
     virtual double order(const void* o) const = 0;
@@ -77,7 +79,7 @@ protected:
 
 /// "Coincidence window" analysis base class
 template<class T>
-class OrderedWindow: public OrderedWindowBase {
+class OrderedWindow: public OrderedWindowBase, protected AllocPool<T> {
 public:
     /// Constructor
     using OrderedWindowBase::OrderedWindowBase;
@@ -123,9 +125,11 @@ protected:
     virtual void processNew(T&) { }
     /// processing hook for each object as it passes through middle of window
     virtual void processMid(T&) { }
+    /// processing hook for objects leaving the window
+    virtual void processOld(T&) { }
 
     /// disposal/deletion for objects outside window
-    void dispose(void* o) override { if(ownsItems) delete (T*)o; }
+    void dispose(void* o) override { this->put((T*)o); }
     /// display object
     void _display(void* o) const override { if(o) dispObj(*(T*)o); }
 
@@ -134,6 +138,8 @@ protected:
     void _processNew(void* o) override { assert(o); processNew(*(T*)o); }
     /// processing hook for each object as it passes through middle of window
     void _processMid(void* o) override { assert(o); processMid(*(T*)o); }
+    /// processing hook for objects leaving the window
+    void _processOld(void* o) override { assert(o); processOld(*(T*)o); }
 };
 
 #endif

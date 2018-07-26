@@ -55,6 +55,8 @@ public:
     virtual void rename(const string& nm);
     /// write items to currently open directory, or specified
     TDirectory* writeItems(TDirectory* d = nullptr) override;
+    /// open output ROOT file
+    void openROOT(OutputManager* base=nullptr);
     /// write output ROOT file, or to new directory within parent; deletes ALL REGISTERED OBJECTS by default
     string writeROOT(TDirectory* parentDir = nullptr, bool clear=true);
 
@@ -68,6 +70,8 @@ public:
     string printsfx = ".pdf";           ///< printCanvas default suffix
 
     static bool squelchAllPrinting;     ///< whether to cancel all printCanvas output
+protected:
+    static TFile* rootOut;                  ///< output file
 };
 
 #endif

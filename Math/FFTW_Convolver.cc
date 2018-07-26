@@ -1,6 +1,7 @@
 /// \file FFTW_Convolver.cxx
 // Michael P. Mendenhall, LLNL 2018
 
+#ifndef WITHOUT_FFTW
 #include "FFTW_Convolver.hh"
 
 //////////////////
@@ -189,3 +190,5 @@ const cplx_t* ConvolverFactoryR2C::getKernel(size_t i) {
     fftw_execute_dft_r2c(ffter.k_fwd, ffter.realspace, (fftw_complex*)k);
     return k;
 }
+
+#endif

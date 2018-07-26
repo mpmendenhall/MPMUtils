@@ -3,6 +3,7 @@
 
 #ifndef FFTW_CONVOLVER_H
 #define FFTW_CONVOLVER_H
+#ifndef WITHOUT_FFTW
 
 #include <complex>
 #include <fftw3.h>
@@ -230,4 +231,5 @@ protected:
     std::mutex kernLock;           ///< multithreading lock for constructing kernels
 };
 
+#endif
 #endif
