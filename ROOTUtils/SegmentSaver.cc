@@ -146,7 +146,7 @@ TCumulative* SegmentSaver::registerCumulative(const string& onm, const TCumulati
 
 TH1* SegmentSaver::getSavedHist(const string& hname) {
     auto it = saveHists.find(hname);
-    smassert(it != saveHists.end());
+    assert(it != saveHists.end());
     return it->second;
 }
 

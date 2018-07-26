@@ -29,14 +29,6 @@
 #include <TH1F.h>
 #include <TH2F.h>
 
-/// indicator for level of problem with analysis
-enum WarningLevel {
-    BENIGN_WARNING,     ///< just FYI for troubleshooting
-    MODERATE_WARNING,   ///< might be a problem to look at
-    SEVERE_WARNING,     ///< almost certainly something is very wrong
-    FATAL_WARNING       ///< data is corrupted and cannot be analyzed
-};
-
 /// manages output directory for grouping related information; manages a canvas, output SMFile, output ROOT file, recursive subdirectories
 class OutputManager: public TObjCollector {
 public:

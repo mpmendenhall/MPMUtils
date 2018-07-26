@@ -38,7 +38,7 @@ public:
         auto PBase = dynamic_cast<Base*>(pnt);
         assert(PBase);
         auto t0 = steady_clock::now();
-        thePlugin = make_shared<Plug>(PBase, cfg);
+        thePlugin = std::make_shared<Plug>(PBase, cfg);
         thePlugin->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
         cfg.lookupValue("order", thePlugin->order);
     }
@@ -76,7 +76,7 @@ protected:
 class _##NAME##_Registrar: public PluginRegistrar { \
 public: \
     _##NAME##_Registrar() { DynamicPluginSaver::builderTable().emplace(#NAME,this); } \
-    shared_ptr<PluginBuilder> makeBuilder(Setting& c) const override { return make_shared<ConfigPluginBuilder<NAME,BASE>>(c); } \
+    shared_ptr<PluginBuilder> makeBuilder(Setting& c) const override { return std::make_shared<ConfigPluginBuilder<NAME,BASE>>(c); } \
 }; \
 static _##NAME##_Registrar the_##NAME##_Registrar;
 

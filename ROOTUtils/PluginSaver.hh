@@ -46,7 +46,7 @@ public:
     /// Create appropriate plugin type
     virtual shared_ptr<SegmentSaver> _makePlugin(Base* PBase) {
         auto t0 = steady_clock::now();
-        auto p = make_shared<Plug>(PBase);
+        auto p = std::make_shared<Plug>(PBase);
         p->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
         return p;
     }

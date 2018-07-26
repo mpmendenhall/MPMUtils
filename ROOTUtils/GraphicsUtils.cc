@@ -19,19 +19,19 @@
 #include <TColor.h>
 
 bool compareHistosByMax(TH1* i, TH1* j) {
-    smassert(i && j);
+    assert(i && j);
     return i->GetMaximum() < j->GetMaximum();
 }
 
-double getXmin(const TH1* h) { smassert(h); return h->GetBinLowEdge(1); }
-double getXmax(const TH1* h) { smassert(h); return h->GetBinLowEdge(h->GetNbinsX()+1); }
+double getXmin(const TH1* h) { assert(h); return h->GetBinLowEdge(1); }
+double getXmax(const TH1* h) { assert(h); return h->GetBinLowEdge(h->GetNbinsX()+1); }
 
 bool compareHistosByXmin(TH1* i, TH1* j) {
-    smassert(i && j);
+    assert(i && j);
     return getXmin(i) < getXmin(j);
 }
 bool compareHistosByXmax(TH1* i, TH1* j) {
-    smassert(i && j);
+    assert(i && j);
     return getXmax(i) < getXmax(j);
 }
 
@@ -44,7 +44,7 @@ double drawSimulHistos(vector<TH1*>& hists, const string& opt, const string& new
     double xmax = getXmax(*std::max_element(hists.begin(),hists.end(),compareHistosByXmax));
     printf("%g), ",xmax); fflush(stdout);
     TH1* maxHist = *std::max_element(hists.begin(),hists.end(),compareHistosByMax);
-    smassert(maxHist);
+    assert(maxHist);
     printf("with ymax = %g...",maxHist->GetMaximum()); fflush(stdout);
     //maxHist->SetAxisRange(xmin,xmax,"X");
     string oldTitle = maxHist->GetTitle();
@@ -52,7 +52,7 @@ double drawSimulHistos(vector<TH1*>& hists, const string& opt, const string& new
         maxHist->SetTitle(newTitle.c_str());
     maxHist->Draw(opt.c_str());
     for(auto h: hists) {
-        smassert(h);
+        assert(h);
         if(h == maxHist)
             continue;
         if(opt.size())
@@ -67,7 +67,7 @@ double drawSimulHistos(vector<TH1*>& hists, const string& opt, const string& new
 }
 
 void drawHistoPair(TH1* hRed, TH1* hBlue, const string& opt, Int_t c1, Int_t c2) {
-    smassert(hRed && hBlue);
+    assert(hRed && hBlue);
     hRed->SetLineColor(c1);
     hRed->SetMarkerColor(c1);
     hBlue->SetLineColor(c2);

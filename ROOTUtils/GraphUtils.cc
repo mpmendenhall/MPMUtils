@@ -111,7 +111,7 @@ TGraphErrors* histoDeriv(const TH1* h, unsigned int dxi, double s) {
 }
 
 Stringmap histoToStringmap(const TH1* h) {
-    smassert(h);
+    assert(h);
     Stringmap m;
     m.insert("nbins",h->GetNbinsX());
     m.insert("name",h->GetName());
@@ -135,13 +135,13 @@ TH1F* stringmapToTH1F(const Stringmap& m) {
     string hName = m.getDefault("name","hFoo");
     string hTitle = m.getDefault("name","hFoo");
     unsigned int nBins = (unsigned int)(m.getDefault("nbins",0));
-    smassert(nBins >= 1);
+    assert(nBins >= 1);
     vector<double> binEdges = sToDoubles(m.getDefault("binEdges",""));
     vector<double> binConts = sToDoubles(m.getDefault("binConts",""));
     vector<double> binErrs = sToDoubles(m.getDefault("binErrs",""));
-    smassert(binEdges.size()==nBins+1);
-    smassert(binConts.size()==nBins+2);
-    smassert(binErrs.size()==nBins+2);
+    assert(binEdges.size()==nBins+1);
+    assert(binConts.size()==nBins+2);
+    assert(binErrs.size()==nBins+2);
 
     // TODO does this work right?
     TH1F* h = new TH1F(hName.c_str(),hTitle.c_str(),nBins,&binEdges[0]);
@@ -206,7 +206,7 @@ void comboErr(double a, double da, double b, double db, double& x, double& dx) {
 }
 
 void accumPoints(TGraphErrors& a, const TGraphErrors& b, bool errorWeight, bool yonly) {
-    smassert(a.GetN()==b.GetN());
+    assert(a.GetN()==b.GetN());
     for(int i=0; i<a.GetN(); i++) {
         double ax,ay,bx,by;
         a.GetPoint(i,ax,ay);
@@ -260,7 +260,7 @@ TH1* cumulativeHist(const TH1& h, bool normalize, bool reverse) {
 }
 
 TGraph* invertGraph(const TGraph* g) {
-    smassert(g);
+    assert(g);
     TGraph* gi = new TGraph(g->GetN());
     double x,y;
     for(int i=0; i<g->GetN(); i++) {
@@ -471,14 +471,14 @@ TGraphErrors* interpolate(TGraphErrors& tg, float dx) {
 }
 
 double invCDF(TH1* h, double p) {
-    smassert(h);
+    assert(h);
     unsigned int nbins = h->GetNbinsX()-2;
     if(p<=0) return 0;
     if(p>=1) return h->GetBinLowEdge(nbins+1);
     Double_t* cdf = h->GetIntegral();
     unsigned int mybin = std::upper_bound(cdf,cdf+nbins,p)-cdf;
-    smassert(mybin>0);
-    smassert(mybin<=nbins);
+    assert(mybin>0);
+    assert(mybin<=nbins);
     double l = (p-cdf[mybin-1])/(cdf[mybin]-cdf[mybin-1]);
     return h->GetBinLowEdge(mybin)*(1.0-l)+h->GetBinLowEdge(mybin+1)*l;
 }
@@ -526,7 +526,7 @@ TH1F* axisHist(const TH2& h, const string& hname,  AxisDirection d) {
 }
 
 vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d) {
-    smassert(d<=Z_DIRECTION);
+    assert(d<=Z_DIRECTION);
 
     const TAxis* Ax1 = d==X_DIRECTION?h3.GetYaxis():h3.GetXaxis();
     const TAxis* Ax2 = d==Z_DIRECTION?h3.GetYaxis():h3.GetZaxis();
@@ -568,7 +568,7 @@ vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d) {
 }
 
 vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection d, bool includeOverflow) {
-    smassert(d==X_DIRECTION || d==Y_DIRECTION);
+    assert(d==X_DIRECTION || d==Y_DIRECTION);
     vector<TH1F*> h1s;
     const unsigned int nx = h2.GetNbinsX();
     const unsigned int ny = h2.GetNbinsY();
@@ -626,7 +626,7 @@ TH1* projectTH2(const TH2& h, double nb, double cx, double cy) {
 
 TH1* histsep(const TH1& h1, const TH1& h2) {
     int nb = h1.GetNbinsX();
-    smassert(nb==h2.GetNbinsX());
+    assert(nb==h2.GetNbinsX());
     TH1* hDiv = (TH1*)h1.Clone("hDivision");
     hDiv->SetBinContent(0,0);
     hDiv->SetBinContent(nb+1,0);
@@ -643,7 +643,7 @@ TH1* histsep(const TH1& h1, const TH1& h2) {
 
 void histoverlap(const TH1& h1, const TH1& h2, double& o, double& xdiv) {
     int nb = h1.GetNbinsX();
-    smassert(nb==h2.GetNbinsX());
+    assert(nb==h2.GetNbinsX());
     double* csum = new double[nb+2];
     csum[0] = csum[nb+1] = 0;
     for(int b=1; b<=nb; b++)
