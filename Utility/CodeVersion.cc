@@ -38,7 +38,7 @@ namespace CodeVersion {
         if(!gethostname(c,1024)) return c;
         return "";
     }
-    const string hostname = get_hostname();
+    const string host = get_hostname();
 
     const char* get_user() {
         auto uid = getuid();
