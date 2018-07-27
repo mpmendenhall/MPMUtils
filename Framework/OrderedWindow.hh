@@ -86,6 +86,12 @@ public:
 
     /// add next newer object; process older as they pass through window.
     void addItem(T* o) { _addItem(o); }
+    /// add copy of item
+    void addItem(const T& o) {
+        auto O = this->get();
+        *O = o;
+        addItem(O);
+    }
 
     /// convenience typedef
     typedef recastIt<OrderedWindowBase::iterator, T> iterator;

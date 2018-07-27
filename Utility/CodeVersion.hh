@@ -14,6 +14,8 @@ namespace CodeVersion {
     extern const string repo_tagname;   ///< repository symbolic tag name
     extern const string compile_time;   ///< time of compile
     extern const string compiler;       ///< compiler name
+    extern const string user;           ///< username of user running program
+    extern const string host;           ///< hostname of computer running program
 
     /// print compile info to stdout
     void display_code_version();

@@ -1,6 +1,8 @@
 /// \file CodeVersion.cc
 
 #include "CodeVersion.hh"
+#include <unistd.h> // for gethostname
+#include <pwd.h>    // for user name
 #include <stdio.h>
 
 /// convert literal text to const char* (no #define expansion)
@@ -29,6 +31,22 @@ namespace CodeVersion {
 #else
     const string compiler = "not gcc";
 #endif
+
+    const char* get_hostname() {
+        auto c = new char[1025];
+        c[1024] = 0; // assure array terminated if hostname truncated
+        if(!gethostname(c,1024)) return c;
+        return "";
+    }
+    const string hostname = get_hostname();
+
+    const char* get_user() {
+        auto uid = getuid();
+        auto p = getpwuid(uid);
+        if(p && p->pw_name) return p->pw_name;
+        return "";
+    }
+    const string user = get_user();
 
     void display_code_version() {
         printf("Repository version '%s' (%s), compiled %s with %s\n",
