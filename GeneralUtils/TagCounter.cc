@@ -28,28 +28,24 @@
 
 template<>
 TagCounter<int>::TagCounter(Stringmap m) {
-    for(auto const& kv: m.dat)
-        add(atoi(kv.first.c_str()),atof(kv.second.c_str()));
+    for(auto const& kv: m) (*this)[atoi(kv.first.c_str())] += atof(kv.second.c_str());
 }
 
 template<>
 TagCounter<unsigned int>::TagCounter(Stringmap m) {
-    for(auto const& kv: m.dat)
-        add(atoi(kv.first.c_str()),atof(kv.second.c_str()));
+    for(auto const& kv: m) (*this)[atoi(kv.first.c_str())] += atof(kv.second.c_str());
 }
 
 template<>
 TagCounter<string>::TagCounter(Stringmap m) {
-    for(auto const& kv: m.dat)
-        add(kv.first,atof(kv.second.c_str()));
+    for(auto const& kv: m) (*this)[kv.first] += atof(kv.second.c_str());
 }
 
 template<>
 TagCounter< std::pair<unsigned int, unsigned int> >::TagCounter(Stringmap m) {
-    for(auto const& kv: m.dat) {
+    for(auto const& kv: m) {
         vector<int> v = sToInts(kv.first, "/");
         assert(v.size()==2);
-        if(v.size()==2)
-            add(std::pair<unsigned int, unsigned int>(v[0],v[1]),atof(kv.second.c_str()));
+        if(v.size()==2) (*this)[std::pair<unsigned int, unsigned int>(v[0],v[1])] += atof(kv.second.c_str());
     }
 }

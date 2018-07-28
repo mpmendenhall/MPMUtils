@@ -33,54 +33,41 @@ using std::map;
 
 /// Templatized counts tally
 template<typename T>
-class TagCounter {
+class TagCounter: public map<T,double> {
 public:
     /// constructor
     TagCounter() { }
     /// constructor from stringmap
     TagCounter(Stringmap m);
-    /// destructor
-    ~TagCounter() {}
-    /// add counts
-    void add(const T& itm, double c);
     /// add another counter
-    void operator+=(const TagCounter<T>& c);
+    void operator+=(const map<T,double>& c);
+    /// scale contents
+    void operator*=(double s);
     /// multiply all counts
     void scale(double s);
     /// make into Stringmap
     Stringmap toStringmap();
-    /// get number of counted items
-    unsigned int nTags() const { return counts.size(); }
     /// get total counts on all objects
     double total() const;
     /// get count for given item
-    double operator[](const T& itm) const;
-
-    map<T,double> counts;  ///< counts per object
+    double get(const T& itm) const;
 };
 
 template<typename T>
-void TagCounter<T>::add(const T& itm, double c) {
-    counts[itm] += c;
+void TagCounter<T>::operator+=(const map<T,double>& c) {
+    for(auto& kv: c) (*this)[kv.first] += kv.second;
 }
 
 template<typename T>
-void TagCounter<T>::operator+=(const TagCounter<T>& c) {
-    for(auto const& kv: c.counts)
-        add(kv.first,kv.second);
-}
-
-template<typename T>
-void TagCounter<T>::scale(double s) {
+void TagCounter<T>::operator*=(double s) {
     if(s==1) return;
-    for(auto& kv: counts)
-        kv.second *= s;
+    for(auto& kv: *this) kv.second *= s;
 }
 
 template<typename T>
 Stringmap TagCounter<T>::toStringmap() {
     Stringmap m;
-    for(auto const& kv: counts) {
+    for(auto const& kv: *this) {
         std::ostringstream s;
         s << kv.first;
         m.insert(s.str(),to_str(kv.second));
@@ -91,15 +78,14 @@ Stringmap TagCounter<T>::toStringmap() {
 template<typename T>
 double TagCounter<T>::total() const {
     double d = 0;
-    for(auto const& kv: counts) d += kv.second;
+    for(auto const& kv: *this) d += kv.second;
     return d;
 }
 
 template<typename T>
-double TagCounter<T>::operator[](const T& itm) const {
-    typename map<T,double>::const_iterator it = counts.find(itm);
-    if(it==counts.end()) return 0;
-    return it->second;
+double TagCounter<T>::get(const T& itm) const {
+    auto it = this->find(itm);
+    return it==this->end()? 0 : it->second;
 }
 
 #endif
