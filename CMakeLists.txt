@@ -63,7 +63,7 @@ add_library(MPM SHARED ${SOURCE_FILES})
 target_link_libraries(MPM ${ROOT_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${CONFIG_LIBS} ${FFTW_LIBS}) #${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES}
 
 # test programs
-foreach(exec IN ITEMS testVisr)
+foreach(exec IN ITEMS testVisr testPolynomial)
     add_executable(${exec} Test/${exec}.cc)
     target_link_libraries(${exec} MPM)
 endforeach(exec)
