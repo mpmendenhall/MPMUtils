@@ -21,7 +21,7 @@ struct subwindowObj {
 };
 
 /// Manager for multiple simulatneous window analyses
-class MultiWindow: protected OrderedWindow<subwindowObj>, protected AllocPool<subwindowObj> {
+class MultiWindow: protected OrderedWindow<subwindowObj> {
 public:
     using OrderedWindow<subwindowObj>::OrderedWindow;
     using OrderedWindow<subwindowObj>::clearWindow;
@@ -32,8 +32,6 @@ public:
     void addItem(void* o, OrderedWindowBase& W);
 
 protected:
-    /// disposal/deletion for objects outside window
-    void dispose(void* o) override;
     /// display object
     void _display(void* o) const override { if(o) { auto so = (subwindowObj*)o; so->W->_display(so->o); } }
 

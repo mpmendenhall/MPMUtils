@@ -41,12 +41,5 @@ void MultiWindow::disposeLo() {
     imid--;
     auto so = (subwindowObj*)o;
     so->W->disposeLo();
-    if(so->W->ownsItems) so->o = nullptr;
     dispose(o);
-}
-
-void MultiWindow::dispose(void* o) {
-    auto so = (subwindowObj*)o;
-    if(so->o) so->W->dispose(o);
-    put(so);
 }
