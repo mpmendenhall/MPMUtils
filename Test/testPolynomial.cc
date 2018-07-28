@@ -8,15 +8,15 @@ typedef Polynomial_t<3> Pxyz;
 
 int main(int, char**) {
 
-    vector<double> x(3);
+    std::vector<double> x(3);
 
     Mxyz m(5,{3,2,1});
     m += m;
     std::cout << m << "\n";
 
-    auto p = Pxyz::lowerTriangleTerms(2);
-    p = p.even();
+    auto p = Pxyz::lowerTriangleTerms(3);
     std::cout << p << "\n";
+    p.algebraicForm(std::cout,true) << "\n";
     p += p;
     p *= p;
     p += m;

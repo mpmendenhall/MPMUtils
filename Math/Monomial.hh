@@ -23,7 +23,6 @@
 #define MONOMIAL_HH
 
 #include <iostream>
-using std::ostream;
 #include <iomanip>
 #include <exception>
 #include <cassert>
@@ -112,7 +111,7 @@ public:
     bool isOdd() const { for(auto e: *this) { if(!(e%2)) return false; } return true; }
 
     /// output representation in algebraic form
-    ostream& algebraicForm(ostream& o) const {
+    std::ostream& algebraicForm(std::ostream& o, bool LaTeX=false) const {
         if(fabs(coeff) == 1) {
             if(!this->order()) {
                 o << std::showpos << coeff << std::noshowpos;
@@ -125,7 +124,7 @@ public:
         for(auto e: *this) {
             if(e) {
                 o << vletters[i];
-                if(e != 1) o << "^" << e;
+                if(e != 1) o << (LaTeX? "^{" : "^") << e << (LaTeX? "}" : "");
             }
             i++;
         }
@@ -138,29 +137,14 @@ public:
 
 /// output representation
 template<typename Vec, typename T>
-ostream& operator<<(ostream& o, const Monomial<Vec,T>& u) { return u.algebraicForm(o); }
+std::ostream& operator<<(std::ostream& o, const Monomial<Vec,T>& u) { return u.algebraicForm(o); }
 
+/// convenience typedef
 template<unsigned int N, typename T = double>
 using Monomial_t = Monomial<std::array<unsigned int,N>, T>;
 
 /*
- *    ostream& latexForm(ostream& o) const {
- *        o << std::showpos << coeff << std::noshowpos;
- *        for(P i=0; i<N; i++) {
- *            if((*this)[i] > 0) {
- *                if((*this)[i] == 1) {
- *                    o << vletters[i];
- *                } else {
- *                    o << vletters[i] << "^";
- *                    if((*this)[i] < 10)
- *                        o << (*this)[i] ;
- *                    else
- *                        o << "{" << (*this)[i] << "}";
- *                }
- *            }
- *        }
- *        return o;
- *    }
+
  *
  *    template<typename Vec, typename P>
  *    ostream& tableForm(ostream& o) const {

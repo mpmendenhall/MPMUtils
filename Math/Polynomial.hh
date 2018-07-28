@@ -25,14 +25,12 @@
 
 #include "Monomial.hh"
 #include <set>
-using std::set;
 #include <vector>
-using std::vector;
 #include <cmath>
 
 /// Algebraic polynomial of monomials
 template<typename M>
-class Polynomial: protected set<M> {
+class Polynomial: protected std::set<M> {
 public:
     typedef typename M::coeff_t coeff_t;
     template<typename A>
@@ -103,7 +101,7 @@ public:
     /// expand polynomial around a new origin
     template<typename cvec>
     const Polynomial recentered(const cvec& v) const {
-        vector<Polynomial> vP;
+        std::vector<Polynomial> vP;
         size_t i = 0;
         for(auto c: v) {
             M m(1);
@@ -170,37 +168,20 @@ public:
     /// division by a scalar
     const Polynomial operator/(coeff_t c) const { auto p = *this; p /= c; return p; }
 
-    /// output in table form
-    //ostream& tableForm(ostream& o) const;
-    /// output in LaTeX form
-    //ostream& latexForm(ostream& o) const;
-
-    ostream& algebraicForm(ostream& o) const { for(auto& t: *this) { o << " " << t; } if(!this->size()) o << "0"; return o; }
+    /// print representation
+    std::ostream& algebraicForm(std::ostream& o, bool LaTeX=false) const {
+        for(auto& t: *this) t.algebraicForm(o, LaTeX) << " ";
+        if(!this->size()) o << "0";
+        return o;
+    }
 };
 
 /// output representation
 template<typename M>
-ostream& operator<<(ostream& o, const Polynomial<M>& u) { return u.algebraicForm(o); }
+std::ostream& operator<<(std::ostream& o, const Polynomial<M>& u) { return u.algebraicForm(o); }
 
+/// convenience typedef
 template<unsigned int N, typename T = double>
 using Polynomial_t = Polynomial<Monomial_t<N,T>>;
-
-/*
-
-template<unsigned int N, typename T>
-ostream& Polynomial<N,T>::latexForm(ostream& o) const {
-    for(auto const& kv: terms) Monomial<N,T,unsigned int>(kv.second, kv.first).latexForm(o);
-    return o;
-}
-
-template<unsigned int N, typename T>
-ostream& Polynomial<N,T>::tableForm(ostream& o) const {
-    for(auto const& kv: terms) {
-        Monomial<N,T,unsigned int>(kv.second,kv.first).tableForm(o);
-        o << "\n";
-    }
-    return o;
-}
-*/
 
 #endif
