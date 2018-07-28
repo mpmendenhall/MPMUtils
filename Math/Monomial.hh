@@ -43,14 +43,16 @@ class InconsistentMonomialException: public PolynomialException {
 template<typename Vec, typename T>
 class Monomial: public Vec {
 public:
+    typedef T coeff_t;      ///< coefficient
     typedef Vec exponents;  ///< exponents list
-    typedef T value;        ///< evaluation value
 
     template<typename A>
     using array_contents_t = typename std::remove_reference<decltype(std::declval<A&>()[0])>::type;
 
+    typedef array_contents_t<Vec> exp_t;    ///< exponent type
+
     /// constructor
-    Monomial(T v, Vec d = Vec()): Vec(d), coeff(v) { }
+    Monomial(coeff_t v, exponents d = exponents()): Vec(d), coeff(v) { }
 
     /// check Monomial consistency
     bool consistentWith(const Monomial& u) const { return (Vec&)(*this) == (Vec&)u; }
@@ -101,9 +103,23 @@ public:
     /// division operator
     const Monomial operator/(T other) const { return Monomial(*this) /= other; }
 
+    /// polynomial order
+    exp_t order() const { exp_t o = 0; for(auto e: *this) o += fabs(e); return o; }
+    /// is this term even?
+    bool isEven() const { for(auto e: *this) { if(e%2) return false; } return true; }
+    /// is this term odd?
+    bool isOdd() const { for(auto e: *this) { if(!(e%2)) return false; } return true; }
+
     /// output representation in algebraic form
     ostream& algebraicForm(ostream& o) const {
-        o << std::showpos << coeff << std::noshowpos;
+        if(fabs(coeff) == 1) {
+            if(!this->order()) {
+                o << std::showpos << coeff << std::noshowpos;
+                return o;
+            }
+            o << (coeff > 0? "+":"-");
+        } else o << std::showpos << coeff << std::noshowpos;
+
         unsigned int i = 0;
         for(auto e: *this) {
             if(e) {

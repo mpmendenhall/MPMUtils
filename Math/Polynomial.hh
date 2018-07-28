@@ -34,27 +34,54 @@ using std::vector;
 template<typename M>
 class Polynomial: protected set<M> {
 public:
-
-    typedef typename M::value value;
+    typedef typename M::coeff_t coeff_t;
     template<typename A>
     using array_contents_t = typename std::remove_reference<decltype(std::declval<A&>()[0])>::type;
 
     /// constructor for 0 polynomial
-    Polynomial(value c = 0) { if(c) this->insert(M(c)); }
+    Polynomial(coeff_t c = 0) { if(c) this->insert(M(c)); }
     /// constructor from a monomial term
     Polynomial(const M& m) { this->insert(m); }
 
     /// generate polynomial with all terms of order <= o in each variable
-    //static Polynomial allTerms(unsigned int o);
+    static Polynomial allTerms(unsigned int o) {
+        M m(1);
+        Polynomial P(m);
+        unsigned int i = 0;
+        while(i < m.size()) {
+            if((unsigned int)m[i] < o) {
+                m[i]++;
+                P.insert(m);
+                i = 0;
+            } else m[i++] = 0;
+        }
+        return P;
+    }
+
     /// generate polynomial with all terms of total order <= o
-    //static Polynomial lowerTriangleTerms(unsigned int o);
+    static Polynomial lowerTriangleTerms(unsigned int o) {
+        auto P0 = allTerms(o);
+        Polynomial P;
+        for(auto& t: P0)
+            if((unsigned int)t.order() <= o)
+                P.insert(t);
+        return P;
+    }
 
     /// return polynomial with only even terms
-    //Polynomial even() const;
+    Polynomial even() const {
+        Polynomial P;
+        for(auto& t: *this) { if(t.isEven()) P.insert(t); }
+        return P;
+    }
 
     /// evaluate at given point
     template<typename coord>
-    auto operator()(const coord& v) const -> array_contents_t<coord> { array_contents_t<coord> s = 0; for(auto& t: *this) { s += t(v); } return s; }
+    auto operator()(const coord& v) const -> array_contents_t<coord> {
+        array_contents_t<coord> s = 0;
+        for(auto& t: *this) s += t(v);
+        return s;
+    }
 
     /// evaluate a polynomial change of variable
     template<typename pVec>
@@ -72,6 +99,7 @@ public:
         }
         return P;
     }
+
     /// expand polynomial around a new origin
     template<typename cvec>
     const Polynomial recentered(const cvec& v) const {
@@ -85,8 +113,9 @@ public:
         }
         return this->replace(v);
     }
+
     /// remove negligible terms
-    Polynomial& prune(value c = 0) {
+    Polynomial& prune(coeff_t c = 0) {
         Polynomial P;
         for(auto& t: *this) if(fabs(t.coeff) > c) P.insert(t);
         *this = P;
@@ -124,9 +153,9 @@ public:
     /// inplace division by a monomial
     Polynomial& operator/=(const M& rhs) { for(auto& t: *this) { (M&)t /= rhs; } return *this; }
     /// inplace multiplication by a constant
-    Polynomial& operator*=(value c) { for(auto& t: *this) { (M&)t *= c; } return *this; }
+    Polynomial& operator*=(coeff_t c) { for(auto& t: *this) { (M&)t *= c; } return *this; }
     /// inplace division by a constant
-    Polynomial& operator/=(value c) { for(auto& t: *this) { (M&)t /= c; } return *this; }
+    Polynomial& operator/=(coeff_t c) { for(auto& t: *this) { (M&)t /= c; } return *this; }
 
     /// addition
     const Polynomial operator+(const Polynomial& rhs) const { auto p = *this; p += rhs; return p; }
@@ -135,18 +164,18 @@ public:
     /// multiplication
     const Polynomial operator*(const Polynomial& rhs) const { Polynomial P; for(auto& t: *this) { for(auto& t2: rhs) P += t*t2; }; return P; }
     /// multiplication by a scalar
-    const Polynomial operator*(value c) const { auto p = *this; p *= c; return p; }
+    const Polynomial operator*(coeff_t c) const { auto p = *this; p *= c; return p; }
     /// division
     const Polynomial operator/(const M& rhs) const { auto p = *this; p *= rhs; return p; }
     /// division by a scalar
-    const Polynomial operator/(value c) const { auto p = *this; p /= c; return p; }
+    const Polynomial operator/(coeff_t c) const { auto p = *this; p /= c; return p; }
 
     /// output in table form
     //ostream& tableForm(ostream& o) const;
     /// output in LaTeX form
     //ostream& latexForm(ostream& o) const;
 
-    ostream& algebraicForm(ostream& o) const { for(auto& t: *this) { o << t; } if(!this->size()) o << "0"; return o; }
+    ostream& algebraicForm(ostream& o) const { for(auto& t: *this) { o << " " << t; } if(!this->size()) o << "0"; return o; }
 };
 
 /// output representation
@@ -154,52 +183,6 @@ template<typename M>
 ostream& operator<<(ostream& o, const Polynomial<M>& u) { return u.algebraicForm(o); }
 
 /*
-
-
-template<unsigned int N, typename T>
-Polynomial<N,T> Polynomial<N,T>::allTerms(unsigned int o) {
-    Vec<N,unsigned int> d = Vec<N,unsigned int>();
-    Polynomial<N,T> t = Polynomial<N,T>(Monomial<N,T,unsigned int>(1,d));
-    unsigned int p = 0;
-    while(p<N) {
-        if(d[p] < o) {
-            d[p] += 1;
-            t.terms[d] = 1.0;
-            p = 0;
-        } else {
-            d[p] = 0;
-            p++;
-        }
-    }
-    return t;
-}
-
-template<unsigned int N, typename T>
-Polynomial<N,T> Polynomial<N,T>::lowerTriangleTerms(unsigned int o) {
-    Polynomial<N,T> lt = Polynomial<N,T>();
-    Polynomial<N,T> t = Polynomial<N,T>::allTerms(o);
-    for(auto const& kv: t.terms)
-        if(kv.first.sum() <= o)
-            lt.terms[kv.first] = 1.0;
-    return lt;
-}
-
-template<unsigned int N, typename T>
-Polynomial<N,T> Polynomial<N,T>::even() const {
-    Polynomial<N,T> e = Polynomial<N,T>();
-    for(auto const& kv: terms) {
-        bool iseven = true;
-        for(unsigned int i=0; i<N; i++) {
-            if(kv.first[i].denominator() != 1 || (kv.first[i].numerator())%2 ) {
-                iseven = false;
-                break;
-            }
-        }
-        if(iseven)
-            e.terms[kv.first] += kv.second;
-    }
-    return e;
-}
 
 template<unsigned int N, typename T>
 ostream& Polynomial<N,T>::latexForm(ostream& o) const {

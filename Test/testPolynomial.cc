@@ -16,13 +16,13 @@ int main(int, char**) {
     m += m;
     std::cout << m << "\n";
 
-    Pxyz p({5,{1,2,3}});
-    p += Pxyz(1);
+    auto p = Pxyz::lowerTriangleTerms(2);
+    p = p.even();
     std::cout << p << "\n";
     p += p;
     p *= p;
     p += m;
-    std::cout << p << p(x) << "\n";
+    std::cout << p << " -> " << p(x) << "\n";
 
     p.prune();
     p.recentered(x);
