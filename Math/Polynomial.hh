@@ -36,6 +36,14 @@ public:
     template<typename A>
     using array_contents_t = typename std::remove_reference<decltype(std::declval<A&>()[0])>::type;
 
+
+    using std::set<M>::begin;
+    using std::set<M>::end;
+    using std::set<M>::size;
+
+    /// equality
+    bool operator==(const Polynomial& P) const { return (std::set<M>&)*this == P; }
+
     /// constructor for 0 polynomial
     Polynomial(coeff_t c = 0) { if(c) this->insert(M(c)); }
     /// constructor from a monomial term
@@ -112,6 +120,16 @@ public:
         return this->replace(v);
     }
 
+
+    /// derivative of i^th variable
+    const Polynomial derivative(size_t i) const { Polynomial P; for(auto& m: *this) P.insert(m.derivative(i)); return P; }
+    /// indefinite integral of i^th variable
+    const Polynomial integral(size_t i) const { Polynomial P; for(auto& m: *this) P.insert(m.integral(i)); return P; }
+    /// evaluate with i^th variable set to constant
+    const Polynomial eval(size_t i, coeff_t c) const { Polynomial P; for(auto& m: *this) P += m.eval(i,c); return P; }
+    /// definite integral of i^th variable
+    const Polynomial integral(size_t i, coeff_t c0, coeff_t c1) { Polynomial P; for(auto& m: *this) P += m.integral(i,c0,c1); return P; }
+
     /// remove negligible terms
     Polynomial& prune(coeff_t c = 0) {
         Polynomial P;
@@ -120,31 +138,31 @@ public:
         return *this;
     }
 
+    /// inplace monomial addition
+    Polynomial& operator+=(const M& m) {
+        auto it = this->find(m);
+        if(it == this->end()) this->insert(m);
+        else {
+            (M&)(*it) += m;
+            if(!it->coeff) this->erase(it);
+        }
+        return *this;
+    }
     /// inplace addition
-    Polynomial& operator+=(const Polynomial& rhs) {
-        for(auto& t: rhs) {
-            auto it = this->find(t);
-            if(it == this->end()) this->insert(t);
-            else {
-                (M&)(*it) += t;
-                if(!it->coeff) this->erase(it);
-            }
-        }
-        return *this;
-    }
+    Polynomial& operator+=(const Polynomial& rhs) { for(auto& t: rhs) *this += t; return *this; }
 
-    /// inplace subtraction
-    Polynomial& operator-=(const Polynomial& rhs)  {
-        for(auto& t: rhs) {
-            auto it = this->find(t);
-            if(it == this->end()) this->insert(t);
-            else {
-                (M&)(*it) -= t;
-                if(!it->coeff) this->erase(it);
-            }
+    /// inplace monomial subtraction
+    Polynomial& operator-=(const M& m)  {
+        auto it = this->find(m);
+        if(it == this->end()) this->insert(m);
+        else {
+            (M&)(*it) -= m;
+            if(!it->coeff) this->erase(it);
         }
         return *this;
     }
+    /// inplace subtraction
+    Polynomial& operator-=(const Polynomial& rhs) { for(auto& t: rhs) *this -= t; return *this; }
 
     /// inplace multiplication by a polynomial
     Polynomial& operator*=(const Polynomial& rhs) { *this = (*this) * rhs; return *this; }
@@ -181,7 +199,15 @@ template<typename M>
 std::ostream& operator<<(std::ostream& o, const Polynomial<M>& u) { return u.algebraicForm(o); }
 
 /// convenience typedef
-template<unsigned int N, typename T = double>
+template<long unsigned int N, typename T = double>
 using Polynomial_t = Polynomial<Monomial_t<N,T>>;
+
+/// evaluate out variable
+template<long unsigned int N, typename T = double>
+Polynomial_t<N-1, T> reduce(const Polynomial_t<N,T>& p, int i, T c = 1) {
+    Polynomial_t<N-1, T> pp;
+    for(auto& m: p) pp += reduce(m,i,c);
+    return pp;
+}
 
 #endif

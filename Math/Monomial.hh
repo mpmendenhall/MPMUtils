@@ -67,6 +67,32 @@ public:
     /// inverse Monomial
     const Monomial inverse() const { Monomial u(1./coeff, *this); for(auto& e: u) { e *= -1; } return u; }
 
+    /// derivative of i^th variable
+    const Monomial derivative(size_t i) const {
+        auto e = (*this)[i];
+        if(!e) return Monomial(0);
+        auto m = (*this)*e;
+        m[i]--;
+        return m;
+    }
+    /// indefinite integral of i^th variable
+    const Monomial integral(size_t i) const {
+        auto e = (*this)[i];
+        assert((int)e != -1);
+        auto m = (*this)/(e+1.);
+        m[i]++;
+        return m;
+    }
+    /// replace i^th variable with constant
+    const Monomial eval(size_t i, coeff_t c) const { auto m = (*this)*pow(c, (*this)[i]); m[i] = 0; return m; }
+    /// definite integral of i^th variable
+    const Monomial integral(size_t i, coeff_t c0, coeff_t c1) const {
+        auto m = this->integral(i);
+        m *= (pow(c1, m[i]) - pow(c0, m[i]));
+        m[i] = 0;
+        return m;
+    }
+
     /// evaluate at given point
     template<typename coord>
     auto operator()(const coord& v) const -> array_contents_t<coord> {
@@ -76,6 +102,9 @@ public:
         for(auto e: *this) { if(e) s *= pow(v[i++],e); }
         return s;
     }
+
+    /// equality check
+    bool operator==(const Monomial& m) const { return coeff == m.coeff && (Vec&)*this == m; }
 
     /// inplace addition
     Monomial& operator+=(const Monomial& rhs) { assertConsistent(rhs); coeff += rhs.coeff; return *this; }
@@ -140,8 +169,20 @@ template<typename Vec, typename T>
 std::ostream& operator<<(std::ostream& o, const Monomial<Vec,T>& u) { return u.algebraicForm(o); }
 
 /// convenience typedef
-template<unsigned int N, typename T = double>
+template<long unsigned int N, typename T = double>
 using Monomial_t = Monomial<std::array<unsigned int,N>, T>;
+
+/// evaluate out variable
+template<long unsigned int N, typename T>
+Monomial_t<N-1, T> reduce(const Monomial_t<N,T>& m, int i, double c = 1) {
+    Monomial_t<N-1, T> mm(c==1? m.coeff : m.coeff*pow(c,m[i]));
+    size_t j = 0, k = 0;
+    for(auto e: m) {
+        if((int)j++ == i) continue;
+        mm[k++] = e;
+    }
+    return mm;
+}
 
 /*
 

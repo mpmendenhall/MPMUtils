@@ -20,10 +20,17 @@ int main(int, char**) {
     p += p;
     p *= p;
     p += m;
+    p = p.integral(1,0,2);
     std::cout << p << " -> " << p(x) << "\n";
 
     p.prune();
     p.recentered(x);
+
+    assert(p == p.integral(2).derivative(2));
+
+    auto ip = p.integral(2);
+    auto p2 = reduce(ip,2);
+    std::cout << p2 << "\n";
 
     return EXIT_SUCCESS;
 }
