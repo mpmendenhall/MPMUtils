@@ -28,6 +28,7 @@ using std::ostream;
 #include <exception>
 #include <cassert>
 #include <cmath>
+#include <array>
 
 /// general exception for polynomial problems
 class PolynomialException: public std::exception {
@@ -138,6 +139,9 @@ public:
 /// output representation
 template<typename Vec, typename T>
 ostream& operator<<(ostream& o, const Monomial<Vec,T>& u) { return u.algebraicForm(o); }
+
+template<unsigned int N, typename T = double>
+using Monomial_t = Monomial<std::array<unsigned int,N>, T>;
 
 /*
  *    ostream& latexForm(ostream& o) const {

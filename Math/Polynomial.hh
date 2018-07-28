@@ -92,7 +92,7 @@ public:
             size_t i = 0;
             for(auto e: t) {
                 if(i >= v.size()) break;
-                for(int j=0; j<e; j++) Q *= v[i];
+                for(int j=0; j<(int)e; j++) Q *= v[i];
                 i++;
             }
             P += Q;
@@ -181,6 +181,9 @@ public:
 /// output representation
 template<typename M>
 ostream& operator<<(ostream& o, const Polynomial<M>& u) { return u.algebraicForm(o); }
+
+template<unsigned int N, typename T = double>
+using Polynomial_t = Polynomial<Monomial_t<N,T>>;
 
 /*
 

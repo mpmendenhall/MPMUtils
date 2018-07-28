@@ -1,12 +1,10 @@
 /// \file testPolynomial.cc Test of polynomial manipulation
 
 #include "Polynomial.hh"
-#include <array>
-using std::array;
 #include <stdlib.h>
 
-typedef Monomial<array<int,3>, float> Mxyz;
-typedef Polynomial<Mxyz> Pxyz;
+typedef Monomial_t<3> Mxyz;
+typedef Polynomial_t<3> Pxyz;
 
 int main(int, char**) {
 
