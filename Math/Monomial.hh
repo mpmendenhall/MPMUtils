@@ -26,6 +26,8 @@
 using std::ostream;
 #include <iomanip>
 #include <exception>
+#include <cassert>
+#include <cmath>
 
 /// general exception for polynomial problems
 class PolynomialException: public std::exception {
@@ -39,8 +41,14 @@ class InconsistentMonomialException: public PolynomialException {
 
 /// Monomial (one term in a Polynomial), given by coefficient and vector of exponents
 template<typename Vec, typename T>
-class Monomial: protected Vec {
+class Monomial: public Vec {
 public:
+    typedef Vec exponents;  ///< exponents list
+    typedef T value;        ///< evaluation value
+
+    template<typename A>
+    using array_contents_t = typename std::remove_reference<decltype(std::declval<A&>()[0])>::type;
+
     /// constructor
     Monomial(T v, Vec d = Vec()): Vec(d), coeff(v) { }
 
@@ -58,7 +66,14 @@ public:
     const Monomial inverse() const { Monomial u(1./coeff, *this); for(auto& e: u) { e *= -1; } return u; }
 
     /// evaluate at given point
-    T operator()(const Vec& v) const { T s = coeff; unsigned int i=0; for(auto e: *this) { s *= pow(v[i++],e); } return s; }
+    template<typename coord>
+    auto operator()(const coord& v) const -> array_contents_t<coord> {
+        assert(v.size() == this->size());
+        array_contents_t<coord> s = coeff;
+        unsigned int i=0;
+        for(auto e: *this) { if(e) s *= pow(v[i++],e); }
+        return s;
+    }
 
     /// inplace addition
     Monomial& operator+=(const Monomial& rhs) { assertConsistent(rhs); coeff += rhs.coeff; return *this; }
@@ -92,7 +107,7 @@ public:
         unsigned int i = 0;
         for(auto e: *this) {
             if(e) {
-                 o << vletters[i];
+                o << vletters[i];
                 if(e != 1) o << "^" << e;
             }
             i++;
@@ -109,32 +124,32 @@ template<typename Vec, typename T>
 ostream& operator<<(ostream& o, const Monomial<Vec,T>& u) { return u.algebraicForm(o); }
 
 /*
-    ostream& latexForm(ostream& o) const {
-        o << std::showpos << coeff << std::noshowpos;
-        for(P i=0; i<N; i++) {
-            if((*this)[i] > 0) {
-                if((*this)[i] == 1) {
-                    o << vletters[i];
-                } else {
-                    o << vletters[i] << "^";
-                    if((*this)[i] < 10)
-                        o << (*this)[i] ;
-                    else
-                        o << "{" << (*this)[i] << "}";
-                }
-            }
-        }
-        return o;
-    }
-
-    template<typename Vec, typename P>
-    ostream& tableForm(ostream& o) const {
-        o << std::setw(20) << std::setprecision(10) << coeff << "\t";
-        for(P i=0; i<N; i++)
-            o << " " << std::setw(0) << (*this)[i];
-        return o;
-    }
-*/
+ *    ostream& latexForm(ostream& o) const {
+ *        o << std::showpos << coeff << std::noshowpos;
+ *        for(P i=0; i<N; i++) {
+ *            if((*this)[i] > 0) {
+ *                if((*this)[i] == 1) {
+ *                    o << vletters[i];
+ *                } else {
+ *                    o << vletters[i] << "^";
+ *                    if((*this)[i] < 10)
+ *                        o << (*this)[i] ;
+ *                    else
+ *                        o << "{" << (*this)[i] << "}";
+ *                }
+ *            }
+ *        }
+ *        return o;
+ *    }
+ *
+ *    template<typename Vec, typename P>
+ *    ostream& tableForm(ostream& o) const {
+ *        o << std::setw(20) << std::setprecision(10) << coeff << "\t";
+ *        for(P i=0; i<N; i++)
+ *            o << " " << std::setw(0) << (*this)[i];
+ *        return o;
+ *    }
+ */
 
 
 #endif
