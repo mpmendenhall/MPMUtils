@@ -4,7 +4,9 @@ project(MPMUtils)
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 find_library(CONFIG_LIBS config++)
-find_package(HDF5 REQUIRED COMPONENTS C HL)
+#find_package(HDF5 REQUIRED COMPONENTS C HL)
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
 include_directories(${HDF5_INCLUDE_DIRS})
 find_library(FFTW_LIBS fftw3)
 
@@ -17,14 +19,13 @@ LIST(APPEND SOURCE_FILES ${DIRSRC})
 endforeach(dir)
 
 LIST(REMOVE_ITEM SOURCE_FILES ${PROJECT_SOURCE_DIR}/Utility/SQLite_Helper.cc)
-message(${SOURCE_FILES})
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 
-add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++11")
+add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++11" "-DWITH_OPENGL")
 
 ################
 # ROOT, ROOT Dicts
@@ -57,8 +58,15 @@ SET_SOURCE_FILES_PROPERTIES(Utility/CodeVersion.cc PROPERTIES COMPILE_FLAGS "-DR
 # build targets
 ################
 
+# libMPM omnibus
 add_library(MPM SHARED ${SOURCE_FILES})
-target_link_libraries(MPM ${ROOT_LIBRARIES} ${CONFIG_LIBS} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} ${FFTW_LIBS})
+target_link_libraries(MPM ${ROOT_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${CONFIG_LIBS} ${FFTW_LIBS}) #${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES}
+
+# test programs
+foreach(exec IN ITEMS testVisr)
+    add_executable(${exec} Test/${exec}.cc)
+    target_link_libraries(${exec} MPM)
+endforeach(exec)
 
 #################
 # Documentation with Doxygen

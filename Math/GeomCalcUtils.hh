@@ -8,7 +8,7 @@
 #include <type_traits>
 
 template<typename T>
-using array_contents_t = std::remove_reference<decltype(std::declval<T&>()[0])>;
+using array_contents_t = typename std::remove_reference<decltype(std::declval<T&>()[0])>::type;
 
 template<typename T>
 inline array_contents_t<T> dot(const T& a,  const T& b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
