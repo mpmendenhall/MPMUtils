@@ -21,102 +21,75 @@
 
 #include "LinMin.hh"
 #include <cassert>
-#include "gsl/gsl_linalg.h"
-#include "gsl/gsl_blas.h"
+#include <stdio.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_blas.h>
 
-/*
-double polynomialFit(const gsl_matrix* coords, const gsl_vector* values, Polynomial<3,double>& p) {
-    int nparams = p.terms.size();
-    assert(coords && values);
-    assert((unsigned int)nparams <= values->size);
-    assert(coords->size1 == values->size);
-    assert(coords->size2 == 3);
-
-    // build coefficients matrix
-    gsl_matrix* coeffs = gsl_matrix_alloc(coords->size1,nparams);
-    Vec<3,double> coord;
-    auto pit = p.terms.begin();
-    for(int j=0; j<nparams; j++) {
-        Monomial<3,double,unsigned int> m = Monomial<3,double,unsigned int>(1.0,pit->first);
-        for(unsigned int i=0; i<values->size; i++) {
-            for(int c=0; c<3; c++) coord[c] = gsl_matrix_get(coords,i,c);
-            gsl_matrix_set(coeffs,i,j,m(coord));
-        }
-        pit++;
-    }
-
-    // fit, cleanup, return
-    gsl_vector* resid = gsl_vector_calloc(values->size);
-    gsl_vector* fitv = lsmin(coeffs,values,resid);
-    pit = p.terms.begin();
-    for(int j=0; j<nparams; j++) {
-        p.terms[pit->first] = gsl_vector_get(fitv,j);
-        pit++;
-    }
-    double rsresid =  gsl_blas_dnrm2(resid);
-    gsl_vector_free(fitv);
-    gsl_vector_free(resid);
-    return rsresid/sqrt(values->size);
-}
-*/
-
-void LinEqSolver::resize(size_t neq, size_t nvar) {
+void LinMin::resize(size_t neq, size_t nvar) {
     if(neq == Neq && nvar == Nvar) return;
     clear();
     if(!neq || !nvar) return;
     Neq = neq;
     Nvar = nvar;
     M = gsl_matrix_alloc(Neq,Nvar);
-    y = gsl_vector_calloc(Neq);
     r = gsl_vector_calloc(Neq);
 }
 
-void LinEqSolver::clear() {
+void LinMin::clear() {
     Neq = Nvar = 0;
     if(M) gsl_matrix_free(M);
+    if(tau) gsl_vector_free(tau);
     if(x) gsl_vector_free(x);
     if(y) gsl_vector_free(y);
     if(r) gsl_vector_free(r);
     M = nullptr;
-    x = y = r = nullptr;
+    x = y = r = tau = nullptr;
 }
 
-void LinEqSolver::sety(size_t i, double v) {
-    assert(i<Neq);
-    gsl_vector_set(y, i, v);
+void vector2gsl(const vector<double>& v, gsl_vector*& g) {
+    if(g && g->size != v.size()) {
+        gsl_vector_free(g);
+        g = nullptr;
+    }
+    if(!g) g = gsl_vector_alloc(v.size());
+    for(size_t i=0; i<g->size; i++) gsl_vector_set(g,i,v[i]);
 }
 
-void LinEqSolver::setM(size_t i, size_t j, double v) {
+void LinMin::setM(size_t i, size_t j, double v) {
     assert(M && i<Neq && j<Nvar);
     gsl_matrix_set(M,i,j,v);
 }
 
-void LinEqSolver::solve() {
-    if(!(M && y && r)) return;
-    if(x) gsl_vector_free(x);
+void LinMin::solve(const vector<double>& vy) {
+    vector2gsl(vy,y);
+    if(!(M && y && r)) throw;
 
-    gsl_vector* tau = gsl_vector_calloc(M->size2);
-    if(gsl_linalg_QR_decomp(M,tau)) throw;
-    x = gsl_vector_calloc(M->size2);
-    if(gsl_linalg_QR_lssolve(M, tau, y, x, r));
+    if(x && x->size != M->size2) {
+        gsl_vector_free(x);
+        x = nullptr;
+    }
+    if(!x) x = gsl_vector_alloc(M->size2);
 
-    gsl_vector_free(tau);
-    gsl_matrix_free(M);
-    M = nullptr;
+    // converts M to QR
+    if(!tau) {
+        tau = gsl_vector_alloc(M->size2);
+        if(gsl_linalg_QR_decomp(M,tau)) throw;
+    }
+
+    if(gsl_linalg_QR_lssolve(M, tau, y, x, r)) throw;
 }
 
-double LinEqSolver::ssresid() const {
+double LinMin::ssresid() const {
+    if(!r) return -1;
     return gsl_blas_dnrm2(r);
 }
 
-void LinEqSolver::getx(vector<double>& vx) const {
-    if(!x) vx.clear();
-    //auto p0 = &gsl_vector_get(x,0);
-    //vx.assign(p0, p0+Nvar);
+void gsl2vector(const gsl_vector* g, vector<double>& v) {
+    if(!g) { v.clear(); return; }
+    v.resize(g->size);
+    for(size_t i=0; i<g->size; i++) v[i] = gsl_vector_get(g,i);
 }
 
-void LinEqSolver::getr(vector<double>& vr) const {
-    if(!r) vr.clear();
-    //auto p0 = &gsl_vector_get(r,0);
-    //vr.assign(p0, p0+Neq);
-}
+void LinMin::getx(vector<double>& vx) const { gsl2vector(x,vx); }
+
+void LinMin::getr(vector<double>& vr) const { gsl2vector(r,vr); }

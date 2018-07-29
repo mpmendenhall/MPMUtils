@@ -19,6 +19,9 @@
  *
  */
 
+#ifndef POWERSERIESEVAL_HH
+#define POWERSERIESEVAL_HH
+
 #include <vector>
 
 /// Vectorized power-series sum evaluation
@@ -70,3 +73,5 @@ protected:
     const Vec* X = nullptr; ///< input X^1
     std::vector<Vec> Xn;    ///< powers of X
 };
+
+#endif

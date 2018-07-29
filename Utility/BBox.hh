@@ -15,8 +15,8 @@
 template<size_t D, typename T>
 class BBox {
 public:
-    /// Constructor
-    BBox() { }
+    /// coordinate type
+    typedef std::array<T,D> coord_t;
 
     /// expand to include point
     void expand(const T* x) {
@@ -27,7 +27,7 @@ public:
     }
 
     /// expand to include point (from array)
-    void expand(const std::array<T,D>& a) { expand(a.data()); }
+    void expand(const coord_t& a) { expand(a.data()); }
 
     /// offset by vector
     void offset(const T* x) {
@@ -38,7 +38,7 @@ public:
     }
 
     /// offset by vector
-    void offset(const std::array<T,D>& a) { offset(a.data()); }
+    void offset(const coord_t& a) { offset(a.data()); }
 
     /// expand to include BBox
     void operator+=(const BBox& B) {
@@ -65,8 +65,8 @@ public:
     /// local coordinate along axis, 0->lo and 1->hi
     T pos(T x, size_t i) const { return lo[i] + x*dl(i); }
 
-    std::array<T,D> lo; /// lower bounds
-    std::array<T,D> hi; /// upper bounds
+    coord_t lo; /// lower bounds
+    coord_t hi; /// upper bounds
 
     /// create BBox with "null" bounds
     static BBox nullBox() {

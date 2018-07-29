@@ -32,6 +32,7 @@
 template<typename M>
 class Polynomial: protected std::set<M> {
 public:
+    typedef M monomial_t;
     typedef typename M::coeff_t coeff_t;
     template<typename A>
     using array_contents_t = typename std::remove_reference<decltype(std::declval<A&>()[0])>::type;
@@ -50,8 +51,8 @@ public:
     Polynomial(const M& m) { this->insert(m); }
 
     /// generate polynomial with all terms of order <= o in each variable
-    static Polynomial allTerms(unsigned int o) {
-        M m(1);
+    static Polynomial allTerms(unsigned int o, coeff_t c = 0) {
+        M m(c);
         Polynomial P(m);
         unsigned int i = 0;
         while(i < m.size()) {
@@ -65,8 +66,8 @@ public:
     }
 
     /// generate polynomial with all terms of total order <= o
-    static Polynomial lowerTriangleTerms(unsigned int o) {
-        auto P0 = allTerms(o);
+    static Polynomial lowerTriangleTerms(unsigned int o, coeff_t c = 0) {
+        auto P0 = allTerms(o,c);
         Polynomial P;
         for(auto& t: P0)
             if((unsigned int)t.order() <= o)
@@ -120,9 +121,12 @@ public:
         return this->replace(v);
     }
 
-
     /// derivative of i^th variable
-    const Polynomial derivative(size_t i) const { Polynomial P; for(auto& m: *this) P.insert(m.derivative(i)); return P; }
+    const Polynomial derivative(size_t i) const {
+        Polynomial P;
+        for(auto& m: *this) { if(m[i]) P.insert(m.derivative(i)); }
+        return P;
+    }
     /// indefinite integral of i^th variable
     const Polynomial integral(size_t i) const { Polynomial P; for(auto& m: *this) P.insert(m.integral(i)); return P; }
     /// evaluate with i^th variable set to constant
@@ -142,10 +146,7 @@ public:
     Polynomial& operator+=(const M& m) {
         auto it = this->find(m);
         if(it == this->end()) this->insert(m);
-        else {
-            (M&)(*it) += m;
-            if(!it->coeff) this->erase(it);
-        }
+        else (M&)(*it) += m;
         return *this;
     }
     /// inplace addition
@@ -155,10 +156,7 @@ public:
     Polynomial& operator-=(const M& m)  {
         auto it = this->find(m);
         if(it == this->end()) this->insert(m);
-        else {
-            (M&)(*it) -= m;
-            if(!it->coeff) this->erase(it);
-        }
+        else (M&)(*it) -= m;
         return *this;
     }
     /// inplace subtraction

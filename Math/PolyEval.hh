@@ -19,6 +19,9 @@
  *
  */
 
+#ifndef POLYEVAL_HH
+#define POLYEVAL_HH
+
 #include "PowerSeriesEval.hh"
 #include "Polynomial.hh"
 using std::vector;
@@ -47,25 +50,33 @@ public:
         }
     }
 
-    /// Add evaluated monomial to input vector; auto-resize if input vector empty
+    /// Evalualuate monomial into vector
     template<class M>
-    void addMonomial(const M& m, vector<T>& v) {
-        if(!v.size() && Xs.size()) v.resize(Xs[0].size());
-        if(!Xs.size() || !m.coeff) return;
-        assert(m.size() <= Xs.size() && v.size() <= Xs[0].size());
-
-        vector<T> vv(v.size(), m.coeff);
+    void evalMonomial(const M& m, vector<T>& v) {
+        v.resize(0);
+        assert(m.size() <= Xs.size());
+        if(!Xs.size()) return;
+        v.resize(Xs[0].size(), m.coeff);
         size_t i = 0;
         for(auto e: m) {
             while(Ps.size() <= i) {
                 Ps.push_back({});
                 Ps.back().setX(Xs[Ps.size()-1]);
             }
-            Ps[i].mul(vv, e);
+            Ps[i].mul(v, e);
             i++;
         }
+    }
 
-        i = 0;
+    /// Add evaluated monomial to input vector; auto-resize if input vector empty
+    template<class M>
+    void addMonomial(const M& m, vector<T>& v) {
+        if(!v.size() && Xs.size()) v.resize(Xs[0].size());
+        if(!Xs.size() || !m.coeff) return;
+
+        vector<T> vv(v.size(), m.coeff);
+        evalMonomial(m,vv);
+        size_t i = 0;
         for(auto c: vv) v[i++] += c;
     }
 
@@ -77,3 +88,5 @@ protected:
     vector<vector<T>> Xs;                     ///< loaded coordinate vectors
     vector<PowerSeriesEval<vector<T>>> Ps;    /// Powers by variable
 };
+
+#endif

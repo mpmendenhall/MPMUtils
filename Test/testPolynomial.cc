@@ -2,9 +2,13 @@
 
 #include "Polynomial.hh"
 #include "PolyEval.hh"
+#include "PolyFit.hh"
+#include "CodeVersion.hh"
+#include "NGrid.hh"
 #include <stdlib.h>
 #include <chrono>
 using std::chrono::steady_clock;
+
 
 typedef Monomial_t<3> Mxyz;
 typedef Polynomial_t<3> Pxyz;
@@ -19,6 +23,7 @@ void addSimple(const P& p, vector<T>& v, const Cvec& c) {
 }
 
 int main(int, char**) {
+    CodeVersion::display_code_version();
 
     std::vector<double> x(3);
 
@@ -44,7 +49,9 @@ int main(int, char**) {
     PolyEval<> PE;
     int ntrials = 10;
     vector<PolyEval<>::coord_t<3>> vc(1000000/ntrials);
-    for(size_t i=0; i<vc.size(); i++) vc[i] = {0.5*i};
+    for(size_t i=0; i<vc.size(); i++) {
+        vc[i] = {0.5*i*1e-5, sqrt(i/1e4), i*1.e-10*i};
+    }
     vector<double> vp, vp2;
 
     auto t0 = steady_clock::now();
@@ -70,6 +77,21 @@ int main(int, char**) {
         dmax = std::max(dmax, fabs((vp[i]-vp2[i])/vp[i]));
     }
     printf("dmax %g\n", dmax);
+
+    NGrid<3> NG({10,10,10});
+    vc.clear();
+    for(auto c: NG) vc.push_back({c[0]*1.,c[1]*1.,c[2]*1.});
+
+    PolyFit<Pxyz> PF(Pxyz::lowerTriangleTerms(3,3.14));
+    std::cout << PF.getPoly() << "\n";
+    PF.setX(vc);
+    vector<double> y;
+    for(auto& c: vc) {
+        auto yy = PF.getPoly()(c);
+        y.push_back(yy);
+    }
+    auto& PP = PF.solve(y);
+    std::cout << PP << "\n" << PF.ssresid() << "\n";
 
     return EXIT_SUCCESS;
 }

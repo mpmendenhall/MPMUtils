@@ -1,7 +1,7 @@
-/// \file "LinMin.hh" Least-squares linear polynomial fits
+/// \file "LinMin.hh" Least-squares linear equations solver
 /*
  * LinMin.hh, part of the MPMUtils package.
- * Copyright (c) 2007-2014 Michael P. Mendenhall
+ * Copyright (c) 2007-2018 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,27 +20,24 @@
  */
 
 #ifndef LINMIN_HH
-/// Make sure this header is included only once
 #define LINMIN_HH
 
-#include "gsl/gsl_matrix.h"
-#include "gsl/gsl_vector.h"
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
 #include <vector>
 using std::vector;
 
 /// helper class for solving system of linear equations Mx = y+r
-class LinEqSolver {
+class LinMin {
 public:
     /// Constructor, for m equations in n variables
-    LinEqSolver(size_t neq = 0, size_t nvar = 0) { resize(neq, nvar); }
+    LinMin(size_t neq = 0, size_t nvar = 0) { resize(neq, nvar); }
     /// Destructor
-    ~LinEqSolver() { clear(); }
-    /// set y
-    void sety(size_t i, double v);
+    ~LinMin() { clear(); }
     /// set M
     void setM(size_t i, size_t j, double v);
     /// calculate solution x, r
-    void solve();
+    void solve(const vector<double>& vy);
 
     /// get sum of squares of residuals
     double ssresid() const;
@@ -51,7 +48,7 @@ public:
 
     /// resize to specified dimensions
     void resize(size_t neq, size_t nvar);
-    /// free data
+    /// clear solution, free data
     void clear();
 
 protected:
@@ -59,6 +56,7 @@ protected:
     size_t Nvar = 0;            ///< number of variables
 
     gsl_matrix* M = nullptr;    ///< coefficients matrix
+    gsl_vector* tau = nullptr;  ///< from QR decomposition of M
     gsl_vector* x = nullptr;    ///< solution vector
     gsl_vector* y = nullptr;    ///< RHS vector
     gsl_vector* r = nullptr;    ///< residuals vector
