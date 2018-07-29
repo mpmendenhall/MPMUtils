@@ -23,10 +23,11 @@
 #include "Polynomial.hh"
 using std::vector;
 
+/// Fast vectorized evaluation of polynomials at many points
 template<typename T = double>
 class PolyEval {
 public:
-
+    /// convenience typedef for n-dimensional evauation coordinate
     template<unsigned int n>
     using coord_t = std::array<T,n>;
 
@@ -46,24 +47,21 @@ public:
         }
     }
 
-    /// Add evaluated monomial to input vector
+    /// Add evaluated monomial to input vector; auto-resize if input vector empty
     template<class M>
     void addMonomial(const M& m, vector<T>& v) {
-        if(!Xs.size() || !v.size() || !m.coeff) return;
+        if(!v.size() && Xs.size()) v.resize(Xs[0].size());
+        if(!Xs.size() || !m.coeff) return;
         assert(m.size() <= Xs.size() && v.size() <= Xs[0].size());
 
         vector<T> vv(v.size(), m.coeff);
         size_t i = 0;
         for(auto e: m) {
-            if(!e) { i++;; continue; }
             while(Ps.size() <= i) {
                 Ps.push_back({});
                 Ps.back().setX(Xs[Ps.size()-1]);
             }
-            vector<T> vvv(v.size());
-            Ps[i].add(vvv, 1, e);
-            size_t j = 0;
-            for(auto& c: vv) c *= vvv[j++];
+            Ps[i].mul(vv, e);
             i++;
         }
 
@@ -71,13 +69,14 @@ public:
         for(auto c: vv) v[i++] += c;
     }
 
-    /// Add evaluated polynomial to input vector
+    /// Add evaluated polynomial to input vector; auto-resize if input vector empty
     template<class P>
     void addPolynomial(const P& p, vector<T>& v) { for(auto& m: p) addMonomial(m,v); }
 
     /// Comparison simple algorithm
     template<class P, class Cvec>
     void addSimple(const P& p, vector<T>& v, const Cvec& c) const {
+        if(!v.size()) v.resize(c.size());
         assert(v.size() <= c.size());
         size_t i = 0;
         for(auto& y: v) y += p(c[i++]);

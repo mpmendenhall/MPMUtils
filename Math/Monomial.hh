@@ -96,7 +96,10 @@ public:
         assert(v.size() == this->size());
         array_contents_t<coord> s = coeff;
         unsigned int i=0;
-        for(auto e: *this) { if(e) s *= pow(v[i++],e); }
+        for(auto e: *this) {
+            if(e) s *= pow(v[i],e);
+            i++;
+        }
         return s;
     }
 

@@ -17,7 +17,7 @@ int main(int, char**) {
     m += m;
     std::cout << m << "\n";
 
-    auto p = Pxyz::lowerTriangleTerms(3);
+    auto p = Pxyz::lowerTriangleTerms(4);
     std::cout << p << "\n";
     p.algebraicForm(std::cout,true) << "\n";
     p += p;
@@ -26,9 +26,6 @@ int main(int, char**) {
     p = p.integral(1,0,2);
     std::cout << p << " -> " << p(x) << "\n";
 
-    p.prune();
-    p.recentered(x);
-
     assert(p == p.integral(2).derivative(2));
 
     auto ip = p.integral(2);
@@ -36,24 +33,34 @@ int main(int, char**) {
     std::cout << p2 << "\n";
 
     PolyEval<> PE;
-    vector<PolyEval<>::coord_t<3>> vc(1000000, {1.});
-    vector<double> vp(vc.size());
-    auto vp2 = vp;
+    int ntrials = 10;
+    vector<PolyEval<>::coord_t<3>> vc(1000000/ntrials);
+    for(size_t i=0; i<vc.size(); i++) vc[i] = {0.5*i};
+    vector<double> vp, vp2;
 
     auto t0 = steady_clock::now();
 
-    PE.setX(vc);
-    PE.addPolynomial(p, vp);
+    for(int i=0; i<ntrials; i++) {
+        PE.setX(vc);
+        PE.addPolynomial(p, vp);
+    }
 
     auto t1 = steady_clock::now();
 
-    PE.addSimple(p, vp2, vc);
+    for(int i=0; i<ntrials; i++) PE.addSimple(p, vp2, vc);
 
     auto t2 = steady_clock::now();
 
     printf("dt1 = %g; dt2 = %g\n",
            std::chrono::duration<double>(t1-t0).count(),
            std::chrono::duration<double>(t2-t1).count());
+
+    double dmax =  0;
+    for(size_t i=0; i<vp.size(); i++) {
+        //printf("%g\t%g\n", vp[i], vp2[i]);
+        dmax = std::max(dmax, fabs((vp[i]-vp2[i])/vp[i]));
+    }
+    printf("dmax %g\n", dmax);
 
     return EXIT_SUCCESS;
 }

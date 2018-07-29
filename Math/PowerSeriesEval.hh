@@ -37,8 +37,16 @@ public:
         else {
             auto& x = pow(n);
             size_t i = 0;
-            for(auto& s: v0) s += x[i++];
+            for(auto& s: v0) s += k*x[i++];
         }
+    }
+
+    /// multiply by x^n
+    void mul(Vec& v0, size_t n) {
+        if(!n) return;
+         auto& x = pow(n);
+        size_t i = 0;
+        for(auto& s: v0) s *= x[i++];
     }
 
 protected:
@@ -46,7 +54,7 @@ protected:
     const Vec& pow(size_t n) {
         assert(X);
         if(n==1) return *X;
-        while(n <= Xn.size()+2) {
+        while(Xn.size()+2 <= n) {
             if(!Xn.size()) {
                 Xn.push_back(*X);
                 for(auto& i: Xn[0]) i *= i;
@@ -55,7 +63,6 @@ protected:
                 size_t i=0;
                 for(auto& x: *X) Xn.back()[i++] *= x;
             }
-            return Xn[n-2];
         }
         return Xn[n-2];
     }
