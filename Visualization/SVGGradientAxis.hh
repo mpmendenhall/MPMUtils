@@ -48,12 +48,12 @@ public:
         bool operator<(const tick& rhs) const { return z < rhs.z; }
     };
 
-    bool logscale = false;                                      ///< log scale setting
-    BBox<1,double> range = BBox<1,double>::nullBox();           ///< axis range
-    set<tick> axticks;                                          ///< axis tick locations
-    SVG::group* axisGroup = new SVG::group;                     ///< group containing axis information
-    SVG::lingradient* base_gradient = nullptr;                  ///< SVG gradient specification
-    color::Gradient G;                                          ///< gradient color definition
+    bool logscale = false;                      ///< log scale setting
+    BBox<1,double> range;                       ///< axis range
+    set<tick> axticks;                          ///< axis tick locations
+    SVG::group* axisGroup = new SVG::group;     ///< group containing axis information
+    SVG::lingradient* base_gradient = nullptr;  ///< SVG gradient specification
+    color::Gradient G;                          ///< gradient color definition
 };
 
 #endif

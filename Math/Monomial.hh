@@ -97,7 +97,8 @@ public:
         array_contents_t<coord> s = coeff;
         unsigned int i=0;
         for(auto e: *this) {
-            if(e) s *= pow(v[i],e);
+            //if(e) s *= pow(v[i],e);
+            while(e--) s *= v[i]; // improved for high precision types
             i++;
         }
         return s;
@@ -143,11 +144,11 @@ public:
     std::ostream& algebraicForm(std::ostream& o, bool LaTeX=false) const {
         if(fabs(coeff) == 1) {
             if(!this->order()) {
-                o << std::showpos << coeff << std::noshowpos;
+                o << std::showpos << double(coeff) << std::noshowpos;
                 return o;
             }
             o << (coeff > 0? "+":"-");
-        } else o << std::showpos << coeff << std::noshowpos;
+        } else o << std::showpos << double(coeff) << std::noshowpos;
 
         unsigned int i = 0;
         for(auto e: *this) {
@@ -183,18 +184,5 @@ Monomial_t<N-1, T> reduce(const Monomial_t<N,T>& m, int i, double c = 1) {
     }
     return mm;
 }
-
-/*
-
- *
- *    template<typename Vec, typename P>
- *    ostream& tableForm(ostream& o) const {
- *        o << std::setw(20) << std::setprecision(10) << coeff << "\t";
- *        for(P i=0; i<N; i++)
- *            o << " " << std::setw(0) << (*this)[i];
- *        return o;
- *    }
- */
-
 
 #endif

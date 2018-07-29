@@ -15,6 +15,12 @@
 template<size_t D, typename T = double>
 class BBox {
 public:
+    /// Constructor, defaulting to null null box
+    BBox() {
+        lo.fill(std::numeric_limits<T>::max());
+        hi.fill(-std::numeric_limits<T>::max());
+    }
+
     /// number of dimensions
     static constexpr size_t N = D;
     /// one-dimensional type
@@ -71,14 +77,6 @@ public:
 
     coord_t lo; /// lower bounds
     coord_t hi; /// upper bounds
-
-    /// create BBox with "null" bounds
-    static BBox nullBox() {
-        BBox<D,double> b;
-        for(auto& v: b.lo) v = std::numeric_limits<T>::max();
-        for(auto& v: b.hi) v = -std::numeric_limits<T>::max();
-        return b;
-    }
 
     bool isNull() const {
         for(size_t i=0; i<D; i++) if(hi[i] < lo[i]) return true;

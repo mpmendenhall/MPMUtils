@@ -37,7 +37,8 @@ public:
     /// set M
     void setM(size_t i, size_t j, double v);
     /// calculate solution x, r
-    void solve(const vector<double>& vy);
+    template<typename YVec>
+    void solve(const YVec& vy) { vector2gsl(vy,y); _solve(); }
 
     /// get sum of squares of residuals
     double ssresid() const;
@@ -51,7 +52,21 @@ public:
     /// clear solution, free data
     void clear();
 
+    /// fill gsl vector
+    template<typename YVec>
+    static void vector2gsl(const YVec& v, gsl_vector*& g) {
+        if(g && g->size != v.size()) {
+            gsl_vector_free(g);
+            g = nullptr;
+        }
+        if(!g) g = gsl_vector_alloc(v.size());
+        for(size_t i=0; i<g->size; i++) gsl_vector_set(g,i,v[i]);
+    }
+
 protected:
+    /// solve after loading 'y' vector
+    void _solve();
+
     size_t Neq = 0;             ///< number of equations
     size_t Nvar = 0;            ///< number of variables
 

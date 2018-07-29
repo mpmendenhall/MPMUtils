@@ -10,9 +10,12 @@
 #include <chrono>
 using std::chrono::steady_clock;
 
-
-typedef Monomial_t<3> Mxyz;
-typedef Polynomial_t<3> Pxyz;
+//typedef float precision_t;
+typedef double precision_t;
+//typedef long double precision_t;
+//typedef __float128 precision_t;
+typedef Monomial_t<3,precision_t> Mxyz;
+typedef Polynomial_t<3,precision_t> Pxyz;
 
 /// Comparison simple algorithm
 template<class P, class T, class Cvec>
@@ -26,20 +29,23 @@ void addSimple(const P& p, vector<T>& v, const Cvec& c) {
 int main(int, char**) {
     CodeVersion::display_code_version();
 
-    std::vector<double> x(3);
+    ////////////////////////
+    // construct polynomials
+
+    std::vector<precision_t> x(3);
 
     Mxyz m(5,{3,2,1});
     m += m;
     std::cout << m << "\n";
 
-    auto p = Pxyz::lowerTriangleTerms(4);
+    auto p = Pxyz::lowerTriangleTerms(4,1);
     std::cout << p << "\n";
     p.algebraicForm(std::cout,true) << "\n";
     p += p;
     p *= p;
     p += m;
     p = p.integral(1,0,2);
-    std::cout << p << " -> " << p(x) << "\n";
+    std::cout << p << " -> " << double(p(x)) << "\n";
 
     assert(p == p.integral(2).derivative(2));
 
@@ -47,13 +53,16 @@ int main(int, char**) {
     auto p2 = reduce(ip,2);
     std::cout << p2 << "\n";
 
-    PolyEval<> PE;
+    /////////////////////////////////////////////////
+    // compare time between fast and naive evaluation
+
+    PolyEval<precision_t> PE;
     int ntrials = 10;
-    vector<PolyEval<>::coord_t<3>> vc(1000000/ntrials);
+    vector<PolyEval<precision_t>::coord_t<3>> vc(1000000/ntrials);
     for(size_t i=0; i<vc.size(); i++) {
         vc[i] = {0.5*i*1e-5, sqrt(i/1e4), i*1.e-10*i};
     }
-    vector<double> vp, vp2;
+    vector<precision_t> vp, vp2;
 
     auto t0 = steady_clock::now();
 
@@ -79,25 +88,29 @@ int main(int, char**) {
     }
     printf("dmax %g\n", dmax);
 
-    BBox<3> BB;
-    BB.expand({-1,-1,-1});
-    BB.expand({1,1,1});
+    ///////////////////////////
+    // generate evaluation grid
+
+    BBox<3,precision_t> BB;
+    BB.expand({precision_t(-1),precision_t(-1),precision_t(-1)});
+    BB.expand({precision_t(1),precision_t(1),precision_t(1)});
     NGrid<3> NG({5,5,5});
     vc.clear();
     for(auto c: NG) {
         auto x = NG.centerpos(c,BB);
-        printf("%g\t%g\t%g\n", x[0], x[1], x[2]);
+        printf("%i,%i,%i -> %g\t%g\t%g\n", c[0], c[1], c[2], double(x[0]), double(x[1]), double(x[2]));
         vc.push_back(x);
     }
+
+    //////////////////////////////////
+    // fit polynomial over grid points
 
     PolyFit<Pxyz> PF(Pxyz::lowerTriangleTerms(3,3.14));
     std::cout << PF.getPoly() << "\n";
     PF.setX(vc);
-    vector<double> y;
-    for(auto& c: vc) {
-        auto yy = PF.getPoly()(c);
-        y.push_back(yy);
-    }
+    vector<precision_t> y;
+    PE.setX(vc);
+    PE.evalPolynomial(PF.getPoly(), y);
     auto& PP = PF.solve(y);
     std::cout << PP << "\n" << PF.ssresid() << "\n";
 

@@ -84,6 +84,11 @@ public:
     template<class P>
     void addPolynomial(const P& p, vector<T>& v) { for(auto& m: p) addMonomial(m,v); }
 
+    /// Evaluate polynomial into vector
+    template<class P>
+    void evalPolynomial(const P& p, vector<T>& v) { v.clear(); addPolynomial(p,v); }
+
+
 protected:
     vector<vector<T>> Xs;                     ///< loaded coordinate vectors
     vector<PowerSeriesEval<vector<T>>> Ps;    /// Powers by variable

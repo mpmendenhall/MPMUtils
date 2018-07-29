@@ -1,4 +1,4 @@
-/// \file "PolyFit.hh" Least-squares linear polynomial fits
+/// \file "PolyFit.hh" Least-squares linear multidimensional polynomial fits
 /*
  * PolyFit.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2018 Michael P. Mendenhall
@@ -48,7 +48,8 @@ public:
     const Poly& getPoly() const { return P; }
 
     /// solve for RHS y (results stored in Poly coefficients)
-    const Poly& solve(const vector<double>& y) {
+    template<typename YVec>
+    const Poly& solve(const YVec& y) {
         assert(Xs.size() && y.size() == Xs[0].size());
         if(!Ps.size()) LinMin::clear(); // need new M for updated Xs
 

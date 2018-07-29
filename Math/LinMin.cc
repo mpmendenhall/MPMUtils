@@ -46,22 +46,12 @@ void LinMin::clear() {
     x = y = r = tau = nullptr;
 }
 
-void vector2gsl(const vector<double>& v, gsl_vector*& g) {
-    if(g && g->size != v.size()) {
-        gsl_vector_free(g);
-        g = nullptr;
-    }
-    if(!g) g = gsl_vector_alloc(v.size());
-    for(size_t i=0; i<g->size; i++) gsl_vector_set(g,i,v[i]);
-}
-
 void LinMin::setM(size_t i, size_t j, double v) {
     assert(M && i<Neq && j<Nvar);
     gsl_matrix_set(M,i,j,v);
 }
 
-void LinMin::solve(const vector<double>& vy) {
-    vector2gsl(vy,y);
+void LinMin::_solve() {
     if(!(M && y && r)) throw;
 
     if(x && x->size != M->size2) {

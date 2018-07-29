@@ -100,7 +100,7 @@ public:
     typename BB::coord_t centerpos(const idx_t i, const BB& B) const {
         static_assert(N == BB::N, "dimension mismatch");
         typename BB::coord_t c;
-        for(size_t a=0; a<N; a++) c[a] = B.pos((typename BB::x_t)(i[a]+0.5)/ngrid[a], a);
+        for(size_t a=0; a<N; a++) c[a] = B.pos(((typename BB::x_t)(i[a])+0.5)/ngrid[a], a);
         return c;
     }
 

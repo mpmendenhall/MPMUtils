@@ -30,10 +30,10 @@ namespace SVG {
         virtual BBox2 getBB() { return BB; }
     protected:
         /// Contents bounding box
-        BBox2 BB = BBox2::nullBox();
+        BBox2 BB;
         /// Calculate BBox from children
         void calcChildrenBB() {
-            BB = BBox2::nullBox();
+            BB = BBox2();
             for(auto& c: children) {
                 auto cc = dynamic_cast<BBXML*>(c);
                 if(cc) BB += cc->getBB();
@@ -70,7 +70,7 @@ namespace SVG {
         /// Calculate bounding box from contents
         BBox2 getBB() override {
             calcChildrenBB();
-            if(BB == BBox2::nullBox()) return BB;
+            if(BB.isNull()) return BB;
             for(auto i:{0,1}) { BB.lo[i] *= scale[i]; BB.hi[i] *= scale[i]; }
             BB.offset(translation);
             return BB;
@@ -176,7 +176,7 @@ namespace SVG {
         vector<xypoint> pts;
         /// Calculate bounding box from contents
         BBox2 getBB() override {
-            BB = BBox2::nullBox();
+            BB = BBox2();
             for(auto p: pts) BB.expand(p);
             return BB;
         }
@@ -248,9 +248,9 @@ namespace SVG {
     /// SVG document outline convenience class
     class SVGDoc {
     public:
-        svg body;                                       ///< main body element
-        BBXML::BBox2 BB = BBXML::BBox2::nullBox();      ///< view bounding box
-        double x2cm = 1.;                               ///< output scale factor
+        svg body;           ///< main body element
+        BBXML::BBox2 BB;    ///< view bounding box
+        double x2cm = 1.;   ///< output scale factor
 
         /// write to ostream
         void write(std::ostream& o) {
