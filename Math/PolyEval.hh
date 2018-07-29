@@ -56,7 +56,7 @@ public:
         v.resize(0);
         assert(m.size() <= Xs.size());
         if(!Xs.size()) return;
-        v.resize(Xs[0].size(), m.coeff);
+        v.resize(Xs[0].size(), 1);
         size_t i = 0;
         for(auto e: m) {
             while(Ps.size() <= i) {
@@ -70,19 +70,19 @@ public:
 
     /// Add evaluated monomial to input vector; auto-resize if input vector empty
     template<class M>
-    void addMonomial(const M& m, vector<T>& v) {
+    void addMonomial(const M& m, const T& coeff, vector<T>& v) {
         if(!v.size() && Xs.size()) v.resize(Xs[0].size());
-        if(!Xs.size() || !m.coeff) return;
+        if(!Xs.size()) return;
 
-        vector<T> vv(v.size(), m.coeff);
+        vector<T> vv;
         evalMonomial(m,vv);
         size_t i = 0;
-        for(auto c: vv) v[i++] += c;
+        for(auto c: vv) v[i++] += coeff*c;
     }
 
     /// Add evaluated polynomial to input vector; auto-resize if input vector empty
     template<class P>
-    void addPolynomial(const P& p, vector<T>& v) { for(auto& m: p) addMonomial(m,v); }
+    void addPolynomial(const P& p, vector<T>& v) { for(auto& kv: p) addMonomial(kv.first,kv.second,v); }
 
     /// Evaluate polynomial into vector
     template<class P>

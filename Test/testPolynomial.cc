@@ -8,6 +8,7 @@
 #include "BBox.hh"
 #include <stdlib.h>
 #include <chrono>
+#include "Abstract.hh"
 using std::chrono::steady_clock;
 
 //typedef float precision_t;
@@ -32,26 +33,31 @@ int main(int, char**) {
     ////////////////////////
     // construct polynomials
 
+    // 1-variable (integer exponent), float coeffs
+    AbstractPolynomial<float,int> AP2;
+    AP2[1] = 6;
+    AP2[2] = 2;
+    AP2[3] = 3;
+    std::cout << AP2 << AP2*AP2 << "\n";
+
+    // 2-variable, integer coeffs
+    AbstractPolynomial<int,EVec<2>> AP;
+    AP[EVec<2>({0,1})] = 6;
+    AP[EVec<2>({1,1})] = 2;
+    AP[EVec<2>({2,0})] = 3;
+    std::cout << AP << AP*AP << "\n";
+
     std::vector<precision_t> x(3);
 
-    Mxyz m(5,{3,2,1});
-    m += m;
-    std::cout << m << "\n";
-
-    auto p = Pxyz::lowerTriangleTerms(4,1);
-    std::cout << p << "\n";
-    p.algebraicForm(std::cout,true) << "\n";
-    p += p;
-    p *= p;
-    p += m;
-    p = p.integral(1,0,2);
+    auto p = Pxyz::lowerTriangleTerms(3,1);
+    std::cout << "Poly(xyz^3) " << p << "\n";
     std::cout << p << " -> " << double(p(x)) << "\n";
 
-    assert(p == p.integral(2).derivative(2));
+    //assert(p == p.integral(2).derivative(2));
 
-    auto ip = p.integral(2);
-    auto p2 = reduce(ip,2);
-    std::cout << p2 << "\n";
+    //auto ip = p.integral(2);
+    //auto p2 = reduce(ip,2);
+    //std::cout << p2 << "\n";
 
     /////////////////////////////////////////////////
     // compare time between fast and naive evaluation

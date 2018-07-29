@@ -56,10 +56,9 @@ public:
         if(!M) {
             LinMin::resize(y.size(), P.size());
             size_t i = 0;
-            for(auto& m: P) {
-                ((typename Poly::monomial_t&)m).coeff = 1;
+            for(auto& kv: P) {
                 vector<double> v;
-                evalMonomial(m,v);
+                evalMonomial(kv.first,v);
                 size_t j = 0;
                 for(auto c: v) gsl_matrix_set(M,j++,i,c);
                 i++;
@@ -69,7 +68,7 @@ public:
 
         size_t i=0;
         assert(x && x->size == P.size());
-        for(auto& m: P) ((typename Poly::monomial_t&)m).coeff = gsl_vector_get(x,i++);
+        for(auto& kv: P) kv.second = gsl_vector_get(x,i++);
         return P;
     }
 

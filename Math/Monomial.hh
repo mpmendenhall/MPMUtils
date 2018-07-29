@@ -22,12 +22,11 @@
 #ifndef MONOMIAL_HH
 #define MONOMIAL_HH
 
-#include <iostream>
+#include "Abstract.hh"
 #include <iomanip>
 #include <exception>
 #include <cassert>
 #include <cmath>
-#include <array>
 
 /// general exception for polynomial problems
 class PolynomialException: public std::exception {
@@ -39,39 +38,32 @@ class InconsistentMonomialException: public PolynomialException {
     virtual const char* what() const throw() { return "Incomparable monomial terms!"; }
 };
 
-/// Monomial (one term in a Polynomial), given by coefficient and vector of exponents
-template<typename Vec, typename T>
-class Monomial: public Vec {
+/// Monomial function M, given by vector of exponents
+template<typename Vec>
+class Monomial: public Semigroup<Vec> {
 public:
-    typedef T coeff_t;      ///< coefficient
-    typedef Vec exponents;  ///< exponents list
-
     template<typename A>
     using array_contents_t = typename std::remove_reference<decltype(std::declval<A&>()[0])>::type;
 
-    typedef array_contents_t<Vec> exp_t;    ///< exponent type
+    typedef Semigroup<Vec> exponents;   ///< exponents list
+    typedef array_contents_t<Vec> exp_t;///< exponent type
 
-    /// constructor
-    Monomial(coeff_t v, exponents d = exponents()): Vec(d), coeff(v) { }
+    /// constructor for unit monomial
+    Monomial(exponents d = exponents()): exponents(d) { }
 
-    /// check Monomial consistency
-    bool consistentWith(const Monomial& u) const { return (Vec&)(*this) == (Vec&)u; }
-    /// throw error if inconsistent
-    void assertConsistent(const Monomial& u) const { if(!consistentWith(u)) throw(InconsistentMonomialException()); }
-
-    /// unary minus
-    const Monomial operator-() const { return Monomial(-coeff, *this); }
     /// inverse Monomial
-    const Monomial inverse() const { Monomial u(1./coeff, *this); for(auto& e: u) { e *= -1; } return u; }
+    const Monomial inverse() const { return Monomial(-exponents(*this)); }
 
     /// derivative of i^th variable
     const Monomial derivative(size_t i) const {
         auto e = (*this)[i];
-        if(!e) return Monomial(0);
+        assert(e); // TODO null monomial return Monomial();
         auto m = (*this)*e;
         m[i]--;
         return m;
     }
+
+    /*
     /// indefinite integral of i^th variable
     const Monomial integral(size_t i) const {
         auto e = (*this)[i];
@@ -89,67 +81,13 @@ public:
         m[i] = 0;
         return m;
     }
-
-    /// evaluate at given point
-    template<typename coord>
-    auto operator()(const coord& v) const -> array_contents_t<coord> {
-        assert(v.size() == this->size());
-        array_contents_t<coord> s = coeff;
-        unsigned int i=0;
-        for(auto e: *this) {
-            //if(e) s *= pow(v[i],e);
-            while(e--) s *= v[i]; // improved for high precision types
-            i++;
-        }
-        return s;
-    }
-
-    /// equality check
-    bool operator==(const Monomial& m) const { return coeff == m.coeff && (Vec&)*this == m; }
-
-    /// inplace addition
-    Monomial& operator+=(const Monomial& rhs) { assertConsistent(rhs); coeff += rhs.coeff; return *this; }
-    /// inplace subtraction
-    Monomial& operator-=(const Monomial& rhs) { assertConsistent(rhs); coeff -= rhs.coeff; return *this; }
-    /// inplace multiplication
-    Monomial& operator*=(const Monomial& rhs) { unsigned int i=0; for(auto& e: *this) { e += rhs[i++]; } coeff *= rhs.coeff; return *this; }
-    /// inplace division
-    Monomial& operator/=(const Monomial& rhs) { unsigned int i=0; for(auto& e: *this) { e -= rhs[i++]; } coeff /= rhs.coeff; return *this; }
-    /// inplace multiplication
-    Monomial& operator*=(T rhs) { coeff *= rhs; return *this; }
-    /// inplace division
-    Monomial& operator/=(T rhs) { coeff /= rhs; return *this; }
-
-    /// addition operator
-    const Monomial operator+(const Monomial& other) const { return Monomial(*this) += other; }
-    /// subtraction operator
-    const Monomial operator-(const Monomial& other) const { return Monomial(*this) -= other; }
-    /// multiplication operator
-    const Monomial operator*(const Monomial& other) const { return Monomial(*this) *= other; }
-    /// division operator
-    const Monomial operator/(const Monomial& other) const { return Monomial(*this) /= other; }
-    /// multiplication operator
-    const Monomial operator*(T other) const { return Monomial(*this) *= other; }
-    /// division operator
-    const Monomial operator/(T other) const { return Monomial(*this) /= other; }
+    */
 
     /// polynomial order
     exp_t order() const { exp_t o = 0; for(auto e: *this) o += fabs(e); return o; }
-    /// is this term even?
-    bool isEven() const { for(auto e: *this) { if(e%2) return false; } return true; }
-    /// is this term odd?
-    bool isOdd() const { for(auto e: *this) { if(!(e%2)) return false; } return true; }
 
     /// output representation in algebraic form
     std::ostream& algebraicForm(std::ostream& o, bool LaTeX=false) const {
-        if(fabs(coeff) == 1) {
-            if(!this->order()) {
-                o << std::showpos << double(coeff) << std::noshowpos;
-                return o;
-            }
-            o << (coeff > 0? "+":"-");
-        } else o << std::showpos << double(coeff) << std::noshowpos;
-
         unsigned int i = 0;
         for(auto e: *this) {
             if(e) {
@@ -161,18 +99,18 @@ public:
         return o;
     }
 
-    T coeff;  ///< coefficient
     static constexpr const char* vletters = "xyztuvwabcdefghijklmnopqrs";  ///< letters for variable names
 };
 
 /// output representation
-template<typename Vec, typename T>
-std::ostream& operator<<(std::ostream& o, const Monomial<Vec,T>& u) { return u.algebraicForm(o); }
+template<typename Vec>
+std::ostream& operator<<(std::ostream& o, const Monomial<Vec>& u) { return u.algebraicForm(o); }
 
 /// convenience typedef
-template<long unsigned int N, typename T = double>
-using Monomial_t = Monomial<std::array<unsigned int,N>, T>;
+template<long unsigned int N, typename T = unsigned int>
+using Monomial_t = Monomial<std::array<T,N>>;
 
+/*
 /// evaluate out variable
 template<long unsigned int N, typename T>
 Monomial_t<N-1, T> reduce(const Monomial_t<N,T>& m, int i, double c = 1) {
@@ -184,5 +122,6 @@ Monomial_t<N-1, T> reduce(const Monomial_t<N,T>& m, int i, double c = 1) {
     }
     return mm;
 }
+*/
 
 #endif
