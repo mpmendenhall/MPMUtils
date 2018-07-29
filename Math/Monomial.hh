@@ -59,9 +59,6 @@ public:
     /// throw error if inconsistent
     void assertConsistent(const Monomial& u) const { if(!consistentWith(u)) throw(InconsistentMonomialException()); }
 
-    /// convert to dimensionless quantity of given unit
-    double in(const Monomial& u) const { assertConsistent(u); return coeff/u.coeff; }
-
     /// unary minus
     const Monomial operator-() const { return Monomial(-coeff, *this); }
     /// inverse Monomial
