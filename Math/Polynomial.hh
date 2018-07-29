@@ -34,8 +34,10 @@ public:
     typedef M monomial_t;
     typedef R coeff_t;
 
+    /// default empty polynomial constructor
+    Polynomial() { }
     /// constructor from a monomial term
-    Polynomial(const M& m = M(), const coeff_t& c = 0) { (*this)[m] = c; }
+    Polynomial(const M& m, const coeff_t& c = 0) { (*this)[m] = c; }
 
     /// generate polynomial with all terms of order <= o in each variable
     static Polynomial allTerms(unsigned int o, coeff_t c = 0) {
@@ -69,7 +71,36 @@ public:
         for(auto& kv: *this) s += kv.first(v) * kv.second;
         return s;
     }
-/*
+
+    /// derivative of i^th variable
+    const Polynomial derivative(size_t i) const {
+        Polynomial P;
+        for(auto& kv: *this) {
+            auto m = kv.first;
+            auto c = m.differentiate(i);
+            if(!c) continue;
+            P[m] = kv.second * c;
+        }
+        return P;
+    }
+
+    /// indefinite integral of i^th variable
+    const Polynomial integral(size_t i) const {
+        Polynomial P;
+        for(auto& kv: *this) {
+            auto m = kv.first;
+            double c = m.integrate(i);
+            P[m] = kv.second / c;
+        }
+        return P;
+    }
+    /// evaluate with i^th variable set to constant
+    //const Polynomial eval(size_t i, coeff_t c) const { Polynomial P; for(auto& m: *this) P += m.eval(i,c); return P; }
+
+    /*
+    /// definite integral of i^th variable
+    const Polynomial integral(size_t i, coeff_t c0, coeff_t c1) { Polynomial P; for(auto& m: *this) P += m.integral(i,c0,c1); return P; }
+
     /// evaluate a polynomial change of variable
     template<typename pVec>
     Polynomial replace(const pVec& v) const {
@@ -100,19 +131,6 @@ public:
         }
         return this->replace(v);
     }
-
-    /// derivative of i^th variable
-    const Polynomial derivative(size_t i) const {
-        Polynomial P;
-        for(auto& m: *this) { if(m[i]) P.insert(m.derivative(i)); }
-        return P;
-    }
-    /// indefinite integral of i^th variable
-    const Polynomial integral(size_t i) const { Polynomial P; for(auto& m: *this) P.insert(m.integral(i)); return P; }
-    /// evaluate with i^th variable set to constant
-    const Polynomial eval(size_t i, coeff_t c) const { Polynomial P; for(auto& m: *this) P += m.eval(i,c); return P; }
-    /// definite integral of i^th variable
-    const Polynomial integral(size_t i, coeff_t c0, coeff_t c1) { Polynomial P; for(auto& m: *this) P += m.integral(i,c0,c1); return P; }
 */
     /// remove negligible terms
     Polynomial& prune(coeff_t c = 0) {

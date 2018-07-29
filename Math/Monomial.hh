@@ -42,36 +42,19 @@ class InconsistentMonomialException: public PolynomialException {
 template<typename Vec>
 class Monomial: public Semigroup<Vec> {
 public:
-    template<typename A>
-    using array_contents_t = typename std::remove_reference<decltype(std::declval<A&>()[0])>::type;
-
     typedef Semigroup<Vec> exponents;   ///< exponents list
     typedef array_contents_t<Vec> exp_t;///< exponent type
 
-    /// constructor for unit monomial
-    Monomial(exponents d = exponents()): exponents(d) { }
+    /// constructor from exponents (defaults to unit)
+    Monomial(const exponents& d = exponents()): exponents(d) { }
 
-    /// inverse Monomial
-    const Monomial inverse() const { return Monomial(-exponents(*this)); }
+    /// derivative of i^th variable; return coefficient scaling
+    exp_t differentiate(size_t i) { return (*this)[i]--; }
 
-    /// derivative of i^th variable
-    const Monomial derivative(size_t i) const {
-        auto e = (*this)[i];
-        assert(e); // TODO null monomial return Monomial();
-        auto m = (*this)*e;
-        m[i]--;
-        return m;
-    }
+    /// indefinite integral of i^th variable; return inverse scaling
+    exp_t integrate(size_t i) { return ++((*this)[i]); }
 
     /*
-    /// indefinite integral of i^th variable
-    const Monomial integral(size_t i) const {
-        auto e = (*this)[i];
-        assert((int)e != -1);
-        auto m = (*this)/(e+1.);
-        m[i]++;
-        return m;
-    }
     /// replace i^th variable with constant
     const Monomial eval(size_t i, coeff_t c) const { auto m = (*this)*pow(c, (*this)[i]); m[i] = 0; return m; }
     /// definite integral of i^th variable

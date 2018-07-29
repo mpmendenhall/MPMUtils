@@ -22,13 +22,19 @@
 #ifndef ABSTRACT_HH
 #define ABSTRACT_HH
 
+/////////////////////////////////////////////////////////////////////////////////////////
 // semigroup: set, operator *: a,b in S => a*b in s
+//
 // monoid: semigroup with identity element 1 in S, 1*a = a*1 = a for all a in S
+//
 // group: monoid with inverses; for all a in S, exists a^-1 such that a a^-1 = 1 = a^-1 a
+//
 // ring: set, operator *, operator +
 //      Abelian group under + => associative, commutative, has identity 0 and inverse -a
 //      monoid under * (has identity 1); * is distributive over +, not necessarily commutative
-// field: ring, add commutative over +, * inverses except 0
+//
+// field: ring plus commutative over +, * inverses except 0
+//
 // vector/linear space: module over a field
 
 // Left R-Module M:
@@ -49,15 +55,15 @@
 template<typename A>
 using array_contents_t = typename std::remove_reference<decltype(std::declval<A&>()[0])>::type;
 
-/// Formal abstract polynomial
+/// Formal abstract polynomial, with +/- and * operations
 // R is a ring with operators +,*, inverse -, default constructor '0'
 // E is a semigroup with operator + for exponent symbols x^i, x^k, x^(i+k)
 template<typename R, typename E>
 class AbstractPolynomial: public std::map<E,R> {
 public:
-    /// monomial term type
+    /// monomials semigroup member type
     typedef E monomial_t;
-    /// coefficients type
+    /// coefficients ring member type
     typedef R coeff_t;
 
     /// default constructor
@@ -110,7 +116,7 @@ public:
     /// addition
     const Semigroup operator+(const Semigroup& rhs) const { auto s = *this; s += rhs; return s; }
 
-    /// evaluate at given point
+    /// evaluate at given point, treating as exponentiation
     template<typename coord>
     auto operator()(const coord& v) const -> array_contents_t<coord> {
         assert(v.size() == this->size());
@@ -126,9 +132,9 @@ public:
 
 /// convenience typedef for N-dimensional (unsigned int) exponents vector
 template<long unsigned int N, typename T = unsigned int>
-using EVec = Semigroup<std::array<T,N>>;
+using ExpVec_t = Semigroup<std::array<T,N>>;
 
-// output representation
+/// output representation for Semigroup<Vec>
 template<typename Vec>
 std::ostream& operator<<(std::ostream& o, const Semigroup<Vec>& v) {
     o << "( ";
