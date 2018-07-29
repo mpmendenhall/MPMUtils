@@ -73,15 +73,6 @@ public:
     template<class P>
     void addPolynomial(const P& p, vector<T>& v) { for(auto& m: p) addMonomial(m,v); }
 
-    /// Comparison simple algorithm
-    template<class P, class Cvec>
-    void addSimple(const P& p, vector<T>& v, const Cvec& c) const {
-        if(!v.size()) v.resize(c.size());
-        assert(v.size() <= c.size());
-        size_t i = 0;
-        for(auto& y: v) y += p(c[i++]);
-    }
-
 protected:
     vector<vector<T>> Xs;                     ///< loaded coordinate vectors
     vector<PowerSeriesEval<vector<T>>> Ps;    /// Powers by variable

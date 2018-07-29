@@ -9,6 +9,15 @@ using std::chrono::steady_clock;
 typedef Monomial_t<3> Mxyz;
 typedef Polynomial_t<3> Pxyz;
 
+/// Comparison simple algorithm
+template<class P, class T, class Cvec>
+void addSimple(const P& p, vector<T>& v, const Cvec& c) {
+    if(!v.size()) v.resize(c.size());
+    assert(v.size() <= c.size());
+    size_t i = 0;
+    for(auto& y: v) y += p(c[i++]);
+}
+
 int main(int, char**) {
 
     std::vector<double> x(3);
@@ -47,7 +56,7 @@ int main(int, char**) {
 
     auto t1 = steady_clock::now();
 
-    for(int i=0; i<ntrials; i++) PE.addSimple(p, vp2, vc);
+    for(int i=0; i<ntrials; i++) addSimple(p, vp2, vc);
 
     auto t2 = steady_clock::now();
 

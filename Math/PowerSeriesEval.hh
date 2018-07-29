@@ -25,7 +25,7 @@
 template<typename Vec>
 class PowerSeriesEval {
 public:
-
+    /// return value, deduced from vector type
     typedef typename std::remove_reference<decltype(std::declval<Vec&>()[0])>::type T;
 
     /// set x^1 values
@@ -41,7 +41,7 @@ public:
         }
     }
 
-    /// multiply by x^n
+    /// multiply vector by x^n
     void mul(Vec& v0, size_t n) {
         if(!n) return;
          auto& x = pow(n);
