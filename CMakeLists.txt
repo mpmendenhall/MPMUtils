@@ -10,6 +10,12 @@ find_package(GLUT REQUIRED)
 include_directories(${HDF5_INCLUDE_DIRS})
 find_library(FFTW_LIBS fftw3)
 
+
+# force rebuild of CodeVersion
+#add_custom_command(OUTPUT always_rebuild COMMAND cmake -E echo)
+add_custom_command(OUTPUT codeversion COMMAND touch ${PROJECT_SOURCE_DIR}/Utility/CodeVersion.cc)
+add_custom_target(update_codeversion DEPENDS codeversion)
+
 foreach(dir IN ITEMS
     Framework Math Utility Visualization
 )
@@ -33,6 +39,7 @@ add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++11" "-DWITH_OPEN
 
 find_package(ROOT REQUIRED COMPONENTS MathCore Core RIO Hist Tree Minuit)
 include_directories(${ROOT_INCLUDE_DIRS})
+find_package(GSL)
 
 #---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
 include(${ROOT_USE_FILE})
@@ -60,7 +67,8 @@ SET_SOURCE_FILES_PROPERTIES(Utility/CodeVersion.cc PROPERTIES COMPILE_FLAGS "-DR
 
 # libMPM omnibus
 add_library(MPM SHARED ${SOURCE_FILES})
-target_link_libraries(MPM ${ROOT_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${CONFIG_LIBS} ${FFTW_LIBS}) #${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES}
+target_link_libraries(MPM ${CONFIG_LIBS} ${FFTW_LIBS} ${GLUT_LIBRARIES} ${GSL_LIBRARIES} ${OPENGL_LIBRARIES} ${ROOT_LIBRARIES} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
+add_dependencies(MPM update_codeversion)
 
 # test programs
 foreach(exec IN ITEMS testVisr testPolynomial)

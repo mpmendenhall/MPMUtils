@@ -1,7 +1,7 @@
-/// \file "LinMin.hh" Least-squares linear system matrix solver
+/// \file "LinMin.hh" Least-squares linear polynomial fits
 /*
  * LinMin.hh, part of the MPMUtils package.
- * Copyright (c) 2007-2018 Michael P. Mendenhall
+ * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,45 +20,48 @@
  */
 
 #ifndef LINMIN_HH
+/// Make sure this header is included only once
 #define LINMIN_HH
 
 #include "gsl/gsl_matrix.h"
 #include "gsl/gsl_vector.h"
-#include <iostream>
-
-/// least-squares minimize coeffs*x = rslt+resid using QR decomposition. *frees* coeffs; needs proper-sized resid, returns x.
-//gsl_vector* lsmin(gsl_matrix* coeffs, const gsl_vector* rslt, gsl_vector* resid);
-/// Linear fit to 3-variate polynomial; return rms residual. Coords is an N*3 matrix for N values at locations x,y,z
-//double polynomialFit(const gsl_matrix* coords, const gsl_vector* values, Polynomial<3,double>& p);
+#include <vector>
+using std::vector;
 
 /// helper class for solving system of linear equations Mx = y+r
 class LinEqSolver {
 public:
     /// Constructor, for m equations in n variables
-    LinEqSolver(size_t mm, size_t nn);
+    LinEqSolver(size_t neq = 0, size_t nvar = 0) { resize(neq, nvar); }
     /// Destructor
-    ~LinEqSolver();
+    ~LinEqSolver() { clear(); }
     /// set y
     void sety(size_t i, double v);
     /// set M
     void setM(size_t i, size_t j, double v);
     /// calculate solution x, r
     void solve();
+
     /// get sum of squares of residuals
     double ssresid() const;
     /// get solution x
-    double getx(size_t i) const;
+    void getx(vector<double>& vx) const;
     /// get resid r
-    double getr(size_t i) const;
+    void getr(vector<double>& vr) const;
 
-    const size_t m;             ///< number of equations
-    const size_t n;             ///< number of variables
+    /// resize to specified dimensions
+    void resize(size_t neq, size_t nvar);
+    /// free data
+    void clear();
 
 protected:
-    gsl_matrix* M = nullptr;       ///< coefficients matrix
-    gsl_vector* x = nullptr;       ///< solution vector
-    gsl_vector* y = nullptr;       ///< RHS vector
-    gsl_vector* r = nullptr;       ///< residuals vector
+    size_t Neq = 0;             ///< number of equations
+    size_t Nvar = 0;            ///< number of variables
+
+    gsl_matrix* M = nullptr;    ///< coefficients matrix
+    gsl_vector* x = nullptr;    ///< solution vector
+    gsl_vector* y = nullptr;    ///< RHS vector
+    gsl_vector* r = nullptr;    ///< residuals vector
 };
 
 #endif
