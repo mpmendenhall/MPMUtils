@@ -12,9 +12,13 @@
 #include <array>
 
 /// Templatized D-dimensional bounding box
-template<size_t D, typename T>
+template<size_t D, typename T = double>
 class BBox {
 public:
+    /// number of dimensions
+    static constexpr size_t N = D;
+    /// one-dimensional type
+    typedef T x_t;
     /// coordinate type
     typedef std::array<T,D> coord_t;
 

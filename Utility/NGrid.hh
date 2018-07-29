@@ -22,7 +22,6 @@
 #ifndef NGRID_HH
 #define NGRID_HH
 
-//#include "BBox.hh"
 #include <iterator>
 #include <cassert>
 
@@ -86,6 +85,24 @@ public:
     iterator begin() const { return iterator(ngrid); }
     /// end of grid enumeration
     iterator end() const { return iterator(ngrid,-1); }
+
+    /// indexed coordinate position, spanning corners of bounding box (use with BBox.hh)
+    template<class BB>
+    typename BB::coord_t cornerpos(const idx_t i, const BB& B) const {
+        static_assert(N == BB::N, "dimension mismatch");
+        typename BB::coord_t c;
+        for(size_t a=0; a<N; a++) c[a] = B.pos(ngrid[a] > 1? (typename BB::x_t)(i[a])/(ngrid[a]-1) : 0.5, a);
+        return c;
+    }
+
+    /// indexed coordinate position, centered in subdivided BBox (use with BBox.hh)
+    template<class BB>
+    typename BB::coord_t centerpos(const idx_t i, const BB& B) const {
+        static_assert(N == BB::N, "dimension mismatch");
+        typename BB::coord_t c;
+        for(size_t a=0; a<N; a++) c[a] = B.pos((typename BB::x_t)(i[a]+0.5)/ngrid[a], a);
+        return c;
+    }
 
 protected:
     size_t size = 0;///< total number of points

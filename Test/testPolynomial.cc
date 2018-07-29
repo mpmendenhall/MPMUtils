@@ -5,6 +5,7 @@
 #include "PolyFit.hh"
 #include "CodeVersion.hh"
 #include "NGrid.hh"
+#include "BBox.hh"
 #include <stdlib.h>
 #include <chrono>
 using std::chrono::steady_clock;
@@ -78,9 +79,16 @@ int main(int, char**) {
     }
     printf("dmax %g\n", dmax);
 
-    NGrid<3> NG({10,10,10});
+    BBox<3> BB;
+    BB.expand({-1,-1,-1});
+    BB.expand({1,1,1});
+    NGrid<3> NG({5,5,5});
     vc.clear();
-    for(auto c: NG) vc.push_back({c[0]*1.,c[1]*1.,c[2]*1.});
+    for(auto c: NG) {
+        auto x = NG.centerpos(c,BB);
+        printf("%g\t%g\t%g\n", x[0], x[1], x[2]);
+        vc.push_back(x);
+    }
 
     PolyFit<Pxyz> PF(Pxyz::lowerTriangleTerms(3,3.14));
     std::cout << PF.getPoly() << "\n";
