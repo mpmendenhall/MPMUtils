@@ -31,7 +31,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 
-add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++11" "-DWITH_OPENGL")
+add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++14" "-DWITH_OPENGL")
 
 ################
 # ROOT, ROOT Dicts

@@ -50,8 +50,8 @@ public:
     /// solve for RHS y (results stored in Poly coefficients)
     template<typename YVec>
     const Poly& solve(const YVec& y) {
-        assert(Xs.size() && y.size() == Xs[0].size());
-        if(!Ps.size()) LinMin::clear(); // need new M for updated Xs
+        assert(y.size() == npts);
+        if(!Xd.size()) LinMin::clear(); // need new M for updated Xs
 
         if(!M) {
             LinMin::resize(y.size(), P.size());

@@ -23,8 +23,7 @@
 #define POLYEVAL_HH
 
 #include "PowerSeriesEval.hh"
-#include "Polynomial.hh"
-using std::vector;
+#include "Abstract.hh"
 
 /// Fast vectorized evaluation of polynomials at many points
 template<typename T = double>
@@ -32,63 +31,41 @@ class PolyEval {
 public:
     /// convenience typedef for n-dimensional evauation coordinate
     template<unsigned int n>
-    using coord_t = std::array<T,n>;
+    using coord_t = array<T,n>;
 
     /// load x,y,z,... vectors
     template<class Cvec>
     void setX(const Cvec& v) {
-        Xs.clear();
-        Ps.clear();
+        Xd.clear();
+        npts = v.size();
         if(!v.size()) return;
 
         auto n = v[0].size();
-        Xs.resize(n);
         for(size_t i = 0; i < n; i++) {
-            Xs[i].resize(v.size());
+            auto& x = Xd[i];
+            x.Xs.resize(v.size());
             size_t j = 0;
-            for(auto& c: v) Xs[i][j++] = c[i];
+            for(auto& c: v) x.Xs[j++] = c[i];
+            x.Ps.setX(x.Xs);
         }
     }
 
-    /// Evalualuate monomial into vector
+    /// Evalualuate standard-form polymial term into vector
     template<class M>
     void evalMonomial(const M& m, vector<T>& v) {
         v.resize(0);
-        assert(m.size() <= Xs.size());
-        if(!Xs.size()) return;
-        v.resize(Xs[0].size(), 1);
-        size_t i = 0;
-        for(auto e: m) {
-            while(Ps.size() <= i) {
-                Ps.push_back({});
-                Ps.back().setX(Xs[Ps.size()-1]);
-            }
-            Ps[i].mul(v, e);
-            i++;
-        }
-    }
-/*
-    /// Evalualuate monomial into vector
-    template<class M>
-    void evalMonomial(const std::map<U,V>& m, vector<T>& v) {
-        v.resize(0);
-        if(!Xs.size()) return;
-        v.resize(Xs[0].size(), 1);
+        v.resize(npts, 1);
         for(auto& kv: m) {
-            while(Ps.size() <= kv.first) {
-                Ps.push_back({});
-                Ps.back().setX(Xs[Ps.size()-1]);
-            }
-            Ps[kv.first].mul(v, kv.second);
+            auto it = Xd.find(kv.first);
+            if(it == Xd.end()) throw;
+            it->second.Ps.mul(v, kv.second);
         }
     }
-*/
 
     /// Add evaluated monomial to input vector; auto-resize if input vector empty
     template<class M>
     void addMonomial(const M& m, const T& coeff, vector<T>& v) {
-        if(!v.size() && Xs.size()) v.resize(Xs[0].size());
-        if(!Xs.size()) return;
+        if(!v.size()) v.resize(npts);
 
         vector<T> vv;
         evalMonomial(m,vv);
@@ -98,7 +75,7 @@ public:
 
     /// Add evaluated polynomial to input vector; auto-resize if input vector empty
     template<class P>
-    void addPolynomial(const P& p, vector<T>& v) { for(auto& kv: p) addMonomial(kv.first,kv.second,v); }
+    void addPolynomial(const P& p, vector<T>& v) { for(auto& kv: p) addMonomial(kv.first.get(), kv.second, v); }
 
     /// Evaluate polynomial into vector
     template<class P>
@@ -106,8 +83,12 @@ public:
 
 
 protected:
-    vector<vector<T>> Xs;                     ///< loaded coordinate vectors
-    vector<PowerSeriesEval<vector<T>>> Ps;    /// Powers by variable
+    size_t npts = 0;                    ///< number of evaluation points
+    struct Xdata {
+        vector<T> Xs;                   ///< one variable's values
+        PowerSeriesEval<vector<T>> Ps;  ///< powers of the variable
+    };
+    map<int,Xdata> Xd;                  ///< cached data
 };
 
 #endif

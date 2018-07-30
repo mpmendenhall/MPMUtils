@@ -23,7 +23,7 @@
 #ifndef POLYNOMIAL_HH
 #define POLYNOMIAL_HH
 
-#include "Monomial.hh"
+#include "Abstract.hh"
 #include <vector>
 #include <cmath>
 
@@ -157,18 +157,6 @@ public:
         return o;
     }
 };
-
-/// output representation
-template<typename M, typename R>
-std::ostream& operator<<(std::ostream& o, const Polynomial<M,R>& u) { return u.algebraicForm(o); }
-
-/// convenience typedef
-template<long unsigned int N, typename T = double>
-using Polynomial_t = Polynomial<Monomial_t<N>,T>;
-
-/// convenience typedef
-template<typename T = double>
-using PolynomialM_t = Polynomial<MonomialM_t<>,T>;
 
 /// evaluate out variable
 template<long unsigned int N, typename T = double>

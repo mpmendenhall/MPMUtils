@@ -23,9 +23,9 @@
 #define ABSTRACT_HH
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// semigroup: set, operator *: a,b in S => a*b in s
+// _Semigroup: set, operator *: a,b in S => a*b in s
 //
-// monoid: semigroup with identity element 1 in S, 1*a = a*1 = a for all a in S
+// monoid: _Semigroup with identity element 1 in S, 1*a = a*1 = a for all a in S
 //
 // group: monoid with inverses; for all a in S, exists a^-1 such that a a^-1 = 1 = a^-1 a
 //
@@ -49,9 +49,15 @@
 
 #include <map>
 #include <array>
+#include <vector>
 #include <iostream>
 #include <cassert>
 #include <cmath>
+
+using std::vector;
+using std::map;
+using std::array;
+using std::pair;
 
 //template<typename A>
 //using array_contents_t = typename std::tuple_element<0,A>::type;
@@ -59,103 +65,151 @@
 template<typename T>
 using array_contents_t = typename std::remove_reference<decltype(std::declval<T&>()[0])>::type;
 
-
 template<typename M>
 using map_key_t = typename std::remove_reference<decltype(std::declval<M&>().begin()->first)>::type;
 
 template<typename M>
 using map_value_t = typename std::remove_reference<decltype(std::declval<M&>().begin()->second)>::type;
 
-/// Formal abstract polynomial, with +/- and * operations
-// R is a ring with operators +,*, inverse -, default constructor '0'
-// E is a semigroup with operator + for exponent symbols x^i, x^k, x^(i+k)
-template<typename R, typename E>
-class AbstractPolynomial: public std::map<E,R> {
-public:
-    /// monomials semigroup member type
-    typedef E monomial_t;
-    /// coefficients ring member type
-    typedef R coeff_t;
+////////////////////////////////////////////////
+////////////////////////////////////////////////
 
-    /// default constructor
-    using std::map<E,R>::map;
+/// Pass-through _Semigroup identification class
+template<class G>
+class _Semigroup { };
 
-    //////////////////////////////////////
-    // core "required" polyomial functions
-
-    /// unary minus
-    const AbstractPolynomial operator-() const { AbstractPolynomial P(*this); for(auto& kv: P) kv.second = -kv.second; }
-    /// inplace addition
-    AbstractPolynomial& operator+=(const AbstractPolynomial& rhs) { for(auto& kv: rhs) (*this)[kv.first] += kv.second; return *this; }
-    /// addition
-    const AbstractPolynomial operator+(const AbstractPolynomial& rhs) const { auto p = *this; p += rhs; return p; }
-    /// inplace subtraction
-    AbstractPolynomial& operator-=(const AbstractPolynomial& rhs) { for(auto& kv: rhs) (*this)[kv.first] -= kv.second; return *this; }
-    /// subtraction
-    const AbstractPolynomial operator-(const AbstractPolynomial& rhs) const { auto p = *this; p -= rhs; return p; }
-    /// multiplication
-    const AbstractPolynomial operator*(const AbstractPolynomial& rhs) const {
-        AbstractPolynomial P;
-        for(auto& kv: *this)
-            for(auto& kv2: rhs)
-                P[kv.first + kv2.first] += kv.second*kv.second;
-        return P;
+/// output representation for standard-form _Semigroup
+template<class G>
+std::ostream& operator<<(std::ostream& o, const _Semigroup<G>& s) {
+    auto e = s.get();
+    o << "( ";
+    for(auto& p: e) {
+        if(p.second) {
+            if(p.second != 1) o << p.second << "x";
+            o << "[" << p.first << "]";
+        } else o << "1";
+        o << " ";
     }
-    /// inplace multiplication
-    AbstractPolynomial& operator*=(const AbstractPolynomial& rhs) { *this = (*this) * rhs; return *this; }
-    /// scalar multiplication
-    AbstractPolynomial& operator*=(const coeff_t& rhs) { for(auto& kv: *this) kv.second *= rhs; }
-
-    /////////////////////////////////
-    // optional variants as-supported
-
-    /// transform as sum of terms
-    template<class X>
-    auto transform(const X& x) const -> decltype(x(this->begin()->first,this->begin()->second)) {
-        decltype(x(this->begin()->first,this->begin()->second)) P;
-        for(auto& kv: *this) P += x(kv.first,kv.second);
-        return P;
-    }
-};
-
-// transform patterns on P = sum(c*x^i)
-// x^i -> k * y^j => P -> sum (c*k) y^j term-by-term or drop
-// OR terms are polynomials that mix, x^i -> P'(k,y)
-// P -> sum c*P'(k,y) = P''(sum c*k, y), new type c*k
-
-/// output representation
-template<typename R, typename E>
-std::ostream& operator<<(std::ostream& o, const AbstractPolynomial<R,E>& p) {
-    o << "< ";
-    for(auto& kv: p) o << kv.second << " * " << kv.first << " ";
-    o << ">";
+    o << ")";
     return o;
 }
 
-/// Wrapper for iterable fixed-size array into semigroup under +
-template<typename A>
-class ArraySemigroup: public A {
+/// apply semigroup operator as multiply
+template<typename SG, typename T, typename Data>
+T& SGmultiply(const SG& o, const Data& d, T& x0) {
+    auto ts = o.get();
+    for(auto& kv: ts) {
+        auto e = kv.second;
+        while(e-- > 0) x0 *= d[kv.first];
+    }
+    return x0;
+}
+
+////////////////////////////////////////////////
+
+/// Arithmetic type pass-through class
+template<typename T>
+class _ArithmeticRing { };
+
+/// Arithmetic operations as _Semigroup
+template<typename T>
+class _Semigroup<_ArithmeticRing<T>> {
 public:
-    /// convenience typedef for array contents
-    typedef array_contents_t<A> x_t;
-    /// an appropriate coordinate type
-    template<typename T>
-    using coord_t = std::array<T, std::tuple_size<A>::value>;
+    /// "exponent type" when used as polynomial _Semigroup
+    typedef T exp_t;
+    /// generator enumeration index --- only one generator!
+    typedef int gen_t;
+    /// _Semigroup element
+    typedef vector<pair<gen_t,exp_t>> elem_t;
+    /// array size
+    static constexpr auto N = 1;
+
+    /// Constructor
+    _Semigroup(const T& X = 0): x(X) { }
+
+    /// get standard-form element representation
+    elem_t get() const { return {{0,x}}; }
+    /// recast to base type
+    operator T() const { return x; }
+
+    T x;    ///< arithmetic value
+
+    /// comparison
+    bool operator<(const _Semigroup& rhs) const { return x < rhs.x; }
+    /// inplace addition
+    _Semigroup& operator+=(const _Semigroup& rhs) { x += rhs.x; return *this; }
+    /// out-of-place addition
+    const _Semigroup operator+(const _Semigroup& rhs) const { return x + rhs.x; }
+    /// inplace multiplication
+    _Semigroup& operator*=(const _Semigroup& rhs) { x *= rhs.x; return *this; }
+    /// out-of-place multiplication
+    const _Semigroup operator*(const _Semigroup& rhs) const { return x * rhs.x; }
+    /// inplace division
+    _Semigroup& operator/=(const _Semigroup& rhs) { x /= rhs.x; return *this; }
+    /// out-of-place division
+    const _Semigroup operator/(const _Semigroup& rhs) const { return x / rhs.x; }
+    /// unary minus
+    const _Semigroup operator-() const { return -x; }
+};
+
+/// convenience typedef for Arithmetic on T
+template<typename T>
+using ArithmeticRing_t = _Semigroup<_ArithmeticRing<T>>;
+
+/// output representation for arithmetic value
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const ArithmeticRing_t<T>& s) {
+    o << T(s);
+    return o;
+}
+
+/////////////////////////////////////////
+
+/// Array-type pass-through tag
+template<typename A>
+class _SGArray { };
+
+/// Specialization for array-type _Semigroups
+template<typename A>
+class _Semigroup<_SGArray<A>>: public A {
+public:
+    /// exponent type from array contents
+    typedef array_contents_t<A> exp_t;
+    /// generator enumeration index
+    typedef unsigned int gen_t;
+    /// _Semigroup element
+    typedef vector<pair<gen_t,exp_t>> elem_t;
+    /// array size
+    static constexpr auto N = std::tuple_size<A>::value;
 
     /// default constructor
-    ArraySemigroup(): A() { }
+    using A::A;
     /// constructor from array
-    ArraySemigroup(const A& v): A(v) { }
+    _Semigroup(const A& a): A(a) { }
+
+    /// get standard-form element representation
+    elem_t get() const {
+        elem_t g;
+        gen_t i = 0;
+        for(auto e: *this) {
+            if(e) g.emplace_back(i,e);
+            i++;
+        }
+        return g;
+    }
 
     /// inplace addition
-    ArraySemigroup& operator+=(const ArraySemigroup& rhs) { size_t i=0; for(auto& e: *this) { e += rhs[i++]; } return *this; }
-    /// addition
-    const ArraySemigroup operator+(const ArraySemigroup& rhs) const { auto s = *this; s += rhs; return s; }
+    _Semigroup& operator+=(const _Semigroup& rhs) {
+        size_t i=0;
+        for(auto& e: *this) e += rhs[i++];
+        return *this;
+    }
+    /// out-of-place addition
+    const _Semigroup operator+(const _Semigroup& rhs) const { auto s = *this; s += rhs; return s; }
 
-    /// total contents 1-norm
-    x_t order() const { x_t o = 0; for(auto e: *this) o += fabs(e); return o; }
-    /// const access at index i
-    x_t get(size_t i) const { return this->at(i); }
+    /// an appropriate coordinate type
+    template<typename T>
+    using coord_t = array<T,N>;
 
     /// evaluate at given point, treating as exponentiation
     template<typename coord>
@@ -171,63 +225,147 @@ public:
     }
 };
 
-/// Wrapper for map-type object as semigroup under +
-template<typename M>
-class MapSemigroup: public M {
-public:
-    /// convenience typedef for map contents
-    typedef map_value_t<M> x_t;
-    /// convenience typedef for map key
-    typedef map_key_t<M> k_t;
-    /// an appropriate coordinate type
-    template<typename T>
-    using coord_t = std::map<k_t, T>;
+/// convenience typedef for N-dimensional SGArray of T (default uint)
+template<long unsigned int N, typename T = unsigned int>
+using SGArray_t = _Semigroup<_SGArray<array<T,N>>>;
 
+/////////////////////////////////////////
+
+/// Map-type pass-through tag
+template<typename M>
+class _SGMap: public M { };
+
+/// Specialization for map-type _Semigroups
+template<typename M>
+class _Semigroup<_SGMap<M>>: public M {
+public:
+    /// base map object
+    typedef M map_t;
+    /// map key is generator
+    typedef map_key_t<M> gen_t;
+    /// map value is exponent
+    typedef map_value_t<M> exp_t;
+    /// _Semigroup element
+    typedef vector<pair<gen_t,exp_t>> elem_t;
 
     /// default constructor
-    MapSemigroup(): M() { }
-    /// constructor from array
-    MapSemigroup(const M& m): M(m) { }
+    using M::M;
+    /// constructor from map
+    _Semigroup(const M& m): M(m) { }
+
+    /// get standard-form element representation
+    elem_t get() const {
+        elem_t g;
+        for(auto& kv: *this) g.emplace_back(kv);
+        return g;
+    }
 
     /// inplace addition
-    MapSemigroup& operator+=(const MapSemigroup& rhs) {
-        for(auto& kv: rhs) (*this)[kv.first] += kv.second;
+    _Semigroup& operator+=(const _Semigroup& rhs) {
+        for(auto& kv: rhs) {
+            auto it = this->find(kv.first);
+            if(it == this->end()) {
+                if(kv.second) this->insert(kv);
+            } else {
+                it->second += kv.second;
+                if(!it->second) this->erase(it);
+            }
+        }
         return *this;
     }
     /// addition
-    const MapSemigroup operator+(const MapSemigroup& rhs) const { auto s = *this; s += rhs; return s; }
+    const _Semigroup operator+(const _Semigroup& rhs) const { auto s = *this; s += rhs; return s; }
+};
 
-    /// total contents 1-norm
-    x_t order() const { x_t o = 0; for(auto& kv: *this) o += fabs(kv.second); return o; }
-    /// const access at index i
-    x_t get(k_t i) const {
-        auto it = this->find(i);
-        return it == this->end? x_t() : it->second;
+/// convenience typedef for SGMap of T (default uint)
+template<typename K = unsigned int, typename V = unsigned int>
+using SGMap_t = _Semigroup<_SGMap<map<K,V>>>;
+
+////////////////////////////////////////////////
+////////////////////////////////////////////////
+
+/// Formal abstract polynomial, with +/- and * operations
+// R is a ring with operators +,*, inverse -, default constructor '0'
+// S is a Semigroup with operator + for exponent symbols x^i, x^k, x^(i+k)
+template<typename R, typename S, typename _X = void>
+class AbstractPolynomial: public SGMap_t<S,R> {
+public:
+    typedef SGMap_t<S,R> SG;
+    /// coefficients ring member type
+    typedef R coeff_t;
+    /// monomials _Semigroup member type
+    typedef S monomial_t;
+
+    /// default constructor
+    using SG::_Semigroup;
+
+    //////////////////////////////////////
+    // core "required" polyomial functions
+
+    /// inplace addition
+    AbstractPolynomial& operator+=(const AbstractPolynomial& rhs) { (SG&)(*this) += rhs; return *this; }
+    /// addition
+    AbstractPolynomial operator+(const AbstractPolynomial& rhs) { auto p = *this; p += rhs; return p; }
+
+    /// unary minus
+    const AbstractPolynomial operator-() const { return -(SG&)*this; }
+    /// inplace subtraction
+    AbstractPolynomial& operator-=(const AbstractPolynomial& rhs) { *this += -rhs; }
+    /// subtraction
+    const AbstractPolynomial operator-(const AbstractPolynomial& rhs) const { auto p = *this; p -= rhs; return p; }
+
+    /// multiplication
+    const AbstractPolynomial operator*(const AbstractPolynomial& rhs) const {
+        AbstractPolynomial P;
+        for(auto& kv: *this)
+            for(auto& kv2: rhs)
+                P[kv.first + kv2.first] += kv.second * kv2.second;
+        return P;
     }
+    /// inplace multiplication
+    AbstractPolynomial& operator*=(const AbstractPolynomial& rhs) { *this = (*this) * rhs; return *this; }
+    /// scalar multiplication
+    AbstractPolynomial& operator*=(const coeff_t& rhs) { for(auto& kv: *this) kv.second *= rhs; return *this; }
 
-    /// evaluate at given point, treating as exponentiation
-    template<typename coord>
-    auto operator()(const coord& m) const -> decltype(m.begin()->second) {
-        decltype(m.begin()->second) s = 1;
-        for(auto& kv: *this) {
-            auto it = m.find(kv.first);
-            if(it == m.end()) continue;
-            auto e = it->first;
-            while(e--) s *= it->second;
-        }
-        return s;
+    /////////////////////////////////
+    // optional variants as-supported
+
+    /// transform as sum of terms
+    template<class X>
+    auto transform(const X& x) const -> decltype(x(this->begin()->first,this->begin()->second)) {
+        decltype(x(this->begin()->first,this->begin()->second)) P;
+        for(auto& kv: *this) P += x(kv.first,kv.second);
+        return P;
     }
 };
 
-/// convenience typedef for N-dimensional (unsigned int) exponents vector
-template<long unsigned int N, typename T = unsigned int>
-using ExpVec_t = ArraySemigroup<std::array<T,N>>;
+/// convenience typdef for N-dimensional polynomial
+template<size_t N, typename T = double, typename C = ArithmeticRing_t<T>>
+using Polynomial_t = AbstractPolynomial<C, SGArray_t<N>>;
+/// convenience typdef for map-type polynomial
+template<typename T = double, typename C = ArithmeticRing_t<T>>
+using PolynomialM_t = AbstractPolynomial<C, SGMap_t<>>;
 
-/// output representation for Semigroup<Vec>
-template<typename Vec>
-std::ostream& operator<<(std::ostream& o, const ArraySemigroup<Vec>& v) {
+/// output representation for polynomial
+template<class R, class S, typename _X>
+std::ostream& operator<<(std::ostream& o, const AbstractPolynomial<R,S,_X>& P) {
+    const char* vletters = "xyztuvwabcdefghijklmnopqrsXYZTUVWABCDEFGHIJKLMNOPQRS";
+
+    auto e = P.get();
     o << "( ";
-    for(auto& e: v) o << e << " ";
+    for(auto& p: e) {
+        if(p.second) o << p.second << "*";
+
+        auto v = p.first.get();
+        if(v.size()) {
+            for(auto& x: v) {
+                if(0 <= x.first && x.first < 52) o << vletters[x.first];
+                else o << "[" << x.first << "]";
+                if(x.second != 1) o << "^" << x.second;
+            }
+        } else o << "1";
+        o << " ";
+    }
     o << ")";
     return o;
 }
