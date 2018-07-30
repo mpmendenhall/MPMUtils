@@ -166,6 +166,10 @@ std::ostream& operator<<(std::ostream& o, const Polynomial<M,R>& u) { return u.a
 template<long unsigned int N, typename T = double>
 using Polynomial_t = Polynomial<Monomial_t<N>,T>;
 
+/// convenience typedef
+template<typename T = double>
+using PolynomialM_t = Polynomial<MonomialM_t<>,T>;
+
 /// evaluate out variable
 template<long unsigned int N, typename T = double>
 Polynomial_t<N-1, T> reduce(const Polynomial_t<N,T>& p, int i, T c = 1) {

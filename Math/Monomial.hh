@@ -39,11 +39,11 @@ class InconsistentMonomialException: public PolynomialException {
 };
 
 /// Monomial function M, given by vector of exponents
-template<typename Vec>
-class Monomial: public Semigroup<Vec> {
+template<typename SG>
+class Monomial: public SG {
 public:
-    typedef Semigroup<Vec> exponents;   ///< exponents list
-    typedef array_contents_t<Vec> exp_t;///< exponent type
+    typedef SG exponents;                   ///< exponents list
+    typedef typename exponents::x_t exp_t;  ///< exponent type
 
     /// constructor from exponents (defaults to unit)
     Monomial(const exponents& d = exponents()): exponents(d) { }
@@ -66,9 +66,6 @@ public:
     }
     */
 
-    /// polynomial order
-    exp_t order() const { exp_t o = 0; for(auto e: *this) o += fabs(e); return o; }
-
     /// output representation in algebraic form
     std::ostream& algebraicForm(std::ostream& o, bool LaTeX=false) const {
         unsigned int i = 0;
@@ -89,22 +86,12 @@ public:
 template<typename Vec>
 std::ostream& operator<<(std::ostream& o, const Monomial<Vec>& u) { return u.algebraicForm(o); }
 
-/// convenience typedef
+/// convenience typedef for fixed-dimension terms
 template<long unsigned int N, typename T = unsigned int>
-using Monomial_t = Monomial<std::array<T,N>>;
+using Monomial_t = Monomial<ArraySemigroup<std::array<T,N>>>;
 
-/*
-/// evaluate out variable
-template<long unsigned int N, typename T>
-Monomial_t<N-1, T> reduce(const Monomial_t<N,T>& m, int i, double c = 1) {
-    Monomial_t<N-1, T> mm(c==1? m.coeff : m.coeff*pow(c,m[i]));
-    size_t j = 0, k = 0;
-    for(auto e: m) {
-        if((int)j++ == i) continue;
-        mm[k++] = e;
-    }
-    return mm;
-}
-*/
+/// convenience typedef for arbitrary-dimension terms
+template<typename T = unsigned int>
+using MonomialM_t = Monomial<MapSemigroup<std::map<long unsigned int, T>>>;
 
 #endif

@@ -51,9 +51,20 @@
 #include <array>
 #include <iostream>
 #include <cassert>
+#include <cmath>
 
-template<typename A>
-using array_contents_t = typename std::remove_reference<decltype(std::declval<A&>()[0])>::type;
+//template<typename A>
+//using array_contents_t = typename std::tuple_element<0,A>::type;
+
+template<typename T>
+using array_contents_t = typename std::remove_reference<decltype(std::declval<T&>()[0])>::type;
+
+
+template<typename M>
+using map_key_t = typename std::remove_reference<decltype(std::declval<M&>().begin()->first)>::type;
+
+template<typename M>
+using map_value_t = typename std::remove_reference<decltype(std::declval<M&>().begin()->second)>::type;
 
 /// Formal abstract polynomial, with +/- and * operations
 // R is a ring with operators +,*, inverse -, default constructor '0'
@@ -68,6 +79,9 @@ public:
 
     /// default constructor
     using std::map<E,R>::map;
+
+    //////////////////////////////////////
+    // core "required" polyomial functions
 
     /// unary minus
     const AbstractPolynomial operator-() const { AbstractPolynomial P(*this); for(auto& kv: P) kv.second = -kv.second; }
@@ -91,9 +105,25 @@ public:
     AbstractPolynomial& operator*=(const AbstractPolynomial& rhs) { *this = (*this) * rhs; return *this; }
     /// scalar multiplication
     AbstractPolynomial& operator*=(const coeff_t& rhs) { for(auto& kv: *this) kv.second *= rhs; }
+
+    /////////////////////////////////
+    // optional variants as-supported
+
+    /// transform as sum of terms
+    template<class X>
+    auto transform(const X& x) const -> decltype(x(this->begin()->first,this->begin()->second)) {
+        decltype(x(this->begin()->first,this->begin()->second)) P;
+        for(auto& kv: *this) P += x(kv.first,kv.second);
+        return P;
+    }
 };
 
-// output representation
+// transform patterns on P = sum(c*x^i)
+// x^i -> k * y^j => P -> sum (c*k) y^j term-by-term or drop
+// OR terms are polynomials that mix, x^i -> P'(k,y)
+// P -> sum c*P'(k,y) = P''(sum c*k, y), new type c*k
+
+/// output representation
 template<typename R, typename E>
 std::ostream& operator<<(std::ostream& o, const AbstractPolynomial<R,E>& p) {
     o << "< ";
@@ -102,19 +132,30 @@ std::ostream& operator<<(std::ostream& o, const AbstractPolynomial<R,E>& p) {
     return o;
 }
 
-/// Wrapper for iterable vector into semigroup under +
-template<typename Vec>
-class Semigroup: public Vec {
+/// Wrapper for iterable fixed-size array into semigroup under +
+template<typename A>
+class ArraySemigroup: public A {
 public:
+    /// convenience typedef for array contents
+    typedef array_contents_t<A> x_t;
+    /// an appropriate coordinate type
+    template<typename T>
+    using coord_t = std::array<T, std::tuple_size<A>::value>;
+
     /// default constructor
-    Semigroup(): Vec() { }
-    /// constructor from Vec
-    Semigroup(const Vec& v): Vec(v) { }
+    ArraySemigroup(): A() { }
+    /// constructor from array
+    ArraySemigroup(const A& v): A(v) { }
 
     /// inplace addition
-    Semigroup& operator+=(const Semigroup& rhs) { size_t i=0; for(auto& e: *this) { e += rhs[i++]; } return *this; }
+    ArraySemigroup& operator+=(const ArraySemigroup& rhs) { size_t i=0; for(auto& e: *this) { e += rhs[i++]; } return *this; }
     /// addition
-    const Semigroup operator+(const Semigroup& rhs) const { auto s = *this; s += rhs; return s; }
+    const ArraySemigroup operator+(const ArraySemigroup& rhs) const { auto s = *this; s += rhs; return s; }
+
+    /// total contents 1-norm
+    x_t order() const { x_t o = 0; for(auto e: *this) o += fabs(e); return o; }
+    /// const access at index i
+    x_t get(size_t i) const { return this->at(i); }
 
     /// evaluate at given point, treating as exponentiation
     template<typename coord>
@@ -130,13 +171,61 @@ public:
     }
 };
 
+/// Wrapper for map-type object as semigroup under +
+template<typename M>
+class MapSemigroup: public M {
+public:
+    /// convenience typedef for map contents
+    typedef map_value_t<M> x_t;
+    /// convenience typedef for map key
+    typedef map_key_t<M> k_t;
+    /// an appropriate coordinate type
+    template<typename T>
+    using coord_t = std::map<k_t, T>;
+
+
+    /// default constructor
+    MapSemigroup(): M() { }
+    /// constructor from array
+    MapSemigroup(const M& m): M(m) { }
+
+    /// inplace addition
+    MapSemigroup& operator+=(const MapSemigroup& rhs) {
+        for(auto& kv: rhs) (*this)[kv.first] += kv.second;
+        return *this;
+    }
+    /// addition
+    const MapSemigroup operator+(const MapSemigroup& rhs) const { auto s = *this; s += rhs; return s; }
+
+    /// total contents 1-norm
+    x_t order() const { x_t o = 0; for(auto& kv: *this) o += fabs(kv.second); return o; }
+    /// const access at index i
+    x_t get(k_t i) const {
+        auto it = this->find(i);
+        return it == this->end? x_t() : it->second;
+    }
+
+    /// evaluate at given point, treating as exponentiation
+    template<typename coord>
+    auto operator()(const coord& m) const -> decltype(m.begin()->second) {
+        decltype(m.begin()->second) s = 1;
+        for(auto& kv: *this) {
+            auto it = m.find(kv.first);
+            if(it == m.end()) continue;
+            auto e = it->first;
+            while(e--) s *= it->second;
+        }
+        return s;
+    }
+};
+
 /// convenience typedef for N-dimensional (unsigned int) exponents vector
 template<long unsigned int N, typename T = unsigned int>
-using ExpVec_t = Semigroup<std::array<T,N>>;
+using ExpVec_t = ArraySemigroup<std::array<T,N>>;
 
 /// output representation for Semigroup<Vec>
 template<typename Vec>
-std::ostream& operator<<(std::ostream& o, const Semigroup<Vec>& v) {
+std::ostream& operator<<(std::ostream& o, const ArraySemigroup<Vec>& v) {
     o << "( ";
     for(auto& e: v) o << e << " ";
     o << ")";

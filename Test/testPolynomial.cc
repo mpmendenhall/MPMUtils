@@ -15,8 +15,12 @@ using std::chrono::steady_clock;
 typedef double precision_t;
 //typedef long double precision_t;
 //typedef __float128 precision_t;
+
 typedef Monomial_t<3,precision_t> Mxyz;
 typedef Polynomial_t<3,precision_t> Pxyz;
+
+typedef MonomialM_t<precision_t> MxyzM;
+typedef PolynomialM_t<precision_t> PxyzM;
 
 /// Comparison simple algorithm
 template<class P, class T, class Cvec>
@@ -49,7 +53,7 @@ int main(int, char**) {
 
     // all third-order 3-variable terms polynomial
     auto p = Pxyz::lowerTriangleTerms(3,1);
-    std::vector<precision_t> x(3);
+    Mxyz::coord_t<precision_t> x{};
     std::cout << "Poly(xyz^3) " << p << "\n";
     std::cout << p << " -> " << double(p(x)) << "\n";
 

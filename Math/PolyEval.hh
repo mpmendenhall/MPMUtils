@@ -67,6 +67,22 @@ public:
             i++;
         }
     }
+/*
+    /// Evalualuate monomial into vector
+    template<class M>
+    void evalMonomial(const std::map<U,V>& m, vector<T>& v) {
+        v.resize(0);
+        if(!Xs.size()) return;
+        v.resize(Xs[0].size(), 1);
+        for(auto& kv: m) {
+            while(Ps.size() <= kv.first) {
+                Ps.push_back({});
+                Ps.back().setX(Xs[Ps.size()-1]);
+            }
+            Ps[kv.first].mul(v, kv.second);
+        }
+    }
+*/
 
     /// Add evaluated monomial to input vector; auto-resize if input vector empty
     template<class M>
