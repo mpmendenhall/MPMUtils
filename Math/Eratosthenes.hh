@@ -52,13 +52,19 @@ public:
     const vector<int_t>& getPrimes() const { return primes; }
     /// get extra primes
     const map<int_t, factors_t>& getXf() const { return xf; }
+    /// get maximum checked number
+    int_t maxchecked() const { return factors.size()-1; }
 
 protected:
+    /// add cached factorization
+    void addXF(int_t i, const factors_t& v);
+
     std::mutex sieveLock;       ///< lock on updating sieve
-    vector<int_t> primes;       ///< primes indexed by pidx_t
+    vector<int_t> primes;       ///< primes list
     vector<factors_t> factors;  ///< factorization table
     int_t factor_max;           ///< current largest factorable number
     map<int_t, factors_t> xf;   ///< spot factors for larger numbers outside table range
+    size_t max_xf = 100000;     ///< maximum number of extra factors to cache
 };
 
 /// global singleton access

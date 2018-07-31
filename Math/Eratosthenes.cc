@@ -9,14 +9,18 @@ PrimeSieve& theSieve() {
 }
 
 PrimeSieve::PrimeSieve() {
-    primes = {0,1,2};
-    factors = {{0}, {1}, {2}};
+    factors = {{0}, {1}};
     factor_max = (factors.size()-1)*(factors.size()-1);
 }
 
 PrimeSieve::factors_t PrimeSieve::factor(int_t i) {
     std::lock_guard<std::mutex> LG(sieveLock);
     return _factor(i);
+}
+
+void PrimeSieve::addXF(int_t i, const factors_t& v) {
+    xf[i] = v;
+    if(xf.size() > max_xf) xf.erase(std::prev(xf.end()));
 }
 
 PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
@@ -32,7 +36,7 @@ PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
             auto v = _factor(i/d);
             v.push_back(d);
             std::sort(v.begin(), v.end());
-            xf[i] = v;
+            addXF(i,v);
             return v;
         }
     }
@@ -40,14 +44,14 @@ PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
     // search next prime factor
     size_t f = 0;
     for(auto p: primes) {
-        if(p > 1 && !(i%p)) break;
+        if(!(i%p)) break;
         f++;
     }
 
     if(f == primes.size()) { // i is prime!
         factors_t v;
         v.push_back(i);
-        xf[i] = v;
+        addXF(i,v);
         return v;
     }
 
@@ -55,7 +59,7 @@ PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
     auto v = _factor(i/d);
     v.push_back(d);
     std::sort(v.begin(), v.end());
-    xf[i] = v;
+    addXF(i,v);
     return v;
 }
 
@@ -66,11 +70,8 @@ PrimeSieve::int_t PrimeSieve::checkNext() {
     // previously-identified factorization?
     auto it = xf.find(i);
     if(it != xf.end()) {
-        bool isPrime = !it->second.size();
-        if(isPrime) {
-            it->second.push_back(primes.size());
-            primes.push_back(i);
-        }
+        bool isPrime = it->second.size() < 2;
+        if(isPrime) primes.push_back(i);
         factors.push_back(it->second);
         xf.erase(it);
         return isPrime? i : 0;
@@ -78,7 +79,7 @@ PrimeSieve::int_t PrimeSieve::checkNext() {
 
     int_t f = 0;
     for(auto p: primes) {
-        if(p >= 2 && !(i%p)) break;
+        if(!(i%p)) break;
         f++;
     }
     bool isPrime = f == primes.size();
