@@ -13,16 +13,8 @@ public:
     /// Constructor from sorted factors list
     Rational(const PrimeSieve::factors_t& f);
 
-    /// invert contents
-    void invert() { for(auto& kv: *this) kv.second = -kv.second; }
-
     /// check if 0
     bool operator!() const { return this->size() && !(*this)[0].first; }
-
-    /// inplace multiplication
-    Rational& operator*=(const Rational& R);
-    /// multiplication
-    const Rational operator*(const Rational& R) { auto c = *this; c *= R; return c; }
 
     /// numerator, denominator pair
     pair<int,int> components() const;
@@ -30,10 +22,35 @@ public:
     /// integer evaluation
     operator int() const { auto c = components(); return c.first / c.second; }
 
+    /// comparison
+    bool operator<(const Rational& R) const;
+
+    /// unary minus
+    const Rational operator-() const { auto r = *this; r.positive = !positive; return r; }
+
+    /// invert contents
+    Rational& invert() { for(auto& kv: *this) { kv.second = -kv.second; } return *this; }
+
+    /// inplace multiplication
+    Rational& operator*=(const Rational& R);
+    /// multiplication
+    const Rational operator*(const Rational& R) { auto c = *this; c *= R; return c; }
+    /// inplace division
+    Rational& operator/=(Rational R) { return (*this) *= R.invert(); }
+    /// division
+    const Rational operator/(Rational R) { return *this * R.invert(); }
+
+
     /// inplace addition
     Rational& operator+=(const Rational& r);
     /// addition
     const Rational operator+(const Rational& R) const { auto c = *this; c += R; return c; }
+    /// inplace subtraction
+    Rational& operator-=(const Rational& R) { return *this += -R; }
+    /// subtraction
+    const Rational operator-(const Rational& R) const { return *this + -R; }
+
+    bool positive; ///< sign
 };
 
 

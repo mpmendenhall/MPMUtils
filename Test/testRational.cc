@@ -25,8 +25,8 @@ int main(int, char**) {
     CodeVersion::display_code_version();
 
     Rational a(4);
-    Rational b(18,21);
-    Rational c(123,4567);
+    Rational b(-18,21);
+    Rational c(-123,4567);
     Rational z(0);
 
     testAdd(a,b);

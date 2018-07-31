@@ -2,18 +2,21 @@
 
 #include "Rational.hh"
 
-Rational::Rational(int n, unsigned int d) {
+Rational::Rational(int n, unsigned int d): positive(n >= 0) {
+    if(!positive) n = -n;
+
     auto& PS = theSieve();
     if(d==1) *this = Rational(PS.factor(n));
     else {
         auto r1 = Rational(PS.factor(n));
+        r1.positive = positive;
         auto r2 = Rational(PS.factor(d));
         r2.invert();
         *this = r1*r2;
     }
 }
 
-Rational::Rational(const PrimeSieve::factors_t& f) {
+Rational::Rational(const PrimeSieve::factors_t& f): positive(true) {
     unsigned int i = 0;
     int n = 0;
     for(auto c: f) {
@@ -33,6 +36,7 @@ Rational& Rational::operator*=(const Rational& R) {
     if(!(*this)) return *this;
 
     (SGVec_t<>&)(*this) += R;
+    if(!R.positive) positive = !positive;
     return *this;
 }
 
@@ -43,6 +47,7 @@ pair<int,int> Rational::components() const {
         while(e > 0) { n.first *= kv.first; --e; }
         while(e < 0) { n.second *= kv.first; ++e; }
     }
+    if(!positive) n.first = -n.first;
     return n;
 }
 
@@ -62,6 +67,12 @@ Rational& Rational::operator+=(const Rational& r) {
     (SGVec_t<>&)(*this) = cf;
     *this *= rf;
     return *this;
+}
+
+bool Rational::operator<(const Rational& R) const {
+    auto a = components();
+    auto b = R.components();
+    return a.first * b.second < a.second * b.first;
 }
 
 std::ostream& operator<<(std::ostream& o, const Rational& r) {
