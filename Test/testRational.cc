@@ -18,11 +18,11 @@ void summary(const PrimeSieve& S) {
 int main(int, char**) {
     CodeVersion::display_code_version();
 
-    PrimeSieve PS;
+    auto& PS = theSieve();
     summary(PS);
     PrimeSieve::int_t i = 1234567893;
     auto v = PS.factor(i);
-    printf("%i =", PS(v));
+    printf("%i =", PS.prod(v));
     for(auto f: v) printf("\t%i", f);
     printf("\n");
     summary(PS);

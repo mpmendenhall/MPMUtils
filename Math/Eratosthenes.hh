@@ -19,10 +19,14 @@
  *
  */
 
+#ifndef PRIMESIEVE_HH
+#define PRIMESIEVE_HH
+
 #include <vector>
 using std::vector;
 #include <map>
 using std::map;
+#include <mutex>
 
 class PrimeSieve {
 public:
@@ -34,23 +38,30 @@ public:
     /// factorization
     typedef vector<int_t> factors_t;
 
-    /// get factorization
+    /// get factorization (thread-safe)
     factors_t factor(int_t i);
+    /// get factorization (not thread-safe)
+    factors_t _factor(int_t i);
 
-    /// check factors of next item in table; return i if prime, else 0
+    /// check factors of next item in table; return i if prime, else 0 (not thread-safe)
     int_t checkNext();
 
-    /// evaluate factors
-    int_t operator()(const factors_t& f);
+    /// factors product
+    static int_t prod(const factors_t& f);
     /// get primes list
     const vector<int_t>& getPrimes() const { return primes; }
     /// get extra primes
     const map<int_t, factors_t>& getXf() const { return xf; }
 
 protected:
-
+    std::mutex sieveLock;       ///< lock on updating sieve
     vector<int_t> primes;       ///< primes indexed by pidx_t
     vector<factors_t> factors;  ///< factorization table
     int_t factor_max;           ///< current largest factorable number
     map<int_t, factors_t> xf;   ///< spot factors for larger numbers outside table range
 };
+
+/// global singleton access
+PrimeSieve& theSieve();
+
+#endif
