@@ -193,9 +193,11 @@ public:
     /// array size
     static constexpr auto N = std::tuple_size<A>::value;
 
-    /// default constructor
+    /// inherit Array constructors
     using A::A;
-    /// constructor from array
+    /// default constructor
+    _Semigroup(): A() { }
+    /// constructor from array; allows curly-brackets init SGarray_t<3>({1,2,3});
     _Semigroup(const A& a): A(a) { }
 
     /// get standard-form element representation
@@ -259,10 +261,12 @@ public:
     /// _Semigroup element
     typedef vector<pair<gen_t,num_t>> elem_t;
 
-    /// default constructor
+    /// inherit map constructors
     using M::M;
+    /// default constructor
+    _Semigroup() { }
     /// constructor from map
-    _Semigroup(const M& m): M(m) { }
+    //_Semigroup(const M& m): M(m) { }
 
     /// get standard-form element representation
     elem_t get() const {
@@ -309,8 +313,10 @@ public:
     /// exponent type
     typedef typename S::num_t exp_t;
 
-    /// default constructor
+    /// inherit SGMap_t constructors
     using SG::_Semigroup;
+    /// default constructor
+    AbstractPolynomial() { }
 
     //////////////////////////////////////
     // core "required" polyomial functions
