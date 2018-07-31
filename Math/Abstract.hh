@@ -199,6 +199,8 @@ public:
     _Semigroup(): A() { }
     /// constructor from array; allows curly-brackets init SGarray_t<3>({1,2,3});
     _Semigroup(const A& a): A(a) { }
+    /// Costructor for single-variable x_i^n
+    _Semigroup(gen_t i, num_t n = 1): A() { assert(i < this->size()); (*this)[i] = n; }
 
     /// get standard-form element representation
     elem_t get() const {
@@ -266,7 +268,9 @@ public:
     /// default constructor
     _Semigroup() { }
     /// constructor from map
-    //_Semigroup(const M& m): M(m) { }
+    _Semigroup(const M& m): M(m) { }
+    /// Costructor for single-variable x_i^n
+    _Semigroup(gen_t i, num_t n = 1) { (*this)[i] = n; }
 
     /// get standard-form element representation
     elem_t get() const {
@@ -317,6 +321,9 @@ public:
     using SG::_Semigroup;
     /// default constructor
     AbstractPolynomial() { }
+    /// Costructor for single-variable x_i
+    AbstractPolynomial(typename monomial_t::gen_t i) { (*this)[monomial_t(i,1)] = 1; }
+
 
     //////////////////////////////////////
     // core "required" polyomial functions
@@ -324,7 +331,7 @@ public:
     /// inplace addition
     AbstractPolynomial& operator+=(const AbstractPolynomial& rhs) { (SG&)(*this) += rhs; return *this; }
     /// addition
-    AbstractPolynomial operator+(const AbstractPolynomial& rhs) { auto p = *this; p += rhs; return p; }
+    AbstractPolynomial operator+(const AbstractPolynomial& rhs) const { auto p = *this; p += rhs; return p; }
 
     /// unary minus
     const AbstractPolynomial operator-() const { return -(SG&)*this; }

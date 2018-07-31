@@ -86,8 +86,11 @@ int main(int, char**) {
 
     /// 3-variable polynomial
     typedef Polynomial_t<3,precision_t> P3_t;
-    SGArray_t<3> x({1,0,0}), y{{0,1,0}};
-    P3_t P3_a({{x, 4.}, {y, 6.}});
+    //SGArray_t<3> x({1,0,0}), y{{0,1,0}};
+    //P3_t P3_a({{x, 4.}, {y, 6.}});
+    P3_t Px(0);
+    P3_t Py(1);
+    auto P3_a = Px*Px*Px*Px + Py*Py*Py*Py*Py*Py;
     P3_t P3_b({ { {{0,0,1}}, 2. }, { {{1,0,1}}, 5.}});
     testAdd(P3_a, P3_b);
     testMul(P3_a, P3_b);
