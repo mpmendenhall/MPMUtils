@@ -8,19 +8,25 @@
 
 class Rational: protected SGVec_t<> {
 public:
+    /// Default constructor 0
+    Rational(): positive(true) { this->push_back({0,1}); }
+    /// Construct from integer
+    Rational(int n);
     /// Default constructor from numerator, denominator
-    Rational(int n = 0, unsigned int d = 1);
+    Rational(int n, unsigned int d);
     /// Constructor from sorted factors list
     Rational(const PrimeSieve::factors_t& f);
 
     /// check if 0
-    bool operator!() const { return this->size() && !(*this)[0].first; }
+    operator bool() const { return  !this->size() || (*this)[0].first; }
 
     /// numerator, denominator pair
     pair<int,int> components() const;
 
     /// integer evaluation
     operator int() const { auto c = components(); return c.first / c.second; }
+    /// floating point evaluation
+    operator double() const { auto c = components(); return double(c.first) / c.second; }
 
     /// comparison
     bool operator<(const Rational& R) const;
@@ -34,11 +40,11 @@ public:
     /// inplace multiplication
     Rational& operator*=(const Rational& R);
     /// multiplication
-    const Rational operator*(const Rational& R) { auto c = *this; c *= R; return c; }
+    const Rational operator*(const Rational& R) const { auto c = *this; c *= R; return c; }
     /// inplace division
     Rational& operator/=(Rational R) { return (*this) *= R.invert(); }
     /// division
-    const Rational operator/(Rational R) { return *this * R.invert(); }
+    const Rational operator/(Rational R) const { return *this * R.invert(); }
 
 
     /// inplace addition

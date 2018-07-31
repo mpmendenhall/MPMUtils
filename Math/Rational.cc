@@ -2,6 +2,10 @@
 
 #include "Rational.hh"
 
+Rational::Rational(int n) {
+    *this = Rational(n,1);
+}
+
 Rational::Rational(int n, unsigned int d): positive(n >= 0) {
     if(!positive) n = -n;
 

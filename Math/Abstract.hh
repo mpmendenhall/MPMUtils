@@ -201,7 +201,7 @@ public:
     /// constructor from array; allows curly-brackets init SGarray_t<3>({1,2,3});
     _Semigroup(const A& a): A(a) { }
     /// Costructor for single-variable x_i^n
-    _Semigroup(gen_t i, num_t n = 1): A() { assert(i < this->size()); (*this)[i] = n; }
+    _Semigroup(gen_t i, num_t n): A() { assert(i < this->size()); (*this)[i] = n; }
 
     /// get standard-form element representation
     elem_t get() const {
@@ -270,7 +270,7 @@ public:
     /// default constructor
     _Semigroup() { }
     /// Costructor for single-variable x_i^n
-    _Semigroup(gen_t i, num_t n = 1) { if(n) this->push_back({i,n}); }
+    _Semigroup(gen_t i, num_t n) { if(n) this->push_back({i,n}); }
 
     /// get standard-form element representation
     elem_t get() const { return elem_t(*this); }
@@ -391,14 +391,12 @@ public:
     /// _Semigroup element
     typedef vector<pair<gen_t,num_t>> elem_t;
 
-    /// inherit map constructors
-    using M::M;
     /// default constructor
     _Semigroup() { }
     /// constructor from map
     _Semigroup(const M& m): M(m) { }
     /// Costructor for single-variable x_i^n
-    _Semigroup(gen_t i, num_t n = 1) { (*this)[i] = n; }
+    _Semigroup(gen_t i, num_t n) { (*this)[i] = n; }
 
     /// get standard-form element representation
     elem_t get() const {
@@ -449,8 +447,10 @@ public:
     using SG::_Semigroup;
     /// default constructor
     AbstractPolynomial() { }
+    /// Costructor for constant
+    AbstractPolynomial(const coeff_t& c) { (*this)[monomial_t(0,0)] = c; }
     /// Costructor for single-variable x_i
-    AbstractPolynomial(typename monomial_t::gen_t i) { (*this)[monomial_t(i,1)] = 1; }
+    AbstractPolynomial(const coeff_t& c, typename monomial_t::gen_t i) { (*this)[monomial_t(i,1)] = c; }
 
     //////////////////////////////////////
     // core "required" polyomial functions
@@ -479,6 +479,15 @@ public:
     AbstractPolynomial& operator*=(const AbstractPolynomial& rhs) { *this = (*this) * rhs; return *this; }
     /// scalar multiplication
     AbstractPolynomial& operator*=(const coeff_t& rhs) { for(auto& kv: *this) kv.second *= rhs; return *this; }
+
+    /// exponentiation
+    AbstractPolynomial pow(unsigned int e) const {
+        if(!e) return AbstractPolynomial(1);
+        auto P = *this;
+        while(--e) P *= *this;
+        return P;
+    }
+
 
     /////////////////////////////////
     // optional variants as-supported
