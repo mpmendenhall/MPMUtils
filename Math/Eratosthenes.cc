@@ -8,9 +8,10 @@ PrimeSieve& theSieve() {
     return PS;
 }
 
-PrimeSieve::PrimeSieve() {
-    factors = {{0}, {1}};
-    factor_max = (factors.size()-1)*(factors.size()-1);
+PrimeSieve::PrimeSieve(size_t i0):
+factors({{0}, {1}}), factor_max(1) {
+    while(factors.size()<i0)
+        checkNext();
 }
 
 PrimeSieve::factors_t PrimeSieve::factor(int_t i) {

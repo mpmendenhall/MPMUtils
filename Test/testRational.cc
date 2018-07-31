@@ -9,7 +9,7 @@ void summary(const PrimeSieve& S) {
     auto& ps = S.getPrimes();
     auto& xf = S.getXf();
     printf("%zu primes (out of %i) and %zu extra factorizations:", ps.size(), S.maxchecked(), xf.size());
-    for(auto p: ps) printf("\t%i", p);
+    //for(auto p: ps) printf("\t%i", p);
     printf("\n");
 
     if(xf.size() > 10) return;

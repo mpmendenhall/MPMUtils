@@ -30,9 +30,8 @@ using std::map;
 
 class PrimeSieve {
 public:
-    /// Constructor
-    PrimeSieve();
-
+    /// Constructor, with option to "prime the pump"
+    PrimeSieve(size_t i0 = 10000);
     /// Integer type handled
     typedef unsigned int int_t;
     /// factorization

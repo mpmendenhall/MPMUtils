@@ -246,6 +246,64 @@ using SGArray_t = _Semigroup<_SGArray<array<T,N>>>;
 
 /////////////////////////////////////////
 
+/// sorted-vector type pass-through tag
+template<typename V>
+class _SGVec: public V { };
+
+/// Specialization for sorted-vector _Semigroups
+template<typename V>
+class _Semigroup<_SGVec<V>>: protected V {
+public:
+    /// base map object
+    typedef V elem_t;
+    /// one factor in element
+    typedef array_contents_t<V> factor_t;
+    /// first item is generator
+    typedef typename std::remove_reference<decltype(std::declval<factor_t>().first)>::type gen_t;
+    /// second item is exponent
+    typedef typename std::remove_reference<decltype(std::declval<factor_t>().second)>::type num_t;
+
+    /// comparison for sorting
+    bool operator<(const _Semigroup& rhs) const { return (V&)(*this) < (V&)(rhs); }
+
+    /// default constructor
+    _Semigroup() { }
+    /// Costructor for single-variable x_i^n
+    _Semigroup(gen_t i, num_t n = 1) { if(n) this->push_back({i,n}); }
+
+    /// get standard-form element representation
+    elem_t get() const { return elem_t(*this); }
+
+    /// inplace addition
+    _Semigroup& operator+=(const _Semigroup& rhs) {
+        elem_t vnew;
+        auto it0 = this->begin();
+        auto it1 = rhs.begin();
+        while(it0 != this->end() && it1 != rhs.end()) {
+            if(it0->first < it1->first) vnew.push_back(*(it0++));
+            else if(it0->first > it1->first) vnew.push_back(*(it1++));
+            else {
+                auto p = *it0;
+                p.second += it1->second;
+                if(p.second) vnew.push_back(p);
+                it0++; it1++;
+            }
+        }
+        vnew.insert(vnew.end(), it0, this->end());
+        vnew.insert(vnew.end(), it1, rhs.end());
+        (V&)(*this) = vnew;
+        return *this;
+    }
+    /// addition
+    const _Semigroup operator+(const _Semigroup& rhs) const { auto s = *this; s += rhs; return s; }
+};
+
+/// convenience typedef for SGVec of T (default unsigned int)
+template<typename K = unsigned int, typename V = int>
+using SGVec_t = _Semigroup<_SGVec<vector<pair<K,V>>>>;
+
+/////////////////////////////////////////
+
 /// Map-type pass-through tag
 template<typename M>
 class _SGMap: public M { };
@@ -324,7 +382,6 @@ public:
     /// Costructor for single-variable x_i
     AbstractPolynomial(typename monomial_t::gen_t i) { (*this)[monomial_t(i,1)] = 1; }
 
-
     //////////////////////////////////////
     // core "required" polyomial functions
 
@@ -371,6 +428,9 @@ using Polynomial_t = AbstractPolynomial<C, SGArray_t<N>>;
 /// convenience typdef for map-type polynomial
 template<typename T = double, typename C = ArithmeticRing_t<T>>
 using PolynomialM_t = AbstractPolynomial<C, SGMap_t<>>;
+/// convenience typdef for sorted-vector-type polynomial
+template<typename T = double, typename C = ArithmeticRing_t<T>>
+using PolynomialV_t = AbstractPolynomial<C, SGVec_t<>>;
 
 /// output representation for polynomial
 template<class R, class S, typename _X>

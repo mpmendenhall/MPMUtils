@@ -73,6 +73,11 @@ int main(int, char**) {
     SGMap_t<> SGm_b({{5,6},{7,8}});
     testAdd(SGm_a, SGm_b);
 
+    // sorted-vector Semigroup
+    SGVec_t<> SGv_a(1,2);
+    SGVec_t<> SGv_b(3,4);
+    testAdd(SGv_a, SGv_b);
+
     ////////////////////////
     // construct polynomials
 
@@ -101,6 +106,13 @@ int main(int, char**) {
     PM_t PM_b({ { {{ {37,2} }}, 7.}, { {{ {101,0} }}, 8.} }); // note x^0 kept if explicitly constructed...
     testAdd(PM_a, PM_b);
     testMul(PM_a, PM_b);
+
+    /// sorted-vector unlimited-variable polynomial
+    typedef PolynomialV_t<precision_t> PV_t;
+    PV_t PV_a({ {{1,2}, 3}, {{4,5}, 6} });
+    PV_t PV_b({ {{7,8}, 9} });
+    testAdd(PV_a, PV_b);
+    testMul(PV_a, PV_b);
 
     ///////////////////////
     // Evaluate polynomials
