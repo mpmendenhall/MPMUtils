@@ -105,6 +105,17 @@ T& SGmultiply(const SG& o, const Data& d, T& x0) {
     return x0;
 }
 
+/// apply semigroup operator as add
+template<typename SG, typename T, typename Data>
+T& SGadd(const SG& o, const Data& d, T& x0) {
+    auto ts = o.get();
+    for(auto& kv: ts) {
+        auto e = kv.second;
+        while(e-- > 0) x0 += d(kv.first);
+    }
+    return x0;
+}
+
 ////////////////////////////////////////////////
 
 /// Arithmetic type pass-through class
@@ -115,12 +126,12 @@ class _ArithmeticRing { };
 template<typename T>
 class _Semigroup<_ArithmeticRing<T>> {
 public:
-    /// "exponent type" when used as polynomial _Semigroup
-    typedef T exp_t;
+    /// numbering type for generator multiplicity
+    typedef T num_t;
     /// generator enumeration index --- only one generator!
     typedef int gen_t;
     /// _Semigroup element
-    typedef vector<pair<gen_t,exp_t>> elem_t;
+    typedef vector<pair<gen_t,num_t>> elem_t;
     /// array size
     static constexpr auto N = 1;
 
@@ -174,11 +185,11 @@ template<typename A>
 class _Semigroup<_SGArray<A>>: public A {
 public:
     /// exponent type from array contents
-    typedef array_contents_t<A> exp_t;
+    typedef array_contents_t<A> num_t;
     /// generator enumeration index
     typedef unsigned int gen_t;
     /// _Semigroup element
-    typedef vector<pair<gen_t,exp_t>> elem_t;
+    typedef vector<pair<gen_t,num_t>> elem_t;
     /// array size
     static constexpr auto N = std::tuple_size<A>::value;
 
@@ -244,9 +255,9 @@ public:
     /// map key is generator
     typedef map_key_t<M> gen_t;
     /// map value is exponent
-    typedef map_value_t<M> exp_t;
+    typedef map_value_t<M> num_t;
     /// _Semigroup element
-    typedef vector<pair<gen_t,exp_t>> elem_t;
+    typedef vector<pair<gen_t,num_t>> elem_t;
 
     /// default constructor
     using M::M;
@@ -295,6 +306,8 @@ public:
     typedef R coeff_t;
     /// monomials _Semigroup member type
     typedef S monomial_t;
+    /// exponent type
+    typedef typename S::num_t exp_t;
 
     /// default constructor
     using SG::_Semigroup;

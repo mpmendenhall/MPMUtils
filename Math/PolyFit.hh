@@ -58,7 +58,7 @@ public:
             size_t i = 0;
             for(auto& kv: P) {
                 vector<double> v;
-                evalMonomial(kv.first,v);
+                evalMonomial(kv.first.get(), v);
                 size_t j = 0;
                 for(auto c: v) gsl_matrix_set(M,j++,i,c);
                 i++;
