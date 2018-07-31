@@ -53,6 +53,7 @@
 #include <iostream>
 #include <cassert>
 #include <cmath>
+#include <algorithm>
 
 using std::vector;
 using std::map;
@@ -296,6 +297,75 @@ public:
     }
     /// addition
     const _Semigroup operator+(const _Semigroup& rhs) const { auto s = *this; s += rhs; return s; }
+
+    /// remove 0-exponent generators
+    void removeNull() {
+        this->erase(std::remove_if(this->begin(), this->end(), [](factor_t f){return !f.second;}), this->end());
+    }
+
+    /// split negative-exponent generators into separate V
+    _Semigroup splitNegative() {
+        auto it = std::stable_partition(this->begin, this->end(), [](factor_t f){return f.second > 0;});
+        _Semigroup SG;
+        SG.assign(it, this->end());
+        this->erase(it, this->end());
+        return SG;
+    }
+
+    /// make this and other relatively prime (and positive), returning common factors
+    _Semigroup relPrime(_Semigroup& S) {
+        _Semigroup P, ip0, ip1;
+        auto it0 = this->begin();
+        auto it1 = S.begin();
+
+        while(it0 != this->end() && it1 != S.end()) {
+            if(it0->first < it1->first) {
+                if(it0->second < 0) {
+                    P.push_back(*it0);
+                    ip1.push_back({it0->first, -it0->second});
+                    it0->second = 0;
+                }
+                ++it0;
+            } else if(it0->first > it1->first) {
+                if(it1->second < 0) {
+                    P.push_back(*it1);
+                    ip0.push_back({it1->first, -it1->second});
+                    it1->second = 0;
+                }
+                ++it1;
+            } else {
+                num_t& a = it0->second;
+                num_t& b = it1->second;
+                num_t c = std::min(a,b);
+                a -= c;
+                b -= c;
+                P.push_back({it0->first, c});
+                it0++; it1++;
+            }
+        }
+
+        while(it0 != this->end()) {
+            if(it0->second < 0) {
+                P.push_back(*it0);
+                ip1.push_back({it0->first, -it0->second});
+                it0->second = 0;
+            }
+            ++it0;
+        }
+
+        while(it1 != S.end()) {
+            if(it1->second < 0) {
+                P.push_back(*it1);
+                ip0.push_back({it1->first, -it1->second});
+                it1->second = 0;
+            }
+            ++it1;
+        }
+
+        *this += ip0;
+        S += ip1;
+        return P;
+    }
 };
 
 /// convenience typedef for SGVec of T (default unsigned int)

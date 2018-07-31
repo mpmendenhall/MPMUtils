@@ -2,7 +2,10 @@
 
 #include "CodeVersion.hh"
 #include "Eratosthenes.hh"
+#include "Rational.hh"
+#include "TestOperators.hh"
 #include <stdio.h>
+#include <iostream>
 #include <cassert>
 
 void summary(const PrimeSieve& S) {
@@ -20,6 +23,14 @@ void summary(const PrimeSieve& S) {
 
 int main(int, char**) {
     CodeVersion::display_code_version();
+
+    Rational a(4);
+    Rational b(18,21);
+    Rational c(123,4567);
+    Rational z(0);
+
+    testAdd(a,b);
+    testAdd(b,c);
 
     auto& PS = theSieve();
     summary(PS);
