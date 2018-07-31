@@ -1,0 +1,56 @@
+/// \file Eratosthenes.hh Sieve of Eratosthenes primes/factoring utility
+/*
+ * Eratosthenes.hh, part of the MPMUtils package.
+ * Copyright (c) 2007-2018 Michael P. Mendenhall
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+#include <vector>
+using std::vector;
+#include <map>
+using std::map;
+
+class PrimeSieve {
+public:
+    /// Constructor
+    PrimeSieve();
+
+    /// Integer type handled
+    typedef unsigned int int_t;
+    /// factorization
+    typedef vector<int_t> factors_t;
+
+    /// get factorization
+    factors_t factor(int_t i);
+
+    /// check factors of next item in table; return i if prime, else 0
+    int_t checkNext();
+
+    /// evaluate factors
+    int_t operator()(const factors_t& f);
+    /// get primes list
+    const vector<int_t>& getPrimes() const { return primes; }
+    /// get extra primes
+    const map<int_t, factors_t>& getXf() const { return xf; }
+
+protected:
+
+    vector<int_t> primes;       ///< primes indexed by pidx_t
+    vector<factors_t> factors;  ///< factorization table
+    int_t factor_max;           ///< current largest factorable number
+    map<int_t, factors_t> xf;   ///< spot factors for larger numbers outside table range
+};

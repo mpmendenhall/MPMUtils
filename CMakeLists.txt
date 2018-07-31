@@ -71,7 +71,7 @@ target_link_libraries(MPM ${CONFIG_LIBS} ${FFTW_LIBS} ${GLUT_LIBRARIES} ${GSL_LI
 add_dependencies(MPM update_codeversion)
 
 # test programs
-foreach(exec IN ITEMS testVisr testPolynomial)
+foreach(exec IN ITEMS testVisr testRational testPolynomial)
     add_executable(${exec} Test/${exec}.cc)
     target_link_libraries(${exec} MPM)
 endforeach(exec)
