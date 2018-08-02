@@ -501,6 +501,9 @@ public:
     }
 };
 
+/// convenience typedef for 1D polynomial
+template<typename T = double>
+using Pol1_t = AbstractPolynomial<ArithmeticRing_t<T>, ArithmeticRing_t<int>>;
 /// convenience typdef for N-dimensional polynomial
 template<size_t N, typename T = double, typename C = ArithmeticRing_t<T>>
 using Polynomial_t = AbstractPolynomial<C, SGArray_t<N>>;

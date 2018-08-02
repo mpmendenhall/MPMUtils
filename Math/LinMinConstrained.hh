@@ -31,11 +31,11 @@ public:
     LinMinConstrained(size_t neq = 0, size_t nvar = 0, size_t ncon = 0): LinMin(neq, nvar), Ncon(ncon) { }
 
     /// set number of constraints
-    void setNConstraints(size_t nc) { /*TODO*/ }
+    void setNConstraints(size_t nc);
     /// set constraints
-    void setG(size_t i, size_t j, double v) {/*TODO*/ }
+    void setG(size_t i, size_t j, double v);
     /// set constraints RHS
-    void setk(const vector<double>& rhs) { /*k = rhs;*/ }
+    void setk(size_t i, double v);
 
     /// clear solution, free data
     void clear() override;
@@ -43,7 +43,7 @@ public:
     void clear_constraints();
 
     /// get Lagrange Multipliers vector
-    //void getL(vector<double>& l) const { LM.getx(l); }
+    void getL(vector<double>& vl) const { gsl2vector(l,vl); }
 
 protected:
     /// solve after loading 'y' vector
@@ -51,17 +51,19 @@ protected:
 
     size_t Ncon;
 
+    // for each M
     gsl_matrix* Q = nullptr;        ///< Q from QR decomp
     gsl_matrix* RT = nullptr;       ///< R^T from QR decomp (use with blas Cholesky Decomposition functions for R^T R)
     gsl_matrix* RTRi = nullptr;     ///< (R^T R)^-1 = (M^T M)^-1 using Cholesky inverse
 
+    // for each M,G
     gsl_matrix* G = nullptr;        ///< Ncon*Nvar constraints matrix
     gsl_vector* k = nullptr;        ///< RHS of constraints
-    gsl_vector* l = nullptr;        ///< Lagrange Multipliers for constraints
-
     gsl_matrix* GRRM  = nullptr;    ///< G (R^T R)^-1 M^T reusable intermediate
     gsl_matrix* GRRG_CD = nullptr;  ///< Cholesky Decomposition for A*lambda = v solver
-    gsl_vector* lambda = nullptr;   ///< Lagrange Multipliers
+
+    // for each y,M,G
+    gsl_vector* l = nullptr;        ///< Lagrange Multipliers for constraints
 };
 
 #endif

@@ -21,9 +21,9 @@
 
 #include "LinMinConstrained.hh"
 #include <cassert>
-#include <stdio.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
+#include <iostream>
 
 /*
 Minimize |r^2| over x: M[Neq,Nvar] x = y + r,
@@ -50,64 +50,85 @@ Substitute x = (RTR)^-1 (M^T y + G^T l) into (0) to solve for lambda(y,k):
 Substitute G^T lambda back into (2) to solve for x (using Cholesky Decomp. solver)
 */
 
-
 void LinMinConstrained::clear() {
     LinMin::clear();
     clear_constraints();
 
     if(Q) gsl_matrix_free(Q);
+    if(RT) gsl_matrix_free(RT);
     if(RTRi) gsl_matrix_free(RTRi);
-    if(lambda) gsl_vector_free(lambda);
-    Q = RTRi = nullptr;
-    lambda = nullptr;
+    Q = RT = RTRi = nullptr;
+}
+
+void LinMinConstrained::setG(size_t i, size_t j, double v) {
+    assert(G && i<Ncon && j<Nvar);
+    gsl_matrix_set(G,i,j,v);
+}
+
+void LinMinConstrained::setk(size_t i, double v) {
+    assert(k && i<Ncon);
+    gsl_vector_set(k,i,v);
 }
 
 void LinMinConstrained::clear_constraints() {
+    if(G) gsl_matrix_free(G);
     if(GRRM) gsl_matrix_free(GRRM);
     if(GRRG_CD) gsl_matrix_free(GRRG_CD);
-    GRRM = GRRG_CD = nullptr;
+    if(k) gsl_vector_free(k);
+    if(l) gsl_vector_free(l);
+    G = GRRM = GRRG_CD = nullptr;
+    k = l = nullptr;
 }
 
+void LinMinConstrained::setNConstraints(size_t nc) {
+    Ncon = nc;
+    if(!G || G->size1 != Ncon || G->size2 != Nvar) clear_constraints();
+    if(!Ncon) return;
+    G = gsl_matrix_calloc(Ncon,Nvar);
+    resize(k,Ncon);
+}
 
 void LinMinConstrained::_solve() {
+    if(!G) { LinMin::_solve(); return; }
     if(!(M && y && r)) throw;
 
-    if(x && x->size != M->size2) {
-        gsl_vector_free(x);
-        x = nullptr;
-    }
-    if(!x) x = gsl_vector_alloc(M->size2);
+    resize(x,M->size2);
 
-    if(!tau) { // need QR decomposision
+    if(!tau) { // need QR decomposision?
 
         tau = gsl_vector_alloc(M->size2);
         if(gsl_linalg_QR_decomp(M,tau)) throw;
 
         // Extract Q, R
         Q = gsl_matrix_alloc(Neq,Neq);
-        auto R = gsl_matrix_alloc(Nvar,Nvar);
-        if(gsl_linalg_QR_unpack(M, tau, Q, R)) throw;
+        auto R0 = gsl_matrix_alloc(Neq,Nvar);
+        if(gsl_linalg_QR_unpack(M, tau, Q, R0)) throw;
 
-        // RTRi = (R^T R)^-1
-        // Transpose R to lower-triangular form assumed by gsl Cholesky
+        // Truncate, transpose R to lower-triangular form assumed by gsl Cholesky
+        auto R = gsl_matrix_alloc(Nvar,Nvar);
+        for(size_t i=0; i<Nvar; i++) for(size_t j=0; i<Nvar; i++) gsl_matrix_set(R,i,j,gsl_matrix_get(R0,i,j));
         if(gsl_matrix_transpose(R)) throw;
+        // RTRi = (R^T R)^-1
         RTRi = R; // renaming for inversion
         gsl_linalg_cholesky_invert(RTRi);
 
+        gsl_matrix_free(R0);
         clear_constraints(); // need new constraints solver
     }
 
     if(!GRRM) { // need constraints solver?
+
+        //gsl_matrix_print(RTRi);
 
         auto GRR = gsl_matrix_alloc(Ncon, Nvar);
         // C = a BA + b C, symmetric A
         if(gsl_blas_dsymm(CblasRight,   // AB vs. BA
                           CblasLower,   // RTRi lower-triangle representation
                           1.0,          // a
-                          G,            // A
-                          RTRi,         // B
+                          RTRi,         // A
+                          G,            // B
                           0.0,          // b
-                          GRR)         // C
+                          GRR)          // C
           ) throw;
 
         GRRG_CD = gsl_matrix_alloc(Ncon,Ncon);
@@ -119,7 +140,8 @@ void LinMinConstrained::_solve() {
                           0.0,          // b
                           GRRG_CD)      // C
           ) throw;
-        if(gsl_linalg_cholesky_decomp1(GRRG_CD)) throw;
+        if(gsl_linalg_cholesky_decomp(GRRG_CD)) throw;      // older deprecated function call
+        //if(gsl_linalg_cholesky_decomp1(GRRG_CD)) throw;   // newer GSL call
 
         GRRM = gsl_matrix_alloc(Ncon,Neq);
         if(gsl_blas_dgemm(CblasNoTrans, // op(A)
@@ -171,3 +193,4 @@ void LinMinConstrained::_solve() {
     if(gsl_linalg_cholesky_solve(RT, v, x)) throw;
     gsl_vector_free(v);
 }
+

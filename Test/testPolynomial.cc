@@ -64,7 +64,7 @@ int main(int, char**) {
     // construct polynomials
 
     /// univariate unsigned integer exponents polynomial
-    typedef AbstractPolynomial<ArithmeticRing_t<precision_t>, ArithmeticRing_t<int>> P1_t;
+    typedef Pol1_t<precision_t> P1_t;
     P1_t P1_a({{1,2}, {3,4}});
     P1_t P1_b({{5,6}, {7,8}});
     testAdd(P1_a, P1_b);
@@ -133,14 +133,6 @@ int main(int, char**) {
     for(size_t i=0; i<vp.size(); i++) dmax = std::max(dmax, fabs((vp[i]-vp2[i])/vp[i]));
     printf("dmax %g\n", dmax);
 
-    //////////////////////////////////////////////
-    // all third-order 3-variable terms polynomial
-
-    NGrid<3, P3_t::exp_t> NG0({4,4,4});
-    P3_t P3_o3;
-    for(auto& a: NG0) if(a[0]+a[1]+a[2] < 4) P3_o3[a] = 3.14;
-    cout << P3_o3 << "\n";
-
 #if false
     // calculus test
     auto pi2 = p.integral(2);
@@ -148,33 +140,6 @@ int main(int, char**) {
     std::cout << pi2 << "\n" << dpi2 << "\n";
     assert(p == dpi2);
 #endif
-
-    ///////////////////////////
-    // generate evaluation grid
-
-    BBox<3,precision_t> BB;
-    BB.expand({precision_t(-1),precision_t(-1),precision_t(-1)});
-    BB.expand({precision_t(1),precision_t(1),precision_t(1)});
-    NGrid<3> NG({5,5,5});
-    vc.clear();
-    for(auto c: NG) {
-        auto x = NG.centerpos(c,BB);
-        //printf("%i,%i,%i -> %g\t%g\t%g\n", c[0], c[1], c[2], double(x[0]), double(x[1]), double(x[2]));
-        vc.push_back(x);
-    }
-
-    //////////////////////////////////
-    // fit polynomial over grid points
-
-    PolyFit<P3_t> PF(P3_o3);
-    std::cout << PF.getPoly() << "\n";
-
-    PF.setX(vc);
-    vector<precision_t> yy;
-    PE.setX(vc);
-    PE.evalPolynomial(PF.getPoly(), yy);
-    auto& PP = PF.solve(yy);
-    std::cout << PP << "\n" << PF.ssresid() << "\n";
 
     return EXIT_SUCCESS;
 }

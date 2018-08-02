@@ -34,33 +34,42 @@ public:
     LinMin(size_t neq = 0, size_t nvar = 0) { resize(neq, nvar); }
     /// Destructor
     virtual ~LinMin() { clear(); }
-    /// set M
+
+    /// set element of M
     void setM(size_t i, size_t j, double v);
+
     /// calculate solution x, r
     template<typename YVec>
     void solve(const YVec& vy) { vector2gsl(vy,y); _solve(); }
 
     /// get sum of squares of residuals
     double ssresid() const;
+
     /// get solution x
-    void getx(vector<double>& vx) const;
+    void getx(vector<double>& vx) const { gsl2vector(x,vx); }
     /// get resid r
-    void getr(vector<double>& vr) const;
+    void getr(vector<double>& vr) const { gsl2vector(r,vr); }
 
     /// resize to specified dimensions
     virtual void resize(size_t neq, size_t nvar);
     /// clear solution, free data
     virtual void clear();
 
+    /// allocate and/or re-size gsl vector
+    static void resize(gsl_vector*& g, size_t n);
+
     /// fill gsl vector
     template<typename YVec>
     static void vector2gsl(const YVec& v, gsl_vector*& g) {
-        if(g && g->size != v.size()) {
-            gsl_vector_free(g);
-            g = nullptr;
-        }
-        if(!g) g = gsl_vector_alloc(v.size());
+        resize(g, v.size());
         for(size_t i=0; i<g->size; i++) gsl_vector_set(g,i,v[i]);
+    }
+    /// extract gsl vector
+    template<typename Vec>
+    static void gsl2vector(const gsl_vector* g, Vec& v) {
+        if(!g) { v.clear(); return; }
+        v.resize(g->size);
+        for(size_t i=0; i<g->size; i++) v[i] = gsl_vector_get(g,i);
     }
 
 protected:

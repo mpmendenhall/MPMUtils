@@ -21,7 +21,6 @@
 
 #include "LinMin.hh"
 #include <cassert>
-#include <stdio.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 
@@ -46,6 +45,11 @@ void LinMin::clear() {
     x = y = r = tau = nullptr;
 }
 
+void LinMin::resize(gsl_vector*& g, size_t n) {
+    if(g && g->size != n) { gsl_vector_free(g); g = nullptr; }
+    if(!g) g = gsl_vector_calloc(n);
+}
+
 void LinMin::setM(size_t i, size_t j, double v) {
     assert(M && i<Neq && j<Nvar);
     gsl_matrix_set(M,i,j,v);
@@ -54,11 +58,7 @@ void LinMin::setM(size_t i, size_t j, double v) {
 void LinMin::_solve() {
     if(!(M && y && r)) throw;
 
-    if(x && x->size != M->size2) {
-        gsl_vector_free(x);
-        x = nullptr;
-    }
-    if(!x) x = gsl_vector_alloc(M->size2);
+    resize(x, M->size2);
 
     // converts M to QR
     if(!tau) {
@@ -74,12 +74,3 @@ double LinMin::ssresid() const {
     return gsl_blas_dnrm2(r);
 }
 
-void gsl2vector(const gsl_vector* g, vector<double>& v) {
-    if(!g) { v.clear(); return; }
-    v.resize(g->size);
-    for(size_t i=0; i<g->size; i++) v[i] = gsl_vector_get(g,i);
-}
-
-void LinMin::getx(vector<double>& vx) const { gsl2vector(x,vx); }
-
-void LinMin::getr(vector<double>& vr) const { gsl2vector(r,vr); }
