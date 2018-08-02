@@ -27,13 +27,13 @@
 #include <vector>
 using std::vector;
 
-/// helper class for solving system of linear equations Mx = y+r
+/// helper class for solving (overdetermined) system of linear equations Mx = y+r
 class LinMin {
 public:
     /// Constructor, for m equations in n variables
     LinMin(size_t neq = 0, size_t nvar = 0) { resize(neq, nvar); }
     /// Destructor
-    ~LinMin() { clear(); }
+    virtual ~LinMin() { clear(); }
     /// set M
     void setM(size_t i, size_t j, double v);
     /// calculate solution x, r
@@ -48,9 +48,9 @@ public:
     void getr(vector<double>& vr) const;
 
     /// resize to specified dimensions
-    void resize(size_t neq, size_t nvar);
+    virtual void resize(size_t neq, size_t nvar);
     /// clear solution, free data
-    void clear();
+    virtual void clear();
 
     /// fill gsl vector
     template<typename YVec>
@@ -65,12 +65,14 @@ public:
 
 protected:
     /// solve after loading 'y' vector
-    void _solve();
+    virtual void _solve();
+
+    friend class LinMinConstrained;
 
     size_t Neq = 0;             ///< number of equations
     size_t Nvar = 0;            ///< number of variables
 
-    gsl_matrix* M = nullptr;    ///< coefficients matrix
+    gsl_matrix* M = nullptr;    ///< coefficients matrix -> QR decomp
     gsl_vector* tau = nullptr;  ///< from QR decomposition of M
     gsl_vector* x = nullptr;    ///< solution vector
     gsl_vector* y = nullptr;    ///< RHS vector
