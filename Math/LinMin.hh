@@ -76,8 +76,6 @@ protected:
     /// solve after loading 'y' vector
     virtual void _solve();
 
-    friend class LinMinConstrained;
-
     size_t Neq = 0;             ///< number of equations
     size_t Nvar = 0;            ///< number of variables
 
