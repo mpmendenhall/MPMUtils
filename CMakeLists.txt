@@ -46,7 +46,7 @@ endif()
 # ROOT, ROOT Dicts
 ################
 
-find_package(ROOT REQUIRED COMPONENTS MathCore Core RIO Hist Tree Minuit)
+find_package(ROOT COMPONENTS MathCore Core RIO Hist Tree Minuit)
 include_directories(${ROOT_INCLUDE_DIRS})
 find_package(GSL)
 

@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <algorithm>
 
+// gcc $MPMUTILS/Test/SQLite_Clone.cc $MPMUTILS/Utility/sqlite3.c -I$MPMUTILS/Utility/ -o SQLite_Clone -std=c++11 -lpthread -ldl
+
 /*
 ** Perform an online backup of database pDb to the database file named
 ** by zFilename. This function copies 5 database pages from pDb to
@@ -27,7 +29,8 @@
 */
 int backupDb(
   sqlite3 *pDb,               /* Database to back up */
-  const char *zFilename       /* Name of file to back up to */
+  const char *zFilename,      /* Name of file to back up to */
+  int pagelim                 /* limit max pages to transfer per step */
 ){
   int rc;                     /* Function return code */
   sqlite3 *pFile;             /* Database connection opened on zFilename */
@@ -48,7 +51,7 @@ int backupDb(
       do {
         rc = sqlite3_backup_step(pBackup, npg);
         auto np = sqlite3_backup_pagecount(pBackup);
-        npg = std::max(std::min(np/20, 5), 10000);
+        npg = std::min(std::max(np/20, 5), pagelim);
         printf("%i\t/ %i pages remaining\n", sqlite3_backup_remaining(pBackup), np);
         if( rc==SQLITE_OK || rc==SQLITE_BUSY || rc==SQLITE_LOCKED ){
           sqlite3_sleep(250);
@@ -68,8 +71,8 @@ int backupDb(
 }
 
 int main(int argc, char** argv) {
-    if(argc != 3) {
-        printf("Use: SQLite_Clone <input file> <output file>\n");
+    if(argc < 3) {
+        printf("Use: SQLite_Clone <input file> <output file> [page limit]\n");
         return EXIT_SUCCESS;
     }
 
@@ -82,7 +85,7 @@ int main(int argc, char** argv) {
     printf("Cloning DB '%s' to '%s'\n", argv[1], argv[2]);
 
 
-    err = backupDb(db, argv[2]);
+    err = backupDb(db, argv[2], argc > 3? atoi(argv[3]) : -1);
     sqlite3_close(db);
 
     return err;
