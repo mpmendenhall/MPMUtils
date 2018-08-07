@@ -5,8 +5,8 @@ list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 find_library(CONFIG_LIBS config++)
 #find_package(HDF5 REQUIRED COMPONENTS C HL)
-find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
+find_package(OpenGL)
+find_package(GLUT)
 include_directories(${HDF5_INCLUDE_DIRS})
 find_library(FFTW_LIBS fftw3)
 
@@ -31,7 +31,16 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 
-add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++14" "-DWITH_OPENGL")
+add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++14")
+
+if(GLUT_FOUND)
+    add_compile_options("-DWITH_OPENGL")
+endif()
+
+if(FFTW_LIBS-NOTFOUND)
+    message("Disabling FFTW3 dependency")
+    add_compile_options("-DWITHOUT_FFTW")
+endif()
 
 ################
 # ROOT, ROOT Dicts
