@@ -36,19 +36,21 @@ d|r^2|/dx = d/dx lambda G =>
 (1) M^T M x = M^T y + G^T lambda
 
 Decomposing M = Q[Neq,Neq] R[Neq,Nvar], where Q is orthogonal
-    and R is upper-right-triangular (effectively [Nvar,Nvar]),
-then M^T M = R^T R is square and symmetric:
+    and R is upper-right-triangular;
+    let S[Nvar,Nvar] be the truncated upper square of R, then
+then M^T M = R^T R = S^T S is square and symmetric.
 
-(2) R^T R x = M^T y + G^T lambda
-we can use Cholesky Decomposition inverse on R^T R
+(2) S^T S x = M^T y + G^T lambda
+we can use Cholesky Decomposition inverse on S^T S
 
-Substitute x = (RTR)^-1 (M^T y + G^T l) into (0) to solve for lambda(y,k):
+Substitute x = (S^T S)^-1 (M^T y + G^T l) into (0) to solve for lambda(y,k):
 
-(3) (G (RTR)^-1 G^T) lambda = k - (G (RTR)^-1 M^T) y
+(3) (G (S^T S)^-1 G^T) lambda = k - (G (S^T S)^-1 M^T) y
 (solve for lambda using Cholesky Decomposition)
 
 Substitute G^T lambda back into (2) to solve for x (using Cholesky Decomp. solver)
 */
+
 
 void LinMinConstrained::clear() {
     LinMin::clear();
