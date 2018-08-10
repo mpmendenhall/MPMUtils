@@ -462,6 +462,7 @@ def run_commandline():
     parser.add_argument("--bundle",   help="bundle job name; specify bundled walltime")
     parser.add_argument("--test",     type=int, help="run test idle jobs")
 
+    # Special commands to allow locally-running jobs to report back on completion
     parser.add_argument("--jid",      type=int, help=SUPPRESS) # help="job ID in database")
     parser.add_argument("--setreturn",type=int, help=SUPPRESS) # help="set job return code")
     parser.add_argument("--setstatus",type=int, help=SUPPRESS) # help="set job status code")
