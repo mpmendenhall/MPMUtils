@@ -8,6 +8,8 @@ CREATE TABLE jobs (
     status INTEGER,             -- processing status. -1: hold; 0: waiting; 1: sumitted; 2: queued; 3: running; 4: done; >= 5: special/undefined
     queue_id INTEGER,           -- submission queue identifier
     name TEXT,                  -- user-assigned (group) name
+    q_name TEXT,                -- job queue name
+    q_acct TEXT,                -- submission account
     jobfile TEXT,               -- job commands file
     outlog TEXT,                -- output logfile path
     associated INTEGER,         -- associated job for bundling
