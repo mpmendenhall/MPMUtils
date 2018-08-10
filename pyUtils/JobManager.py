@@ -330,7 +330,7 @@ def kill_jobs(conn, usr, account):
 
 class Job:
     """Description of a job to run"""
-    def __init__(self, name, q, acct, infile, logfile, res_list):
+    def __init__(self, name=None, q=None, acct=None, infile=None, logfile=None, res_list=[]):
         self.name = name
         self.q = q
         self.acct = acct
@@ -343,46 +343,44 @@ class Job:
         curs.execute("INSERT INTO jobs(name,q_name,q_acct,jobfile,outlog,status) VALUES (?,?,?,?,?,0)",
                      (self.name, self.q, self.acct, self.infile, self.logfile))
         self.jid = curs.lastrowid
-        #for rs in self.res_list: set_job_resource(curs, self.jid, rs[0], rs[1])
+        for rs in self.res_list: set_job_resource(curs, self.jid, rs[0], rs[1])
         return self.jid
 
     def __str__(self):
         return "Job " + self.name + " [" + self.q + "," + str(self.acct) + "]"
 
-def upload_jobs(curs,joblist):
-    """Upload a list of jobs to run; return list of database IDs"""
-    res_ids = {}
-    jids = []
-    print("Uploading jobs")
-    for j in joblist:
-        print("\t",j)
-        j.upload(curs)
-        jids.append(j.jid)
-        for rs in j.res_list:
-            if rs[0] not in res_ids: res_ids[rs[0]] = get_resource_id(curs,rs[0],rs[0])
-            set_job_resource(curs, j.jid, res_ids[rs[0]], rs[1])
-    return jids
+def setup_jobfiles(J, jc):
+    """Initialize default job and log files from command"""
+    try: os.remove(J.logfile)
+    except: pass
+    if type(jc)==type(""):
+        open(J.infile,"w").write(jc)
+    else:
+        J.logfile = jc[1]
+        open(J.infile, "w").write(jc[0])
 
 def make_upload_jobs(curs, jname, q, acct, jcmds, res_use):
     """Generate jobfiles for "one liners" and upload to DB"""
+
     jobdir = jobscript_dir + "/" + jname
     os.makedirs(jobdir, exist_ok=True)
+
+    # look up named resources to DB IDs
+    for rs in res_use: rs = (get_resource_id(curs,rs[0],rs[0]), rs[1])
+
     joblist = []
     for (n,jc) in enumerate(jcmds):
-        jfl = jobdir + "/job_%i.sh"%n
-        logfl = jobdir+"/log_%i.txt"%n
-        try: os.remove(logfl)
-        except: pass
-        if type(jc)==type(""): open(jfl,"w").write(jc)
-        else:
-            logfl = jc[1]
-            open(jfl,"w").write(jc[0])
-        joblist.append(Job(jname, q, acct, jfl, logfl, res_use))
-    return upload_jobs(curs, joblist)
+        J = Job(jname, q, acct)
+        J.infile = jobdir + "/job_%i.sh"%n
+        J.logfile = jobdir+"/log_%i.txt"%n
+        J.res_list = res_use
+        setup_jobfiles(J,jc)
+        joblist.append(J)
+    return [J.upload(curs) for j in joblist]
 
 def make_test_jobs(curs, njobs, q, acct):
     """Generate test run batch"""
-    jcmds = ['echo "Hello world %i!"\nsleep 25\necho "Goodbye!"'%i for i in range(njobs)]
+    jcmds = ['echo "Hello world %i!"\nsleep 5\necho "Goodbye!"'%i for i in range(njobs)]
     make_upload_jobs(curs, "test", q, acct, jcmds, [("walltime",30), ("local_cores" if q == 'local' else "cores",1)])
 
 def choose_bundles(ts, tmax, nmax):
