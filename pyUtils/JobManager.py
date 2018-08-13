@@ -21,10 +21,12 @@ def connect_JobsDB(fname, remake = True):
     if remake and not os.path.exists(fname):
         print("Initializing new JobsDB at", fname)
         os.system("sqlite3 %s < %s/pyUtils/JobsDB_Schema.sql"%(fname, os.environ["MPMUTILS"]))
-    conn = sqlite3.connect(fname)
+    conn = sqlite3.connect(fname, timeout = 60, isolation_level = "DEFERRED")
     curs = conn.cursor()
     curs.execute("PRAGMA foreign_keys = ON")
     curs.execute("PRAGMA journal_mode = WAL")
+    global dbfile
+    dbfile = fname
     return curs,conn
 
 ##
@@ -277,12 +279,13 @@ def check_running_localjobs(curs):
     curs.execute("SELECT job_id,queue_id FROM jobs WHERE status = 3 AND q_name = 'local'")
     for j in curs.fetchall():
         try: os.kill(j[1], 0)
-        except: curs.execute("UPDATE jobs SET status = 4, return_code = -999 WHERE job_id = ? AND status = 3", (j[0],))
+        except:
+            print("Job",j[0],j[1],"failed to report back!")
+            curs.execute("UPDATE jobs SET status = 4, return_code = -999 WHERE job_id = ? AND status = 3", (j[0],))
 
-def update_and_launch(conn, trickle = None):
+def update_and_launch(conn, curs, trickle = None):
     """Update status; launch new jobs as available"""
 
-    curs = conn.cursor()
     jstatus = get_showq_runstatus()
     update_DB_qrunstatus(curs,jstatus)
     check_running_localjobs(curs)
@@ -430,7 +433,7 @@ def cycle_launcher(conn, trickle=0, twait=15):
         nleft = curs.fetchone()[0]
         print(nleft, "jobs uncompleted.", flush=True)
         if not nleft: break
-        update_and_launch(conn, trickle)
+        update_and_launch(conn, curs, trickle)
         conn.commit()
         time.sleep(twait)
     conn.commit()
@@ -511,7 +514,7 @@ def run_commandline():
         conn.commit()
 
     if options.test: make_test_jobs(curs, options.test, options.queue, options.account); conn.commit()
-    if options.launch and not options.runlocal: update_and_launch_q(conn, options.account, options.queue, options.trickle)
+    if options.launch: update_and_launch(conn, curs, options.trickle)
     if options.status: update_qstatus(conn)
     if options.cancel: cancel_queued_jobs(conn)
     if options.kill: kill_jobs(conn, os.environ["USER"], qs["account"])

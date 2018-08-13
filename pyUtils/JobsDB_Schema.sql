@@ -2,7 +2,7 @@
 -- sqlite3 Jobs.db < $MPMUTILS/pyUtils/JobManager/JobsDB.sql
 
 PRAGMA foreign_keys = ON;
-PRAGMA journal_mode = WAL;
+PRAGMA journal_mode = WAL; -- for local jobs to report back
 
 CREATE TABLE jobs (
     job_id INTEGER PRIMARY KEY, -- unique internal job ID number
