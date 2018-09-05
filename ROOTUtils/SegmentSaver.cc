@@ -25,7 +25,7 @@
 #include <TString.h>
 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
-OutputManager(nm,pnt), inflname(inflName) {
+OutputManager(nm,pnt), ignoreMissingHistos(true), inflname(inflName) {
     // open file to load existing data
     fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : nullptr;
     smassert(!fIn || !fIn->IsZombie(),"unreadable_file");
@@ -48,9 +48,10 @@ SegmentSaver::~SegmentSaver() {
 
 bool SegmentSaver::isNormalized() {
     if(!normalization) {
+        auto im0 = ignoreMissingHistos;
         ignoreMissingHistos = true;
         normalization = registerNamedVector("normalization", 0);
-        ignoreMissingHistos = false;
+        ignoreMissingHistos = im0;
     }
     return normalization->GetNrows();
 }
@@ -210,6 +211,17 @@ bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
         }
     }
     return true;
+}
+
+map<string,float> SegmentSaver::compareKolmogorov(const SegmentSaver& S) const {
+    map<string,float> m;
+    for(auto& kv: saveHists) {
+        if(kv.second->GetEntries() < 100) continue;
+        auto it = S.saveHists.find(kv.first);
+        if(it == S.saveHists.end()) continue;
+        m[kv.first] = kv.second->KolmogorovTest(it->second,"UO");
+    }
+    return m;
 }
 
 void SegmentSaver::addSegment(const SegmentSaver& S, double sc) {

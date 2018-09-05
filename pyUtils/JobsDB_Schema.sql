@@ -22,6 +22,7 @@ CREATE TABLE jobs (
 CREATE INDEX idx_jobs_qid ON jobs(queue_id);
 CREATE INDEX idx_jobs_name ON jobs(name,status);
 CREATE INDEX idx_jobs_status ON jobs(status);
+CREATE INDEX idx_jobs_jid ON jobs(job_id);
 
 -- Resource pools needed by jobs
 CREATE TABLE resources (

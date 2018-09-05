@@ -22,11 +22,11 @@ void DynamicPluginSaver::Reconfigure() {
         cfg.setAutoConvert(true);
         string s = configstr->String().Data();
         cfg.readString(s);
-        Configure(cfg.getRoot());
+        Configure(cfg.getRoot(), true);
     } else printf("No configuration found in loaded file!\n");
 }
 
-void DynamicPluginSaver::Configure(const Setting& cfg) {
+void DynamicPluginSaver::Configure(const Setting& cfg, bool skipUnknown) {
     // save copy of config to output
     auto srcfl = cfg.getSourceFile();
     if(srcfl) configstr->SetString(loadFileString(srcfl).c_str());
@@ -39,6 +39,10 @@ void DynamicPluginSaver::Configure(const Setting& cfg) {
             string pname = plugs[i].getName();
             auto it = builderTable().find(pname);
             if(it == builderTable().end()) {
+                if(skipUnknown) {
+                    printf("Skipping unknown plugin type '%s'!\n", pname.c_str());
+                    continue;
+                }
                 fprintf(stderr,"Unknown plugin type '%s' configured! I die!\n", pname.c_str());
                 printf("Available plugins:\n");
                 for(auto kv: builderTable()) printf("\t%s\n", kv.first.c_str());

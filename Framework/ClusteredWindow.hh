@@ -6,7 +6,8 @@
 
 #include "OrderedWindow.hh"
 #include "AllocPool.hh"
-#include <cmath>
+#include <cmath> // for fabs
+#include <algorithm> // for std::sort
 
 /// "Cluster" base class; responsible for contents memory management.
 template<class TT>
@@ -33,6 +34,9 @@ public:
 
     /// Perform analysis at completion of cluster. Override to add more fancy calculations.
     virtual void close() { x_median = this->size()? order(*(*this)[this->size()/2]) : 0; }
+
+    /// sort contents by ordering parameter
+    void sort() { std::sort(this->begin(), this->end(), [this](T* a, T* b) { return this->order(*a) < this->order(*b); }); }
 
     /// clear cluster contents for allocated space re-use
     virtual void clear() {

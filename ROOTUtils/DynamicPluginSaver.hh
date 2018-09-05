@@ -58,7 +58,7 @@ public:
     /// Constructor
     DynamicPluginSaver(OutputManager* pnt, const string& nm = "DynamicPluginSaver", const string& inflName = "");
     /// Configure from libconfig object, dynamically loading plugins
-    virtual void Configure(const Setting& cfg);
+    virtual void Configure(const Setting& cfg, bool skipUnknown = false);
     /// Configure, loading config by filename
     void LoadConfig(const string& fname);
     /// Configure, loading from input file

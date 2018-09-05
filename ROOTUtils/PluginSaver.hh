@@ -90,6 +90,8 @@ public:
     void compare(const vector<SegmentSaver*>& v) override;
     /// virtual routine to calculate incremental changes from preceding timestep
     void checkpoint(const SegmentSaver& Sprev) override;
+    /// statistical test of histogram similarity
+    map<string,float> compareKolmogorov(const SegmentSaver& S) const override;
 
     /// display plugin run time profiling; return total accounted-for time
     double displayTimeUse() const;

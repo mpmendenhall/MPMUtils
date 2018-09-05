@@ -88,6 +88,8 @@ public:
     virtual bool isEquivalent(const SegmentSaver& S, bool throwit = false) const;
     /// load and add a list of segment files; return number loaded
     virtual size_t addFiles(const vector<string>& inflnames);
+    /// statistical test of histogram similarity
+    virtual map<string,float> compareKolmogorov(const SegmentSaver& S) const;
 
     bool ignoreMissingHistos;   ///< whether to quietly ignore missing histograms in input file
 

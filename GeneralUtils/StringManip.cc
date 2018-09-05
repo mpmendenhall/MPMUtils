@@ -156,3 +156,10 @@ string displayTime(double t, const string& fmt) {
     strftime(buf,sizeof(buf),fmt.c_str(),localtime(&tt));
     return buf;
 }
+
+string commonpfx(const string& s1, const string& s2) {
+    auto smax = std::min(s1.size(), s2.size());
+    size_t i = 0;
+    for(; i<smax; i++) if(s1[i] != s2[i]) break;
+    return s1.substr(0,i);
+}

@@ -93,6 +93,8 @@ string join(const vector<string>& ss, const string& sep = " ");
 string strip(const string& str, const string stripchars = " \t\r\n");
 /// drop last segment after splitting character
 string dropLast(const string& str, const string splitchars);
+/// keep starting characters in common between two strings
+string commonpfx(const string& s1, const string& s2);
 
 /// display formatted time from timestamp
 string displayTime(double t, const string& fmt = "%a %b %d %H:%M:%S %Y");

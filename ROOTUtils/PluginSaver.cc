@@ -47,6 +47,18 @@ void PluginSaver::buildPlugins() {
               [](SegmentSaver* a, SegmentSaver* b) { return a->order < b->order; });
 }
 
+map<string,float> PluginSaver::compareKolmogorov(const SegmentSaver& S) const {
+    auto m = SegmentSaver::compareKolmogorov(S);
+    auto& PS = dynamic_cast<const PluginSaver&>(S);
+    for(auto P: myPlugins) {
+        auto Si = PS.getPlugin(P->name);
+        if(!Si) continue;
+        auto mm = P->compareKolmogorov(*Si);
+        for(auto& kv: mm) m[P->name + "." + kv.first] = kv.second;
+    }
+    return m;
+}
+
 shared_ptr<SegmentSaver> PluginSaver::getPlugin(const string& nm) const {
     auto PB = myBuilders.find(nm);
     if(PB == myBuilders.end()) return nullptr;
@@ -84,7 +96,7 @@ void PluginSaver::normalize() {
 
 void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
     SegmentSaver::addSegment(S);
-    const PluginSaver& PS = dynamic_cast<const PluginSaver&>(S);
+    auto& PS = dynamic_cast<const PluginSaver&>(S);
     for(auto P: myPlugins) {
         auto Si = PS.getPlugin(P->name);
         if(Si) P->addSegment(*Si,sc);
