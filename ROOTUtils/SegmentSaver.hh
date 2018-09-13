@@ -105,8 +105,8 @@ public:
     virtual void processEvent() { }
     /// optional mid-processing status check calculations/results/plots
     virtual void checkStatus() { }
-    /// optional cleanup at end of data loading
-    virtual void finishData() { }
+    /// cleanup at end of data loading; set final = false to indicate more data yet to come
+    virtual void finishData(bool /*final*/ = true) { }
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
     virtual void normalize() { if(!isNormalized()) { normalization->ResizeTo(1); (*normalization)(0) = 1; }  }
     /// virtual routine for generating calculated hists

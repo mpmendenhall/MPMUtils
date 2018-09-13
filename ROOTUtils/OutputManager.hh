@@ -57,8 +57,8 @@ public:
     TDirectory* writeItems(TDirectory* d = nullptr) override;
     /// open output ROOT file
     void openROOT(OutputManager* base=nullptr);
-    /// write output ROOT file, or to new directory within parent; deletes ALL REGISTERED OBJECTS by default
-    string writeROOT(TDirectory* parentDir = nullptr, bool clear=true);
+    /// write output ROOT file, or to new directory within parent
+    string writeROOT(TDirectory* parentDir = nullptr);
 
     TCanvas defaultCanvas;              ///< canvas for drawing plots
     OutputManager* parent = nullptr;    ///< parent output manager

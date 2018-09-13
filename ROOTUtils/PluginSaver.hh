@@ -77,7 +77,7 @@ public:
     /// optional mid-processing status updates
     void checkStatus() override;
     /// optional cleanup at end of data loading
-    void finishData() override;
+    void finishData(bool /*final*/ = true) override;
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
     void normalize() override;
     /// self-normalization before plugins

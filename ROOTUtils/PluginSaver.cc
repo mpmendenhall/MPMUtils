@@ -136,10 +136,10 @@ void PluginSaver::processEvent() {
     for(auto P: myPlugins) P->processEvent();
 }
 
-void PluginSaver::finishData() {
+void PluginSaver::finishData(bool f) {
     for(auto P: myPlugins) {
         auto t0 = steady_clock::now();
-        P->finishData();
+        P->finishData(f);
         P->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
     }
 }

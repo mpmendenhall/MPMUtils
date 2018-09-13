@@ -74,7 +74,7 @@ void OutputManager::openROOT(OutputManager* base){
     }
 }
 
-string OutputManager::writeROOT(TDirectory* parentDir, bool clear) {
+string OutputManager::writeROOT(TDirectory* parentDir) {
     printf("\n--------- Building output .root file... ----------\n");
     string outfname = "";
     if(parentDir) writeItems(parentDir);
@@ -83,7 +83,6 @@ string OutputManager::writeROOT(TDirectory* parentDir, bool clear) {
         rootOut->cd();
         writeItems(nullptr);
     }
-    if(clear) clearItems();
     delete rootOut;
     rootOut = nullptr;
 
