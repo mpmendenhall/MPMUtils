@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <cassert>
+#include <random>
 
 void summary(const PrimeSieve& S) {
     auto& ps = S.getPrimes();
@@ -41,7 +42,7 @@ int main(int, char**) {
     for(PrimeSieve::int_t i=0; i<=10000000; i++) {
         auto v = PS.factor(i);
         assert(i == PS.prod(v));
-        if(i%1000001) continue;
+        if(rand() > 1e-5*RAND_MAX) continue;
         printf("%i =", PS.prod(v));
         for(auto f: v) printf("\t%i", f);
         printf("\n");
