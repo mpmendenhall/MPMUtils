@@ -46,7 +46,7 @@ endif()
 # ROOT, ROOT Dicts
 ################
 
-find_package(ROOT COMPONENTS MathCore Core RIO Hist Tree Minuit)
+find_package(ROOT COMPONENTS MathCore MathMore Core RIO Hist Tree Minuit)
 include_directories(${ROOT_INCLUDE_DIRS})
 find_package(GSL)
 
@@ -80,7 +80,7 @@ target_link_libraries(MPM ${CONFIG_LIBS} ${FFTW_LIBS} ${GLUT_LIBRARIES} ${GSL_LI
 add_dependencies(MPM update_codeversion)
 
 # test programs
-foreach(exec IN ITEMS SQLite_Clone testFitters testPolynomial testQuadratic testRational testVisr)
+foreach(exec IN ITEMS SQLite_Clone testFitters testNoisyMin testPolynomial testQuadratic testRational testVisr)
     add_executable(${exec} Test/${exec}.cc)
     target_link_libraries(${exec} MPM)
 endforeach(exec)

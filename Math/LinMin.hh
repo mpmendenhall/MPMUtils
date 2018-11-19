@@ -24,16 +24,22 @@
 
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
+#include <gsl/gsl_eigen.h>
 #include <vector>
 using std::vector;
 
-/// helper class for solving (overdetermined) system of linear equations Mx = y+r
+/// helper class for solving (overdetermined) system of linear equations Mx = y + r
+// Internally: decomposes M = Q (orthogonal) * R (right-triangular)
 class LinMin {
 public:
     /// Constructor, for m equations in n variables
     LinMin(size_t neq = 0, size_t nvar = 0) { resize(neq, nvar); }
     /// Destructor
     virtual ~LinMin() { clear(); }
+    /// get Nvar
+    size_t nVar() const { return Nvar; }
+    /// get Neq
+    size_t nEq() const { return Neq; }
 
     /// set element of M
     void setM(size_t i, size_t j, double v);
@@ -44,9 +50,19 @@ public:
 
     /// get sum of squares of residuals
     double ssresid() const;
+    /// calculate and return covariance matrix
+    const gsl_matrix* calcCov();
+    /// calculate, return unit eigenvectors of covariance matrix in columns
+    const gsl_matrix* calcPCA();
+    /// return eigenvalues for PCA vectors
+    const gsl_vector* PCAlambda() { calcPCA(); return lPCA; }
+
+
 
     /// get solution x
     void getx(vector<double>& vx) const { gsl2vector(x,vx); }
+    /// get realization of solution within covariance
+    void getRealization(const vector<double>& vr, vector<double>& vx);
     /// get resid r
     void getr(vector<double>& vr) const { gsl2vector(r,vr); }
 
@@ -75,15 +91,25 @@ public:
 protected:
     /// solve after loading 'y' vector
     virtual void _solve();
+    /// calculate QR decomposition of M (stored in M, tau)
+    void calcQR();
 
     size_t Neq = 0;             ///< number of equations
     size_t Nvar = 0;            ///< number of variables
 
-    gsl_matrix* M = nullptr;    ///< coefficients matrix -> QR decomp
+    gsl_matrix* M = nullptr;    ///< coefficients (design) matrix -> QR decomp
     gsl_vector* tau = nullptr;  ///< from QR decomposition of M
+    gsl_matrix* Q = nullptr;    ///< unpacked Q decomposition matrix
+    gsl_matrix* R = nullptr;    ///< unpacked R decomposition
+    gsl_matrix* L = nullptr;    ///< L = R^T square corner, Cholesky Decomp M^T M = L L^T
+    gsl_matrix* Cov = nullptr;  ///< Cov = (M^T M)^-1 = (L L^T)^-1
+    gsl_matrix* PCA = nullptr;  ///< normalized eigenvectors of Cov in columns (for random realizations)
+    gsl_vector* lPCA = nullptr; ///< eigenvalues of Cov
     gsl_vector* x = nullptr;    ///< solution vector
     gsl_vector* y = nullptr;    ///< RHS vector
     gsl_vector* r = nullptr;    ///< residuals vector
+    gsl_eigen_symmv_workspace* esw = nullptr;   ///< eigendecomposition workspace
+
 };
 
 #endif

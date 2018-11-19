@@ -36,13 +36,12 @@ void LinMin::resize(size_t neq, size_t nvar) {
 
 void LinMin::clear() {
     Neq = Nvar = 0;
-    if(M) gsl_matrix_free(M);
-    if(tau) gsl_vector_free(tau);
-    if(x) gsl_vector_free(x);
-    if(y) gsl_vector_free(y);
-    if(r) gsl_vector_free(r);
-    M = nullptr;
-    x = y = r = tau = nullptr;
+    for(auto& m: {M,Q,R,L,Cov,PCA}) if(m) gsl_matrix_free(m);
+    M = Q = R = L = Cov = PCA = nullptr;
+    for(auto& v: {tau,x,y,r,lPCA}) if(v) gsl_vector_free(v);
+    tau = x = y = r = lPCA = nullptr;
+    if(esw) gsl_eigen_symmv_free(esw);
+    esw = nullptr;
 }
 
 void LinMin::resize(gsl_vector*& g, size_t n) {
@@ -55,22 +54,76 @@ void LinMin::setM(size_t i, size_t j, double v) {
     gsl_matrix_set(M,i,j,v);
 }
 
+void LinMin::calcQR() {
+    if(tau) return; // already done
+    if(!M) throw;
+
+    tau = gsl_vector_alloc(M->size2);
+    if(gsl_linalg_QR_decomp(M,tau)) throw;
+}
+
 void LinMin::_solve() {
-    if(!(M && y && r)) throw;
-
+    if(!(y && r)) throw;
+    calcQR();
     resize(x, M->size2);
-
-    // converts M to QR
-    if(!tau) {
-        tau = gsl_vector_alloc(M->size2);
-        if(gsl_linalg_QR_decomp(M,tau)) throw;
-    }
-
     if(gsl_linalg_QR_lssolve(M, tau, y, x, r)) throw;
+}
+
+const gsl_matrix* LinMin::calcCov() {
+    if(Cov) return Cov; // already calculated
+    calcQR();
+
+    // unpack Q,R decomposition matrices
+    Q = gsl_matrix_alloc(Neq, Neq);
+    R = gsl_matrix_alloc(Neq, Nvar);
+    if(gsl_linalg_QR_unpack(M, tau, Q, R)) throw;
+
+    // copy to L
+    L = gsl_matrix_calloc(Nvar, Nvar);
+    for(size_t i = 0; i < Nvar; i++)
+        for(size_t j = i; j < Nvar; j++)
+            gsl_matrix_set(L, j, i, gsl_matrix_get(R, i, j));
+
+
+    // Cov = (M^T M)^-1 = (L L^T)^-1
+    Cov = gsl_matrix_alloc(Nvar, Nvar);
+
+    // alternate method for comparison:
+    //gsl_blas_dsyrk(CblasLower, CblasNoTrans, 1., L, 0., Cov);
+    //gsl_linalg_cholesky_decomp1(Cov);
+
+    if(gsl_matrix_memcpy(Cov, L)) throw;
+    if(gsl_linalg_cholesky_invert(Cov)) throw;
+    return Cov;
+}
+
+const gsl_matrix* LinMin::calcPCA() {
+    if(PCA) return PCA;
+
+    esw = gsl_eigen_symmv_alloc(Nvar);
+    PCA = gsl_matrix_alloc(Nvar, Nvar);
+    auto A = gsl_matrix_alloc(Nvar, Nvar);
+    lPCA = gsl_vector_alloc(Nvar);
+    if(gsl_matrix_memcpy(A, calcCov())) throw;
+    if(gsl_eigen_symmv(A, lPCA, PCA, esw)) throw;
+    gsl_matrix_free(A);
+
+    return PCA;
+}
+
+void LinMin::getRealization(const vector<double>& vr, vector<double>& vx) {
+    calcPCA();
+
+    getx(vx);
+    for(size_t i = 0; i < std::min(Nvar, vr.size()); i++)
+        for(size_t j = 0; j < Nvar; j++)
+            vx[j] += vr[i] * gsl_vector_get(lPCA, i) * gsl_matrix_get(PCA, i, j);
 }
 
 double LinMin::ssresid() const {
     if(!r) return -1;
-    return gsl_blas_dnrm2(r);
+    double ssr;
+    gsl_blas_ddot(r,r,&ssr);
+    return ssr;
 }
 

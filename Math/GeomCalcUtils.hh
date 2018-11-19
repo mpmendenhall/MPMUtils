@@ -6,9 +6,17 @@
 
 #include <cmath>
 #include <type_traits>
+#include <numeric> // for std::accumulate
 
 template<typename T>
 using array_contents_t = typename std::remove_reference<decltype(std::declval<T&>()[0])>::type;
+
+/// generic vector magnitude^2
+template<typename V>
+array_contents_t<V> vmag2(const V& v) {
+    typedef array_contents_t<V> T;
+    return std::accumulate(v.begin(), v.end(), T(0), [](T a, T b) { return a + b*b; });
+}
 
 template<typename T>
 inline array_contents_t<T> dot(const T& a,  const T& b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
@@ -25,12 +33,14 @@ template<typename T>
 inline array_contents_t<T> triple_prod(const T& a,  const T& b, const T& c) {
     return a[0]*b[1]*c[2] + a[2]*b[0]*c[1] + a[1]*b[2]*c[0] - a[2]*b[1]*c[0] - a[1]*b[0]*c[2] - a[0]*b[2]*c[1];
 }
-/// vector magnitude squared
+
+/// 3-vector magnitude^2
 template<typename T>
 inline array_contents_t<T> mag2(const T& v) { return dot(v,v); }
+
 /// vector magnitude
 template<typename T>
-inline array_contents_t<T> mag(const T& v) { return sqrt(dot(v,v)); }
+inline array_contents_t<T> mag(const T& v) { return sqrt(mag2(v)); }
 /// normalize to unit vector; return original length
 template<typename T>
 inline array_contents_t<T> makeunit(T v) {
