@@ -71,7 +71,7 @@ public:
         } while(vmag2(r) > 1.);
 
         std::copy(r.begin(), r.end(), v1->data);
-        std::copy(QC.x0.begin(), QC.x0.end(), v2->data);
+        std::copy(x0.begin(), x0.end(), v2->data);
         // v2 = x0 + dS * r
         gsl_blas_dgemv(CblasNoTrans, nsigma, dS, v1, 1., v2);
 
