@@ -31,7 +31,7 @@ void LinMin::resize(size_t neq, size_t nvar) {
     if(!neq || !nvar) return;
     Neq = neq;
     Nvar = nvar;
-    M = gsl_matrix_alloc(Neq,Nvar);
+    M = gsl_matrix_alloc(Neq, Nvar);
     r = gsl_vector_calloc(Neq);
 }
 

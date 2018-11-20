@@ -45,10 +45,12 @@ public:
     QuadraticCholesky<N,T> QChol;   ///< Cholesky decomposition of Q
     coord_t x0 = {};        ///< estimated minimum location
     LinMin LM;              ///< linear minimizer (solves for coefficients in Q)
-    gsl_matrix* dQ0;        ///< fit stats uncertainty ellipse on Q minimum (1-sigma orthogonal vectors)
-    gsl_matrix* dS;         ///< search/sampling region for minimum in parameter space
+    gsl_matrix* dQ0;        ///< fit stats uncertainty ellipse on Q minimum (1-sigma orthogonal vector columns)
+    gsl_matrix* dS;         ///< search/sampling region principal axes columns for minimum in parameter space
     double h = 1;           ///< height of ``1 sigma'' minima search region
-    int verbose = 1;        ///< debugging verbosity level
+    int verbose = 0;        ///< debugging verbosity level
+    size_t step = 0;        ///< fit step number
+    double nSigmaStat = 4;  ///< statistical uncertainty search region expansion
 
     /// add evaluated point
     template<typename F>
@@ -74,20 +76,29 @@ public:
         gsl_blas_dgemv(CblasNoTrans, nsigma, dS, v1, 1., v2);
 
         coord_t x;
-        std::copy(v2->data, v2->data+N, x.begin());
+        for(size_t i=0; i<N; i++) x[i] = gsl_vector_get(v2,i);
         return x;
     }
 
     /// update estimated minimum
     void fitMin() {
-        if(verbose) printf("Fitting to %zu datapoints...\n", fvals.size());
+        // filter points to search region (except on first step)
+        vector<evalpt> vs;
+        if(!(step++)) vs = fvals;
+        else {
+            for(auto& p: fvals) {
+                for(size_t i=0; i<N; i++) gsl_vector_set(v1, i, p.x[i] - x0[i]);
+                gsl_blas_dtrmv(CblasLower, CblasTrans, CblasNonUnit, sE.EC.L, v1);
+                if(gsl_blas_dnrm2(v1) < 1) vs.push_back(p);
+            }
+        }
+        if(verbose) printf("\n**** Fit step %zu to %zu/%zu datapoints...\n", step, vs.size(), fvals.size());
 
         // fit surface around minimum
-        LM.resize(fvals.size(), NTERMS);
-        vector<T> y(fvals.size());
-        //auto& x0 = Q.factor(); // for weighting by distance to center
+        LM.resize(vs.size(), NTERMS);
+        vector<T> y(vs.size());
         size_t i = 0;
-        for(auto& p: fvals) {
+        for(auto& p: vs) {
             int j = 0;
             for(auto x: p.t) LM.setM(i, j++, x);
             y[i] = p.f;
@@ -96,7 +107,6 @@ public:
         LM.solve(y);
         LM.getx(y);
         Q = Quadratic<N,T>(y);  // estimated minimum surface
-        if(verbose) Q.display();
         QChol.decompose(Q);     // find minimum position (and Cholesky form)
         x0 = QChol.x0;
         for(i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E1.L, i, j, gsl_matrix_get(QChol.L, i, j)/sqrt(h));
@@ -105,7 +115,7 @@ public:
         auto P = LM.calcPCA();
         auto l = LM.PCAlambda();
         auto s2 = LM.ssresid()/LM.nDF();
-        if(verbose) { printf("RMS deviation %g\n", sqrt(s2)); displayM(P); displayV(l); }
+        if(verbose) printf("RMS deviation %g\n", sqrt(s2));
         gsl_matrix_set_zero(dQ0);
         for(i=0; i<NTERMS; i++) {
             auto yy = y;
@@ -115,20 +125,18 @@ public:
             for(size_t j=0; j<N; j++) gsl_vector_set(v1, j, QC.x0[j] - x0[j]);
             gsl_blas_dsyr(CblasLower, 1., v1, dQ0);
         }
-        displayM(dQ0);
 
-        // stats uncertainty inverse Cholesky form
-        for(i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E2.L, i, j, gsl_matrix_get(dQ0, i, j));
+        // n-sigma stats uncertainty inverse Cholesky form
+        for(i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E2.L, i, j, gsl_matrix_get(dQ0, i, j)*nSigmaStat*nSigmaStat);
         gsl_linalg_cholesky_decomp1(sE.E2.L);
-        displayM(sE.E2.L);
-        gsl_linalg_tri_lower_invert(sE.E2.L);
-        displayM(sE.E2.L);
+        gsl_linalg_cholesky_invert(sE.E2.L);
+        gsl_linalg_cholesky_decomp1(sE.E2.L);
 
         // stats uncertainty 1*sigma principal axes
         EWS.decompSymm(dQ0, v1);
         for(i=0; i<N; i++) gsl_vector_set(v1, i, sqrt(gsl_vector_get(v1,i)));
         rmul_diag(dQ0, v1);
-        displayM(dQ0);
+        if(verbose > 1) { printf("dQ0:\n"); displayM(dQ0); }
 
         // update search region
         sE.calcCovering();              // ellipse containing both
@@ -145,7 +153,7 @@ public:
         for(size_t i=0; i<N; i++) {
             vector<T> v(N);
             v[i] = 1.0;
-            printf("[%zu]\t%g\t~%g (dh)\t~%g (stat)\n", i, x0[i], QChol.projLength(v), sE.E2.projLength(v));
+            printf("[%zu]\t%g\t~%g (dh)\t~%g (stat)\n", i, x0[i], QChol.projLength(v)*sqrt(h), sE.E2.projLength(v)/nSigmaStat);
         }
     }
 

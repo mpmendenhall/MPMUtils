@@ -80,6 +80,14 @@ protected:
 void zeroTriangle(CBLAS_UPLO_t uplo, gsl_matrix* A);
 /// Fill in specified half of symmetric matrix from other side
 void fillSymmetric(CBLAS_UPLO_t uplo, gsl_matrix* A);
+/// sum x x^T points into symmetric matrix (lower triangle)
+template<typename V>
+void sumSymm(gsl_matrix* A, gsl_vector* vn, const V& vp) {
+    for(auto& p: vp) {
+        for(size_t i=0; i<vn->size; i++) gsl_vector_set(vn, i, p[i]);
+        gsl_blas_dsyr(CblasLower, 1., vn, A);
+    }
+}
 
 /// Re-usable workspace for projecting an N-dimensional ellipsoid into an M-dimensional affine subspace
 // formula from Stephen B. Pope, "Algorithms for Ellipsoids," Cornell University Report FDA-08-01 (2008)
