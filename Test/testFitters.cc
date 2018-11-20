@@ -39,7 +39,7 @@ int main(int, char**) {
     //////////////////////////////////
     // fit polynomial over grid points
 
-    LinMin LM;
+    LinMin LM(P3_o3.size());
     PolyFit<P3_t> PF(P3_o3);
     std::cout << PF.P << "\n";
 
@@ -72,7 +72,7 @@ int main(int, char**) {
     PolyFit<P1_t> PF1(px);
     PF1.setX(vx);
 
-    LinMinConstrained LMC;
+    LinMinConstrained LMC(px.size());
     PF1.configure(LMC);
     LMC.setNConstraints(1);
     LMC.setG(0,0,1);

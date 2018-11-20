@@ -28,7 +28,7 @@
 class LinMinConstrained: public LinMin {
 public:
     /// Constructor, for m equations in n variables
-    LinMinConstrained(size_t neq = 0, size_t nvar = 0, size_t ncon = 0): LinMin(neq, nvar), Ncon(ncon) { }
+    LinMinConstrained(size_t nvar, size_t neq = 0, size_t ncon = 0): LinMin(nvar, neq), Ncon(ncon) { }
 
     /// set number of constraints
     void setNConstraints(size_t nc);

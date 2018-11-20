@@ -9,37 +9,54 @@
 #include <gsl/gsl_eigen.h>
 #include <utility>
 #include <cassert>
+#include <vector>
+using std::vector;
+
+/// print vector to stdout
+void displayV(const gsl_vector* v);
+/// print matrix to stdout
+void displayM(const gsl_matrix* M);
 
 /// right-multiply (scale columns) of M by diagonal matrix D
 void rmul_diag(gsl_matrix* M, const gsl_vector* D);
-
 /// right-divide (scale columns) of M by diagonal matrix D
 void rdiv_diag(gsl_matrix* M, const gsl_vector* D);
-
 /// left-multiply (scale rows) of M by diagonal matrix D
 void lmul_diag(gsl_matrix* M, const gsl_vector* D);
 
-/// Allocated workspace for N*N matrix operations
-class MnnWorkspace {
-public:
-    /// Constructor
-    MnnWorkspace(size_t n): N(n), M(gsl_matrix_alloc(N,N)) { }
-    /// Destructor
-    ~MnnWorkspace() { gsl_matrix_free(M); }
+/// Zero out triangle above/below diagonal (after triangular matrix ops leaving junk here)
+void zeroTriangle(CBLAS_UPLO_t uplo, gsl_matrix* A);
+/// Fill in specified half of symmetric matrix from other side
+void fillSymmetric(CBLAS_UPLO_t uplo, gsl_matrix* A);
 
-    /// Rank-2 symmetric A -> A A^T (default fill lower triangle; also option to transpose for A^T A)
-    void square(gsl_matrix*& A, CBLAS_UPLO_t ul = CblasLower, CBLAS_TRANSPOSE_t t = CblasNoTrans) {
-        assert(A && A->size1 == N && A->size2 == N);
-        gsl_blas_dsyrk(ul, t, 1., A, 0., M);
-        std::swap(A,M);
+/// sum x x^T points into symmetric matrix (lower triangle)
+template<typename V>
+void sumSymm(gsl_matrix* A, gsl_vector* vn, const V& vp) {
+    for(auto& p: vp) {
+        for(size_t i=0; i<vn->size; i++) gsl_vector_set(vn, i, p[i]);
+        gsl_blas_dsyr(CblasLower, 1., vn, A);
     }
+}
+/// resize (allocate if needed) gsl vector
+void resize(gsl_vector*& g, size_t n);
+/// fill gsl vector
+template<typename YVec>
+void vector2gsl(const YVec& v, gsl_vector*& g) {
+    resize(g, v.size());
+    for(size_t i=0; i<g->size; i++) gsl_vector_set(g,i,v[i]);
+}
+/// extract gsl vector
+template<typename Vec>
+static void gsl2vector(const gsl_vector* g, Vec& v) {
+    if(!g) { v.clear(); return; }
+    v.resize(g->size);
+    for(size_t i=0; i<g->size; i++) v[i] = gsl_vector_get(g,i);
+}
 
-    const size_t N; ///< matrix dimension
 
-protected:
-    gsl_matrix* M;  ///< NxN workspace
-};
 
+
+//----------------------------------------------------------
 /// Helper workspace for SVD A(M,N) = U(M,N) S(N,N) V^T(N,N)
 class SVDWorkspace {
 public:
@@ -60,35 +77,34 @@ protected:
     gsl_vector* w;      ///< workspace N
 };
 
+
+
+//----------------------------------------------------------
 /// Workspace for symmetric NxN Eigenvector decomposition A -> U D U^T
 class EigSymmWorkspace {
 public:
     /// Constructor
-    EigSymmWorkspace(size_t n): evec(gsl_matrix_alloc(n,n)), W(gsl_eigen_symmv_alloc(n)) { }
+    EigSymmWorkspace(size_t n): _N(n) { }
     /// Destructor
-    ~EigSymmWorkspace() { gsl_matrix_free(evec); gsl_eigen_symmv_free(W); }
+    ~EigSymmWorkspace() { if(evec) gsl_matrix_free(evec); if(W) gsl_eigen_symmv_free(W); }
 
     /// Decompose symmetric (lower-triangle) A -> U D U^T; return eigenvectors in A -> U columns
-    void decompSymm(gsl_matrix*& A, gsl_vector* D) { gsl_eigen_symmv(A, D, evec, W); std::swap(evec,A); }
+    void decompSymm(gsl_matrix*& A, gsl_vector* D) {
+        if(!evec) evec = gsl_matrix_alloc(_N,_N);
+        if(!W) W = gsl_eigen_symmv_alloc(_N);
+        gsl_eigen_symmv(A, D, evec, W);
+        std::swap(evec,A);
+    }
+
+    const size_t _N;
 
 protected:
-    gsl_matrix* evec;               ///< eigenvector storage
-    gsl_eigen_symmv_workspace* W;   ///< symmetrix matrix eigendecomposition workspace
+    gsl_matrix* evec = nullptr;             ///< eigenvector storage
+    gsl_eigen_symmv_workspace* W = nullptr; ///< symmetrix matrix eigendecomposition workspace
 };
 
-/// Zero out triangle above/below diagonal (after triangular matrix ops leaving junk here)
-void zeroTriangle(CBLAS_UPLO_t uplo, gsl_matrix* A);
-/// Fill in specified half of symmetric matrix from other side
-void fillSymmetric(CBLAS_UPLO_t uplo, gsl_matrix* A);
-/// sum x x^T points into symmetric matrix (lower triangle)
-template<typename V>
-void sumSymm(gsl_matrix* A, gsl_vector* vn, const V& vp) {
-    for(auto& p: vp) {
-        for(size_t i=0; i<vn->size; i++) gsl_vector_set(vn, i, p[i]);
-        gsl_blas_dsyr(CblasLower, 1., vn, A);
-    }
-}
 
+//----------------------------------------------------------
 /// Re-usable workspace for projecting an N-dimensional ellipsoid into an M-dimensional affine subspace
 // formula from Stephen B. Pope, "Algorithms for Ellipsoids," Cornell University Report FDA-08-01 (2008)
 class ellipse_affine_projector: public SVDWorkspace {
@@ -115,10 +131,5 @@ protected:
     gsl_matrix* Mmn;    ///< MxN workspace
     gsl_matrix* Mnn;    ///< NxN workspace
 };
-
-/// print vector to stdout
-void displayV(const gsl_vector* v);
-/// print matrix to stdout
-void displayM(const gsl_matrix* M);
 
 #endif

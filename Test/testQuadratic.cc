@@ -176,7 +176,7 @@ int main(int, char**) {
             QP2.decompose(R2);
 
 
-            int a1 = 0, a2 = 1;
+            //int a1 = 0, a2 = 1;
             //auto g = vEllipse(QP.USi, QC.x0[a1], QC.x0[a2], a1, a2);
             //g2.Draw("AL");
             //g.Draw("AL");

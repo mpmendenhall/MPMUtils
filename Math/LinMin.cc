@@ -25,52 +25,38 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 
-void LinMin::resize(size_t neq, size_t nvar) {
-    if(neq == Neq && nvar == Nvar) return;
+void LinMin::setNeq(size_t neq) {
     clear();
-    if(!neq || !nvar) return;
+    if(neq == Neq) return;
+
     Neq = neq;
-    Nvar = nvar;
+    if(M) { gsl_matrix_free(M); M = nullptr; }
+
+    if(!Neq) return;
     M = gsl_matrix_alloc(Neq, Nvar);
-    r = gsl_vector_calloc(Neq);
 }
 
-void LinMin::clear() {
-    Neq = Nvar = 0;
+LinMin::~LinMin() {
     for(auto& m: {M,Q,R,L,Cov,PCA}) if(m) gsl_matrix_free(m);
-    M = Q = R = L = Cov = PCA = nullptr;
     for(auto& v: {tau,x,y,r,lPCA}) if(v) gsl_vector_free(v);
-    tau = x = y = r = lPCA = nullptr;
-    if(esw) gsl_eigen_symmv_free(esw);
-    esw = nullptr;
-}
-
-void LinMin::resize(gsl_vector*& g, size_t n) {
-    if(g && g->size != n) { gsl_vector_free(g); g = nullptr; }
-    if(!g) g = gsl_vector_calloc(n);
-}
-
-void LinMin::setM(size_t i, size_t j, double v) {
-    assert(M && i<Neq && j<Nvar);
-    gsl_matrix_set(M,i,j,v);
 }
 
 void LinMin::calcQR() {
-    if(tau) return; // already done
-    assert(M);
-
-    tau = gsl_vector_alloc(M->size2);
+    if(has_tau) return; // already done
+    if(!tau) tau = gsl_vector_alloc(M->size2);
     gsl_linalg_QR_decomp(M,tau);
+    has_tau = true;
 }
 
 void LinMin::_solve() {
     calcQR();
     resize(x, M->size2);
+    resize(r, M->size1);
     gsl_linalg_QR_lssolve(M, tau, y, x, r);
 }
 
 const gsl_matrix* LinMin::calcCov() {
-    if(Cov) return Cov; // already calculated
+    if(has_Cov) return Cov; // already calculated
     calcQR();
 
     // unpack Q,R decomposition matrices
@@ -90,20 +76,19 @@ const gsl_matrix* LinMin::calcCov() {
     gsl_matrix_memcpy(Cov, L);
     gsl_linalg_cholesky_invert(Cov);
 
+    has_Cov = true;
     return Cov;
 }
 
 const gsl_matrix* LinMin::calcPCA() {
-    if(PCA) return PCA;
+    if(has_PCA) return PCA;
 
-    esw = gsl_eigen_symmv_alloc(Nvar);
-    PCA = gsl_matrix_alloc(Nvar, Nvar);
-    auto A = gsl_matrix_alloc(Nvar, Nvar);
+    if(!PCA) PCA = gsl_matrix_alloc(Nvar, Nvar);
     if(!lPCA) lPCA = gsl_vector_alloc(Nvar);
-    gsl_matrix_memcpy(A, calcCov());
-    gsl_eigen_symmv(A, lPCA, PCA, esw);
-    gsl_matrix_free(A);
+    gsl_matrix_memcpy(PCA, calcCov());
+    decompSymm(PCA, lPCA);
 
+    has_PCA = true;
     return PCA;
 }
 

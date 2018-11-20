@@ -21,7 +21,7 @@ public:
     static constexpr int NTERMS = Quadratic<N,T>::NTERMS;
 
     /// Constructor
-    NoisyMin(): dQ0(gsl_matrix_calloc(N,N)), dS(gsl_matrix_calloc(N,N)),
+    NoisyMin(): LM(NTERMS), dQ0(gsl_matrix_calloc(N,N)), dS(gsl_matrix_calloc(N,N)),
     v1(gsl_vector_alloc(N)), v2(gsl_vector_alloc(N)), QRNG(N), EWS(N) { }
     /// Destructor
     ~NoisyMin() {
@@ -95,7 +95,7 @@ public:
         if(verbose) printf("\n**** Fit step %zu to %zu/%zu datapoints...\n", step, vs.size(), fvals.size());
 
         // fit surface around minimum
-        LM.resize(vs.size(), NTERMS);
+        LM.setNeq(vs.size());
         vector<T> y(vs.size());
         size_t i = 0;
         for(auto& p: vs) {

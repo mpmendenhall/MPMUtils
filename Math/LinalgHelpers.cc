@@ -46,6 +46,11 @@ void fillSymmetric(CBLAS_UPLO_t uplo, gsl_matrix* A) {
     }
 }
 
+void resize(gsl_vector*& g, size_t n) {
+    if(g && g->size != n) { gsl_vector_free(g); g = nullptr; }
+    if(!g) g = gsl_vector_alloc(n);
+}
+
 /////////////////////
 
 SVDWorkspace::SVDWorkspace(size_t n, size_t m): N(n), M(m),

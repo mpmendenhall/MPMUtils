@@ -24,6 +24,7 @@
 
 #include "Polynomial.hh"
 #include "PolyEval.hh"
+#include <cassert>
 
 /// Configure LinMin-like classes to fit polynomial P(X;coeffs) = y(X)
 template<class Poly>
@@ -42,7 +43,8 @@ public:
     /// configure fit matrix for polynomial over X grid
     template<typename LM>
     void configure(LM& fitter) {
-        fitter.resize(npts, P.size());
+        assert(P.size() == fitter.Nvar);
+        fitter.setNeq(npts);
         size_t i = 0;
         for(auto& kv: P) {
             vector<double> v;
