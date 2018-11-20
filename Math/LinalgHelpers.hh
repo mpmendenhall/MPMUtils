@@ -60,13 +60,13 @@ protected:
     gsl_vector* w;      ///< workspace N
 };
 
-/// Allocated workspace for NxN Eigenvector decompositions
-class EigNWorkspace {
+/// Workspace for symmetric NxN Eigenvector decomposition A -> U D U^T
+class EigSymmWorkspace {
 public:
     /// Constructor
-    EigNWorkspace(size_t n): evec(gsl_matrix_alloc(n,n)), W(gsl_eigen_symmv_alloc(n)) { }
+    EigSymmWorkspace(size_t n): evec(gsl_matrix_alloc(n,n)), W(gsl_eigen_symmv_alloc(n)) { }
     /// Destructor
-    ~EigNWorkspace() { gsl_matrix_free(evec); gsl_eigen_symmv_free(W); }
+    ~EigSymmWorkspace() { gsl_matrix_free(evec); gsl_eigen_symmv_free(W); }
 
     /// Decompose symmetric (lower-triangle) A -> U D U^T; return eigenvectors in A -> U columns
     void decompSymm(gsl_matrix*& A, gsl_vector* D) { gsl_eigen_symmv(A, D, evec, W); std::swap(evec,A); }
@@ -78,6 +78,8 @@ protected:
 
 /// Zero out triangle above/below diagonal (after triangular matrix ops leaving junk here)
 void zeroTriangle(CBLAS_UPLO_t uplo, gsl_matrix* A);
+/// Fill in specified half of symmetric matrix from other side
+void fillSymmetric(CBLAS_UPLO_t uplo, gsl_matrix* A);
 
 /// Re-usable workspace for projecting an N-dimensional ellipsoid into an M-dimensional affine subspace
 // formula from Stephen B. Pope, "Algorithms for Ellipsoids," Cornell University Report FDA-08-01 (2008)
@@ -107,8 +109,8 @@ protected:
 };
 
 /// print vector to stdout
-void display(const gsl_vector* v);
+void displayV(const gsl_vector* v);
 /// print matrix to stdout
-void display(const gsl_matrix* M);
+void displayM(const gsl_matrix* M);
 
 #endif

@@ -42,32 +42,35 @@ TGraph vEllipse(const gsl_matrix* m, double x0, double y0, size_t ax = 0, size_t
 int main(int, char**) {
     CodeVersion::display_code_version();
 
-
     // noisy evaluation function
-    Quadratic<NVAR> Q(vector<double>({1.,2.,3.,4.,5.,6.,7.,8.,9.,10.}));
+    //Quadratic<NVAR> Q(vector<double>({1.,2.,3.,4.,5.,6.,7.,8.,9.,10.}));
+    Quadratic<NVAR> Q(vector<double>({1.,2.,3.,0,0,0}));
     TRandom3 TR;
     auto f = [&Q,&TR](NoisyMin<NVAR>::coord_t x) { return Q(x) + 0.1*TR.Gaus(); };
 
-    // decomposition helpers
-    QuadraticCholesky<NVAR> QC;
-    QuadraticPCA<NVAR> QPCA;
-
     // compare many random realizations
-    size_t ntrials = 1000;
+    size_t ntrials = 10;
     TGraph g; // (2D plot) center fit points for each trial
     vector<TGraph> gR(2);           // realizations from a few trials
     vector<TGraph> gE(gR.size());   // error ellipse estimate from a few trials
 
     for(size_t j = 0; j < ntrials; j++) {
+        printf("\n\n---- trial %zu -----\n\n", j);
+
         // minimizer
         NoisyMin<NVAR> NM;
         // initial search range
-        for(int i=0; i<NVAR; i++) gsl_matrix_set(NM.dQ, i, i, 2.0);
+        //NM.x0 = {-1.8, -0.25};
+        for(int i=0; i<NVAR; i++) gsl_matrix_set(NM.dS, i, i, 2.0);
 
-        for(int i=0; i<50; i++) NM.addSample(f);
-        NM.fitMin();
-        QC.decompose(NM.Q);
-        g.SetPoint(j, QC.x0[0], QC.x0[1]);
+        for(int u=0; u<4; u++) {
+            for(int i=0; i<50; i++) NM.addSample(f);
+            NM.fitMin();
+        }
+
+        g.SetPoint(j, NM.x0[0], NM.x0[1]);
+
+        continue;
 
         ////////////////////////////
         if(j >= gR.size()) continue;

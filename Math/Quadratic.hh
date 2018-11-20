@@ -53,12 +53,22 @@ public:
         A[(i*(i-1))/2+j] += v;
     }
 
+    /// evaluate quadratic form component only
+    template<typename coord>
+    T xTAx(const coord& x) const {
+        T s = 0;
+        int n = 0;
+        for(size_t i=0; i<N; i++)
+            for(size_t j=0; j<=i; j++)
+                s += x[i]*x[j]*A[n++];
+        return s;
+    }
+
     /// evaluate at given point
     template<typename coord>
     T operator()(const coord& v) const {
         T s = c;
         int n = 0;
-        s = c;
         for(size_t i=0; i<N; i++) {
             s += b[i]*v[i];
             for(size_t j=0; j<=i; j++) s += v[i]*v[j]*A[n++];
@@ -146,9 +156,17 @@ public:
     void fillA(Quadratic<N,T>& Q) {
         gsl_blas_dsyrk(CblasLower, CblasNoTrans, 1.0, L, 0., M);
         int n = 0;
-        for(int i=0; i<N; i++)
-            for(int j=0; j<=i; j++)
+        for(size_t i=0; i<N; i++)
+            for(size_t j=0; j<=i; j++)
                 Q.A[n++] = gsl_matrix_get(M, i, j) * (i==j? 1 : 2);
+    }
+
+    /// projection length onto unit direction vector
+    template<class V>
+    double projLength(const V& d) {
+        for(size_t i=0; i<N; i++) gsl_vector_set(v, i, d[i]);
+        gsl_blas_dtrsv(CblasLower, CblasNoTrans, CblasNonUnit, L, v);
+        return gsl_blas_dnrm2(v);
     }
 
     void display() const {
@@ -168,10 +186,10 @@ protected:
 
 /// Principal axes of ellipse defined by quadratic
 template<size_t N, typename T = double>
-class QuadraticPCA: protected EigNWorkspace {
+class QuadraticPCA: protected EigSymmWorkspace {
 public:
     /// Constructor
-    QuadraticPCA(): EigNWorkspace(N), USi(gsl_matrix_alloc(N,N)), S2(gsl_vector_alloc(N)), Si(gsl_vector_alloc(N)) { }
+    QuadraticPCA(): EigSymmWorkspace(N), USi(gsl_matrix_alloc(N,N)), S2(gsl_vector_alloc(N)), Si(gsl_vector_alloc(N)) { }
     /// Destructor
     ~QuadraticPCA() { gsl_matrix_free(USi); gsl_vector_free(S2); gsl_vector_free(Si); }
 

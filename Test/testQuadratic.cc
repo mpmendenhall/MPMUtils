@@ -63,12 +63,6 @@ void visEllipse(const gsl_matrix* m, size_t ax0 = 0, size_t ax1 = 1, size_t ax2 
         //vsr::setColor(1,0,0);
         vsr::line(mx, x);
 
-        //vsr::setColor(0,0,0);
-        vsr::vec3 O = {};
-        vsr::vec3 vx = O;
-        vx[a] = 1.5;
-        vsr::line(O, vx);
-
         //vsr::setColor(0,0,1,0.3);
         vsr::startLines();
         int nsp = 11;
@@ -86,7 +80,7 @@ void visEllipse(const gsl_matrix* m, size_t ax0 = 0, size_t ax1 = 1, size_t ax2 
     }
 }
 
-void visProj(const QuadraticCholesky<3>& QC, int ax0 = 0, int ax1 = 1, int ax2 = 2) {
+void visProj(QuadraticCholesky<3>& QC, int ax0 = 0, int ax1 = 1, int ax2 = 2) {
 
     auto v = gsl_vector_calloc(2);
     auto v2 = gsl_vector_calloc(2);
@@ -108,15 +102,23 @@ void visProj(const QuadraticCholesky<3>& QC, int ax0 = 0, int ax1 = 1, int ax2 =
         ellipse_affine_projector EAP(3,2);
         EAP.setAxes(vector<int>({a1,a2}));
         EAP.projectL(QC.L);
+        displayM(EAP.P);
+
+        vsr::setColor(1,0,0);
+        vsr::vec3 x = {};
+        x[a] = 1;
+        x[a] *= QC.projLength(x);
+        vsr::vec3 x2 = x;
+        x2[a] *= -1;
+        vsr::line(x2, x);
 
         vsr::setColor(0,1,0);
         vsr::startLines();
         for(int k=0; k <= npts; k++) {
             gsl_vector_set(v, 0, vc[k]);
             gsl_vector_set(v, 1, vs[k]);
-            gsl_blas_dgemv(CblasTrans, 1., EAP.P, v, 0., v2);
+            gsl_blas_dgemv(CblasNoTrans, 1., EAP.P, v, 0., v2);
 
-            vsr::vec3 x;
             x[a] = 0;
             x[a1] = gsl_vector_get(v2, 0);
             x[a2] = gsl_vector_get(v2, 1);
@@ -167,21 +169,21 @@ int main(int, char**) {
             R.display();
             R2.display();
 
-            QC.decompose(R);
 
-            int a1 = 0, a2 = 1;
 
             QuadraticPCA<3> QP, QP2, QPc;
             QP.decompose(R);
             QP2.decompose(R2);
 
 
+            int a1 = 0, a2 = 1;
             //auto g = vEllipse(QP.USi, QC.x0[a1], QC.x0[a2], a1, a2);
             //g2.Draw("AL");
             //g.Draw("AL");
             //gPad->Print("ellipse.pdf");
 
 
+            QC.decompose(R);
             //ellipse_affine_projector EAP(3,2);
             //EAP.setAxes(vector<int>({a1,a2}));
             //EAP.projectL(QC.L);
@@ -196,17 +198,23 @@ int main(int, char**) {
             CE.EC.fillA(Rc);
             QPc.decompose(Rc);
 
-            display(QP.USi);
-            display(QP2.USi);
+            displayM(QP.USi);
+            displayM(QP2.USi);
 
             vsr::startRecording();
             vsr::clearWindow();
+
             vsr::setColor(0,0,1,0.3);
             visEllipse(QP.USi);
-            vsr::setColor(0,1,0,0.3);
-            visEllipse(QP2.USi);
-            vsr::setColor(1,0,0,0.3);
-            visEllipse(QPc.USi);
+
+            //vsr::setColor(0,1,0,0.3);
+            //visEllipse(QP2.USi);
+
+            //vsr::setColor(1,0,0,0.3);
+            //visEllipse(QPc.USi);
+
+            visProj(QC);
+
             vsr::stopRecording();
 
             vsr::pause();

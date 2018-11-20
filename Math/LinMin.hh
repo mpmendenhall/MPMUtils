@@ -40,6 +40,8 @@ public:
     size_t nVar() const { return Nvar; }
     /// get Neq
     size_t nEq() const { return Neq; }
+    /// get number of degrees of freedom
+    size_t nDF() const { return Neq-Nvar; }
 
     /// set element of M
     void setM(size_t i, size_t j, double v);
@@ -48,9 +50,9 @@ public:
     template<typename YVec>
     void solve(const YVec& vy) { vector2gsl(vy,y); _solve(); }
 
-    /// get sum of squares of residuals
+    /// get sum of squares of residuals ~ sigma^2 * nDF
     double ssresid() const;
-    /// calculate and return covariance matrix
+    /// calculate and return UNNORMALIZED covariance matrix (sum X^T X)^-1 (needs sigma^2 scaling)
     const gsl_matrix* calcCov();
     /// calculate, return unit eigenvectors of covariance matrix in columns
     const gsl_matrix* calcPCA();

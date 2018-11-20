@@ -20,6 +20,7 @@
  */
 
 #include "LinMin.hh"
+#include "LinalgHelpers.hh"
 #include <cassert>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
@@ -56,17 +57,16 @@ void LinMin::setM(size_t i, size_t j, double v) {
 
 void LinMin::calcQR() {
     if(tau) return; // already done
-    if(!M) throw;
+    assert(M);
 
     tau = gsl_vector_alloc(M->size2);
-    if(gsl_linalg_QR_decomp(M,tau)) throw;
+    gsl_linalg_QR_decomp(M,tau);
 }
 
 void LinMin::_solve() {
-    if(!(y && r)) throw;
     calcQR();
     resize(x, M->size2);
-    if(gsl_linalg_QR_lssolve(M, tau, y, x, r)) throw;
+    gsl_linalg_QR_lssolve(M, tau, y, x, r);
 }
 
 const gsl_matrix* LinMin::calcCov() {
@@ -76,7 +76,7 @@ const gsl_matrix* LinMin::calcCov() {
     // unpack Q,R decomposition matrices
     Q = gsl_matrix_alloc(Neq, Neq);
     R = gsl_matrix_alloc(Neq, Nvar);
-    if(gsl_linalg_QR_unpack(M, tau, Q, R)) throw;
+    gsl_linalg_QR_unpack(M, tau, Q, R);
 
     // copy to L
     L = gsl_matrix_calloc(Nvar, Nvar);
@@ -87,13 +87,9 @@ const gsl_matrix* LinMin::calcCov() {
 
     // Cov = (M^T M)^-1 = (L L^T)^-1
     Cov = gsl_matrix_alloc(Nvar, Nvar);
+    gsl_matrix_memcpy(Cov, L);
+    gsl_linalg_cholesky_invert(Cov);
 
-    // alternate method for comparison:
-    //gsl_blas_dsyrk(CblasLower, CblasNoTrans, 1., L, 0., Cov);
-    //gsl_linalg_cholesky_decomp1(Cov);
-
-    if(gsl_matrix_memcpy(Cov, L)) throw;
-    if(gsl_linalg_cholesky_invert(Cov)) throw;
     return Cov;
 }
 
@@ -103,9 +99,9 @@ const gsl_matrix* LinMin::calcPCA() {
     esw = gsl_eigen_symmv_alloc(Nvar);
     PCA = gsl_matrix_alloc(Nvar, Nvar);
     auto A = gsl_matrix_alloc(Nvar, Nvar);
-    lPCA = gsl_vector_alloc(Nvar);
-    if(gsl_matrix_memcpy(A, calcCov())) throw;
-    if(gsl_eigen_symmv(A, lPCA, PCA, esw)) throw;
+    if(!lPCA) lPCA = gsl_vector_alloc(Nvar);
+    gsl_matrix_memcpy(A, calcCov());
+    gsl_eigen_symmv(A, lPCA, PCA, esw);
     gsl_matrix_free(A);
 
     return PCA;

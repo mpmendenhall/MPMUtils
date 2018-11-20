@@ -34,6 +34,18 @@ void zeroTriangle(CBLAS_UPLO_t uplo, gsl_matrix* A) {
     }
 }
 
+void fillSymmetric(CBLAS_UPLO_t uplo, gsl_matrix* A) {
+        if(uplo == CblasLower) {
+        for(size_t i=1; i<A->size1; i++)
+            for(size_t j=0; j<i; j++)
+                gsl_matrix_set(A,i,j, gsl_matrix_get(A,j,i));
+    } else {
+        for(size_t i=0; i<A->size1; i++)
+            for(size_t j=i+1; j<A->size2; j++)
+                gsl_matrix_set(A,i,j, gsl_matrix_get(A,j,i));
+    }
+}
+
 /////////////////////
 
 SVDWorkspace::SVDWorkspace(size_t n, size_t m): N(n), M(m),
@@ -64,7 +76,6 @@ ellipse_affine_projector::~ellipse_affine_projector() { for(auto m: {TT,P,Mmn,Mn
 
 void ellipse_affine_projector::projectL(const gsl_matrix* L) {
     // Mmn = T^T (M,N) L^-T (N,N)
-    display(TT);
     gsl_matrix_memcpy(Mmn, TT);
     gsl_blas_dtrsm(CblasRight, CblasLower, CblasTrans, CblasNonUnit, 1., L, Mmn);
     // embed Mmn in (rank-deficient) NxN matrix
@@ -74,25 +85,22 @@ void ellipse_affine_projector::projectL(const gsl_matrix* L) {
             gsl_matrix_set(Mnn, i, j, gsl_matrix_get(Mmn, i, j));
     // SVD Mnn = U S V^T, Mnn -> U ; S ~ principal axis lengths
     SVD(Mnn);
-    display(Mnn);
-    display(S);
     // normalization: U/S = Lt Q; want U S for principal axes
     // Copy projected component to output P = U S ?????
     for(size_t i=0; i<M; i++)
         for(size_t j=0; j<M; j++)
             gsl_matrix_set(P, i, j, gsl_matrix_get(Mnn, i, j) * gsl_vector_get(S, j));
-    display(P);
 }
 
 /////////////////
 
-void display(const gsl_vector* v) {
+void displayV(const gsl_vector* v) {
     printf("< ");
     for(size_t i=0; i<v->size; i++) printf("%g ", gsl_vector_get(v,i));
     printf(">\n");
 }
 
-void display(const gsl_matrix* M) {
+void displayM(const gsl_matrix* M) {
     printf("---- matrix %zu x %zu ----\n", M->size1, M->size2);
     for(size_t i=0; i<M->size1; i++) {
         for(size_t j=0; j<M->size2; j++) printf("\t%g", gsl_matrix_get(M,i,j));
