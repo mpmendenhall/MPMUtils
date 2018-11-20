@@ -107,6 +107,7 @@ public:
         LM.solve(y);
         LM.getx(y);
         Q = Quadratic<N,T>(y);  // estimated minimum surface
+        if(verbose) Q.display();
         QChol.decompose(Q);     // find minimum position (and Cholesky form)
         x0 = QChol.x0;
         for(i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E1.L, i, j, gsl_matrix_get(QChol.L, i, j)/sqrt(h));
@@ -128,9 +129,9 @@ public:
 
         // n-sigma stats uncertainty inverse Cholesky form
         for(i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E2.L, i, j, gsl_matrix_get(dQ0, i, j)*nSigmaStat*nSigmaStat);
-        gsl_linalg_cholesky_decomp1(sE.E2.L);
+        gsl_linalg_cholesky_decomp(sE.E2.L);
         gsl_linalg_cholesky_invert(sE.E2.L);
-        gsl_linalg_cholesky_decomp1(sE.E2.L);
+        gsl_linalg_cholesky_decomp(sE.E2.L);
 
         // stats uncertainty 1*sigma principal axes
         EWS.decompSymm(dQ0, v1);

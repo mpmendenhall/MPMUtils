@@ -136,7 +136,8 @@ public:
     /// perform Cholesky decomposition of quadratic form
     void calcCholesky(const Quadratic<N,T>& Q) {
         Q.fillA(L);
-        gsl_linalg_cholesky_decomp1(L);
+        //gsl_linalg_cholesky_decomp1(L); // newer GSL only
+        gsl_linalg_cholesky_decomp(L);
     }
 
     /// perform decomposition; solve A x0 = -b/2
@@ -235,7 +236,7 @@ public:
         rmul_diag(L2P, SVD.S);
         gsl_blas_dsyrk(CblasLower, CblasNoTrans, 1.0, L2P, 0., EC.L);
         // solve for L'
-        gsl_linalg_cholesky_decomp1(EC.L);
+        gsl_linalg_cholesky_decomp(EC.L);
         zeroTriangle(CblasUpper, EC.L);
         // L = L1 L'
         gsl_blas_dtrmm(CblasLeft, CblasLower, CblasNoTrans, CblasNonUnit, 1.0, E1.L, EC.L);
