@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <array>
 using std::array;
+#include <cmath>
 #include "LinalgHelpers.hh"
 
 /// Coefficients for multivariate quadratic x^T A x + b.x + c
@@ -141,16 +142,11 @@ public:
     }
 
     /// perform decomposition; solve A x0 = -b/2
-    void decompose(const Quadratic<N,T>& Q) {
+    virtual void decompose(const Quadratic<N,T>& Q) {
         calcCholesky(Q);
         for(size_t i=0; i<N; i++) gsl_vector_set(v, i, -0.5*Q.b[i]);
         gsl_linalg_cholesky_svx(L, v);
-        for(size_t i=0; i<N; i++) x0[i] = gsl_vector_get(v, i);
-
-        // k = c + b x0 / 2
-        k = 0;
-        for(size_t i=0; i<N; i++) k += x0[i]*Q.b[i];
-        k = Q.c + 0.5*k;
+        unpack(Q);
     }
 
     /// multiply Q.A = L L^T
@@ -181,9 +177,48 @@ public:
     gsl_matrix* L;  ///< lower-triangular NxN Cholesky decomposition L L^T = A
 
 protected:
+    /// unpack solution vector v into x0 and k
+    void unpack(const Quadratic<N,T>& Q) {
+        for(size_t i=0; i<N; i++) x0[i] = gsl_vector_get(v, i);
+        // k = c + b x0 / 2
+        k = 0;
+        for(size_t i=0; i<N; i++) k += x0[i]*Q.b[i];
+        k = Q.c + 0.5*k;
+    }
     gsl_matrix *M;  ///< NxN workspace
     gsl_vector* v;  ///< N-element vector
 };
+
+#ifdef GSL_25
+
+/// Modified Cholesky decomposition for non-positive-definite matrices
+template<size_t N, typename T = double>
+class QuadraticMCholesky: public QuadraticCholesky<N,T> {
+public:
+    /// Constructor
+    QuadraticMCholesky(): E(gsl_vector_alloc(N)), P(gsl_permutation_alloc(N)) { }
+    /// Destructor
+    ~QuadraticMCholesky() { gsl_vector_free(E); gsl_permutation_free(P); }
+
+    /// calculate modified Cholesky decomposition
+    void calcMCholesky(const Quadratic<N,T>& Q) {
+        Q.fillA(this->L);
+        gsl_linalg_mcholesky_decomp(this->L, P, E);
+    }
+
+    /// perform decomposition; solve A x0 = -b/2
+    virtual void decompose(const Quadratic<N,T>& Q) override {
+        calcMCholesky(Q);
+        for(size_t i=0; i<N; i++) gsl_vector_set(this->v, i, -0.5*Q.b[i]);
+        gsl_linalg_mcholesky_svx(this->L, P, this->v);
+        this->unpack(Q);
+    }
+
+    gsl_vector*      E;     ///< tweak for positive-definiteness
+    gsl_permutation* P;     ///< pivoting permutation
+};
+
+#endif
 
 /// Principal axes of ellipse defined by quadratic
 template<size_t N, typename T = double>
@@ -195,12 +230,12 @@ public:
     ~QuadraticPCA() { gsl_matrix_free(USi); gsl_vector_free(S2); gsl_vector_free(Si); }
 
     /// perform decomposition
-    void decompose(const Quadratic<N,T>& Q) {
+    void decompose(const Quadratic<N,T>& Q, bool doMul = true) {
         Q.fillA(USi);
         decompSymm(USi, S2); // A -> U S^2 U^T
         for(size_t i=0; i<N; i++) gsl_vector_set(Si, i, 1./sqrt(gsl_vector_get(S2,i)));
 
-        rmul_diag(USi, Si);
+        if(doMul) rmul_diag(USi, Si);
     }
 
     gsl_matrix* USi;        ///< ellipse principal axes in columns

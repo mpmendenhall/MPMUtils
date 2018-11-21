@@ -34,6 +34,7 @@ public:
 
     /// minimizer function evaluation data at a point
     struct evalpt {
+        evalpt() { }
         evalpt(const coord_t& xx): x(xx) { }
         coord_t x;      ///< position
         typename Quadratic<N,T>::terms_t t;  ///< fitter terms at x
@@ -41,6 +42,7 @@ public:
         T df2 = 1;      ///< estimated uncertainty^2
     };
 
+    vector<evalpt> fvals;           ///< collected function evaluations
     Quadratic<N,T> Q;               ///< estimated quadratic minimum surface
     QuadraticCholesky<N,T> QChol;   ///< Cholesky decomposition of Q
     coord_t x0 = {};        ///< estimated minimum location
@@ -49,7 +51,6 @@ public:
     gsl_matrix* dS;         ///< search/sampling region principal axes columns for minimum in parameter space
     double h = 1;           ///< height of ``1 sigma'' minima search region
     int verbose = 0;        ///< debugging verbosity level
-    size_t step = 0;        ///< fit step number
     double nSigmaStat = 4;  ///< statistical uncertainty search region expansion
 
     /// add evaluated point
@@ -81,18 +82,17 @@ public:
     }
 
     /// update estimated minimum
-    void fitMin() {
+    void fitMin(bool filterpts = true) {
         // filter points to search region (except on first step)
         vector<evalpt> vs;
-        if(!(step++)) vs = fvals;
-        else {
+        if(filterpts) {
             for(auto& p: fvals) {
                 for(size_t i=0; i<N; i++) gsl_vector_set(v1, i, p.x[i] - x0[i]);
                 gsl_blas_dtrmv(CblasLower, CblasTrans, CblasNonUnit, sE.EC.L, v1);
                 if(gsl_blas_dnrm2(v1) < 1) vs.push_back(p);
             }
-        }
-        if(verbose) printf("\n**** Fit step %zu to %zu/%zu datapoints...\n", step, vs.size(), fvals.size());
+        } else vs = fvals;
+        if(verbose) printf("\n**** NoisyMin fitting %zu/%zu datapoints...\n", vs.size(), fvals.size());
 
         // fit surface around minimum
         LM.setNeq(vs.size());
@@ -109,6 +109,7 @@ public:
         Q = Quadratic<N,T>(y);  // estimated minimum surface
         if(verbose) Q.display();
         QChol.decompose(Q);     // find minimum position (and Cholesky form)
+        if(verbose) QChol.display();
         x0 = QChol.x0;
         for(i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E1.L, i, j, gsl_matrix_get(QChol.L, i, j)/sqrt(h));
 
@@ -165,7 +166,6 @@ protected:
     gsl_vector *v1, *v2;            ///< temporary N calcultion vectors
     gsl_vector* vNt;                ///< temporary NTERMS calculation vector
     gsl_matrix* Mnn;                ///< temporary
-    vector<evalpt> fvals;           ///< collected function evaluations
     ROOT::Math::QuasiRandomNiederreiter QRNG;   ///< quasirandom distribution generator
     EigSymmWorkspace EWS;           ///< NxN eigendecomposition workspace
 };
