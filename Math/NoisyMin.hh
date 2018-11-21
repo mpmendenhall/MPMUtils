@@ -14,160 +14,88 @@
 using std::vector;
 
 /// Minimizer for N-dimensional ``noisy'' function evaluation
-template<size_t N, typename T = double>
 class NoisyMin {
 public:
-    /// Number of terms in quadratic surface fit
-    static constexpr int NTERMS = Quadratic<N,T>::NTERMS;
+
+    /// shorthand notation
+    typedef vector<double> vec_t;
+    const size_t N;         ///< Number of dimensions being minimized over
+    const size_t NTERMS;    ///< Number of terms in quadratic surface fit
 
     /// Constructor
-    NoisyMin(): LM(NTERMS), dQ0(gsl_matrix_calloc(N,N)), dS(gsl_matrix_calloc(N,N)),
-    v1(gsl_vector_alloc(N)), v2(gsl_vector_alloc(N)), QRNG(N), EWS(N) { }
-    /// Destructor
-    ~NoisyMin() {
-        for(auto m: {dQ0, dS}) gsl_matrix_free(m);
-        for(auto v: {v1, v2}) gsl_vector_free(v);
+    NoisyMin(size_t n): N(n), NTERMS(Quadratic::nterms(N)), x0(N), Mt(NTERMS) {
+        for(auto& m: Mt) m = gsl_matrix_alloc(N,N);
     }
+    /// Destructor
+    ~NoisyMin();
 
-    /// coordinate in minimization space
-    typedef array<T,N> coord_t;
-
-    /// minimizer function evaluation data at a point
+    /// evaluated datapoint for fit
     struct evalpt {
-        evalpt() { }
-        evalpt(const coord_t& xx): x(xx) { }
-        coord_t x;      ///< position
-        typename Quadratic<N,T>::terms_t t;  ///< fitter terms at x
-        T f = 0;        ///< function evaluated at position
-        T df2 = 1;      ///< estimated uncertainty^2
+        /// constructor with dimensions
+        evalpt(size_t n): x(n), t(Quadratic::nterms(n)) { }
+        vec_t x;        ///< position
+        vec_t t;        ///< fitter terms at x
+        double f = 0;   ///< function evaluated at position
+        double df2 = 1; ///< estimated uncertainty^2
     };
 
-    vector<evalpt> fvals;           ///< collected function evaluations
-    Quadratic<N,T> Q;               ///< estimated quadratic minimum surface
-    QuadraticCholesky<N,T> QChol;   ///< Cholesky decomposition of Q
-    coord_t x0 = {};        ///< estimated minimum location
-    LinMin LM;              ///< linear minimizer (solves for coefficients in Q)
-    gsl_matrix* dQ0;        ///< fit stats uncertainty ellipse on Q minimum (1-sigma orthogonal vector columns)
-    gsl_matrix* dS;         ///< search/sampling region principal axes columns for minimum in parameter space
-    double h = 1;           ///< height of ``1 sigma'' minima search region
-    int verbose = 0;        ///< debugging verbosity level
-    double nSigmaStat = 4;  ///< statistical uncertainty search region expansion
-
-    /// add evaluated point
+    /// add evaluated point from supplied function
     template<typename F>
     evalpt& addSample(F& f) {
-        fvals.emplace_back(nextSample());
+        fvals.emplace_back(N);
         auto& p = fvals.back();
+        p.x = nextSample();
         p.f = f(p.x);
-        Quadratic<N,T>::evalTerms(p.x, p.t);
+        Quadratic::evalTerms(p.x, p.t);
         return p;
     }
 
     /// request next sampling point
-    coord_t nextSample(T nsigma = 1) {
-        coord_t r;
-        do {
-            QRNG.Next(r.data());
-            for(auto& x: r) x = 2*x-1;
-        } while(vmag2(r) > 1.);
+    vec_t nextSample(double nsigma = 1);
+    /// perform fit update step (non-singular solutions)
+    void fitMin();
+    /// perform fit update step (non-positive-definite Hessian)
+    void fitMinSingular();
+    /// show summary information
+    void display();
+    /// fit Q to points in current region
+    void fitHessian();
 
-        std::copy(r.begin(), r.end(), v1->data);
-        std::copy(x0.begin(), x0.end(), v2->data);
-        // v2 = x0 + dS * r
-        gsl_blas_dgemv(CblasNoTrans, nsigma, dS, v1, 1., v2);
+    QuadraticCholesky SR0{N};                   ///< initial search range/limits ellipse
+    gsl_matrix* dS = gsl_matrix_alloc(N,N);     ///< fit/sampling region (principal axes columns)
 
-        coord_t x;
-        for(size_t i=0; i<N; i++) x[i] = gsl_vector_get(v2,i);
-        return x;
-    }
+    vector<evalpt> fvals;                       ///< collected function evaluations
 
-    /// update estimated minimum
-    void fitMin(bool filterpts = true) {
-        // filter points to search region (except on first step)
-        vector<evalpt> vs;
-        if(filterpts) {
-            for(auto& p: fvals) {
-                for(size_t i=0; i<N; i++) gsl_vector_set(v1, i, p.x[i] - x0[i]);
-                gsl_blas_dtrmv(CblasLower, CblasTrans, CblasNonUnit, sE.EC.L, v1);
-                if(gsl_blas_dnrm2(v1) < 1) vs.push_back(p);
-            }
-        } else vs = fvals;
-        if(verbose) printf("\n**** NoisyMin fitting %zu/%zu datapoints...\n", vs.size(), fvals.size());
+    LinMin LM{NTERMS};                          ///< fitter for terms in Q
+    Quadratic Q{N};                             ///< estimated quadratic minimum surface
+    QuadraticCholesky QChol{N};                 ///< Cholesky decomposition of Q
+    gsl_matrix* U_q = gsl_matrix_alloc(N,N);    ///< Unitary SVD (columns) of Q: A = U_q S_q U_q^T
+    gsl_vector* S_q = gsl_vector_alloc(N);      ///< eigenvalues ("sigma^2") diagonal for Uq
+    gsl_vector* dS_q = gsl_vector_alloc(N);     ///< fit uncertainties on S_q
 
-        // fit surface around minimum
-        LM.setNeq(vs.size());
-        vector<T> y(vs.size());
-        size_t i = 0;
-        for(auto& p: vs) {
-            int j = 0;
-            for(auto x: p.t) LM.setM(i, j++, x);
-            y[i] = p.f;
-            i++;
-        }
-        LM.solve(y);
-        LM.getx(y);
-        Q = Quadratic<N,T>(y);  // estimated minimum surface
-        if(verbose) Q.display();
-        QChol.decompose(Q);     // find minimum position (and Cholesky form)
-        if(verbose) QChol.display();
-        x0 = QChol.x0;
-        for(i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E1.L, i, j, gsl_matrix_get(QChol.L, i, j)/sqrt(h));
+    vec_t x0;                                   ///< current best fit estimate
+    gsl_matrix* Udx0 = gsl_matrix_alloc(N,N);   ///< Unitary principal axes (columns) of uncertainty ellipse on x0
+    gsl_vector* Sdx0 = gsl_vector_alloc(N);     ///< eigenvalues for Udx0
 
-        // fit parameter uncertainties to minimum location uncertainty
-        auto P = LM.calcPCA();
-        auto l = LM.PCAlambda();
-        auto s2 = LM.ssresid()/LM.nDF();
-        if(verbose) printf("RMS deviation %g\n", sqrt(s2));
-        gsl_matrix_set_zero(dQ0);
-        for(i=0; i<NTERMS; i++) {
-            auto yy = y;
-            for(size_t j=0; j<NTERMS; j++) yy[j] += gsl_matrix_get(P,j,i)*sqrt(gsl_vector_get(l,j)*s2);
-            Quadratic<N,T> Qi(yy);
-            QC.decompose(Qi);
-            for(size_t j=0; j<N; j++) gsl_vector_set(v1, j, QC.x0[j] - x0[j]);
-            gsl_blas_dsyr(CblasLower, 1., v1, dQ0);
-        }
+    double h = 1;                               ///< height of ``1 sigma'' minima search region
+    int verbose = 0;                            ///< debugging verbosity level
+    double nSigmaStat = 4;                      ///< statistical uncertainty search region expansion
 
-        // n-sigma stats uncertainty inverse Cholesky form
-        for(i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E2.L, i, j, gsl_matrix_get(dQ0, i, j)*nSigmaStat*nSigmaStat);
-        gsl_linalg_cholesky_decomp(sE.E2.L);
-        gsl_linalg_cholesky_invert(sE.E2.L);
-        gsl_linalg_cholesky_decomp(sE.E2.L);
-
-        // stats uncertainty 1*sigma principal axes
-        EWS.decompSymm(dQ0, v1);
-        for(i=0; i<N; i++) gsl_vector_set(v1, i, sqrt(gsl_vector_get(v1,i)));
-        rmul_diag(dQ0, v1);
-        if(verbose > 1) { printf("dQ0:\n"); displayM(dQ0); }
-
-        // update search region
-        sE.calcCovering();              // ellipse containing both
-        Quadratic<N,T> Qs;              // A-form ellipse representation
-        sE.EC.fillA(Qs);                // Cholesky to A
-        QP.decompose(Qs);               // search region principal axes
-        gsl_matrix_memcpy(dS, QP.USi);  // store to search region dS
-
-        if(verbose) display();
-    }
-
-    void display() {
-        printf("NoisyMin fitter of %zu parameters wth %zu datapoints\n", N, fvals.size());
-        for(size_t i=0; i<N; i++) {
-            vector<T> v(N);
-            v[i] = 1.0;
-            printf("[%zu]\t%g\t~%g (dh)\t~%g (stat)\n", i, x0[i], QChol.projLength(v)*sqrt(h), sE.E2.projLength(v)/nSigmaStat);
-        }
-    }
+    /// generate variations according to LM covariance
+    vector<Quadratic> LMvariants();
 
 protected:
-    QuadraticCholesky<N,T> QC;      ///< quadratic decomposition helper
-    CoveringEllipse<N,T> sE;        ///< search region around minima, from surface + stat. uncertainty
-    QuadraticPCA<N,T> QP;           ///< principal axes decomposition helper
-    gsl_vector *v1, *v2;            ///< temporary N calcultion vectors
-    gsl_vector* vNt;                ///< temporary NTERMS calculation vector
-    gsl_matrix* Mnn;                ///< temporary
-    ROOT::Math::QuasiRandomNiederreiter QRNG;   ///< quasirandom distribution generator
-    EigSymmWorkspace EWS;           ///< NxN eigendecomposition workspace
+    QuadraticCholesky QC{N};                    ///< quadratic decomposition helper
+    EigSymmWorkspace EWS{N};                    ///< NxN eigendecomposition workspace
+    CoveringEllipse sE{N};                      ///< search region around minima, from surface + stat. uncertainty
+    QuadraticPCA QP{N};                         ///< principal axes decomposition helper
+
+    gsl_matrix* M1 = gsl_matrix_alloc(N,N);     ///< temporary calculation matrix
+    vector<gsl_matrix*> Mt;                     ///< temporary calculation matrices
+    gsl_vector* v1 = gsl_vector_alloc(N);       ///< temporary calculation vector
+    gsl_vector* v2 = gsl_vector_alloc(N);       ///< temporary calculation vector
+
+    ROOT::Math::QuasiRandomNiederreiter QRNG{(unsigned int)N};   ///< quasirandom distribution generator
 };
 
 #endif

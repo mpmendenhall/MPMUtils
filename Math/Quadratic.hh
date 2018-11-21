@@ -5,32 +5,41 @@
 #define QUADRATIC_HH
 
 #include <stdio.h>
-#include <array>
-using std::array;
 #include <cmath>
 #include "LinalgHelpers.hh"
 
 /// Coefficients for multivariate quadratic x^T A x + b.x + c
-template<size_t N, typename T = double>
 class Quadratic {
 public:
-    /// total number of terms in A, b, c
-    static constexpr size_t NTERMS = ((N+2)*(N+1))/2;
-    /// coordinate x,y,z...
-    typedef array<T, N> coord_t;
-    /// individual evaluated terms at a coordinate
-    typedef array<T, NTERMS> terms_t;
+    /// total number of terms
+    static size_t nterms(const size_t n) { return ((n+2)*(n+1))/2; }
 
     /// default constructor
-    Quadratic(): A(), b() { }
+    Quadratic(size_t n): N(n), A((N*(N+1))/2), b(N) { }
 
-    /// constructor from coefficients array
+    /// number of dimensions
+    const size_t N;
+    /// coordinate x,y,z...
+    typedef vector<double> coord_t;
+    /// individual evaluated terms at a coordinate
+    typedef vector<double> terms_t;
+
+    /// unpack from coefficients array
     template<typename coeffs>
-    Quadratic(const coeffs& v) {
+    void setCoeffs(const coeffs& v) {
         int n = 0;
         for(auto& x: A) x = v[n++];
         for(auto& x: b) x = v[n++];
         c = v[n];
+    }
+
+    /// unpack to coefficients array
+    template<typename coeffs>
+    void getCoeffs(coeffs& v) const {
+        int n = 0;
+        for(auto& x: A) v[n++] = x;
+        for(auto& x: b) v[n++] = x;
+        v[n] = c;
     }
 
 /*
@@ -39,25 +48,25 @@ public:
     y  *  x,y
     z  *  x,y,z
 */
-    array<T, (N*(N+1))/2> A;    ///< quadratic form coefficients
-    coord_t b;                  ///< linear coefficients
-    T c = 0;                    ///< x=0 value
+    vector<double> A;   ///< quadratic form coefficients
+    coord_t b;          ///< linear coefficients
+    double c = 0;       ///< x=0 value
 
     /// set quadratic term coefficient
-    void setCoeff(size_t i, size_t j, T v) {
+    void setCoeff(size_t i, size_t j, double v) {
         if(i < j) std::swap(i,j);
         A[(i*(i-1))/2+j] = v;
     }
     /// add quadratic term coefficient
-    void addCoeff(size_t i, size_t j, T v) {
+    void addCoeff(size_t i, size_t j, double v) {
         if(i < j) std::swap(i,j);
         A[(i*(i-1))/2+j] += v;
     }
 
     /// evaluate quadratic form component only
     template<typename coord>
-    T xTAx(const coord& x) const {
-        T s = 0;
+    double xTAx(const coord& x) const {
+        double s = 0;
         int n = 0;
         for(size_t i=0; i<N; i++)
             for(size_t j=0; j<=i; j++)
@@ -67,8 +76,8 @@ public:
 
     /// evaluate at given point
     template<typename coord>
-    T operator()(const coord& v) const {
-        T s = c;
+    double operator()(const coord& v) const {
+        double s = c;
         int n = 0;
         for(size_t i=0; i<N; i++) {
             s += b[i]*v[i];
@@ -98,7 +107,7 @@ public:
     }
 
     /// inplace scalar multiplication
-    void operator*=(T s) {
+    void operator*=(double s) {
         for(auto& v: A) v *= s;
         for(auto& v: b) v *= s;
         c *= s;
@@ -115,6 +124,8 @@ public:
     /// evaluate terms for linear fit at specified coordinate
     template<typename coord>
     static void evalTerms(const coord& v, terms_t& t) {
+        const size_t N = v.size();
+        t.resize(nterms(N));
         int n = 0;
         for(size_t i=0; i<N; i++) for(size_t j=0; j<=i; j++) t[n++] = v[i]*v[j];
         for(size_t i=0; i<N; i++) t[n++] = v[i];
@@ -123,26 +134,28 @@ public:
 };
 
 
+
 /// Cholesky decomposition of quadratic to (x-x0)^T L L^T (x-x0) + k
-template<size_t N, typename T = double>
 class QuadraticCholesky {
 public:
     /// Constructor
-    QuadraticCholesky(): x0(), L(gsl_matrix_alloc(N,N)), M(gsl_matrix_alloc(N,N)), v(gsl_vector_alloc(N)) { }
+    QuadraticCholesky(size_t n): N(n), x0(N), L(gsl_matrix_alloc(N,N)), M(gsl_matrix_alloc(N,N)), v(gsl_vector_alloc(N)) { }
     /// Destructor
     ~QuadraticCholesky() { gsl_matrix_free(L); gsl_matrix_free(M); gsl_vector_free(v); }
 
-    typedef array<T, N> coord_t;
+    const size_t N; ///< number of dimensions
 
     /// perform Cholesky decomposition of quadratic form
-    void calcCholesky(const Quadratic<N,T>& Q) {
+    template<class Quad>
+    void calcCholesky(const Quad& Q) {
         Q.fillA(L);
         //gsl_linalg_cholesky_decomp1(L); // newer GSL only
         gsl_linalg_cholesky_decomp(L);
     }
 
     /// perform decomposition; solve A x0 = -b/2
-    virtual void decompose(const Quadratic<N,T>& Q) {
+    template<class Quad>
+    void decompose(const Quad& Q) {
         calcCholesky(Q);
         for(size_t i=0; i<N; i++) gsl_vector_set(v, i, -0.5*Q.b[i]);
         gsl_linalg_cholesky_svx(L, v);
@@ -150,7 +163,8 @@ public:
     }
 
     /// multiply Q.A = L L^T
-    void fillA(Quadratic<N,T>& Q) {
+    template<class Quad>
+    void fillA(Quad& Q) {
         gsl_blas_dsyrk(CblasLower, CblasNoTrans, 1.0, L, 0., M);
         int n = 0;
         for(size_t i=0; i<N; i++)
@@ -172,13 +186,14 @@ public:
         printf(";\tk = %g\n", k);
     }
 
-    coord_t x0;     ///< extremum position
-    T k = 0;        ///< extremum value
-    gsl_matrix* L;  ///< lower-triangular NxN Cholesky decomposition L L^T = A
+    vector<double> x0;  ///< extremum position
+    double k = 0;       ///< extremum value
+    gsl_matrix* L;      ///< lower-triangular NxN Cholesky decomposition L L^T = A
 
 protected:
     /// unpack solution vector v into x0 and k
-    void unpack(const Quadratic<N,T>& Q) {
+    template<class Quad>
+    void unpack(const Quad& Q) {
         for(size_t i=0; i<N; i++) x0[i] = gsl_vector_get(v, i);
         // k = c + b x0 / 2
         k = 0;
@@ -201,13 +216,13 @@ public:
     ~QuadraticMCholesky() { gsl_vector_free(E); gsl_permutation_free(P); }
 
     /// calculate modified Cholesky decomposition
-    void calcMCholesky(const Quadratic<N,T>& Q) {
+    void calcMCholesky(const Quadratic& Q) {
         Q.fillA(this->L);
         gsl_linalg_mcholesky_decomp(this->L, P, E);
     }
 
     /// perform decomposition; solve A x0 = -b/2
-    virtual void decompose(const Quadratic<N,T>& Q) override {
+    virtual void decompose(const Quadratic& Q) override {
         calcMCholesky(Q);
         for(size_t i=0; i<N; i++) gsl_vector_set(this->v, i, -0.5*Q.b[i]);
         gsl_linalg_mcholesky_svx(this->L, P, this->v);
@@ -221,20 +236,19 @@ public:
 #endif
 
 /// Principal axes of ellipse defined by quadratic
-template<size_t N, typename T = double>
 class QuadraticPCA: protected EigSymmWorkspace {
 public:
     /// Constructor
-    QuadraticPCA(): EigSymmWorkspace(N), USi(gsl_matrix_alloc(N,N)), S2(gsl_vector_alloc(N)), Si(gsl_vector_alloc(N)) { }
+    QuadraticPCA(size_t N): EigSymmWorkspace(N), USi(gsl_matrix_alloc(N,N)), S2(gsl_vector_alloc(N)), Si(gsl_vector_alloc(N)) { }
     /// Destructor
     ~QuadraticPCA() { gsl_matrix_free(USi); gsl_vector_free(S2); gsl_vector_free(Si); }
 
     /// perform decomposition
-    void decompose(const Quadratic<N,T>& Q, bool doMul = true) {
+    template<class Quad>
+    void decompose(const Quad& Q, bool doMul = true) {
         Q.fillA(USi);
         decompSymm(USi, S2); // A -> U S^2 U^T
-        for(size_t i=0; i<N; i++) gsl_vector_set(Si, i, 1./sqrt(gsl_vector_get(S2,i)));
-
+        for(size_t i=0; i<_N; i++) gsl_vector_set(Si, i, 1./sqrt(gsl_vector_get(S2,i)));
         if(doMul) rmul_diag(USi, Si);
     }
 
@@ -244,13 +258,14 @@ public:
 };
 
 /// Workspace for calculating ellipsoid covering or covered by two concentric ellipsoids
-template<size_t N, typename T = double>
 class CoveringEllipse {
 public:
     /// Constructor
-    CoveringEllipse(): SVD(N,N), L2P(gsl_matrix_alloc(N,N)) { }
+    CoveringEllipse(size_t n): N(n), E1(N), E2(N), EC(N), SVD(N,N), L2P(gsl_matrix_alloc(N,N)) { }
     /// Destructor
     ~CoveringEllipse() { gsl_matrix_free(L2P); }
+
+    const size_t N;
 
     /// Calculate covering ellipse EC from E1, E2
     void calcCovering(bool cover = true) {
@@ -277,9 +292,9 @@ public:
         gsl_blas_dtrmm(CblasLeft, CblasLower, CblasNoTrans, CblasNonUnit, 1.0, E1.L, EC.L);
     }
 
-    QuadraticCholesky<N,T> E1;
-    QuadraticCholesky<N,T> E2;
-    QuadraticCholesky<N,T> EC;
+    QuadraticCholesky E1;
+    QuadraticCholesky E2;
+    QuadraticCholesky EC;
 
 protected:
     SVDWorkspace SVD;

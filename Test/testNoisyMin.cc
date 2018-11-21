@@ -44,6 +44,54 @@ TGraph vEllipse(const gsl_matrix* m, double x0, double y0, size_t ax = 0, size_t
     return g;
 }
 
+
+#include "NoisyMin.hh"
+#include <stdio.h>
+#include <iostream>
+#include <fstream>
+#include <cassert>
+using std::cout;
+
+#define NDIM 7
+
+int main(int argc, char** argv) {
+    if(argc != 2) return EXIT_FAILURE;
+
+    NoisyMin NM(NDIM);
+    NM.verbose = 1;
+
+    // load datapoints from file specified on command line
+    std::ifstream f(argv[1]);
+    while(f.good()) {
+        NM.fvals.emplace_back(NM.N);
+        auto& v = NM.fvals.back();
+        for(auto& c: v.x) {
+            f >> c;
+            //cout << c << '\t';
+        }
+        Quadratic::evalTerms(v.x, v.t);
+        f >> v.f;
+        f >> v.df2;
+        //cout << v.f << '\t' << v.df2 << '\n';
+        assert(v.f == v.f);
+    }
+    NM.fvals.pop_back();
+    printf("Loaded %zu fit points\n", NM.fvals.size());
+
+    NM.fitMinSingular();
+    //NM.fitMin();
+
+    /*
+    QuadraticPCA<NDIM> QP;
+    QP.decompose(NM.Q, false);
+    displayM(QP.USi);
+    displayV(QP.S2);
+    */
+
+    return EXIT_SUCCESS;
+}
+
+/*
 int main(int, char**) {
     CodeVersion::display_code_version();
 
@@ -71,7 +119,8 @@ int main(int, char**) {
 
         for(int u=0; u<5; u++) {
             for(int i=0; i<50; i++) NM.addSample(f);
-            NM.fitMin();
+            if(u%2) NM.fitMin();
+            else NM.fitMinSingular();
         }
         g.SetPoint(j, NM.x0[0], NM.x0[1]);
         vx0.push_back(NM.x0);
@@ -81,7 +130,7 @@ int main(int, char**) {
 
         gE[j].SetMarkerColor(2+2*j);
         gE[j].SetLineColor(2+2*j);
-        gEllipse(gE[j], NM.dQ0, NM.x0);
+        gEllipse(gE[j], NM.Udx0, NM.x0);
 
         gS[j].SetMarkerColor(2+2*j);
         gS[j].SetLineColor(2+2*j);
@@ -114,3 +163,4 @@ int main(int, char**) {
 
     return EXIT_SUCCESS;
 }
+*/

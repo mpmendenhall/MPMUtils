@@ -2,6 +2,7 @@
 
 #include "CodeVersion.hh"
 #include "Quadratic.hh"
+#include "QuadraticT.hh"
 #include "Visr.hh"
 #include <vector>
 using std::vector;
@@ -80,7 +81,7 @@ void visEllipse(const gsl_matrix* m, size_t ax0 = 0, size_t ax1 = 1, size_t ax2 
     }
 }
 
-void visProj(QuadraticCholesky<3>& QC, int ax0 = 0, int ax1 = 1, int ax2 = 2) {
+void visProj(QuadraticCholesky& QC, int ax0 = 0, int ax1 = 1, int ax2 = 2) {
 
     auto v = gsl_vector_calloc(2);
     auto v2 = gsl_vector_calloc(2);
@@ -137,12 +138,12 @@ int main(int, char**) {
     pthread_create(&thread, NULL, &visthread, nullptr );
 
 
-    Quadratic<3> R(vector<double>({1.,2.,3.,4.,5.,6.,7.,8.,9.,10.}));
+    QuadraticT<3> R(vector<double>({1.,2.,3.,4.,5.,6.,7.,8.,9.,10.}));
     R *= 0.5;
     R += R;
     R.display();
 
-    QuadraticCholesky<3> QC;
+    QuadraticCholesky QC(3);
     QC.decompose(R);
     QC.display();
 
@@ -150,7 +151,7 @@ int main(int, char**) {
     printf("%g\n", R(x0));
 
     array<double,10> c;
-    Quadratic<3>::evalTerms(x0, c);
+    QuadraticT<3>::evalTerms(x0, c);
     for(auto x: c) printf("\t%g",x);
     printf("\n");
 
@@ -160,18 +161,16 @@ int main(int, char**) {
 
         try{
             vector<double> vr = {1., 0 , 1, 0, 0, 1, 0, 0, 0, 0};
-            //vector<double> vr(Quadratic<3>::NTERMS);
+            //vector<double> vr(QuadraticT<3>::NTERMS);
             for(auto& c: vr) c = 0.5 + TR.Uniform();
-            R = Quadratic<3>(vr);
+            R = QuadraticT<3>(vr);
             for(auto& c: vr) c = 0.5 + TR.Uniform();
             //vr = {1, 1 , 1, 0, 0, 0.5, 0, 0, 0, 0};
-            Quadratic<3> R2(vr);
+            QuadraticT<3> R2(vr);
             R.display();
             R2.display();
 
-
-
-            QuadraticPCA<3> QP, QP2, QPc;
+            QuadraticPCA QP(3), QP2(3), QPc(3);
             QP.decompose(R);
             QP2.decompose(R2);
 
@@ -190,11 +189,11 @@ int main(int, char**) {
             //auto g2 = vEllipse(EAP.P, QC.x0[a1], QC.x0[a2]);
             //g2.SetLineColor(2);
 
-            CoveringEllipse<3> CE;
+            CoveringEllipse CE(3);
             CE.E1.calcCholesky(R);
             CE.E2.calcCholesky(R2);
             CE.calcCovering(true);
-            Quadratic<3> Rc;
+            QuadraticT<3> Rc;
             CE.EC.fillA(Rc);
             QPc.decompose(Rc);
 
