@@ -59,6 +59,8 @@ int main(int argc, char** argv) {
 
     NoisyMin NM(NDIM);
     NM.verbose = 1;
+    for(size_t i=0; i<NDIM; i++) gsl_matrix_set(NM.dS, i, i, 20);
+    NM.initRange();
 
     // load datapoints from file specified on command line
     std::ifstream f(argv[1]);

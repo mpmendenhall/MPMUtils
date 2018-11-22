@@ -1,11 +1,31 @@
 /// \file NoisyMin.cc
 
 #include "NoisyMin.hh"
+#include <gsl/gsl_cblas.h>
+#include <gsl/gsl_eigen.h>
+#include "GeomCalcUtils.hh"
+
+NoisyMin::NoisyMin(size_t n): N(n),
+NTERMS(Quadratic::nterms(N)), x0(N), Mt(NTERMS) {
+    for(auto& m: Mt) m = gsl_matrix_alloc(N,N);
+    gsl_matrix_set_identity(dS);
+}
 
 NoisyMin::~NoisyMin() {
     for(auto m: {Udx0, dS, U_q}) gsl_matrix_free(m);
     for(auto m: Mt) gsl_matrix_free(m);
     for(auto v: {Sdx0, S_q, dS_q, v1, v2}) gsl_vector_free(v);
+}
+
+void NoisyMin::initRange() {
+    sE.EC.x0 = SR0.x0 = x0;
+    gsl_matrix_memcpy(sE.EC.L, dS);
+    invert_colnorms(sE.EC.L);
+    gsl_blas_dsyrk(CblasLower, CblasTrans, 1.0, sE.EC.L, 0., SR0.L);
+    gsl_linalg_cholesky_decomp(SR0.L);
+    gsl_matrix_memcpy(sE.EC.L, SR0.L);
+
+    if(verbose) { printf("Initializing search range:\n"); displayM(dS); }
 }
 
 NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
@@ -127,24 +147,83 @@ void NoisyMin::fitMinSingular() {
     // determine good and singular subspaces
     vector<size_t> vG;  // good nonsingular axes
     vector<size_t> vS;  // singular subspace axes
+    vector<double> vcontrib(N); // variable contributions to nonsingular space
     for(size_t j = 0; j<N; j++) {
         printf("\t%g ~ %g", gsl_vector_get(S_q,j), dS_q[j]);
         if(gsl_vector_get(S_q,j) - 2*dS_q[j] <= 0) vS.push_back(j);
-        else vG.push_back(j);
+        else {
+            vG.push_back(j);
+            for(size_t i=0; i<N; i++) vcontrib[i] += pow(gsl_matrix_get(U_q, i, j),2);
+        }
     }
     printf("\n");
-    if(verbose) printf("Found %zu-dimensional nonsingular subspace.\n", vG.size());
+    auto nGood = vG.size();
+    auto nBad = vS.size();
+    if(verbose) {
+        printf("Found %zu-dimensional nonsingular subspace.\nContributions:", nGood);
+        for(auto c: vcontrib) { printf("\t%g", c); } printf("\n");
+    }
 
-    // calculate x0 uncertainty ellipse in good subspace
-    auto Mg = gsl_matrix_alloc(vG.size(), vG.size());
+    // consider 'good' subspace spanned by Qt = non-singular columns of Q
+    // position in subspace x': x = Qt x', bt = Qt^T b
+    // ellipse x'^T Qt^T A Qt x' + b^T Qt x' + c = 0 = x'^T Dt x' + bt^T x' + c
+    auto Qt = gsl_matrix_alloc(N, nGood);
+    for(size_t i=0; i<N; i++)
+        for(size_t j=0; j<nGood; j++)
+            gsl_matrix_set(Qt, i, j, gsl_matrix_get(U_q, i, vG[j]));
+
+    // bt = Qt^T b
+    auto bt = gsl_vector_alloc(nGood);
+    vector2gsl(Q.b, v1);
+    gsl_blas_dgemv(CblasTrans, 1, Qt, v1, 0, bt);
+
+    // solve x0': Dt x0' = -bt/2
+    vector<double> x0p(nGood);
+    for(size_t j=0; j<nGood; j++) x0p[j] = -0.5 * gsl_vector_get(bt, j) / gsl_vector_get(S_q, vG[j]);
+    if(verbose) {
+        printf("x0' =");
+        for(auto c: x0p) printf("\t%g", c);
+        printf("\n");
+    }
+
+    // calculate x0' uncertainty ellipse for Qt^T A' Qt variations
+    QuadraticCholesky Pg(nGood);
+    auto Mg = gsl_matrix_calloc(nGood, nGood);
+    auto ApQt = gsl_matrix_alloc(N,nGood);
+    auto dx = gsl_vector_alloc(nGood);
+    vec_t b(nGood);
     for(size_t i=0; i<NTERMS; i++) {
-
+        vQ[i].fillA(Mt[i]);
+        gsl_blas_dsymm(CblasLeft, CblasLower, 1, Mt[i], Qt, 0, ApQt);
+        gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1, Qt, ApQt, 0, Pg.L);
+        gsl_linalg_cholesky_decomp(Pg.L);
+        vector2gsl(vQ[i].b, v1);
+        gsl_blas_dgemv(CblasTrans, 1, Qt, v1, 0, bt);
+        for(size_t j=0; j<nGood; j++) b[j] = gsl_vector_get(bt, j);
+        Pg.findCenter(b, vQ[i].c);
+        for(size_t j=0; j<nGood; j++) gsl_vector_set(dx, j, Pg.x0[j] - x0p[j]);
+        gsl_blas_dsyr(CblasLower, 1., dx, Mg);
     }
+    // x0' uncertainty principal vectors, magnitudes
+    EigSymmWorkspace ESWg(nGood);
+    ESWg.decompSymm(Mg, bt);
+    if(verbose) { printf("dx0':\n"); displayM(Mg); displayV(bt); }
+
+    // project initial fit range constraints into singular subspace
+    ellipse_affine_projector EAP(N, nBad);
+    for(size_t i=0; i<N; i++)
+        for(size_t j=0; j<nBad; j++)
+            gsl_matrix_set(EAP.TT, j, i, gsl_matrix_get(U_q, i, vS[j]));
+    EAP.projectL(SR0.L, false);
+    if(verbose) { printf("Ax:\n"); displayM(EAP.P); }
+
+    // reconstruct constrained Q
+
+    // cleanup
     gsl_matrix_free(Mg);
-
-    // trim bad subspace to initial fit range
-
-    printf("\n");
+    gsl_matrix_free(Qt);
+    gsl_matrix_free(ApQt);
+    gsl_vector_free(bt);
 }
 
 void NoisyMin::display() {

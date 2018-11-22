@@ -135,15 +135,13 @@ public:
 
 
 
-/// Cholesky decomposition of quadratic to (x-x0)^T L L^T (x-x0) + k
+/// Cholesky decomposition x^T A x + b^T x + c --> (x-x0)^T L L^T (x-x0) + k
 class QuadraticCholesky {
 public:
     /// Constructor
-    QuadraticCholesky(size_t n): N(n), x0(N), L(gsl_matrix_alloc(N,N)), M(gsl_matrix_alloc(N,N)), v(gsl_vector_alloc(N)) { }
+    QuadraticCholesky(size_t n): N(n), x0(N), L(gsl_matrix_calloc(N,N)), M(gsl_matrix_alloc(N,N)), v(gsl_vector_alloc(N)) { }
     /// Destructor
     ~QuadraticCholesky() { gsl_matrix_free(L); gsl_matrix_free(M); gsl_vector_free(v); }
-
-    const size_t N; ///< number of dimensions
 
     /// perform Cholesky decomposition of quadratic form
     template<class Quad>
@@ -157,15 +155,16 @@ public:
     template<class Quad>
     void decompose(const Quad& Q) {
         calcCholesky(Q);
-        for(size_t i=0; i<N; i++) gsl_vector_set(v, i, -0.5*Q.b[i]);
-        gsl_linalg_cholesky_svx(L, v);
-        unpack(Q);
+        findCenter(Q.b, Q.c);
     }
+
+    /// calculate A = L L^T
+    void getA(gsl_matrix* A) const { gsl_blas_dsyrk(CblasLower, CblasNoTrans, 1.0, L, 0., A); }
 
     /// multiply Q.A = L L^T
     template<class Quad>
     void fillA(Quad& Q) {
-        gsl_blas_dsyrk(CblasLower, CblasNoTrans, 1.0, L, 0., M);
+        getA(M);
         int n = 0;
         for(size_t i=0; i<N; i++)
             for(size_t j=0; j<=i; j++)
@@ -186,22 +185,26 @@ public:
         printf(";\tk = %g\n", k);
     }
 
+    /// solve for b, c -> x0, k (assuming L in Cholesky form)
+    template<class V>
+    void findCenter(const V& b, double c = 0) {
+        for(size_t i=0; i<N; i++) gsl_vector_set(v, i, -0.5*b[i]);
+        gsl_linalg_cholesky_svx(L, v);
+        for(size_t i=0; i<N; i++) x0[i] = gsl_vector_get(v, i);
+        // k = c + b x0 / 2
+        k = 0;
+        for(size_t i=0; i<N; i++) k += x0[i]*b[i];
+        k = c + 0.5*k;
+    }
+
+    const size_t N;     ///< number of dimensions
     vector<double> x0;  ///< extremum position
     double k = 0;       ///< extremum value
     gsl_matrix* L;      ///< lower-triangular NxN Cholesky decomposition L L^T = A
 
 protected:
-    /// unpack solution vector v into x0 and k
-    template<class Quad>
-    void unpack(const Quad& Q) {
-        for(size_t i=0; i<N; i++) x0[i] = gsl_vector_get(v, i);
-        // k = c + b x0 / 2
-        k = 0;
-        for(size_t i=0; i<N; i++) k += x0[i]*Q.b[i];
-        k = Q.c + 0.5*k;
-    }
-    gsl_matrix *M;  ///< NxN workspace
-    gsl_vector* v;  ///< N-element vector
+    gsl_matrix* M;      ///< NxN workspace
+    gsl_vector* v;      ///< N-element Cholesky solution vector
 };
 
 #ifdef GSL_25
@@ -239,7 +242,7 @@ public:
 class QuadraticPCA: protected EigSymmWorkspace {
 public:
     /// Constructor
-    QuadraticPCA(size_t N): EigSymmWorkspace(N), USi(gsl_matrix_alloc(N,N)), S2(gsl_vector_alloc(N)), Si(gsl_vector_alloc(N)) { }
+    QuadraticPCA(size_t N): EigSymmWorkspace(N), USi(gsl_matrix_calloc(N,N)), S2(gsl_vector_calloc(N)), Si(gsl_vector_calloc(N)) { }
     /// Destructor
     ~QuadraticPCA() { gsl_matrix_free(USi); gsl_vector_free(S2); gsl_vector_free(Si); }
 

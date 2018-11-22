@@ -24,20 +24,24 @@ void rmul_diag(gsl_matrix* M, const gsl_vector* D);
 void rdiv_diag(gsl_matrix* M, const gsl_vector* D);
 /// left-multiply (scale rows) of M by diagonal matrix D
 void lmul_diag(gsl_matrix* M, const gsl_vector* D);
+/// scale columns by 1/||column||^2
+void invert_colnorms(gsl_matrix* M);
 
 /// Zero out triangle above/below diagonal (after triangular matrix ops leaving junk here)
 void zeroTriangle(CBLAS_UPLO_t uplo, gsl_matrix* A);
 /// Fill in specified half of symmetric matrix from other side
 void fillSymmetric(CBLAS_UPLO_t uplo, gsl_matrix* A);
 
+/// sum x x^T point into symmetric lower triangle
+template<typename X>
+void add_xTx(gsl_matrix* A, gsl_vector* vn, const X& x) {
+    for(size_t i=0; i<vn->size; i++) gsl_vector_set(vn, i, x[i]);
+    gsl_blas_dsyr(CblasLower, 1., vn, A);
+}
 /// sum x x^T points into symmetric matrix (lower triangle)
 template<typename V>
-void sumSymm(gsl_matrix* A, gsl_vector* vn, const V& vp) {
-    for(auto& p: vp) {
-        for(size_t i=0; i<vn->size; i++) gsl_vector_set(vn, i, p[i]);
-        gsl_blas_dsyr(CblasLower, 1., vn, A);
-    }
-}
+void sumSymm(gsl_matrix* A, gsl_vector* vn, const V& vp) { for(auto& p: vp) add_xTx(A, vn, p); }
+
 /// resize (allocate if needed) gsl vector
 void resize(gsl_vector*& g, size_t n);
 /// fill gsl vector
@@ -122,8 +126,8 @@ public:
         for(size_t i=0; i<M; i++) gsl_matrix_set(TT, i, a[i], 1.);
     }
 
-    /// Project from Cholesky form L(lower) to PCA U S^-1; outputs P = U/sigma and S = 1/sigma
-    void projectL(const gsl_matrix* L);
+    /// Project from Cholesky form L(lower) to PCA P = U sigma^-1 (or P = U sigma if lsigma = false)
+    void projectL(const gsl_matrix* L, bool lsigma = true);
 
     gsl_matrix* TT;     ///< T^T [M,N] orthogonal matrix defining affine subspace in rows
     gsl_matrix* P;      ///< P[M,M] result projection principal axes in columns

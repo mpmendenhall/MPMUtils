@@ -22,6 +22,14 @@ void lmul_diag(gsl_matrix* M, const gsl_vector* D) {
             gsl_matrix_set(M, i, j, gsl_matrix_get(M, i, j)*gsl_vector_get(D, i));
 }
 
+void invert_colnorms(gsl_matrix* M) {
+    for(size_t i=0; i<M->size2; i++) {
+        double cc = 0;
+        for(size_t j=0; j<M->size1; j++) cc += gsl_matrix_get(M,j,i)*gsl_matrix_get(M,j,i);
+        for(size_t j=0; j<M->size1; j++) gsl_matrix_set(M, j, i, gsl_matrix_get(M,j,i)/cc);
+    }
+}
+
 void zeroTriangle(CBLAS_UPLO_t uplo, gsl_matrix* A) {
     if(uplo == CblasLower) {
         for(size_t i=1; i<A->size1; i++)
@@ -79,7 +87,7 @@ TT(gsl_matrix_calloc(M,N)), P(gsl_matrix_alloc(M,M)), Mmn(gsl_matrix_alloc(M,N))
 
 ellipse_affine_projector::~ellipse_affine_projector() { for(auto m: {TT,P,Mmn,Mnn}) gsl_matrix_free(m); }
 
-void ellipse_affine_projector::projectL(const gsl_matrix* L) {
+void ellipse_affine_projector::projectL(const gsl_matrix* L, bool lsigma) {
     // Mmn = T^T (M,N) L^-T (N,N)
     gsl_matrix_memcpy(Mmn, TT);
     gsl_blas_dtrsm(CblasRight, CblasLower, CblasTrans, CblasNonUnit, 1., L, Mmn);
@@ -91,10 +99,14 @@ void ellipse_affine_projector::projectL(const gsl_matrix* L) {
     // SVD Mnn = U S V^T, Mnn -> U ; S ~ principal axis lengths
     SVD(Mnn);
     // normalization: U/S = Lt Q; want U S for principal axes
-    // Copy projected component to output P = U S ?????
-    for(size_t i=0; i<M; i++)
-        for(size_t j=0; j<M; j++)
-            gsl_matrix_set(P, i, j, gsl_matrix_get(Mnn, i, j) * gsl_vector_get(S, j));
+    // Copy projected component to output P = U S
+    for(size_t i=0; i<M; i++) {
+        for(size_t j=0; j<M; j++) {
+            double s = gsl_vector_get(S, j);
+            double m = gsl_matrix_get(Mnn, i, j);
+            gsl_matrix_set(P, i, j, lsigma? m*s : m/s);
+        }
+    }
 }
 
 /////////////////

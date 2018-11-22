@@ -5,29 +5,25 @@
 
 #include "LinalgHelpers.hh"
 #include "Quadratic.hh"
-#include "GeomCalcUtils.hh"
 #include "LinMin.hh"
 #include <Math/QuasiRandom.h>
-#include <gsl/gsl_cblas.h>
-#include <gsl/gsl_eigen.h>
 #include <vector>
 using std::vector;
 
 /// Minimizer for N-dimensional ``noisy'' function evaluation
+/**
+    - Set initial search range in dS, initial guess in x0
+    - call initRange() to set sampling range bounds SR0 from dS, x0
+    - repeat to desired convergence:
+        - add points using addSample(f) on evaluated function
+        - call fitMinSingular() for an update step
+*/
 class NoisyMin {
 public:
 
-    /// shorthand notation
-    typedef vector<double> vec_t;
-    const size_t N;         ///< Number of dimensions being minimized over
-    const size_t NTERMS;    ///< Number of terms in quadratic surface fit
-
-    /// Constructor
-    NoisyMin(size_t n): N(n), NTERMS(Quadratic::nterms(N)), x0(N), Mt(NTERMS) {
-        for(auto& m: Mt) m = gsl_matrix_alloc(N,N);
-    }
-    /// Destructor
-    ~NoisyMin();
+    typedef vector<double> vec_t;   ///< convenience shorthand
+    const size_t N;                 ///< Number of dimensions being minimized over
+    const size_t NTERMS;            ///< Number of terms in quadratic surface fit
 
     /// evaluated datapoint for fit
     struct evalpt {
@@ -39,30 +35,25 @@ public:
         double df2 = 1; ///< estimated uncertainty^2
     };
 
+    /// Constructor, with number of dimensions
+    NoisyMin(size_t n);
+    /// Destructor
+    ~NoisyMin();
+
+    /// initialize search range dS, sE.EC from SR0
+    void initRange();
     /// add evaluated point from supplied function
     template<typename F>
-    evalpt& addSample(F& f) {
-        fvals.emplace_back(N);
-        auto& p = fvals.back();
-        p.x = nextSample();
-        p.f = f(p.x);
-        Quadratic::evalTerms(p.x, p.t);
-        return p;
-    }
-
-    /// request next sampling point
-    vec_t nextSample(double nsigma = 1);
+    evalpt& addSample(F& f);
     /// perform fit update step (non-singular solutions)
     void fitMin();
     /// perform fit update step (non-positive-definite Hessian)
     void fitMinSingular();
     /// show summary information
     void display();
-    /// fit Q to points in current region
-    void fitHessian();
 
     QuadraticCholesky SR0{N};                   ///< initial search range/limits ellipse
-    gsl_matrix* dS = gsl_matrix_alloc(N,N);     ///< fit/sampling region (principal axes columns)
+    gsl_matrix* dS = gsl_matrix_alloc(N,N);     ///< fit/sampling region (principal axis columns)
 
     vector<evalpt> fvals;                       ///< collected function evaluations
 
@@ -81,8 +72,12 @@ public:
     int verbose = 0;                            ///< debugging verbosity level
     double nSigmaStat = 4;                      ///< statistical uncertainty search region expansion
 
+    /// request next sampling point location
+    vec_t nextSample(double nsigma = 1);
     /// generate variations according to LM covariance
     vector<Quadratic> LMvariants();
+    /// fit LM (Q) to points in current region
+    void fitHessian();
 
 protected:
     QuadraticCholesky QC{N};                    ///< quadratic decomposition helper
@@ -97,5 +92,18 @@ protected:
 
     ROOT::Math::QuasiRandomNiederreiter QRNG{(unsigned int)N};   ///< quasirandom distribution generator
 };
+
+///////////////////////
+///////////////////////
+
+template<typename F>
+NoisyMin::evalpt& NoisyMin::addSample(F& f) {
+    fvals.emplace_back(N);
+    auto& p = fvals.back();
+    p.x = nextSample();
+    p.f = f(p.x);
+    Quadratic::evalTerms(p.x, p.t);
+    return p;
+}
 
 #endif
