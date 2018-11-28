@@ -6,15 +6,13 @@
 #include "GeomCalcUtils.hh"
 
 NoisyMin::NoisyMin(size_t n): N(n),
-NTERMS(Quadratic::nterms(N)), x0(N), Mt(NTERMS) {
-    for(auto& m: Mt) m = gsl_matrix_alloc(N,N);
+NTERMS(Quadratic::nterms(N)), x0(N) {
     gsl_matrix_set_identity(dS);
 }
 
 NoisyMin::~NoisyMin() {
-    for(auto m: {Udx0, dS, U_q}) gsl_matrix_free(m);
-    for(auto m: Mt) gsl_matrix_free(m);
-    for(auto v: {Sdx0, S_q, dS_q, v1, v2}) gsl_vector_free(v);
+    for(auto m: {U_dx, dS, U_q, M1, M2}) gsl_matrix_free(m);
+    for(auto v: {S_dx, S_q, v1, v2}) gsl_vector_free(v);
 }
 
 void NoisyMin::initRange() {
@@ -45,7 +43,7 @@ NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
     return x;
 }
 
-void NoisyMin::fitHessian() {
+Quadratic NoisyMin::fitHessian() {
     // filter points to search region
     vector<evalpt> vs;
     for(auto& p: fvals) {
@@ -67,8 +65,10 @@ void NoisyMin::fitHessian() {
     }
     LM.solve(y);
     LM.getx(y);
+    Quadratic Q(N);
     Q.setCoeffs(y);  // estimated minimum surface
     if(verbose) Q.display();
+    return Q;
 }
 
 vector<Quadratic> NoisyMin::LMvariants() {
@@ -89,32 +89,32 @@ vector<Quadratic> NoisyMin::LMvariants() {
 }
 
 void NoisyMin::fitMin() {
-    fitHessian();           // update Q
-    QChol.decompose(Q);     // find minimum position (and Cholesky form)
-    if(verbose) QChol.display();
-    x0 = QChol.x0;
-    for(size_t i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E1.L, i, j, gsl_matrix_get(QChol.L, i, j)/sqrt(h));
+    auto Q = fitHessian();  // update fit
+    QC.decompose(Q);     // find minimum position (and Cholesky form)
+    if(verbose) QC.display();
+    x0 = QC.x0;
+    for(size_t i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E1.L, i, j, gsl_matrix_get(QC.L, i, j)/sqrt(h));
 
     // fit parameter uncertainties to minimum location uncertainty
     auto vQ = LMvariants();
     for(size_t i=0; i<NTERMS; i++) {
         QC.decompose(vQ[i]);
         for(size_t j=0; j<N; j++) gsl_vector_set(v1, j, QC.x0[j] - x0[j]);
-        gsl_blas_dsyr(CblasLower, 1., v1, Udx0);
+        gsl_blas_dsyr(CblasLower, 1., v1, U_dx);
     }
 
     // n-sigma stats uncertainty inverse Cholesky form
-    for(size_t i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E2.L, i, j, gsl_matrix_get(Udx0, i, j)*nSigmaStat*nSigmaStat);
+    for(size_t i=0; i<N; i++) for(size_t j=0; j<=i; j++) gsl_matrix_set(sE.E2.L, i, j, gsl_matrix_get(U_dx, i, j)*nSigmaStat*nSigmaStat);
     gsl_linalg_cholesky_decomp(sE.E2.L);
     gsl_linalg_cholesky_invert(sE.E2.L);
     gsl_linalg_cholesky_decomp(sE.E2.L);
 
     // stats uncertainty 1*sigma principal axes
-    EWS.decompSymm(Udx0, Sdx0);
-    for(size_t i=0; i<N; i++) gsl_vector_set(v1, i, sqrt(gsl_vector_get(Sdx0,i)));
+    EWS.decompSymm(U_dx, S_dx);
+    for(size_t i=0; i<N; i++) gsl_vector_set(v1, i, sqrt(gsl_vector_get(S_dx,i)));
 
-    rmul_diag(Udx0, v1);
-    if(verbose > 1) { printf("Udx0:\n"); displayM(Udx0); }
+    rmul_diag(U_dx, v1);
+    if(verbose > 1) { printf("U_dx:\n"); displayM(U_dx); }
 
     // update search region
     sE.calcCovering();              // ellipse containing both
@@ -127,41 +127,41 @@ void NoisyMin::fitMin() {
 }
 
 void NoisyMin::fitMinSingular() {
-    fitHessian();               // update Q
+    auto Q = fitHessian();      // update fit
     Q.fillA(U_q);
-    EWS.decompSymm(U_q, S_q);   // Hessian principal axes SVD A = Q D Q^T
+    EWS.decompSymm(U_q, S_q);   // Hessian principal axes SVD A = U_q D U_q^T, S_q = diag of D
     displayM(U_q);
     displayV(S_q);
 
-    // repeat for uncertainty variations to determine stability along SVD axes
+    // repeat for uncertainty variations to determine stability along SVD axes:
+    // calculate M2 = D' = U_q^T A' U_q ~ D for each variation; see how D'_jj varies.
     vector<double> dS_q(N); // maximum uncertainty magnitude for each component
     auto vQ = LMvariants();
     for(size_t i=0; i<NTERMS; i++) {
-        // calculate Mt[i] = Q^T A' Q for this variation
-        vQ[i].fillA(Mt[i]);
-        gsl_blas_dsymm(CblasLeft, CblasLower, 1, Mt[i], U_q, 0, M1);
-        gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1, U_q, M1, 0, Mt[i]);
-        for(size_t j = 0; j<N; j++) dS_q[j] = std::max(dS_q[j], fabs(gsl_matrix_get(Mt[i],j,j) - gsl_vector_get(S_q,j)));
+        vQ[i].fillA(M2);
+        gsl_blas_dsymm(CblasLeft, CblasLower, 1, M2, U_q, 0, M1);
+        gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1, U_q, M1, 0, M2);
+        for(size_t j = 0; j<N; j++) dS_q[j] = std::max(dS_q[j], fabs(gsl_matrix_get(M2,j,j) - gsl_vector_get(S_q,j)));
     }
 
     // determine good and singular subspaces
-    vector<size_t> vG;  // good nonsingular axes
-    vector<size_t> vS;  // singular subspace axes
+    vector<size_t> vG;  // good nonsingular axes in U_q
+    vector<size_t> vS;  // singular subspace axes in U_q
     vector<double> vcontrib(N); // variable contributions to nonsingular space
     for(size_t j = 0; j<N; j++) {
-        printf("\t%g ~ %g", gsl_vector_get(S_q,j), dS_q[j]);
+        if(verbose) printf("\t%g ~ %g", gsl_vector_get(S_q,j), dS_q[j]);
         if(gsl_vector_get(S_q,j) - 2*dS_q[j] <= 0) vS.push_back(j);
         else {
             vG.push_back(j);
             for(size_t i=0; i<N; i++) vcontrib[i] += pow(gsl_matrix_get(U_q, i, j),2);
         }
     }
-    printf("\n");
     auto nGood = vG.size();
     auto nBad = vS.size();
     if(verbose) {
-        printf("Found %zu-dimensional nonsingular subspace.\nContributions:", nGood);
-        for(auto c: vcontrib) { printf("\t%g", c); } printf("\n");
+        printf("\nFound %zu-dimensional nonsingular subspace.\nContributions:", nGood);
+        for(auto c: vcontrib) printf("\t%g", c);
+        printf("\n");
     }
 
     // consider 'good' subspace spanned by Qt = non-singular columns of Q
@@ -193,8 +193,8 @@ void NoisyMin::fitMinSingular() {
     auto dx = gsl_vector_alloc(nGood);
     vec_t b(nGood);
     for(size_t i=0; i<NTERMS; i++) {
-        vQ[i].fillA(Mt[i]);
-        gsl_blas_dsymm(CblasLeft, CblasLower, 1, Mt[i], Qt, 0, ApQt);
+        vQ[i].fillA(M2);
+        gsl_blas_dsymm(CblasLeft, CblasLower, 1, M2, Qt, 0, ApQt);
         gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1, Qt, ApQt, 0, Pg.L);
         gsl_linalg_cholesky_decomp(Pg.L);
         vector2gsl(vQ[i].b, v1);
@@ -214,13 +214,27 @@ void NoisyMin::fitMinSingular() {
     for(size_t i=0; i<N; i++)
         for(size_t j=0; j<nBad; j++)
             gsl_matrix_set(EAP.TT, j, i, gsl_matrix_get(U_q, i, vS[j]));
-    EAP.projectL(SR0.L, false);
+    EAP.projectL(SR0.L, false); // EAP.P = U/S in Qbad space
     if(verbose) { printf("Ax:\n"); displayM(EAP.P); }
+    // Mb = A' in Ub = U S^-2 U^T
+    auto Mb = gsl_matrix_alloc(nBad,nBad);
+    gsl_blas_dsyrk(CblasLower, CblasTrans, 1.0, EAP.P, 0., Mb);
+    //fillSymmetric(CblasUpper, Mb); // not necessary: reconstructed A symmetric lower
 
-    // reconstruct constrained Q
+    // reconstruct QC.L = A with limits on singular space
+    gsl_matrix_set_zero(M1);
+    for(size_t j=0; j<nGood; j++) gsl_matrix_set(M1, vG[j], vG[j], gsl_vector_get(S_q, vG[j]));
+    for(size_t i=0; i<nBad; i++)
+        for(size_t j=0; j<nBad; j++)
+            gsl_matrix_set(M1, vS[i], vS[j], gsl_matrix_get(Mb, i, j));
+    gsl_blas_dsymm(CblasLeft, CblasLower, 1, M1, U_q, 0, QC.L);
+    gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1, U_q, QC.L, 0, M1);
+    displayM(M1);
+
 
     // cleanup
     gsl_matrix_free(Mg);
+    gsl_matrix_free(Mb);
     gsl_matrix_free(Qt);
     gsl_matrix_free(ApQt);
     gsl_vector_free(bt);
@@ -231,6 +245,6 @@ void NoisyMin::display() {
     for(size_t i=0; i<N; i++) {
         vec_t v(N);
         v[i] = 1.0;
-        printf("[%zu]\t%g\t~%g (dh)\t~%g (stat)\n", i, x0[i], QChol.projLength(v)*sqrt(h), sE.E2.projLength(v)/nSigmaStat);
+        printf("[%zu]\t%g\t~%g (dh)\t~%g (stat)\n", i, x0[i], QC.projLength(v)*sqrt(h), sE.E2.projLength(v)/nSigmaStat);
     }
 }

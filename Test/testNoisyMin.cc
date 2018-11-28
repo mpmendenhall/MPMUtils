@@ -132,7 +132,7 @@ int main(int, char**) {
 
         gE[j].SetMarkerColor(2+2*j);
         gE[j].SetLineColor(2+2*j);
-        gEllipse(gE[j], NM.Udx0, NM.x0);
+        gEllipse(gE[j], NM.U_dx, NM.x0);
 
         gS[j].SetMarkerColor(2+2*j);
         gS[j].SetLineColor(2+2*j);

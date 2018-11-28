@@ -52,32 +52,32 @@ public:
     /// show summary information
     void display();
 
-    QuadraticCholesky SR0{N};                   ///< initial search range/limits ellipse
+    // initial values
+    vec_t x0;                                   ///< current best fit estimate
     gsl_matrix* dS = gsl_matrix_alloc(N,N);     ///< fit/sampling region (principal axis columns)
 
-    vector<evalpt> fvals;                       ///< collected function evaluations
-
-    LinMin LM{NTERMS};                          ///< fitter for terms in Q
-    Quadratic Q{N};                             ///< estimated quadratic minimum surface
-    QuadraticCholesky QChol{N};                 ///< Cholesky decomposition of Q
-    gsl_matrix* U_q = gsl_matrix_alloc(N,N);    ///< Unitary SVD (columns) of Q: A = U_q S_q U_q^T
-    gsl_vector* S_q = gsl_vector_alloc(N);      ///< eigenvalues ("sigma^2") diagonal for Uq
-    gsl_vector* dS_q = gsl_vector_alloc(N);     ///< fit uncertainties on S_q
-
-    vec_t x0;                                   ///< current best fit estimate
-    gsl_matrix* Udx0 = gsl_matrix_alloc(N,N);   ///< Unitary principal axes (columns) of uncertainty ellipse on x0
-    gsl_vector* Sdx0 = gsl_vector_alloc(N);     ///< eigenvalues for Udx0
+    // result statistical uncertainties
+    gsl_matrix* U_dx = gsl_matrix_alloc(N,N);   ///< Unitary principal axes (columns) of uncertainty ellipse
+    gsl_vector* S_dx = gsl_vector_alloc(N);     ///< eigenvalues 1/sigma^2 for U_dx
+    // result Hessian
+    gsl_matrix* U_q = gsl_matrix_alloc(N,N);    ///< Unitary SVD (columns) A = U_q S_q U_q^T
+    gsl_vector* S_q = gsl_vector_alloc(N);      ///< eigenvalues ("1/sigma^2") diagonal for U_q
 
     double h = 1;                               ///< height of ``1 sigma'' minima search region
     int verbose = 0;                            ///< debugging verbosity level
     double nSigmaStat = 4;                      ///< statistical uncertainty search region expansion
 
+    // internal / debugging quantities
+    vector<evalpt> fvals;                       ///< collected function evaluations
+    QuadraticCholesky SR0{N};                   ///< initial search range/limits ellipse
+    LinMin LM{NTERMS};                          ///< fitter for quadratic surface x^T A x + b^T x + c around minimum
+
     /// request next sampling point location
     vec_t nextSample(double nsigma = 1);
     /// generate variations according to LM covariance
     vector<Quadratic> LMvariants();
-    /// fit LM (Q) to points in current region
-    void fitHessian();
+    /// fit LM to points in current region; return convenience quadratic
+    Quadratic fitHessian();
 
 protected:
     QuadraticCholesky QC{N};                    ///< quadratic decomposition helper
@@ -86,7 +86,7 @@ protected:
     QuadraticPCA QP{N};                         ///< principal axes decomposition helper
 
     gsl_matrix* M1 = gsl_matrix_alloc(N,N);     ///< temporary calculation matrix
-    vector<gsl_matrix*> Mt;                     ///< temporary calculation matrices
+    gsl_matrix* M2 = gsl_matrix_alloc(N,N);     ///< temporary calculation matrix
     gsl_vector* v1 = gsl_vector_alloc(N);       ///< temporary calculation vector
     gsl_vector* v2 = gsl_vector_alloc(N);       ///< temporary calculation vector
 
