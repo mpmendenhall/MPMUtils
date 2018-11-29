@@ -10,6 +10,8 @@
 #include <iostream>
 #include <vector>
 using std::vector;
+#include <string>
+using std::string;
 
 /// Minimizer for N-dimensional ``noisy'' function evaluation
 /**
@@ -39,8 +41,11 @@ public:
     /// Constructor, with number of dimensions
     NoisyMin(size_t n);
 
-    /// initialize search range dS, sE.EC from SR0
+    /// initialize search range from dS, x0
     void initRange();
+    /// call after initRange (and modifying SRm) to set minimum step limits
+    void initMinStep();
+
     /// add evaluated point from supplied function
     template<typename F>
     evalpt& addSample(F& f);
@@ -67,9 +72,16 @@ public:
     double nSigmaStat = 4;          ///< statistical uncertainty search region expansion
 
     // internal / debugging quantities
+    vector<string> vnames;          ///< variable names
     vector<evalpt> fvals;           ///< collected function evaluations
-    QuadraticCholesky SR0{N};       ///< initial search range/limits ellipse
+    gsl_matrix_wrapper SR0{N,N};    ///< initial search range/limits ellipse (Cholesky form)
+    bool minStep = false;           ///< whether to apply minimum step limits
+    gsl_matrix_wrapper SRm{N,N};    ///< minimum search range ellipse (start in PCA form; converted to Cholesky form)
+    vec_t x00;                      ///< initial starting point
+
     LinMin LM{NTERMS};              ///< fitter for quadratic surface x^T A x + b^T x + c around minimum
+    double k0 = 0;                  ///< fit minimum value
+    double dk2 = 0;                 ///< statistical uncertainty^2 on k0
 
     /// request next sampling point location
     vec_t nextSample(double nsigma = 1);

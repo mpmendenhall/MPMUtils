@@ -4,19 +4,31 @@
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_eigen.h>
 #include "GeomCalcUtils.hh"
+#include <sstream>
 
 NoisyMin::NoisyMin(size_t n): N(n),
 NTERMS(Quadratic::nterms(N)), x0(N) {
     gsl_matrix_set_identity(dS);
+
+    vnames.resize(N);
+    int i=0;
+    std::stringstream ss;
+    for(auto& s: vnames) {
+        ss << i++;
+        s = ss.str();
+    }
 }
 
 void NoisyMin::initRange() {
-    SR0.x0 = x0;
+    x00 = x0;
+
+    gsl_matrix_memcpy(SRm, dS);
+    gsl_matrix_scale(SRm, 0.01);
     gsl_matrix_memcpy(sE.EC.L, dS);
     invert_colnorms(sE.EC.L);
-    gsl_blas_dsyrk(CblasLower, CblasTrans, 1.0, sE.EC.L, 0., SR0.L);
-    gsl_linalg_cholesky_decomp(SR0.L);
-    gsl_matrix_memcpy(sE.EC.L, SR0.L);
+    gsl_blas_dsyrk(CblasLower, CblasTrans, 1.0, sE.EC.L, 0., SR0);
+    gsl_linalg_cholesky_decomp(SR0);
+    gsl_matrix_memcpy(sE.EC.L, SR0);
 
     if(verbose) {
         printf("Initializing search range:\n");
@@ -24,6 +36,15 @@ void NoisyMin::initRange() {
         printf("\n");
         displayM(dS);
     }
+}
+
+void NoisyMin::initMinStep() {
+    minStep = true;
+    if(verbose) { printf("Initializing minimum range:\n"); displayM(SRm); }
+    gsl_matrix_memcpy(M1, SRm);
+    invert_colnorms(M1);
+    gsl_blas_dsyrk(CblasLower, CblasTrans, 1.0, M1, 0., SRm);
+    gsl_linalg_cholesky_decomp(SRm);
 }
 
 NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
@@ -160,21 +181,14 @@ void NoisyMin::fitMinSingular() {
     auto nGood = vG.size();
     auto nBad = vS.size();
     if(verbose) {
-        printf("\nFound %zu-dimensional nonsingular subspace.\nParameter nonsingular Contributions:", nGood);
-        for(auto c: vcontrib) printf("\t%g", c);
+        printf("\nParameter contributions to %zu-dimensional nonsingular subspace:\n", nGood);
+        size_t i = 0;
+        for(auto c: vcontrib) printf("\t%24s :\t%g\n", vnames[i++].c_str(), c);
         printf("\n");
     }
 
-    // project initial fit range constraints into singular subspace
-    ellipse_affine_projector EAP(N, nBad);
-    for(size_t i=0; i<N; i++)
-        for(size_t j=0; j<nBad; j++)
-            gsl_matrix_set(EAP.TT, j, i, U_q(i, vS[j]));
-    EAP.projectL(SR0.L, false); // EAP.P = U/S in Qbad space
-    // Mb = A' in Ub = U S^-2 U^T
-    gsl_matrix_wrapper Mb(nBad,nBad);
-    gsl_blas_dsyrk(CblasLower, CblasTrans, 1.0, EAP.P, 0., Mb);
-    //fillSymmetric(CblasUpper, Mb); // not necessary: reconstructed A symmetric lower
+    // special case: entirely singular; do not update values
+    if(!nGood) return;
 
     // determine best fit point x0' in 'good' suspace
     // position in subspace x': x = Qt x', bt = Qt^T b
@@ -198,6 +212,19 @@ void NoisyMin::fitMinSingular() {
         printf("\n");
     }
 
+    // TODO: coerce iffy x0' values into fit range
+
+    // project initial fit range constraints into singular subspace
+    ellipse_affine_projector EAP(N, nBad);
+    for(size_t i=0; i<N; i++)
+        for(size_t j=0; j<nBad; j++)
+            gsl_matrix_set(EAP.TT, j, i, U_q(i, vS[j]));
+    EAP.projectL(SR0, false); // EAP.P = U/S in Qbad space
+    // Mb = A' in Ub = U S^-2 U^T
+    gsl_matrix_wrapper Mb(nBad,nBad);
+    if(nBad) gsl_blas_dsyrk(CblasLower, CblasTrans, 1.0, EAP.P, 0., Mb);
+    //fillSymmetric(CblasUpper, Mb); // not necessary: reconstructed A symmetric lower
+
     // project previous best fit into 'bad' subspace, x0b = Qbad^T * x0
     gsl_matrix_wrapper Qb(N, nBad);
     for(size_t i=0; i<N; i++)
@@ -205,23 +232,26 @@ void NoisyMin::fitMinSingular() {
             gsl_matrix_set(Qb, i, j, U_q(i, vS[j]));
     gsl_vector_wrapper x0b(nBad);
     vector2gsl(x0, v1);
-    gsl_blas_dgemv(CblasTrans, 1, Qb, v1, 0, x0b);
+    if(nBad) gsl_blas_dgemv(CblasTrans, 1, Qb, v1, 0, x0b);
     if(verbose) { printf("bad subspace x0' = "); displayV(x0b); }
 
     // untransform x0 = U_q x' best-fit point
     for(size_t i=0; i<nGood; i++) gsl_vector_set(v1, vG[i], x0p[i]);
     for(size_t i=0; i<nBad; i++) gsl_vector_set(v1, vS[i], x0b(i));
-    gsl_blas_dgemv(CblasNoTrans, 1, U_q, v1, 0, v2);
+    if(nBad) gsl_blas_dgemv(CblasNoTrans, 1, U_q, v1, 0, v2);
     gsl2vector(v2, x0);
+    k0 = Q(x0);
 
-    // calculate x0' uncertainty ellipse for Qt^T A' Qt variations
+    // calculate x0' uncertainty ellipse (and k0 uncertainty) for Qt^T A' Qt variations
     QuadraticCholesky Pg(nGood);
     gsl_matrix_wrapper Mg(nGood, nGood); // uncertainty ellipse A' = sum dx' dx'^T
     gsl_matrix_wrapper Mg2(nGood, nGood);
     gsl_matrix_wrapper ApQt(N,nGood);
     gsl_vector_wrapper dx(nGood);
     vec_t b(nGood);
+    dk2 = 0;
     for(size_t i=0; i<NTERMS; i++) {
+        dk2 += pow(vQ[i](x0) - k0, 2);
         vQ[i].fillA(M2);
         gsl_blas_dsymm(CblasLeft, CblasLower, 1, M2, Qt, 0, ApQt);
         gsl_blas_dgemm(CblasTrans, CblasNoTrans, 1, Qt, ApQt, 0, Pg.L);
@@ -230,11 +260,15 @@ void NoisyMin::fitMinSingular() {
         gsl_blas_dgemv(CblasTrans, 1, Qt, v1, 0, bt);
         for(size_t j=0; j<nGood; j++) b[j] = bt(j);
         Pg.findCenter(b, vQ[i].c);
-        for(size_t j=0; j<nGood; j++) gsl_vector_set(dx, j, Pg.x0[j] - x0p[j]);
+        for(size_t j=0; j<nGood; j++) {
+            if(!(Pg.x0[j] == Pg.x0[j])) Pg.x0[j] = x0p[j]; // NaN check!
+            gsl_vector_set(dx, j, Pg.x0[j] - x0p[j]);
+        }
         gsl_blas_dsyr(CblasLower, 1., dx, Mg2);
     }
     // x0' uncertainty principal vectors * l^2
     EigSymmWorkspace ESWg(nGood);
+    if(verbose) displayM(Mg2);
     ESWg.decompSymm(Mg2, bt);
     // convert to Hessian form: A = (U/l) (U/l)^T
     for(size_t i=0; i<nGood; i++) gsl_vector_set(bt, i, 1/sqrt(bt(i)));
@@ -274,17 +308,24 @@ void NoisyMin::fitMinSingular() {
     // Cholesky decompose
     gsl_linalg_cholesky_decomp(sE.E2.L);
 
-    // TODO minimum based on non-singular subspace
+    if(verbose) printf("\nMinimum value: %g +- %g\n", k0, sqrt(dk2));
 
     updateRange();
 }
 
 void NoisyMin::updateRange() {
     sE.calcCovering();              // cover both stat and h ranges
-    // clip to initial range
+    if(minStep) {                   // expand to minimum range
+        gsl_matrix_memcpy(sE.E1.L, sE.EC.L);
+        gsl_matrix_memcpy(sE.E2.L, SRm);
+        sE.calcCovering(true);
+    }
+    // clip to initial (maximum) range
     gsl_matrix_memcpy(sE.E1.L, sE.EC.L);
-    gsl_matrix_memcpy(sE.E2.L, SR0.L);
+    gsl_matrix_memcpy(sE.E2.L, SR0);
     sE.calcCovering(false);
+
+
 
     Quadratic Qs(N);                // A-form ellipse representation
     sE.EC.fillA(Qs);                // Cholesky to A
@@ -306,7 +347,7 @@ void NoisyMin::display() {
     for(size_t i=0; i<N; i++) {
         vec_t v(N);
         v[i] = 1.0;
-        printf("[%zu]\t%g\t~%g (dh)\t~%g (stat)\n", i, x0[i], sE.E2.projLength(v), sE.E1.projLength(v)/nSigmaStat);
+        printf("%24s :\t%g\t~%g (dh)\t~%g (stat)\n", vnames[i].c_str(), x0[i], sE.E2.projLength(v), sE.E1.projLength(v)/nSigmaStat);
     }
 }
 

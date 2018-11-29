@@ -17,9 +17,9 @@ using std::vector;
 class gsl_matrix_wrapper {
 public:
     /// Constructor with dimensions
-    gsl_matrix_wrapper(size_t m, size_t n, bool c = true): M(c? gsl_matrix_calloc(m,n) : gsl_matrix_alloc(m,n)) { }
+    gsl_matrix_wrapper(size_t m, size_t n, bool c = true): M(m && n? c? gsl_matrix_calloc(m,n) : gsl_matrix_alloc(m,n) : nullptr) { }
     /// Destructor
-    ~gsl_matrix_wrapper() { gsl_matrix_free(M); }
+    ~gsl_matrix_wrapper() { if(M) gsl_matrix_free(M); }
 
     /// easy element access
     double operator()(size_t i, size_t j) const { return gsl_matrix_get(M,i,j); }
@@ -39,9 +39,9 @@ protected:
 class gsl_vector_wrapper {
 public:
     /// Constructor with dimensions
-    gsl_vector_wrapper(size_t n, bool c = true): v(c? gsl_vector_calloc(n) : gsl_vector_alloc(n)) { }
+    gsl_vector_wrapper(size_t n, bool c = true): v(n? c? gsl_vector_calloc(n) : gsl_vector_alloc(n) : nullptr) { }
     /// Destructor
-    ~gsl_vector_wrapper() { gsl_vector_free(v); }
+    ~gsl_vector_wrapper() { if(v) gsl_vector_free(v); }
 
     /// easy element access
     double operator()(size_t i) const { return gsl_vector_get(v,i); }

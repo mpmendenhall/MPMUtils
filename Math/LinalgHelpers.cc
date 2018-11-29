@@ -96,11 +96,12 @@ void ellipse_affine_projector::projectL(const gsl_matrix* L, bool lsigma) {
 
 void displayV(const gsl_vector* v) {
     printf("< ");
-    for(size_t i=0; i<v->size; i++) printf("%g ", gsl_vector_get(v,i));
+    if(v) for(size_t i=0; i<v->size; i++) printf("%g ", gsl_vector_get(v,i));
     printf(">\n");
 }
 
 void displayM(const gsl_matrix* M) {
+    if(!M) { printf("---- matrix 0 x 0 ----\n"); return; }
     printf("---- matrix %zu x %zu ----\n", M->size1, M->size2);
     for(size_t i=0; i<M->size1; i++) {
         for(size_t j=0; j<M->size2; j++) printf("\t%g", gsl_matrix_get(M,i,j));
