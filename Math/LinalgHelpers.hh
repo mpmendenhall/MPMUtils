@@ -13,6 +13,50 @@
 #include <vector>
 using std::vector;
 
+/// helper for memory-managing gsl_matrix
+class gsl_matrix_wrapper {
+public:
+    /// Constructor with dimensions
+    gsl_matrix_wrapper(size_t m, size_t n, bool c = true): M(c? gsl_matrix_calloc(m,n) : gsl_matrix_alloc(m,n)) { }
+    /// Destructor
+    ~gsl_matrix_wrapper() { gsl_matrix_free(M); }
+
+    /// easy element access
+    double operator()(size_t i, size_t j) const { return gsl_matrix_get(M,i,j); }
+
+    /// treat like gsl_matrix*
+    operator gsl_matrix*() const { return M; }
+    /// treat like gsl_matrix*
+    operator gsl_matrix*&() { return M; }
+    /// treat like gsl_matrix*
+    gsl_matrix* operator->() { return M; }
+
+protected:
+    gsl_matrix* M;  ///< the matrix
+};
+
+/// helper for memory-managing gsl_vector
+class gsl_vector_wrapper {
+public:
+    /// Constructor with dimensions
+    gsl_vector_wrapper(size_t n, bool c = true): v(c? gsl_vector_calloc(n) : gsl_vector_alloc(n)) { }
+    /// Destructor
+    ~gsl_vector_wrapper() { gsl_vector_free(v); }
+
+    /// easy element access
+    double operator()(size_t i) const { return gsl_vector_get(v,i); }
+
+    /// treat like gsl_matrix*
+    operator gsl_vector*() const { return v; }
+    /// treat like gsl_matrix*
+    operator gsl_vector*&() { return v; }
+    /// treat like gsl_vector*
+    gsl_vector* operator->() { return v; }
+
+protected:
+    gsl_vector* v;      ///< the vector
+};
+
 /// print vector to stdout
 void displayV(const gsl_vector* v);
 /// print matrix to stdout
@@ -66,20 +110,17 @@ static void gsl2vector(const gsl_vector* g, Vec& v) {
 class SVDWorkspace {
 public:
     /// Constructor
-    SVDWorkspace(size_t n, size_t m);
-    /// Destructor
-    ~SVDWorkspace();
+    SVDWorkspace(size_t n): N(n), V(N,N), S(N), w(N) { }
 
     /// Perform decomposition; outputs U in A
     int SVD(gsl_matrix* A) { return gsl_linalg_SV_decomp(A, V, S, w); }
 
-    const size_t N;     ///< input columns
-    const size_t M;     ///< input rows
-    gsl_matrix* V;      ///< NxN orthogonal matrix
-    gsl_vector* S;      ///< diagonal of NxN singular-values matrix
+    const size_t N;         ///< input columns
+    gsl_matrix_wrapper V;   ///< NxN orthogonal matrix
+    gsl_vector_wrapper S;   ///< diagonal of NxN singular-values matrix
 
 protected:
-    gsl_vector* w;      ///< workspace N
+    gsl_vector_wrapper w;   ///< workspace N
 };
 
 
@@ -115,9 +156,8 @@ protected:
 class ellipse_affine_projector: public SVDWorkspace {
 public:
     /// Constructor
-    ellipse_affine_projector(size_t n, size_t m);
-    /// Destructor
-    ~ellipse_affine_projector();
+    ellipse_affine_projector(size_t n, size_t m): SVDWorkspace(n),
+    M(m), TT(M,N), P(M,M), Mmn(M,N), Mnn(N,N) { }
 
     /// Set T to vectors along specified axes
     template<typename V>
@@ -129,12 +169,13 @@ public:
     /// Project from Cholesky form L(lower) to PCA P = U sigma^-1 (or P = U sigma if lsigma = false)
     void projectL(const gsl_matrix* L, bool lsigma = true);
 
-    gsl_matrix* TT;     ///< T^T [M,N] orthogonal matrix defining affine subspace in rows
-    gsl_matrix* P;      ///< P[M,M] result projection principal axes in columns
+    const size_t M;         ///< input rows
+    gsl_matrix_wrapper TT;  ///< T^T [M,N] orthogonal matrix defining affine subspace in rows
+    gsl_matrix_wrapper P;   ///< P[M,M] result projection principal axes in columns
 
 protected:
-    gsl_matrix* Mmn;    ///< MxN workspace
-    gsl_matrix* Mnn;    ///< NxN workspace
+    gsl_matrix_wrapper Mmn; ///< MxN workspace
+    gsl_matrix_wrapper Mnn; ///< NxN workspace
 };
 
 #endif

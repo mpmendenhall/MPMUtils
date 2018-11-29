@@ -2,7 +2,12 @@
 
 #include "CodeVersion.hh"
 #include "NoisyMin.hh"
+
 #include <iostream>
+#include <fstream>
+#include <stdio.h>
+using std::cout;
+
 #include <TGraph.h>
 #include <TPad.h>
 #include <TRandom3.h>
@@ -44,54 +49,48 @@ TGraph vEllipse(const gsl_matrix* m, double x0, double y0, size_t ax = 0, size_t
     return g;
 }
 
-
-#include "NoisyMin.hh"
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <cassert>
-using std::cout;
-
-#define NDIM 7
-
-int main(int argc, char** argv) {
-    if(argc != 2) return EXIT_FAILURE;
-
+/// run fit step on points saved in file
+void fitFile(const char* fname) {
+    const size_t NDIM = 7;
     NoisyMin NM(NDIM);
     NM.verbose = 1;
-    for(size_t i=0; i<NDIM; i++) gsl_matrix_set(NM.dS, i, i, 20);
+    NM.x0 =             {0.32, -0.045, 12., 0.0028, 0.64, 1.6, 0.5};
+    vector<double> dx = {.1,     .02,   2.,  .0002,  .05,  .2,  .15};
+    NM.h = 0.1;
+    for(size_t i=0; i<NDIM; i++) gsl_matrix_set(NM.dS, i, i, 3*dx[i]);
     NM.initRange();
 
     // load datapoints from file specified on command line
-    std::ifstream f(argv[1]);
+    std::ifstream f(fname);
     while(f.good()) {
         NM.fvals.emplace_back(NM.N);
         auto& v = NM.fvals.back();
-        for(auto& c: v.x) {
-            f >> c;
-            //cout << c << '\t';
-        }
+        for(auto& c: v.x) f >> c;
         Quadratic::evalTerms(v.x, v.t);
         f >> v.f;
         f >> v.df2;
-        //cout << v.f << '\t' << v.df2 << '\n';
-        assert(v.f == v.f);
     }
     NM.fvals.pop_back();
     printf("Loaded %zu fit points\n", NM.fvals.size());
-
     NM.fitMinSingular();
-    //NM.fitMin();
+}
 
-    /*
-    QuadraticPCA<NDIM> QP;
-    QP.decompose(NM.Q, false);
-    displayM(QP.USi);
-    displayV(QP.S2);
-    */
 
+int main(int argc, char** argv) {
+    if(argc != 2) return EXIT_FAILURE;
+    fitFile(argv[1]);
     return EXIT_SUCCESS;
 }
+
+
+
+
+
+
+
+
+
+
 
 /*
 int main(int, char**) {

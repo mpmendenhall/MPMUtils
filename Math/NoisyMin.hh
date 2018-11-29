@@ -7,6 +7,7 @@
 #include "Quadratic.hh"
 #include "LinMin.hh"
 #include <Math/QuasiRandom.h>
+#include <iostream>
 #include <vector>
 using std::vector;
 
@@ -37,8 +38,6 @@ public:
 
     /// Constructor, with number of dimensions
     NoisyMin(size_t n);
-    /// Destructor
-    ~NoisyMin();
 
     /// initialize search range dS, sE.EC from SR0
     void initRange();
@@ -53,24 +52,24 @@ public:
     void display();
 
     // initial values
-    vec_t x0;                                   ///< current best fit estimate
-    gsl_matrix* dS = gsl_matrix_alloc(N,N);     ///< fit/sampling region (principal axis columns)
+    vec_t x0;                       ///< current best fit estimate
+    gsl_matrix_wrapper dS{N,N};     ///< fit/sampling region (principal axis columns)
 
     // result statistical uncertainties
-    gsl_matrix* U_dx = gsl_matrix_alloc(N,N);   ///< Unitary principal axes (columns) of uncertainty ellipse
-    gsl_vector* S_dx = gsl_vector_alloc(N);     ///< eigenvalues 1/sigma^2 for U_dx
+    gsl_matrix_wrapper U_dx{N,N};   ///< Unitary principal axes (columns) of uncertainty ellipse
+    gsl_vector_wrapper S_dx{N};     ///< eigenvalues 1/sigma^2 for U_dx
     // result Hessian
-    gsl_matrix* U_q = gsl_matrix_alloc(N,N);    ///< Unitary SVD (columns) A = U_q S_q U_q^T
-    gsl_vector* S_q = gsl_vector_alloc(N);      ///< eigenvalues ("1/sigma^2") diagonal for U_q
+    gsl_matrix_wrapper U_q{N,N};    ///< Unitary SVD (columns) A = U_q S_q U_q^T
+    gsl_vector_wrapper S_q{N};      ///< eigenvalues ("1/sigma^2") diagonal for U_q
 
-    double h = 1;                               ///< height of ``1 sigma'' minima search region
-    int verbose = 0;                            ///< debugging verbosity level
-    double nSigmaStat = 4;                      ///< statistical uncertainty search region expansion
+    double h = 1;                   ///< height of ``1 sigma'' minima search region
+    int verbose = 0;                ///< debugging verbosity level
+    double nSigmaStat = 4;          ///< statistical uncertainty search region expansion
 
     // internal / debugging quantities
-    vector<evalpt> fvals;                       ///< collected function evaluations
-    QuadraticCholesky SR0{N};                   ///< initial search range/limits ellipse
-    LinMin LM{NTERMS};                          ///< fitter for quadratic surface x^T A x + b^T x + c around minimum
+    vector<evalpt> fvals;           ///< collected function evaluations
+    QuadraticCholesky SR0{N};       ///< initial search range/limits ellipse
+    LinMin LM{NTERMS};              ///< fitter for quadratic surface x^T A x + b^T x + c around minimum
 
     /// request next sampling point location
     vec_t nextSample(double nsigma = 1);
@@ -80,15 +79,18 @@ public:
     Quadratic fitHessian();
 
 protected:
-    QuadraticCholesky QC{N};                    ///< quadratic decomposition helper
-    EigSymmWorkspace EWS{N};                    ///< NxN eigendecomposition workspace
-    CoveringEllipse sE{N};                      ///< search region around minima, from surface + stat. uncertainty
-    QuadraticPCA QP{N};                         ///< principal axes decomposition helper
+    /// update search range assuming sE.E1.L, sE.E2.L in Cholesky form
+    void updateRange();
 
-    gsl_matrix* M1 = gsl_matrix_alloc(N,N);     ///< temporary calculation matrix
-    gsl_matrix* M2 = gsl_matrix_alloc(N,N);     ///< temporary calculation matrix
-    gsl_vector* v1 = gsl_vector_alloc(N);       ///< temporary calculation vector
-    gsl_vector* v2 = gsl_vector_alloc(N);       ///< temporary calculation vector
+    QuadraticCholesky QC{N};    ///< quadratic decomposition helper
+    EigSymmWorkspace EWS{N};    ///< NxN eigendecomposition workspace
+    CoveringEllipse sE{N};      ///< search region around minima, from surface + stat. uncertainty
+    QuadraticPCA QP{N};         ///< principal axes decomposition helper
+
+    gsl_matrix_wrapper M1{N,N}; ///< temporary calculation matrix
+    gsl_matrix_wrapper M2{N,N}; ///< temporary calculation matrix
+    gsl_vector_wrapper v1{N};   ///< temporary calculation vector
+    gsl_vector_wrapper v2{N};   ///< temporary calculation vector
 
     ROOT::Math::QuasiRandomNiederreiter QRNG{(unsigned int)N};   ///< quasirandom distribution generator
 };
@@ -105,5 +107,8 @@ NoisyMin::evalpt& NoisyMin::addSample(F& f) {
     Quadratic::evalTerms(p.x, p.t);
     return p;
 }
+
+/// output evalpt to text line
+std::ostream& operator<<(std::ostream& o, const NoisyMin::evalpt& p);
 
 #endif

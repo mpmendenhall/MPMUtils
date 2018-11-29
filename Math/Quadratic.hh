@@ -139,9 +139,7 @@ public:
 class QuadraticCholesky {
 public:
     /// Constructor
-    QuadraticCholesky(size_t n): N(n), x0(N), L(gsl_matrix_calloc(N,N)), M(gsl_matrix_alloc(N,N)), v(gsl_vector_alloc(N)) { }
-    /// Destructor
-    ~QuadraticCholesky() { gsl_matrix_free(L); gsl_matrix_free(M); gsl_vector_free(v); }
+    QuadraticCholesky(size_t n): N(n), x0(N), L(N,N), M(N,N), v(N) { }
 
     /// perform Cholesky decomposition of quadratic form
     template<class Quad>
@@ -197,14 +195,14 @@ public:
         k = c + 0.5*k;
     }
 
-    const size_t N;     ///< number of dimensions
-    vector<double> x0;  ///< extremum position
-    double k = 0;       ///< extremum value
-    gsl_matrix* L;      ///< lower-triangular NxN Cholesky decomposition L L^T = A
+    const size_t N;         ///< number of dimensions
+    vector<double> x0;      ///< extremum position
+    double k = 0;           ///< extremum value
+    gsl_matrix_wrapper L;   ///< lower-triangular NxN Cholesky decomposition L L^T = A
 
 protected:
-    gsl_matrix* M;      ///< NxN workspace
-    gsl_vector* v;      ///< N-element Cholesky solution vector
+    gsl_matrix_wrapper M;   ///< NxN workspace
+    gsl_vector_wrapper v;   ///< N-element Cholesky solution vector
 };
 
 #ifdef GSL_25
@@ -214,9 +212,9 @@ template<size_t N, typename T = double>
 class QuadraticMCholesky: public QuadraticCholesky<N,T> {
 public:
     /// Constructor
-    QuadraticMCholesky(): E(gsl_vector_alloc(N)), P(gsl_permutation_alloc(N)) { }
+    QuadraticMCholesky(): E(N), P(gsl_permutation_alloc(N)) { }
     /// Destructor
-    ~QuadraticMCholesky() { gsl_vector_free(E); gsl_permutation_free(P); }
+    ~QuadraticMCholesky() { gsl_permutation_free(P); }
 
     /// calculate modified Cholesky decomposition
     void calcMCholesky(const Quadratic& Q) {
@@ -232,7 +230,7 @@ public:
         this->unpack(Q);
     }
 
-    gsl_vector*      E;     ///< tweak for positive-definiteness
+    gsl_vector_wrapper E;   ///< tweak for positive-definiteness
     gsl_permutation* P;     ///< pivoting permutation
 };
 
@@ -242,9 +240,7 @@ public:
 class QuadraticPCA: protected EigSymmWorkspace {
 public:
     /// Constructor
-    QuadraticPCA(size_t N): EigSymmWorkspace(N), USi(gsl_matrix_calloc(N,N)), S2(gsl_vector_calloc(N)), Si(gsl_vector_calloc(N)) { }
-    /// Destructor
-    ~QuadraticPCA() { gsl_matrix_free(USi); gsl_vector_free(S2); gsl_vector_free(Si); }
+    QuadraticPCA(size_t N): EigSymmWorkspace(N), USi(N,N), S2(N), Si(N) { }
 
     /// perform decomposition
     template<class Quad>
@@ -255,20 +251,18 @@ public:
         if(doMul) rmul_diag(USi, Si);
     }
 
-    gsl_matrix* USi;        ///< ellipse principal axes in columns
-    gsl_vector* S2;         ///< axes 1/sigma^2
-    gsl_vector* Si;         ///< axes 1*sigma
+    gsl_matrix_wrapper USi; ///< ellipse principal axes in columns
+    gsl_vector_wrapper S2;  ///< axes 1/sigma^2
+    gsl_vector_wrapper Si;  ///< axes 1*sigma
 };
 
 /// Workspace for calculating ellipsoid covering or covered by two concentric ellipsoids
 class CoveringEllipse {
 public:
     /// Constructor
-    CoveringEllipse(size_t n): N(n), E1(N), E2(N), EC(N), SVD(N,N), L2P(gsl_matrix_alloc(N,N)) { }
-    /// Destructor
-    ~CoveringEllipse() { gsl_matrix_free(L2P); }
+    CoveringEllipse(size_t n): N(n), E1(N), E2(N), EC(N), SVD(N), L2P(N,N) { }
 
-    const size_t N;
+    const size_t N; ///< number of dimensions
 
     /// Calculate covering ellipse EC from E1, E2
     void calcCovering(bool cover = true) {
@@ -301,7 +295,7 @@ public:
 
 protected:
     SVDWorkspace SVD;
-    gsl_matrix* L2P;
+    gsl_matrix_wrapper L2P;
 };
 
 #endif
