@@ -18,8 +18,29 @@ class gsl_matrix_wrapper {
 public:
     /// Constructor with dimensions
     gsl_matrix_wrapper(size_t m, size_t n, bool c = true): M(m && n? c? gsl_matrix_calloc(m,n) : gsl_matrix_alloc(m,n) : nullptr) { }
+    /// Copy constructor
+    gsl_matrix_wrapper(const gsl_matrix_wrapper& w): M(nullptr) {
+        if(w.M) {
+            M = gsl_matrix_alloc(w->size1, w->size2);
+            gsl_matrix_memcpy(M, w);
+        }
+    }
+    /// Move constructor
+    gsl_matrix_wrapper(gsl_matrix_wrapper&& other): M(nullptr) { *this = std::move(other); }
     /// Destructor
     ~gsl_matrix_wrapper() { if(M) gsl_matrix_free(M); }
+
+
+    /// Copy assignment forbidden
+    gsl_matrix_wrapper& operator=(const gsl_matrix_wrapper&) = delete;
+    /// Move assignemnt
+    gsl_matrix_wrapper& operator=(gsl_matrix_wrapper&& other) {
+        if(this == &other) return *this;
+        if(M) gsl_matrix_free(M);
+        M = other.M;
+        other.M = nullptr;
+        return *this;
+    }
 
     /// easy element access
     double operator()(size_t i, size_t j) const { return gsl_matrix_get(M,i,j); }
@@ -32,6 +53,8 @@ public:
     operator gsl_matrix*&() { return M; }
     /// treat like gsl_matrix*
     gsl_matrix* operator->() { return M; }
+    /// treat like gsl_matrix*
+    const gsl_matrix* operator->() const { return M; }
 
 protected:
     gsl_matrix* M;  ///< the matrix
@@ -42,8 +65,29 @@ class gsl_vector_wrapper {
 public:
     /// Constructor with dimensions
     gsl_vector_wrapper(size_t n, bool c = true): v(n? c? gsl_vector_calloc(n) : gsl_vector_alloc(n) : nullptr) { }
+    /// Copy constructor
+    gsl_vector_wrapper(const gsl_vector_wrapper& w): v(nullptr) {
+        if(w.v) {
+            v = gsl_vector_alloc(w->size);
+            gsl_vector_memcpy(v, w);
+        }
+    }
+    /// Move constructor
+    gsl_vector_wrapper(gsl_vector_wrapper&& other): v(nullptr) { *this = std::move(other); }
     /// Destructor
     ~gsl_vector_wrapper() { if(v) gsl_vector_free(v); }
+
+
+    /// Copy assignment forbidden
+    gsl_vector_wrapper& operator=(const gsl_vector_wrapper&) = delete;
+    /// Move assignemnt
+    gsl_vector_wrapper& operator=(gsl_vector_wrapper&& other) {
+        if(this == &other) return *this;
+        if(v) gsl_vector_free(v);
+        v = other.v;
+        other.v = nullptr;
+        return *this;
+    }
 
     /// easy element access
     double operator()(size_t i) const { return gsl_vector_get(v,i); }
@@ -56,6 +100,8 @@ public:
     operator gsl_vector*&() { return v; }
     /// treat like gsl_vector*
     gsl_vector* operator->() { return v; }
+    /// treat like gsl_vector*
+    const gsl_vector* operator->() const { return v; }
 
 protected:
     gsl_vector* v;      ///< the vector
