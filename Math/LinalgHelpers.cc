@@ -78,7 +78,7 @@ void ellipse_affine_projector::projectL(const gsl_matrix* L, bool lsigma) {
     gsl_matrix_set_zero(Mnn);
     for(size_t i=0; i<M; i++)
         for(size_t j=0; j<N; j++)
-            gsl_matrix_set(Mnn, i, j, Mmn(i, j));
+            Mnn(i, j) = Mmn(i, j);
     // SVD Mnn = U S V^T, Mnn -> U ; S ~ principal axis lengths
     SVD(Mnn);
     // normalization: U/S = Lt Q; want U S for principal axes
@@ -87,7 +87,7 @@ void ellipse_affine_projector::projectL(const gsl_matrix* L, bool lsigma) {
         for(size_t j=0; j<M; j++) {
             double s = S(j);
             double m = Mnn(i, j);
-            gsl_matrix_set(P, i, j, lsigma? m*s : m/s);
+            P(i, j) = lsigma? m*s : m/s;
         }
     }
 }

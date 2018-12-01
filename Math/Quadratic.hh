@@ -166,13 +166,13 @@ public:
         int n = 0;
         for(size_t i=0; i<N; i++)
             for(size_t j=0; j<=i; j++)
-                Q.A[n++] = gsl_matrix_get(M, i, j) * (i==j? 1 : 2);
+                Q.A[n++] = M(i, j) * (i==j? 1 : 2);
     }
 
     /// projection length onto unit direction vector
     template<class V>
     double projLength(const V& d) {
-        for(size_t i=0; i<N; i++) gsl_vector_set(v, i, d[i]);
+        for(size_t i=0; i<N; i++) v(i) = d[i];
         gsl_blas_dtrsv(CblasLower, CblasNoTrans, CblasNonUnit, L, v);
         return gsl_blas_dnrm2(v);
     }
@@ -186,9 +186,9 @@ public:
     /// solve for b, c -> x0, k (assuming L in Cholesky form)
     template<class V>
     void findCenter(const V& b, double c = 0) {
-        for(size_t i=0; i<N; i++) gsl_vector_set(v, i, -0.5*b[i]);
+        for(size_t i=0; i<N; i++) v(i) = -0.5*b[i];
         gsl_linalg_cholesky_svx(L, v);
-        for(size_t i=0; i<N; i++) x0[i] = gsl_vector_get(v, i);
+        for(size_t i=0; i<N; i++) x0[i] = v(i);
         // k = c + b x0 / 2
         k = 0;
         for(size_t i=0; i<N; i++) k += x0[i]*b[i];
@@ -225,7 +225,7 @@ public:
     /// perform decomposition; solve A x0 = -b/2
     virtual void decompose(const Quadratic& Q) override {
         calcMCholesky(Q);
-        for(size_t i=0; i<N; i++) gsl_vector_set(this->v, i, -0.5*Q.b[i]);
+        for(size_t i=0; i<N; i++) this->v(i) = -0.5*Q.b[i];
         gsl_linalg_mcholesky_svx(this->L, P, this->v);
         this->unpack(Q);
     }
@@ -247,7 +247,7 @@ public:
     void decompose(const Quad& Q, bool doMul = true) {
         Q.fillA(USi);
         decompSymm(USi, S2); // A -> U S^2 U^T
-        for(size_t i=0; i<_N; i++) gsl_vector_set(Si, i, 1./sqrt(gsl_vector_get(S2,i)));
+        for(size_t i=0; i<_N; i++) Si(i) = 1./sqrt(S2(i));
         if(doMul) rmul_diag(USi, Si);
     }
 
@@ -276,8 +276,8 @@ public:
         SVD.SVD(L2P);
         // Sigma -> ~S
         for(size_t i=0; i<N; i++) {
-            double s = gsl_vector_get(SVD.S, i);
-            gsl_vector_set(SVD.S, i, cover? std::min(s,1.) : std::max(s,1.));
+            double s = SVD.S(i);
+            SVD.S(i) = cover? std::min(s,1.) : std::max(s,1.);
         }
         // EC.L = L' L'^T = U ~S^2 U^T
         rmul_diag(L2P, SVD.S);

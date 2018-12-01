@@ -23,6 +23,8 @@ public:
 
     /// easy element access
     double operator()(size_t i, size_t j) const { return gsl_matrix_get(M,i,j); }
+    /// easy element access
+    double& operator()(size_t i, size_t j) { return *gsl_matrix_ptr(M,i,j); }
 
     /// treat like gsl_matrix*
     operator gsl_matrix*() const { return M; }
@@ -45,10 +47,12 @@ public:
 
     /// easy element access
     double operator()(size_t i) const { return gsl_vector_get(v,i); }
+    /// easy element access
+    double& operator()(size_t i) { return *gsl_vector_ptr(v,i); }
 
-    /// treat like gsl_matrix*
+    /// treat like gsl_vector*
     operator gsl_vector*() const { return v; }
-    /// treat like gsl_matrix*
+    /// treat like gsl_vector*
     operator gsl_vector*&() { return v; }
     /// treat like gsl_vector*
     gsl_vector* operator->() { return v; }
@@ -163,7 +167,7 @@ public:
     template<typename V>
     void setAxes(const V& a) {
         gsl_matrix_set_zero(TT);
-        for(size_t i=0; i<M; i++) gsl_matrix_set(TT, i, a[i], 1.);
+        for(size_t i=0; i<M; i++) TT(i, a[i]) = 1.;
     }
 
     /// Project from Cholesky form L(lower) to PCA P = U sigma^-1 (or P = U sigma if lsigma = false)
