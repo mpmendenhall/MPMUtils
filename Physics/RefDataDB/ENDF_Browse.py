@@ -11,4 +11,14 @@ if __name__=="__main__":
     if not options.file: exit(0)
 
     f = open(options.file,"r")
-    print(load_ENDF_Section(f))
+
+    # tape header line
+    h0 = ENDF_Record(next(f))
+    assert h0.MF == h0.MT == 0 and h0.MAT == 1
+
+    while f:
+        s = load_ENDF_Section(f)
+        print("\n--------------------------------------")
+        print(s)
+        if s.rectp == "TEND": break
+
