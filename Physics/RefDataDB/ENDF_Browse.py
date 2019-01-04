@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python3
 
 from ENDF_Reader import *
 from argparse import ArgumentParser

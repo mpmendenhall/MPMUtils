@@ -1,10 +1,10 @@
 
 # package for parsing Fortran-formatted text files
-# pip install --user fortranformat
+# pip3 install --user fortranformat
 import fortranformat as ff
 
 # for 'super()' in python2
-from builtins import *
+# from builtins import *
 
 from bisect import bisect
 
@@ -13,6 +13,7 @@ class ENDF_Record(object):
     record_reader = ff.FortranRecordReader('(A66,I4,I2,I3,I5)')
 
     def __init__(self, line, rt="TEXT"):
+        self.line = line
         self.TEXT, self.MAT, self.MF, self.MT, self.NS = self.record_reader.read(line)
         self.rectp = rt
         # MAT: material identifier
@@ -20,6 +21,12 @@ class ENDF_Record(object):
         # MT: section number in file
         # NS: line number
         # TEXT: uninterpreted text contents
+
+        self.endlvl = 0
+        if self.MT == 0: self.rectp = "SEND"; self.endlvl = 1   # section end
+        if self.MF == 0: self.rectp = "FEND"; self.endlvl = 2   # file end
+        if self.MAT == 0: self.rectp = "MEND"; self.endlvl = 3  # material end
+        if self.MAT == -1: self.rectp = "TEND"; self.endlvl = 4 # tape end
 
     def printid(self):
         """Short-form description"""
@@ -38,11 +45,6 @@ class ENDF_CONT_Record(ENDF_Record):
         self.C1, self.C2, self.L1, self.L2, self.N1, self.N2 = self.cont_reader.read(self.TEXT)
         # C1, C2         floating-point values
         # L1, L2, N1, N2 integer control values
-        if self.N1 == self.N2 == self.C1 == self.C2 == self.L1 == self.L2 == 0:
-            self.rectp = "SEND"
-            if self.MF == 0: self.rectp = "FEND"    # file end
-            if self.MAT == 0: self.rectp = "MEND"   # material end
-            if self.MAT == -1: self.rectp = "TEND"  # tape end
 
     def parse(line, withUID = False):
         l = ENDF_Record(line)
@@ -59,11 +61,13 @@ class ENDF_HEAD_Record(ENDF_CONT_Record):
     def __init__(self,line):
         super().__init__(line)
         self.ZA = self.C1  # 1000*Z + A
+        self.Z = self.ZA//1000
+        self.A = self.ZA%1000
         self.AWR = self.C2 # Mass (AMU)
         if self.rectp == "CONT": self.rectp = "HEAD"
 
     def printid(self):
-        return super().printid() +' ZA %i/%i'%(self.ZA//1000, self.ZA%1000)
+        return super().printid() +' ZA %i/%i'%(self.Z, self.A)
 
     def __repr__(self):
         return self.printid() +'; L1,L2=%i,%i N1,N2=%i,%i'%(self.L1, self.L2, self.N1, self.N2)
@@ -159,4 +163,17 @@ class ENDF_Tab2(ENDF_HEAD_Record):
         return s + "------- end TAB2 -------\n"
 
 
+#######################################
+#######################################
+
+def pop_section_lines(iterlines, endlvl=1):
+    """Pop lines from iterator until control type found"""
+    ls = []
+    l = next(iterlines)
+    while l:
+        r = ENDF_Record(l)
+        ls.append(r.line)
+        if r.endlvl >= endlvl: break
+        l = next(iterlines)
+    return ls
 
