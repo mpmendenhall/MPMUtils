@@ -58,7 +58,7 @@ class ENDF_File8_Sec(ENDF_HEAD_Record):
             self.info2 = ENDF_List(iterlines)
             self.decays = [ENDF_File8_MT457_Spectrum(iterlines) for i in range(self.NSP)]
         else:
-            print("Unhandled data type MT=",self.MT)
+            print("File 8 Unhandled data type MT=",self.MT)
             assert False
 
         footer = ENDF_HEAD_Record(next(iterlines))

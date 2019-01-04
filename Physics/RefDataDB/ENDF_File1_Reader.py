@@ -1,18 +1,13 @@
 from ENDF_Base_Reader import *
 
-class ENDF_File1_SecHead(ENDF_HEAD_Record):
-    """File 1 'General Information' section"""
-    def __init__(self, l0):
-        super().__init__(l0)
-        assert self.MF == 1
-        self.rectp = "File 1 'General Information' section %i"%self.MT
-
-class ENDF_File1_Sec451(ENDF_File1_SecHead):
+class ENDF_File1_Sec451(ENDF_HEAD_Record):
     """File 1 'General Information' section"""
     def __init__(self, iterlines, l0 = None):
-        if l0: super().__init__(l0)
-        else: super().__init__(next(iterlines))
+        if l0 is None: l0 = next(iterlines)
+        super().__init__(l0)
+        assert self.MF == 1
         assert self.MT == 451
+        self.rectp = "File 1 section %i 'General Information'"%self.MT
 
         self.LRP = self.L1
         self.LFI = self.L2
