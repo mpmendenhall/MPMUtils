@@ -26,8 +26,8 @@ class ENDF_File1_Sec451(ENDF_File1_SecHead):
         self.txt = [ENDF_Record(next(iterlines)).TEXT for i in range(self.NWD)]
         self.xc  = [ENDF_CONT_Record(next(iterlines)) for i in range(self.NXC)]
 
-        self.footer = ENDF_HEAD_Record(next(iterlines))
-        assert self.footer.rectp == "SEND"
+        footer = ENDF_HEAD_Record(next(iterlines))
+        assert footer.rectp == "SEND"
 
     def __repr__(self):
         s = self.printid()

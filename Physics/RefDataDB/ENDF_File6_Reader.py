@@ -3,7 +3,7 @@ from ENDF_Base_Reader import *
 class ENDF_File6_LAW1(ENDF_Tab2):
     """LAW=1 angular distribution"""
     def __init__(self, iterlines):
-        super().__init__(iterlines)
+        super().__init__(iterlines, ENDF_List)
         self.rectp += " E/angle Distribution"
 
         # Angular distribution, in:
@@ -17,8 +17,6 @@ class ENDF_File6_LAW1(ENDF_Tab2):
         self.LEP = self.L2
         # number of sub-entries
         self.NE = self.NZ
-
-        self.entries = [ENDF_List(iterlines) for n in range(self.NE)]
 
     def printid(self):
         return super().printid() + ' LANG=%i, LEP=%i, NE=%i'%(self.LANG, self.LEP, self.NE)
@@ -37,14 +35,11 @@ class ENDF_File6_LAW2_List(ENDF_List):
 
 class ENDF_File6_LAW2(ENDF_Tab2):
     """LAW=2 angular distribution"""
-    def __init__(self, iterlines):
+    def __init__(self, iterlines, ENDF_File6_LAW2_List):
         super().__init__(iterlines)
         self.rectp += " Discrete 2-body scattering"
         # number of sub-entries
         self.NE = self.NZ
-
-        self.entries = [ENDF_File6_LAW2_List(iterlines) for n in range(self.NE)]
-
 
 class ENDF_File6_Tab1(ENDF_Tab1):
     """Table in File 6 data"""
@@ -92,8 +87,8 @@ class ENDF_File6_Sec(ENDF_HEAD_Record):
         self.NK = self.N1  # number of subsections
 
         self.sections = [ENDF_File6_Tab1(iterlines) for i in range(self.NK)]
-        self.footer = ENDF_HEAD_Record(next(iterlines))
-        assert self.footer.rectp == "SEND"
+        footer = ENDF_HEAD_Record(next(iterlines))
+        assert footer.rectp == "SEND"
 
     def __repr__(self):
         s = self.printid() +', %g AMU; %i products in frame %i'%(self.AWR, self.NK, self.LCT)

@@ -86,7 +86,7 @@ class ENDF_List(ENDF_HEAD_Record):
         self.data = [j for i in dat for j in i][:self.NPL]
 
     def __repr__(self):
-        s = super().__repr__()
+        s = " * " + self.rectp
         if len(self.data) < 20: s += '\t' + str(self.data)
         return  s
 
@@ -150,7 +150,7 @@ class ENDF_Tab2(ENDF_HEAD_Record):
     """2-dimensional table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NZ/ Z_int ]TAB2"""
     range_reader = ff.FortranRecordReader('(6I11)')
 
-    def __init__(self, iterlines):
+    def __init__(self, iterlines, subelementClass = None):
         super().__init__(next(iterlines))
         self.NR = self.N1    # number of ranges
         self.NZ = self.N2    # dimension of sub-tables
@@ -159,8 +159,7 @@ class ENDF_Tab2(ENDF_HEAD_Record):
         rdat = [self.range_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NR+2)//3)]
         rdat = [j for i in rdat for j in i][:2*self.NR]
         self.ranges = list(zip(*[iter(rdat)]*2))
-
-        self.entries = [] # loaded afterwards for each NZ, depending on file structure
+        self.entries = [subelementClass(iterlines) for i in range(self.NZ)] if subelementClass else []
 
     def __repr__(self):
         s = '\n' + self.printid() + '\n'

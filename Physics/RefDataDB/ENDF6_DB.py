@@ -1,5 +1,7 @@
 #!/bin/env python3
 
+# rm $ENDFDB
+# sqlite3 $ENDFDB < ENDF6_DB_Schema.sql
 # for f in ~/Data/ENDF-B-VII.1/*/*; do ./ENDF6_DB.py --load $f; done
 
 
@@ -44,7 +46,15 @@ class ENDFDB:
             if replace: self.delete_section(sid)
             else: return sid
 
-        self.curs.execute("INSERT INTO ENDF_sections(MAT,MF,MT,A,Z,lines) VALUES(?,?,?,?,?,?)", (sec.MAT, sec.MF, sec.MT, sec.A, sec.Z, txt))
+        try:
+            s = load_ENDF_Section(iter(txt.split('\n')))
+            assert s is not None
+            self.curs.execute("INSERT INTO ENDF_sections(MAT,MF,MT,A,Z,pcl) VALUES(?,?,?,?,?,?)", (sec.MAT, sec.MF, sec.MT, sec.A, sec.Z, pickle.dumps(s)))
+        except:
+            print("\n**** Unable to pre-parse ****")
+            print(sec)
+            self.curs.execute("INSERT INTO ENDF_sections(MAT,MF,MT,A,Z,lines) VALUES(?,?,?,?,?,?)", (sec.MAT, sec.MF, sec.MT, sec.A, sec.Z, txt))
+
         return self.curs.lastrowid
 
     def get_section(self, sid):
@@ -60,7 +70,7 @@ class ENDFDB:
             h = ENDF_Record(ls[0])
             print("Unhandled type",h)
             return None
-        if not self.readonly:
+        if s is not None and not self.readonly:
             self.curs.execute("UPDATE ENDF_sections SET lines=?, pcl=? WHERE section_id=?", (None, pickle.dumps(s), sid))
             self.conn.commit()
         return s

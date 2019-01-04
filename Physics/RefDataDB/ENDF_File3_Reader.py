@@ -27,8 +27,8 @@ class ENDF_File3_Sec(ENDF_HEAD_Record):
         self.rectp = "File 3 'Reaction cross sections' section %i"%self.MT
         self.AWR = self.C2
         self.tbl = ENDF_File3_Tab1(iterlines)
-        self.footer = ENDF_HEAD_Record(next(iterlines))
-        assert self.footer.rectp == "SEND"
+        footer = ENDF_HEAD_Record(next(iterlines))
+        assert footer.rectp == "SEND"
 
     def printid(self):
         return super().printid() + ', %g AMU'%(self.AWR)
