@@ -15,13 +15,35 @@ class ENDF_File6_LAW1(ENDF_Tab2):
         # (1) histogram,
         # (2) linear-linear, etc.
         self.LEP = self.L2
-        # TAB2 interpolation parameters
-        self.NE = self.N2
+        # number of sub-entries
+        self.NE = self.NZ
 
         self.entries = [ENDF_List(iterlines) for n in range(self.NE)]
 
     def printid(self):
         return super().printid() + ' LANG=%i, LEP=%i, NE=%i'%(self.LANG, self.LEP, self.NE)
+
+
+class ENDF_File6_LAW2_List(ENDF_List):
+    """List entry in LAW=2 File 6 table [MAT, 6, MT/ 0.0, E_1 ,LANG, 0, NW, NL/ A_l(E)]LIST"""
+    def __init__(self, iterlines):
+        super().__init__(iterlines)
+        self.E1 = self.C2       # energy
+        self.LANG = self.L1     # angular distribution type
+        self.NL = self.N2       # LANG=0: highest Legendre order used; else number of cosines tabulated.
+
+    def __repr__(self):
+        return self.printid() +'; E1=%g, LANG=%i, NL=%i'%(self.E1, self.LANG, self.NL)
+
+class ENDF_File6_LAW2(ENDF_Tab2):
+    """LAW=2 angular distribution"""
+    def __init__(self, iterlines):
+        super().__init__(iterlines)
+        self.rectp += " Discrete 2-body scattering"
+        # number of sub-entries
+        self.NE = self.NZ
+
+        self.entries = [ENDF_File6_LAW2_List(iterlines) for n in range(self.NE)]
 
 
 class ENDF_File6_Tab1(ENDF_Tab1):
@@ -40,11 +62,13 @@ class ENDF_File6_Tab1(ENDF_Tab1):
         self.distrib = None
         # undefined distribution
         if not self.LAW: return
+        if self.LAW == 3: return    # isotropic in CM frame
+        if self.LAW == 4: return    # discrete 2-body recoils
 
         # Continuum Energy-Angle Distributions
-        if self.LAW == 1:
-            self.distrib = ENDF_File6_LAW1(iterlines)
-            return
+        if self.LAW == 1: self.distrib = ENDF_File6_LAW1(iterlines)
+        if self.LAW == 2: self.distrib = ENDF_File6_LAW2(iterlines)
+        if self.distrib: return
 
         print("Unknown LAW", self.LAW)
         assert False

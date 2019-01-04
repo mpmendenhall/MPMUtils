@@ -37,7 +37,7 @@ class ENDF_Record(object):
 
 
 class ENDF_CONT_Record(ENDF_Record):
-    """CONTROL record, generic base type for many entries"""
+    """CONTROL record, generic base type for many entries [MAT,MF,MT/C1,C2,L1,L2,N1,N2]CONT"""
     cont_reader = ff.FortranRecordReader('(2E11.0,4I11)')
 
     def __init__(self, line):
@@ -60,21 +60,21 @@ class ENDF_HEAD_Record(ENDF_CONT_Record):
     """HEAD = CONT, with C1,C2 -> ZA,AWR"""
     def __init__(self,line):
         super().__init__(line)
-        self.ZA = self.C1  # 1000*Z + A
+        self.ZA = int(self.C1)  # 1000*Z + A
         self.Z = self.ZA//1000
         self.A = self.ZA%1000
         self.AWR = self.C2 # Mass (AMU)
         if self.rectp == "CONT": self.rectp = "HEAD"
 
     def printid(self):
-        return super().printid() +' ZA %i/%i'%(self.Z, self.A)
+        return super().printid() +' ZA %i/%i, AWR=%g'%(self.Z, self.A, self.AWR)
 
     def __repr__(self):
         return self.printid() +'; L1,L2=%i,%i N1,N2=%i,%i'%(self.L1, self.L2, self.N1, self.N2)
 
 
 class ENDF_List(ENDF_HEAD_Record):
-    """List data format"""
+    """List data format [MAT,MF,MT/ C1, C2, L1, L2, NPL, N2/ B n ] LIST"""
     list_reader = ff.FortranRecordReader('(6E11.0)')
 
     def __init__(self,iterlines):
@@ -84,6 +84,11 @@ class ENDF_List(ENDF_HEAD_Record):
 
         dat = [self.list_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NPL+5)//6)]
         self.data = [j for i in dat for j in i][:self.NPL]
+
+    def __repr__(self):
+        s = super().__repr__()
+        if len(self.data) < 20: s += '\t' + str(self.data)
+        return  s
 
 
 class ENDF_Tab1(ENDF_HEAD_Record):
@@ -142,13 +147,13 @@ class ENDF_Tab1(ENDF_HEAD_Record):
 
 
 class ENDF_Tab2(ENDF_HEAD_Record):
-    """2-dimensional table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NZ/ Z int ]TAB2"""
+    """2-dimensional table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NZ/ Z_int ]TAB2"""
     range_reader = ff.FortranRecordReader('(6I11)')
 
     def __init__(self, iterlines):
         super().__init__(next(iterlines))
         self.NR = self.N1    # number of ranges
-        self.NZ = self.N2    # number of 1D sub-tables
+        self.NZ = self.N2    # dimension of sub-tables
         self.rectp = "TAB2(%ix%i)"%(self.NR, self.NZ)
 
         rdat = [self.range_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NR+2)//3)]

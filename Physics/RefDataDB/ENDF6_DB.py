@@ -53,8 +53,13 @@ class ENDFDB:
         res = self.curs.fetchall()
         if not res: return None
         if res[0][1]: return pickle.loads(res[0][1])
-        try: s = load_ENDF_Section(iter(res[0][0].split("\n")))
-        except: return None
+
+        ls = res[0][0].split("\n")
+        try: s = load_ENDF_Section(iter(ls))
+        except:
+            h = ENDF_Record(ls[0])
+            print("Unhandled type",h)
+            return None
         if not self.readonly:
             self.curs.execute("UPDATE ENDF_sections SET lines=?, pcl=? WHERE section_id=?", (None, pickle.dumps(s), sid))
             self.conn.commit()
@@ -70,6 +75,7 @@ if __name__=="__main__":
     parser.add_argument("--MF",     type=int,   help="filter by file number")
     parser.add_argument("--MT",     type=int,   help="filter by file section")
     parser.add_argument("--display", action="store_true", help="Display located sections")
+    parser.add_argument("--count",   action="store_true", help="Count entries matching query")
 
     options = parser.parse_args()
     EDB = ENDFDB(options.db)
@@ -92,10 +98,11 @@ if __name__=="__main__":
 
         EDB.conn.commit()
 
-    if options.display:
+    sids = []
+    if options.display or options.count:
         sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": options.MF, "MT": options.MT})
         print("Found", len(sids), "matching records.")
+    if options.display:
         for s in sids:
             print("\n--------------------------------------")
             print(EDB.get_section(s))
-
