@@ -6,6 +6,8 @@ import fortranformat as ff
 # for 'super()' in python2
 from builtins import *
 
+from bisect import bisect
+
 class ENDF_Record(object):
     """Generic record (line in file) parser"""
     record_reader = ff.FortranRecordReader('(A66,I4,I2,I3,I5)')
@@ -94,20 +96,46 @@ class ENDF_Tab1(ENDF_HEAD_Record):
 
         rdat = [self.range_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NR+2)//3)]
         rdat = [j for i in rdat for j in i][:2*self.NR]
-        self.ranges = list(zip(*[iter(rdat)]*2))
+        self.NBT = rdat[0::2]   # dividing point between ranges
+        self.INT = rdat[1::2]   # range interpolation scheme
+
 
         pdat = [self.pair_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NP+2)//3)]
         pdat = [j for i in pdat for j in i][:2*self.NP]
-        self.xy = list(zip(*[iter(pdat)]*2))
+        #pdat = list(zip(*[iter(pdat)]*2))
+        self.xs = pdat[0::2]
+        self.ys = pdat[1::2]
 
     def __repr__(self):
         s = '\n' + self.printid() + '\n'
         i0 = 0
-        for r in self.ranges:
-            s += "-- range interpolation %i --\n"%r[1]
-            for i in range(r[0]): s += "\t%g\t%g\n" % self.xy[i+i0]
-            i0 += r[0]
+        for n,r in enumerate(self.NBT):
+            s += "-- range interpolation %i --\n"%self.INT[n]
+            for i in range(r)[i0:]: s += "\t%i]\t%g\t%g\n" % (i, self.xs[i], self.ys[i])
+            i0 = r
         return s + "------- end TAB1 -------\n"
+
+    def __call__(self, x, NoneIfOutside = False):
+        """Evaluate at specified position"""
+        b = bisect(self.xs, x)
+        if b < 1 or b >= len(self.xs): return None if NoneIfOutside else 0.
+        r = bisect(self.NBT, b)
+        i = self.INT[r-1]
+
+        y0 = self.ys[b-1]
+        if i == 1: return y0
+
+        y1 = self.ys[b]
+        l = log(x/self.xs[b-1])/log(self.xs[b]/self.xs[b-1]) if i == 3 or i == 5 else (x-self.xs[b-1])/(self.xs[b]-self.xs[b-1])
+
+        if i == 2 or i == 3: return y0 + (y1 - y0)*l
+        if i == 4 or i == 5: return exp(log(y0) + log(y1/y0)*l)
+
+        # unsupported interpolation scheme
+        assert False
+        return None if NoneIfOutside else 0.
+
+
 
 class ENDF_Tab2(ENDF_HEAD_Record):
     """2-dimensional table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NZ/ Z int ]TAB2"""
