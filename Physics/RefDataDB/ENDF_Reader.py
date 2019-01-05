@@ -6,6 +6,7 @@ from ENDF_File6_Reader import *
 from ENDF_File8_Reader import *
 from ENDF_File9_Reader import *
 from ENDF_File10_Reader import *
+from ENDF_File28_Reader import *
 from ENDF_File33_Reader import *
 
 def load_ENDF_Section(iterlines):
@@ -24,6 +25,7 @@ def load_ENDF_Section(iterlines):
     if h.MF == 8: return ENDF_File8_Sec(iterlines, l0)
     if h.MF == 9: return ENDF_File9_Sec(iterlines, l0)
     if h.MF == 10: return ENDF_File10_Sec(iterlines, l0)
+    if h.MF == 28: return ENDF_File28_Sec(iterlines, l0)
     if h.MF == 33: return ENDF_File33_Sec(iterlines, l0)
 
     print("Unsupported file type MF = %i!"%h.MF)

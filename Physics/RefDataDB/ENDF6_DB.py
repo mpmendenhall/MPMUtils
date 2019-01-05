@@ -92,21 +92,24 @@ if __name__=="__main__":
 
     if options.load:
 
+        print("Loading", options.load)
         f = open(options.load,"r")
 
         # tape header line
         h0 = ENDF_Record(next(f))
         assert h0.MF == h0.MT == 0 and h0.MAT == 1
 
+        nloaded = 0
         while f:
-            print("\n--------------------------------------")
             ls = pop_section_lines(f)
             h = ENDF_HEAD_Record(ls[0])
-            print(h)
             if h.rectp == "TEND": break
-            if not h.endlvl: EDB.upload_section(h, ''.join(ls))
+            if not h.endlvl:
+                EDB.upload_section(h, ''.join(ls))
+                nloaded += 1
 
         EDB.conn.commit()
+        print("\tLoaded", nloaded, "entries.")
 
     sids = []
     if options.display or options.count:
