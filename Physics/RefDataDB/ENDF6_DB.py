@@ -4,7 +4,6 @@
 # sqlite3 $ENDFDB < ENDF6_DB_Schema.sql
 # for f in ~/Data/ENDF-B-VII.1/*/*; do ./ENDF6_DB.py --load $f; done
 
-
 import sqlite3
 import os
 from ENDF_Reader import *
