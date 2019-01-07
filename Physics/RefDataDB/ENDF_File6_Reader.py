@@ -1,10 +1,27 @@
 from ENDF_Base_Reader import *
 
-class ENDF_File6_LAW1(ENDF_Tab2):
-    """LAW=1 angular distribution"""
+class ENDF_File6_LAW1_List(ENDF_List):
+    """List entry in LAW=1 File 6 table"""
     def __init__(self, iterlines):
-        super().__init__(iterlines, ENDF_List)
-        self.rectp += " E/angle Distribution"
+        super().__init__(iterlines)
+        self.E1 = self.C2       # incident energy
+        self.NEP =self.N2       # number of secondary energies listed
+        self.ND = self.L1       # number of discrete energies listed
+        self.NA = self.L2       # number of angular parameters
+
+        nper = self.NA + 2
+        self.contents = [(self.data[i*nper], self.data[i*nper + 1: (i+1)*nper]) for i in range(self.NEP)]
+
+    def __repr__(self):
+        s = self.printid() +'=E1,\t%i ND, %i NA,\t%i NEP'%(self.ND, self.NA, self.NEP)
+        #for c in self.contents: s += '\n\t%g MeV out:\t'%(1e-6*c[0]) + str([1e6*x for x in c[1]])
+        return s
+
+class ENDF_File6_LAW1(ENDF_Tab2):
+    """LAW=1 angular distribution [MAT, 6, MT/ 0.0, 0.0, LANG, LEP, NR, NE/ E_int]TAB2"""
+    def __init__(self, iterlines):
+        super().__init__(iterlines, ENDF_File6_LAW1_List)
+        self.rectp += " Continuum E/angle Distribution"
 
         # Angular distribution, in:
         # (1) Legendre Coefficients,
@@ -15,7 +32,7 @@ class ENDF_File6_LAW1(ENDF_Tab2):
         # (1) histogram,
         # (2) linear-linear, etc.
         self.LEP = self.L2
-        # number of sub-entries
+        # number of sub-entries (one per incident energy)
         self.NE = self.NZ
 
     def printid(self):
@@ -26,9 +43,10 @@ class ENDF_File6_LAW2_List(ENDF_List):
     """List entry in LAW=2 File 6 table [MAT, 6, MT/ 0.0, E_1 ,LANG, 0, NW, NL/ A_l(E)]LIST"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.E1 = self.C2       # energy
+        self.E1 = self.C2       # incident energy
         self.LANG = self.L1     # angular distribution type
         self.NL = self.N2       # LANG=0: highest Legendre order used; else number of cosines tabulated.
+        self.rectp = "LIST.LAW2"
 
     def __repr__(self):
         return self.printid() +'; E1=%g, LANG=%i, NL=%i'%(self.E1, self.LANG, self.NL)
@@ -47,7 +65,7 @@ class ENDF_File6_Tab1(ENDF_Tab1):
         super().__init__(iterlines)
         assert self.MF == 6
         self.rectp += " Products Distribution"
-        self.ZAP = self.C1 # product 1000*Z + A; =0 for photon
+        self.ZAP = self.ZA # product 1000*Z + A
         self.AWP = self.C2 # product mass, neutron units; or, energy of primary photon for ZAP=0
         self.LIP = self.L1 # product modifier flag
         self.LAW = self.L2 # distribution type
@@ -69,7 +87,7 @@ class ENDF_File6_Tab1(ENDF_Tab1):
         assert False
 
     def printid(self):
-        return super().printid() + " ZAP=%g, AWP=%g, LIP=%i, LAW=%i"%(self.ZAP, self.AWP, self.LIP, self.LAW)
+        return super().printid() + " AWP=%g, LIP=%i, LAW=%i"%(self.AWP, self.LIP, self.LAW)
 
     def __repr__(self):
         s = super().__repr__()

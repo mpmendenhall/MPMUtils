@@ -85,6 +85,7 @@ if __name__=="__main__":
     parser.add_argument("--MT",     type=int,   help="filter by file section")
     parser.add_argument("--display", action="store_true", help="Display located sections")
     parser.add_argument("--count",   action="store_true", help="Count entries matching query")
+    parser.add_argument("--list",    action="store_true", help="Short-form listing of entries matching query")
 
     options = parser.parse_args()
     EDB = ENDFDB(options.db)
@@ -111,10 +112,14 @@ if __name__=="__main__":
         print("\tLoaded", nloaded, "entries.")
 
     sids = []
-    if options.display or options.count:
+    if options.display or options.count or options.list:
         sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": options.MF, "MT": options.MT})
         print("Found", len(sids), "matching records.")
     if options.display:
         for s in sids:
             print("\n--------------------------------------")
             print(EDB.get_section(s))
+    if options.list:
+        for s in sids:
+            s = EDB.get_section(s)
+            print(s.printid() if s is not None else None)

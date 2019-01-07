@@ -76,6 +76,7 @@ class ENDF_HEAD_Record(ENDF_CONT_Record):
 class ENDF_List(ENDF_HEAD_Record):
     """List data format [MAT,MF,MT/ C1, C2, L1, L2, NPL, N2/ B n ] LIST"""
     list_reader = ff.FortranRecordReader('(6E11.0)')
+    display_max = 24
 
     def __init__(self,iterlines):
         super().__init__( next(iterlines))
@@ -87,84 +88,98 @@ class ENDF_List(ENDF_HEAD_Record):
 
     def __repr__(self):
         s = " * " + self.rectp
-        if len(self.data) < 20: s += '\t' + str(self.data)
+        if len(self.data) <= ENDF_List.display_max: s += '\t' + str(self.data)
         return  s
 
 
-class ENDF_Tab1(ENDF_HEAD_Record):
-    """(x,y) table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NP/x int /y(x)]TAB1"""
+class ENDF_Ranges(ENDF_HEAD_Record):
+    """Base for tabulated range datastructures"""
     range_reader = ff.FortranRecordReader('(6I11)')
-    pair_reader = ff.FortranRecordReader('(6E11.0)')
 
     def __init__(self, iterlines):
         super().__init__(next(iterlines))
         self.NR = self.N1    # number of ranges
-        self.NP = self.N2    # number of x,y pairs (split into interpolation ranges)
-        self.rectp = "TAB1(%ix%i)"%(self.NR, self.NP)
-        self.ux, self.uy = None,None
+        self.NP = self.N2    # number of points
 
         rdat = [self.range_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NR+2)//3)]
         rdat = [j for i in rdat for j in i][:2*self.NR]
         self.NBT = rdat[0::2]   # dividing point between ranges
         self.INT = rdat[1::2]   # range interpolation scheme
 
-
-        pdat = [self.pair_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NP+2)//3)]
-        pdat = [j for i in pdat for j in i][:2*self.NP]
-        #pdat = list(zip(*[iter(pdat)]*2))
-        self.xs = pdat[0::2]
-        self.ys = pdat[1::2]
-
-    def __repr__(self):
-        s = '\n' + self.printid() + '\n'
-        i0 = 0
-        for n,r in enumerate(self.NBT):
-            s += "-- range interpolation %i --\n"%self.INT[n]
-            for i in range(r)[i0:]: s += "\t%i]\t%g\t%g\n" % (i, self.xs[i], self.ys[i])
-            i0 = r
-        return s + "------- end TAB1 -------\n"
-
-    def __call__(self, x, NoneIfOutside = False):
-        """Evaluate at specified position"""
+    def locate(self, x):
+        """Return point lower-bound index and interpolation scheme"""
         b = bisect(self.xs, x)
-        if b < 1 or b >= len(self.xs): return None if NoneIfOutside else 0.
+        if b < 1 or b >= len(self.xs): return None, None
         r = bisect(self.NBT, b)
-        i = self.INT[r-1]
+        return b, self.INT[r-1]
 
-        y0 = self.ys[b-1]
+    def printid(self):
+        return super().printid() + " {%i/%i}"%(self.NP, self.NR)
+
+    def interpl(x, x0, y0, x1, y1, i):
+        """Interpolated between points"""
         if i == 1: return y0
 
-        y1 = self.ys[b]
-        l = log(x/self.xs[b-1])/log(self.xs[b]/self.xs[b-1]) if i == 3 or i == 5 else (x-self.xs[b-1])/(self.xs[b]-self.xs[b-1])
+        if i == 3 or i == 5: l = log(x/x0)/log(x1/x0)
+        else:                l = (x-x0)/(x1-x0)
 
         if i == 2 or i == 3: return y0 + (y1 - y0)*l
         if i == 4 or i == 5: return exp(log(y0) + log(y1/y0)*l)
 
         # unsupported interpolation scheme
         assert False
-        return None if NoneIfOutside else 0.
 
+class ENDF_Tab1(ENDF_Ranges):
+    """(x,y) table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NP/x int /y(x)]TAB1"""
+    pair_reader = ff.FortranRecordReader('(6E11.0)')
 
+    def __init__(self, iterlines):
+        super().__init__(iterlines)
+        self.ux, self.uy = None,None
+        self.rectp = "TAB1"
 
-class ENDF_Tab2(ENDF_HEAD_Record):
-    """2-dimensional table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NZ/ Z_int ]TAB2"""
-    range_reader = ff.FortranRecordReader('(6I11)')
+        pdat = [self.pair_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NP+2)//3)]
+        pdat = [j for i in pdat for j in i][:2*self.NP]
+        self.xs = pdat[0::2]
+        self.ys = pdat[1::2]
 
-    def __init__(self, iterlines, subelementClass = None):
-        super().__init__(next(iterlines))
-        self.NR = self.N1    # number of ranges
-        self.NZ = self.N2    # dimension of sub-tables
-        self.rectp = "TAB2(%ix%i)"%(self.NR, self.NZ)
+    def __call__(self, x, NoneIfOutside = False):
+        """Evaluate at specified position"""
+        b,i = self.locate(x)
+        if b is None: return None if NoneIfOutside else 0.
 
-        rdat = [self.range_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NR+2)//3)]
-        rdat = [j for i in rdat for j in i][:2*self.NR]
-        self.ranges = list(zip(*[iter(rdat)]*2))
-        self.entries = [subelementClass(iterlines) for i in range(self.NZ)] if subelementClass else []
+        y0 = self.ys[b-1]
+        if i == 1: return y0
+        y1 = self.ys[b]
+        return self.__class__.interpl(x, self.xs[b-1], y0, self.xs[b], y1, i)
 
     def __repr__(self):
         s = '\n' + self.printid() + '\n'
-        for e in self.entries: s += str(e)+'\n'
-        return s + "------- end TAB2 -------\n"
+        i0 = 0
+        for n,r in enumerate(self.NBT):
+            s += "-- range interpolation %i --\n"%self.INT[n]
+            for i in range(i0,i0+r): s += "\t%3i]\t%12g\t%g\n" % (i, self.xs[i], self.ys[i])
+            i0 = r
+        return s + "------- end TAB1 -------\n"
+
+
+class ENDF_Tab2(ENDF_Ranges):
+    """2-dimensional table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NZ/ Z_int ]TAB2"""
+
+    def __init__(self, iterlines, subelementClass = None):
+        super().__init__(iterlines)
+        self.NZ = self.N2    # dimension of sub-tables
+        self.entries = [subelementClass(iterlines) for i in range(self.NZ)] if subelementClass else []
+        self.rectp = "TAB2"
+
+    def __repr__(self):
+        s = '\n' + self.printid()
+        i0 = 0
+        for n,r in enumerate(self.NBT):
+            s += "\n-- range interpolation %i --"%self.INT[n]
+            for i in range(i0,i0+r): s += "\n%3i: "%i+str(self.entries[i])
+            i0 = r
+        return s + "\n------- end TAB2 -------\n"
 
 
 #######################################
