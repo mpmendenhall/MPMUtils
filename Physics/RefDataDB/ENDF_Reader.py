@@ -9,12 +9,21 @@ from ENDF_File10_Reader import *
 from ENDF_File28_Reader import *
 from ENDF_File33_Reader import *
 
+class ENDF_TapeHeader(ENDF_Record):
+    def __init__(self,l0):
+        super().__init__(l0)
+        assert self.MF == self.MT == 0 and self.MAT == 1
+        self.rectp = "Tape Header"
+        self.endlvl = -4
+
+
 def load_ENDF_Section(iterlines):
     """Parse supplied ENDF lines as a file section"""
 
     l0 = next(iterlines)
     h = ENDF_Record(l0)
 
+    if h.MAT == 1: return ENDF_TapeHeader(l0)
     if h.MAT <= 0 or h.MF == 0: return ENDF_CONT_Record(l0) # material, tape, or file end
 
     if h.MF == 1: return ENDF_File1_Sec(iterlines, l0)
@@ -32,6 +41,3 @@ def load_ENDF_Section(iterlines):
     print(h)
     while h.MF: h = ENDF_Record(next(iterlines))
     return None
-
-
-
