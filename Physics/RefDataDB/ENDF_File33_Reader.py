@@ -7,7 +7,7 @@ class ENDF_File33_NC_SSSec(ENDF_List):
         super().__init__(iterlines)
         self.LTY = h.L2 # Flag for procedure to obtain covariance matrix
         assert LTY in (0,1,2,3,4)
-        self.rectp += " NI"
+        self.rectp += " NC"
 
 class ENDF_File33_NI_SSSec(ENDF_List):
     """File 33 NI-type subsubsection"""
@@ -15,7 +15,60 @@ class ENDF_File33_NI_SSSec(ENDF_List):
         super().__init__(iterlines)
         self.rectp += " NI"
         self.LB = self.L2   # flag for interpretation of contents
-        self.LT = self.L1   # number of pairs in second array
+        self.NT = self.N1   # total number of entries
+
+
+        if self.LB in (0,1,2,3,4):
+            self.NP = self.N2   # total number of E,F pairs
+            self.LT = self.L1   # number of pairs in second array
+            n = 2*(self.NP-self.LT)
+            self.Ek = self.data[0:n][::2]
+            self.Fk = self.data[1:n][::2]
+            self.El = self.data[n:][::2]
+            self.Fl = self.data[n+1:][::2]
+            self.data = []
+            self.rectp += " {%i %g -- %g"%(self.NP-self.LT, self.Ek[0], self.Ek[-1])
+            if self.LT: self.rectp += ", %i %g -- %g"%(self.LT, self.Er[0], self.Er[-1])
+            self.rectp += "}"
+
+        elif self.LB == 5:      # space-efficient energy-averaged relative covariance matrix representation
+            self.NE = self.N2   # number of energy bin edge entries
+            self.LS = self.L1   # symmetric matrix flag
+            self.Er = self.data[:self.NE]
+            self.rectp += " {%i^2 %g -- %g%s}"%(self.NE-1, self.Er[0], self.Er[-1], " S" if self.LS else "")
+
+            if not self.LS: # asymetric
+                self.data = [self.data[self.NE + i*(self.NE-1) : self.NE + (i+1)*(self.NE-1)] for i in range(self.NE-1)]
+            else: # symmtric data packing
+                d = []
+                n = self.NE
+                for i in range(self.NE-1):
+                    n2 = n + self.NE - 1 - i
+                    d.append(self.data[n : n2])
+                    n = n2
+                self.data = d
+
+        elif self.LB == 6:    # Non-square matrix for different reactions/materials
+            self.NER = self.N2                  # Number of energies defining rows (NER-1 intervals)
+            self.NEC = (self.NT - 1)//self.NER  # number of column energies
+            self.Er = self.data[0:self.NER]     # Row energy bin edges
+            self.Ec = self.data[self.NER:self.NER+self.NEC] # Column energy bin edges
+            self.data = self.data[self.NER+self.NEC:]       # (NER-1)*(NEC-1) array
+            self.data = [ self.data[i*(self.NEC-1) : (i+1)*(self.NEC-1)] for i in range(self.NER-1)]
+            self.rectp += " {%i %g -- %g x %i %g -- %g}"%(self.NER-1, self.Er[0], self.Er[-1], self.NEC-1, self.Ec[0], self.Ec[-1])
+
+        else: # LB = 8,9 not yet handled
+            pass
+
+    def printid(self):
+        return super().printid() + " LB=%i"%self.LB
+
+    def __repr__(self):
+        s = self.printid()
+        if self.LB < 5 and len(self.Ek) < 20:
+            for i in range(len(self.Ek)):
+                s += "\n\t%12g\t%g"%(self.Ek[i],self.Fk[i])
+        return s
 
 class ENDF_File33_SubSec(ENDF_CONT_Record):
     """File 33 subsection [MAT,33,MT/ XMF1, XLFS1, MAT1, MT1, NC, NI]CONT"""
@@ -27,10 +80,20 @@ class ENDF_File33_SubSec(ENDF_CONT_Record):
         self.MT1   = self.L2        # MT for 2nd cross-section
         self.NC    = self.N1        # number of NC-type subsubsections
         self.NI    = self.N2        # number of NI-type subsubsections
-        self.rectp = "File33 Subsec (%i,%i)"%(self.NC, self.NI)
+        self.rectp = "Covariance x [m%i(%i) f%i s%i]"%(self.MAT1, self.XLFS1, self.XMF1, self.MT1)
 
         self.subNC = [ENDF_File33_NC_SSSec(iterlines) for i in range(self.NC)]
         self.subNI = [ENDF_File33_NI_SSSec(iterlines) for i in range(self.NI)]
+
+    def __repr__(self):
+        s = super().__repr__()
+        if self.subNC:
+            s += "\n---- NC subsubsections ----"
+            for ss in self.subNC: s += '\n' + str(ss)
+        if self.subNI:
+            s += "\n---- NI subsubsections ----"
+            for ss in self.subNI: s += '\n' + str(ss)
+        return s
 
 
 class ENDF_File33_Sec(ENDF_HEAD_Record):
@@ -44,7 +107,7 @@ class ENDF_File33_Sec(ENDF_HEAD_Record):
 
         self.MTL = self.L2  # Nonzero: flags one component of lumped reaction; cov. not given
         self.NL  = self.N2  # number of subsections (0 in lumped MTL != 0 files)
-        assert not (MTL and NL)
+        assert not (self.MTL and self.NL)
 
         self.contents = [ENDF_File33_SubSec(iterlines) for i in range(self.NL)]
 
@@ -53,5 +116,6 @@ class ENDF_File33_Sec(ENDF_HEAD_Record):
 
     def __repr__(self):
         s = self.printid()
-        for c in self.contents: s += '\n'+str(c)
+        for c in self.contents: s += '\n\n'+str(c)
+        s += "\n\n----- End File 33 ------"
         return s

@@ -1,7 +1,6 @@
 #!/bin/env python3
 
-# rm $ENDFDB
-# sqlite3 $ENDFDB < ENDF6_DB_Schema.sql
+# rm $ENDFDB; sqlite3 $ENDFDB < ENDF6_DB_Schema.sql
 # for f in ~/Data/ENDF-B-VII.1/*/*; do ./ENDF6_DB.py --load $f; done
 
 import sqlite3
@@ -64,6 +63,7 @@ class ENDFDB:
         if res[0][1]: return pickle.loads(res[0][1])
 
         ls = res[0][0].split("\n")
+        s = load_ENDF_Section(iter(ls))
         try: s = load_ENDF_Section(iter(ls))
         except:
             h = ENDF_Record(ls[0])

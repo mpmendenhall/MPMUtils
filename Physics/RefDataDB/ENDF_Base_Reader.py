@@ -86,8 +86,11 @@ class ENDF_List(ENDF_HEAD_Record):
         dat = [self.list_reader.read(ENDF_Record(next(iterlines)).TEXT) for i in range((self.NPL+5)//6)]
         self.data = [j for i in dat for j in i][:self.NPL]
 
+    def printid(self):
+        return " * " + self.rectp
+
     def __repr__(self):
-        s = " * " + self.rectp
+        s = self.printid()
         if len(self.data) <= ENDF_List.display_max: s += '\t' + str(self.data)
         return  s
 
@@ -158,7 +161,7 @@ class ENDF_Tab1(ENDF_Ranges):
         i0 = 0
         for n,r in enumerate(self.NBT):
             s += "-- range interpolation %i --\n"%self.INT[n]
-            for i in range(i0,i0+r): s += "\t%3i]\t%12g\t%g\n" % (i, self.xs[i], self.ys[i])
+            for i in range(i0, r): s += "\t%3i\t%12g\t%g\n" % (i, self.xs[i], self.ys[i])
             i0 = r
         return s + "------- end TAB1 -------\n"
 
