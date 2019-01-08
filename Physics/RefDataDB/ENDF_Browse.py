@@ -19,9 +19,11 @@ if __name__=="__main__":
     parser.add_argument("--Z",      type=int,   help="filter by Z")
     parser.add_argument("--MF",     type=int,   help="filter by file number")
     parser.add_argument("--MT",     type=int,   help="filter by file section")
-    parser.add_argument("--display", action="store_true", help="Display located sections")
-    parser.add_argument("--count",   action="store_true", help="Count entries matching query")
-    parser.add_argument("--list",    action="store_true", help="Short-form listing of entries matching query")
+    parser.add_argument("--MAT",    type=int,   help="filter by material number")
+    parser.add_argument("--display",action="store_true", help="Display located sections")
+    parser.add_argument("--count",  action="store_true", help="Count entries matching query")
+    parser.add_argument("--list",   action="store_true", help="Short-form listing of entries matching query")
+    parser.add_argument("--fail",   action="store_true", help="Fail on unparsed data")
 
     options = parser.parse_args()
 
@@ -35,6 +37,7 @@ if __name__=="__main__":
             if s.rectp == "TEND": break
 
     EDB = ENDFDB(options.db)
+    EDB.letFail = options.fail
 
     if options.load:
 
@@ -51,15 +54,20 @@ if __name__=="__main__":
             h = ENDF_HEAD_Record(ls[0])
             if h.rectp == "TEND": break
             if not h.endlvl:
-                EDB.upload_section(h, ''.join(ls))
+                sid = EDB.upload_section(h, ''.join(ls))
                 nloaded += 1
+                if options.display:
+                    print("\n--------------------------------------")
+                    print(EDB.get_section(sid))
+                    print("--------------------------------------\n")
 
         EDB.conn.commit()
         print("\tLoaded", nloaded, "entries.")
+        exit(0)
 
     sids = []
     if options.display or options.count or options.list:
-        sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": options.MF, "MT": options.MT})
+        sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": options.MF, "MT": options.MT, "MAT": options.MAT})
         print("Found", len(sids), "matching records.")
     if options.display:
         for s in sids:

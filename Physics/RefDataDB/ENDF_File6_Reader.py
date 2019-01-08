@@ -53,11 +53,17 @@ class ENDF_File6_LAW2_List(ENDF_List):
 
 class ENDF_File6_LAW2(ENDF_Tab2):
     """LAW=2 angular distribution"""
-    def __init__(self, iterlines, ENDF_File6_LAW2_List):
-        super().__init__(iterlines)
+    def __init__(self, iterlines):
+        super().__init__(iterlines, ENDF_File6_LAW2_List)
         self.rectp += " Discrete 2-body scattering"
         # number of sub-entries
         self.NE = self.NZ
+
+class ENDF_File6_LAW5(ENDF_Tab2):
+    """LAW=5 angular distribution"""
+    def __init__(self, iterlines):
+        super().__init__(iterlines, ENDF_List)
+        self.rectp += " Charged particle elastic scattering"
 
 class ENDF_File6_Tab1(ENDF_Tab1):
     """Table in File 6 data"""
@@ -81,6 +87,7 @@ class ENDF_File6_Tab1(ENDF_Tab1):
         # Continuum Energy-Angle Distributions
         if self.LAW == 1: self.distrib = ENDF_File6_LAW1(iterlines)
         if self.LAW == 2: self.distrib = ENDF_File6_LAW2(iterlines)
+        if self.LAW == 5: self.distrib = ENDF_File6_LAW5(iterlines)
         if self.distrib: return
 
         print("Unknown LAW", self.LAW)

@@ -13,6 +13,7 @@ class ENDFDB:
         self.conn.row_factory = sqlite3.Row # fast name-based access to columns
         self.curs = self.conn.cursor()
         self.readonly = False
+        self.letFail = False
 
     def find_section(self, MAT, MF, MT):
         """Return section_id for by MAT, MF, MT identifiers; None if absent."""
@@ -38,8 +39,9 @@ class ENDFDB:
             if replace: self.delete_section(sid)
             else: return sid
 
+        if self.letFail: s = load_ENDF_Section(iter(txt.split('\n')))
         try:
-            s = load_ENDF_Section(iter(txt.split('\n')))
+            if not self.letFail: s = load_ENDF_Section(iter(txt.split('\n')))
             assert s is not None
             self.curs.execute("INSERT INTO ENDF_sections(MAT,MF,MT,A,Z,pcl) VALUES(?,?,?,?,?,?)", (sec.MAT, sec.MF, sec.MT, sec.A, sec.Z, pickle.dumps(s)))
         except:
@@ -57,12 +59,13 @@ class ENDFDB:
         if res[0][1]: return pickle.loads(res[0][1])
 
         ls = res[0][0].split("\n")
-        s = load_ENDF_Section(iter(ls))
-        try: s = load_ENDF_Section(iter(ls))
-        except:
-            h = ENDF_Record(ls[0])
-            print("Unhandled type",h)
-            return None
+        if self.letFail: s = load_ENDF_Section(iter(ls))
+        else:
+            try: s = load_ENDF_Section(iter(ls))
+            except:
+                h = ENDF_Record(ls[0])
+                print("Unhandled type",h)
+                return None
         if s is not None and not self.readonly:
             self.curs.execute("UPDATE ENDF_sections SET lines=?, pcl=? WHERE section_id=?", (None, pickle.dumps(s), sid))
             self.conn.commit()
