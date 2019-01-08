@@ -7,6 +7,8 @@ from ENDF_File7_Reader import *
 from ENDF_File8_Reader import *
 from ENDF_File9_Reader import *
 from ENDF_File10_Reader import *
+from ENDF_File23_Reader import *
+from ENDF_File26_Reader import *
 from ENDF_File28_Reader import *
 from ENDF_File33_Reader import *
 
@@ -28,15 +30,17 @@ def load_ENDF_Section(iterlines):
     if h.MAT == 1 and h.MF == h.MT == 0: return ENDF_TapeHeader(l0)
     if h.MAT <= 0 or h.MF == 0: return ENDF_CONT_Record(l0) # material, tape, or file end
 
-    if h.MF == 1: return ENDF_File1_Sec(iterlines, l0)
-    if h.MF == 3: return ENDF_File3_Sec(iterlines, l0)
-    if h.MF == 4: return ENDF_File4_Sec(iterlines, l0)
-    if h.MF == 5: return ENDF_File5_Sec(iterlines, l0)
-    if h.MF == 6: return ENDF_File6_Sec(iterlines, l0)
-    if h.MF == 7: return ENDF_File7_Sec(iterlines, l0)
-    if h.MF == 8: return ENDF_File8_Sec(iterlines, l0)
-    if h.MF == 9: return ENDF_File9_Sec(iterlines, l0)
+    if h.MF == 1:  return ENDF_File1_Sec(iterlines, l0)
+    if h.MF == 3:  return ENDF_File3_Sec(iterlines, l0)
+    if h.MF == 4:  return ENDF_File4_Sec(iterlines, l0)
+    if h.MF == 5:  return ENDF_File5_Sec(iterlines, l0)
+    if h.MF == 6:  return ENDF_File6_Sec(iterlines, l0)
+    if h.MF == 7:  return ENDF_File7_Sec(iterlines, l0)
+    if h.MF == 8:  return ENDF_File8_Sec(iterlines, l0)
+    if h.MF == 9:  return ENDF_File9_Sec(iterlines, l0)
     if h.MF == 10: return ENDF_File10_Sec(iterlines, l0)
+    if h.MF == 23: return ENDF_File23_Sec(iterlines, l0)
+    if h.MF == 26: return ENDF_File26_Sec(iterlines, l0)
     if h.MF == 28: return ENDF_File28_Sec(iterlines, l0)
     if h.MF == 33: return ENDF_File33_Sec(iterlines, l0)
 

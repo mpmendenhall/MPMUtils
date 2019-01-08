@@ -65,11 +65,16 @@ class ENDF_File6_LAW5(ENDF_Tab2):
         super().__init__(iterlines, ENDF_List)
         self.rectp += " Charged particle elastic scattering"
 
+class ENDF_File26_LAW8(ENDF_Tab1):
+    """LAW=8 angular distribution for bremsstrahlung """
+    def __init__(self, iterlines):
+        super().__init__(iterlines)
+        self.rectp += " Excitation energy transfer"
+
 class ENDF_File6_Tab1(ENDF_Tab1):
     """Table in File 6 data"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        assert self.MF == 6
         self.rectp += " Products Distribution"
         self.ZAP = self.ZA # product 1000*Z + A
         self.AWP = self.C2 # product mass, neutron units; or, energy of primary photon for ZAP=0
@@ -88,6 +93,7 @@ class ENDF_File6_Tab1(ENDF_Tab1):
         if self.LAW == 1: self.distrib = ENDF_File6_LAW1(iterlines)
         if self.LAW == 2: self.distrib = ENDF_File6_LAW2(iterlines)
         if self.LAW == 5: self.distrib = ENDF_File6_LAW5(iterlines)
+        if self.LAW == 8: self.distrib = ENDF_File26_LAW8(iterlines)
         if self.distrib: return
 
         print("Unknown LAW", self.LAW)
@@ -106,8 +112,8 @@ class ENDF_File6_Sec(ENDF_HEAD_Record):
     def __init__(self, iterlines, l0 = None):
         if l0: super().__init__(l0)
         else: super().__init__(next(iterlines))
-        assert self.MF == 6
-        self.rectp = "File 6 'Product Energy-Angle Distributions' section %i"%self.MT
+        assert self.MF%20 == 6
+        self.rectp = "File %i 'Product Energy-Angle Distributions' section %i"%(self.MF, self.MT)
         self.LCT = self.N2 # reference frame for secondary energy, angle specification
         self.NK = self.N1  # number of subsections
 

@@ -180,7 +180,8 @@ class ENDF_Tab2(ENDF_Ranges):
         i0 = 0
         for n,r in enumerate(self.NBT):
             s += "\n-- range interpolation %i --"%self.INT[n]
-            for i in range(i0,i0+r): s += "\n%3i: "%i+str(self.entries[i])
+            if self.entries:
+                for i in range(i0, r): s += "\n%3i: "%i+str(self.entries[i])
             i0 = r
         return s + "\n------- end TAB2 -------\n"
 
