@@ -15,20 +15,8 @@ def dchain(sid, EDB):
     if sd.NST: return s
 
     for b in sd.branches.data:
-        A0 = A = sd.A
-        Z0 = Z = sd.Z
-        for r in b.RTYP:
-            if r == 0: pass
-            elif r == 1: Z += 1
-            elif r == 2: Z -= 1
-            elif r == 3: pass
-            elif r == 4: Z -=2; A -= 2
-            elif r == 5: A -= 1
-            else: assert False
-        if A == A0 and Z == Z0 and b.RFS == sd.LISO:
-            assert False
-            s += "\n\t*** Daughter is same???"
-            continue
+        Z,A = b.daughterZA(sd.Z, sd.A)
+        assert A != sd.A or Z != sd.Z or b.RFS != sd.LISO
         ss = EDB.find_F8MT457(A, Z, b.RFS, b.RFS)
         if not ss:
             assert False
