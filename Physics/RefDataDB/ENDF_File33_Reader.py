@@ -4,9 +4,9 @@ class ENDF_File33_NC_SSSec(ENDF_List):
     """File 33 NC-type subsubsection"""
     def __init__(self, iterlines):
         h = ENDF_CONT_Record(next(iterlines))
-        super().__init__(self,iterlines)
+        super().__init__(iterlines)
         self.LTY = h.L2 # Flag for procedure to obtain covariance matrix
-        assert LTY in (0,1,2,3,4)
+        assert self.LTY in (0,1,2,3,4)
         self.rectp += " NC"
 
 class ENDF_File33_NI_SSSec(ENDF_List):

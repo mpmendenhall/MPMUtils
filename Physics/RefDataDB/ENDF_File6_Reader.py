@@ -65,6 +65,17 @@ class ENDF_File6_LAW5(ENDF_Tab2):
         super().__init__(iterlines, ENDF_List)
         self.rectp += " Charged particle elastic scattering"
 
+class ENDF_File6_LAW6(ENDF_CONT_Record):
+    """LAW=6 n-body phase space"""
+    def __init__(self, iterlines):
+        super().__init__(next(iterlines))
+        self.rectp = "N-body phase space"
+        self.APSX = self.C1 # total mass (neutron units) of particles
+        self.NPSX = self.N2 # number of particles
+
+    def __repr__(self):
+        return self.rectp + " N=%i, A=%g"%(self.NPSX, self.APSX)
+
 class ENDF_File26_LAW8(ENDF_Tab1):
     """LAW=8 angular distribution for bremsstrahlung """
     def __init__(self, iterlines):
@@ -93,6 +104,7 @@ class ENDF_File6_Tab1(ENDF_Tab1):
         if self.LAW == 1: self.distrib = ENDF_File6_LAW1(iterlines)
         if self.LAW == 2: self.distrib = ENDF_File6_LAW2(iterlines)
         if self.LAW == 5: self.distrib = ENDF_File6_LAW5(iterlines)
+        if self.LAW == 6: self.distrib = ENDF_File6_LAW6(iterlines)
         if self.LAW == 8: self.distrib = ENDF_File26_LAW8(iterlines)
         if self.distrib: return
 

@@ -5,11 +5,11 @@ class ENDF_File3_Sec(ENDF_Tab1):
     def __init__(self, iterlines, l0 = None):
         if l0 is None: l0 = next(iterlines)
         h = ENDF_HEAD_Record(l0)
-        assert h.MF%20 == 3
+        assert h.MF in (3,23,27)
         self.AWR = h.C2
         super().__init__(iterlines)
         self.ZA, self.Z, self.A, self.AWR = h.ZA, h.Z, h.A, h.AWR
-        assert self.MF%20 == 3
+        assert self.MF == h.MF
         self.rectp = "File 3 'Reaction cross sections' section %i"%self.MT
         self.QM = self.C1 # mass-difference Q value [eV]
         self.QI = self.C2 # QM for residual nucleus ground state
