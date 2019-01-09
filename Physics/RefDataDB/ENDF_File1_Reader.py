@@ -6,9 +6,11 @@ class ENDF_File1_Sec451(ENDF_HEAD_Record):
         if l0 is None: l0 = next(iterlines)
         super().__init__(l0)
         assert self.MF == 1
-        self.rectp = "File 1 section %i 'General Information'"%self.MT
+        self.rectp = "File 1 section %i"%self.MT
 
         if self.MT == 451:
+            self.rectp += " 'General Information'"
+
             self.rnm("L1","LRP")    # resonance parameters flag
             self.rnm("L2","LFI")    # fission flag (1: fissions)
             self.rnm("N1","NLIB")   # library identifier
@@ -39,12 +41,12 @@ class ENDF_File1_Sec451(ENDF_HEAD_Record):
             c = ENDF_Record(next(iterlines)).TEXT
             self.ZSYMAM = c[0:11].strip()
             self.ALAB   = c[11:22].strip()
-            self.EDATE  = c[22+5:32]
+            self.EDATE  = c[22+5:32].strip(" -")
             self.AUTH   = c[33:66].strip()
 
             c = ENDF_Record(next(iterlines)).TEXT
             self.REF    = c[1:22].strip()
-            self.DDATE  = c[22+5:32]
+            self.DDATE  = c[22+5:32].strip(" -")
             self.RDATE  = c[33:43]
             self.ENDATE = c[52:63].strip()
 
@@ -54,6 +56,21 @@ class ENDF_File1_Sec451(ENDF_HEAD_Record):
             for i in range(self.NXC):
                 c = ENDF_CONT_Record(next(iterlines))
                 self.directory.append((c.L1, c.L2, c.N1, c.N2))
+
+        elif self.MT in (452, 456):
+            if self.MT == 452:  self.rectp += " 'Number of neutrons per fission'"
+            else: self.rectp += " 'Number of prompt neutrons per fission'"
+            self.rnm("L2","LNU")    # format flag, 1: polynomial, 2: tabulated
+            assert self.LNU in (1,2)
+            if self.LNU == 1: self.nubar = ENDF_List(iterlines)
+            elif self.LNU == 2: self.nubar = ENDF_Tab1(iterlines)
+
+        elif self.MT == 455:
+            self.rectp = "File 1 section %i 'Delayed neutron data'"%self.MT
+            self.rnm("L1","LDG")    # 0: energy-independent, 1: energy-dependent
+            self.rnm("L2","LNU")    # format flag, 1: polynomial, 2: tabulated
+            assert self.LNU in (1,2)
+            raise NotImplementedError
 
         else: raise NotImplementedError
 
@@ -73,11 +90,12 @@ class ENDF_File1_Sec451(ENDF_HEAD_Record):
             if self.TEMP: s += "\n##\ttarget temperature %g K."%self.TMP
             s += "\n## Projectile  mass %g m_n, up to %g MeV"%(self.AWI, self.EMAX/1e6)
 
-            s += "\n##---------------------\n## Included files:"
+            s += "\n##\n## Included files:"
             for d in self.directory: s += "\n## MF %3i\tMT %3i\t%6i records\tModification %i"%d
 
-            s += "\n##---------------------"
-            for t in self.txt: s += '\n## '+t
+            s += "\n##\n"+"#"*72
+            for t in self.txt: s += '\n## ' + t + " ##"
+            s += "\n"+"#"*72
             return s
         else: return super().__repr__()
 
@@ -89,5 +107,4 @@ def ENDF_File1_Sec(iterlines, l0 = None):
     f = None
     if h.MT == 451: f = ENDF_File1_Sec451(iterlines, l0)
 
-    assert f is not None
     return f

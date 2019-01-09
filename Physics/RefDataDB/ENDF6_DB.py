@@ -12,14 +12,14 @@ class ENDFDB:
         self.conn = sqlite3.connect(dbname)
         self.conn.row_factory = sqlite3.Row # fast name-based access to columns
         self.curs = self.conn.cursor()
+        self.curs.execute("PRAGMA foreign_keys=ON")
         self.readonly = False
         self.letFail = False
 
     def find_section(self, MAT, MF, MT):
-        """Return section_id for by MAT, MF, MT identifiers; None if absent."""
+        """Return section_id(s) for by MAT, MF, MT identifiers"""
         self.curs.execute("SELECT section_id FROM ENDF_sections WHERE MAT=? AND MF=? AND MT=?", (MAT,MF,MT))
-        res = self.curs.fetchall()
-        return res[0][0] if res else None
+        return [r[0] for r in self.curs.fetchall()]
 
     def find_sections(self, qdict):
         """Search sections table"""
@@ -28,16 +28,21 @@ class ENDFDB:
         self.curs.execute(cmd, [q[1] for q in qvals])
         return [r[0] for r in self.curs.fetchall()]
 
+    def find_F8MT457(self, A, Z, LIS, LISO):
+        self.curs.execute("SELECT section_id FROM MF8_MT457_directory WHERE A=? AND Z=? AND LIS=? AND LISO=?", (A, Z, LIS, LISO))
+        r = self.curs.fetchone()
+        return r[0] if r else None
+
     def delete_section(self, sid):
         """Delete section information from database"""
         self.curs.execute("DELETE FROM ENDF_sections WHERE section_id = ?", (sid,))
 
-    def upload_section(self, sec, txt, replace=True):
+    def upload_section(self, sec, txt, replace = None):
         """Upload file section to DB; return id number"""
-        sid = self.find_section(sec.MAT, sec.MF, sec.MT)
-        if sid is not None:
-            if replace: self.delete_section(sid)
-            else: return sid
+        if replace is None: replace = sec.MF != 1 or sec.MT != 451
+        if replace:
+            sids = self.find_section(sec.MAT, sec.MF, sec.MT)
+            for sid in sids: self.delete_section(sid)
 
         if self.letFail: s = load_ENDF_Section(iter(txt.split('\n')))
         try:
@@ -49,7 +54,11 @@ class ENDFDB:
             print(sec)
             self.curs.execute("INSERT INTO ENDF_sections(MAT,MF,MT,A,Z,lines) VALUES(?,?,?,?,?,?)", (sec.MAT, sec.MF, sec.MT, sec.A, sec.Z, txt))
 
-        return self.curs.lastrowid
+        sid = self.curs.lastrowid
+        if sec.MF == 8 and sec.MT == 457:
+            self.curs.execute("INSERT INTO MF8_MT457_directory(section_id,A,Z,LIS,LISO) VALUES(?,?,?,?,?)", (sid, s.A, s.Z, s.LIS, s.LISO))
+
+        return sid
 
     def get_section(self, sid):
         """Return section from DB"""

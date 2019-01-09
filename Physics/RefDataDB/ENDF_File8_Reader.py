@@ -1,5 +1,13 @@
 from ENDF_Base_Reader import *
 
+# names for RTYP = 0 to 10
+RTYP_names = ["gamma", "beta", "e.c./e+", "IT", "alpha", "n", "SF", "p", "e-", "xray", "?"]
+
+def make_RTYP(r):
+    ir = int(r)
+    return (ir,) if r == ir else (ir, int(10*r-10*ir))
+def name_RTYP(r): return ','.join([RTYP_names[i] for i in r])
+
 class ENDF_File8_FPY(ENDF_HEAD_Record):
     """Fission Product Yields in File 8"""
     def __init__(self, iterlines):
@@ -15,17 +23,65 @@ class ENDF_File8_FPY(ENDF_HEAD_Record):
         footer = ENDF_HEAD_Record(next(iterlines))
         assert footer.rectp == "SEND"
 
+class ENDF_File8_MT457_DiscreteDecay(ENDF_List):
+    def __init__(self,iterlines):
+        super().__init__(iterlines)
+        self.rnm("C1","ER")     # energy (eV)
+        self.rnm("C2","dER")    # uncertainty
+
+        # decay mode(s) of LIS state
+        self.RTYP = make_RTYP(self.data[0])
+        self.TYPE = self.data[1]        # beta/EC type
+        self.RI   = self.data[2]        # (relative) intensity
+        self.dRI  = self.data[3]        # uncertainty
+        self.RIS  = self.data[4]        # STYP 0: internal pair formation, 2: positron intensity
+        self.dRIS = self.data[5]        # uncertainty
+        if len(self.data) >= 12:        # total, K, and L conversion electron coefficients
+            self.RICC  = self.data[6]
+            self.dRICC = self.data[7]
+            self.RICK  = self.data[8]
+            self.dRICK = self.data[9]
+            self.RICL  = self.data[10]
+            self.dRICL = self.data[11]
+        self.data = ()
+
+    def __repr__(self):
+        s = "Discrete from %s decay mode"%name_RTYP(self.RTYP)
+        s += ", E = %g ~ %g MeV, I = %g ~ %g"%(self.ER*1e-6, self.dER*1e-6, self.RI, self.dRI)
+        return s
+
 class ENDF_File8_MT457_Spectrum(ENDF_List):
     """Spectrum data structure in File 8, section 457 data"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
+        assert self.C1 == 0
         self.rnm("C2","STYP")   # decay radiation type
+        self.STYP = make_RTYP(self.STYP)
         self.rnm("L1","LCON")   # continuum spectrum flag. 0: no continuous given; 1: only continuous given; 2: discrete and continuous given
         self.rnm("N2","NER")    # number of tabulated discrete energies
+        assert self.L2 == 0
+        assert len(self.data) == 6
+        self.FD = self.data[0]  # discrete spectrum normalization, absolute / relative
+        self.dFD = self.data[1] # uncertainty
+        self.ERav = self.data[2]# average decay energy
+        self.dERav = self.data[3] # uncertainty
+        self.FC = self.data[4]  # continuum spectrum normalization, absolute / relative
+        self.dFC = self.data[5] # uncertainty
+        self.data = ()
 
-        self.discrete = [ENDF_List(iterlines) for i in range(self.NER)] if self.LCON != 1 else None
-        self.continuous = ENDF_Tab1(iterlines) if self.LCON != 0 else None
+        self.discrete = [ENDF_File8_MT457_DiscreteDecay(iterlines) for i in range(self.NER)] if self.LCON != 1 else None
+        self.continuous = ENDF_Tab1(iterlines) if self.LCON != 0 else None # normalized spectrum RP(E) in prob/eV
         self.cov = ENDF_List(iterlines) if self.LCON and self.continuous.L2 else None
+
+    def __repr__(self):
+        s = name_RTYP(self.STYP) + " decay radiation, E_avg = %g ~ %g MeV"%(self.ERav * 1e-6, self.dERav * 1e-6)
+        if self.discrete:
+            if self.FD != 1 or self.dFD != 0: s += "\nDiscrete spectra (norm %g ~ %g)"%(self.FD, self.dFD)
+            for t in self.discrete: s += "\n"+indent(str(t), '\t')
+        if self.continuous:
+            if self.FC != 1 or self.dFC != 0: s += "\nContinuous spectra (norm %g ~ %g)"%(self.FC, self.dFC)
+            s += "\n"+indent(str(self.continuous), '\t')
+        return s
 
 class ENDF_File8_DecayProduct:
     def __init__(self,l):
@@ -91,6 +147,46 @@ class ENDF_File8_FPY(ENDF_List):
         for d in self.data: s += '\n\t'+str(d)
         return s
 
+class ENDF_File8_DecayEnergies(ENDF_List):
+    """File 8 listing of decay energies"""
+    def __init__(self, iterlines):
+        super().__init__(iterlines)
+        self.rectp = "Decay Energies"
+        self.data = tuple(zip(*[iter(self.data)]*2))
+
+    def __repr__(self):
+        s = " * Average particles energy:"
+        enames = ["light", "EM", "heavy", "e-", "e+", "Ae-", "Ce-", "gamma", "x-ray", "InB", "ann", "alpha", "recoil", "SF", "n", "p", "nu"]
+        for i,d in enumerate(self.data): s += '\n\t%s\t%12g ~ %g MeV'%(enames[i], d[0]*1e-6, d[1]*1e-6)
+        return s
+
+
+class File8_DecayBranch:
+    """One branch in decay listing"""
+    def __init__(self, l):
+        self.RTYP = make_RTYP(l[0])
+        self.RFS = int(l[1])# daughter isomeric state number
+        self.Q = l[2]       # transition Q-value
+        self.dQ = l[3]      # uncertainty
+        self.BR = l[4]      # branching fraction
+        self.dBR = l[5]     # uncertainty
+
+    def __repr__(self):
+        return name_RTYP(self.RTYP) + " decay mode to daughter isomeric state %i\tQ = %g ~ %g MeV, BR = %g ~ %g"%(self.RFS, self.Q*1e-6, self.dQ*1e-6, self.BR, self.dBR)
+
+class ENDF_File8_DecayBranches(ENDF_List):
+    """File 8 listing of decay energies"""
+    def __init__(self, iterlines):
+        super().__init__(iterlines)
+        self.rectp = "Decay Branches"
+        self.data = [File8_DecayBranch(self.data[6*i:6*i+6]) for i in range(len(self.data)//6)]
+
+    def __repr__(self):
+        s = "" #" * Decay Branches:"
+        for d in self.data: s += '\n'+str(d)
+        return s
+
+
 class ENDF_File8_Sec(ENDF_HEAD_Record):
     """File 8 'Decay and Fission Products Yields' section"""
     def __init__(self, iterlines, l0 = None):
@@ -116,10 +212,10 @@ class ENDF_File8_Sec(ENDF_HEAD_Record):
             self.rnm("N1","NST")    # nucleus stability: 0 = radioactive, 1 = stable
             self.rnm("N2","NSP")    # number of spectrum blocks
             if self.NST: assert not self.NSP
-            self.info1 = ENDF_List(iterlines)
-            self.T_h = self.info1.C1    # halflife
-            self.dT_h = self.info1.C2   # uncertainty on T_h
-            self.info2 = ENDF_List(iterlines)
+            self.decayE = ENDF_File8_DecayEnergies(iterlines)   # average total decay energies
+            self.T_h = self.decayE.C1   # halflife
+            self.dT_h = self.decayE.C2  # uncertainty on T_h
+            self.branches = ENDF_File8_DecayBranches(iterlines)
             self.products = [ENDF_File8_MT457_Spectrum(iterlines) for i in range(self.NSP)]
 
         else:
@@ -135,10 +231,16 @@ class ENDF_File8_Sec(ENDF_HEAD_Record):
     def printid(self):
         s = super().printid() + " target state %i (iso. %i)"%(self.LIS, self.LISO)
         #if self.MT in (454,459): s += "; NS=%i%s"%(self.NS, "" if not self.NO else " +aux in MT457")
-        if self.MT == 457: s += "; T_1/2 = %g ~ %g"%(self.T_h, self.dT_h)
+        if self.MT == 457:
+            if self.NST: s += " STABLE"
+            else: s += "; T_1/2 = %g ~ %g"%(self.T_h, self.dT_h)
         return s
 
     def __repr__(self):
         s = self.printid()
-        for t in self.products: s += '\n\t'+str(t)
+        if self.MT == 457 and not self.NST:
+            #s += "\n"+str(self.decayE)
+            s += "\n"+indent(str(self.branches),'\t')
+        #if self.products: s += "\n * Products:"
+        #for t in self.products: s += '\n'+indent(str(t), '\t')
         return s

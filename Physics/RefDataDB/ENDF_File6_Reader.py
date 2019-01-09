@@ -106,7 +106,7 @@ class ENDF_File6_Tab1(ENDF_Tab1):
         if self.distrib: return
 
         print("Unknown LAW", self.LAW)
-        assert False
+        raise NotImplementedError
 
     def printid(self):
         return super().printid() + " AWP=%g, LIP=%i, LAW=%i"%(self.AWP, self.LIP, self.LAW)

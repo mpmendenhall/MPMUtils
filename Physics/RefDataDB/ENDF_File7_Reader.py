@@ -48,11 +48,12 @@ class ENDF_File7_Sec(ENDF_HEAD_Record):
         else: super().__init__(next(iterlines))
 
         self.rectp = "File 7/%i"%(self.MT)
+        assert self.MT in (2,4)
         if self.MT == 2: self.rectp += " Thermal n elastic"
         elif self.MT == 4: self.rectp += " Thermal n inelastic"
-        else: assert False
 
-        self.rnm("L1","LTHR")   # interpretation flag; 1: elastic
+        self.rnm("L1","LTHR")   # interpretation flag: 0: incoherent inelastic, 1: coherent elastic, 2: incoherent elastic
+        assert self.LTHR in (0,1,2)
 
         self.tbl = None
         if self.LTHR == 0:
@@ -64,9 +65,6 @@ class ENDF_File7_Sec(ENDF_HEAD_Record):
         elif self.LTHR == 2:
             assert self.L2 == self.N1 == self.N2 == 0
             self.tbl = ENDF_File7_IncoherentElastic(iterlines)
-        else:
-            print(self)
-            assert False
 
         footer = ENDF_HEAD_Record(next(iterlines))
         assert footer.rectp == "SEND"

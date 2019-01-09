@@ -28,7 +28,7 @@ class ENDF_File5_Distrib(ENDF_Tab1):
             self.T_M = ENDF_Tab1(iterlines)
         else:
             print("Unhandled File 5 subsection format LF =", self.LF)
-            assert False
+            raise NotImplementedError
 
 class ENDF_File5_Sec(ENDF_HEAD_Record):
     """File 5 'Energy distributions of secondary particles' for neutrons and spontaneous fission"""

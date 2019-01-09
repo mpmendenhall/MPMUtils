@@ -8,6 +8,33 @@
 from ENDF6_DB import *
 from argparse import ArgumentParser
 
+def dchain(sid, EDB):
+    """Printable decay chain summary"""
+    sd = EDB.get_section(sid)
+    s = str(sd)
+    if sd.NST: return s
+
+    for b in sd.branches.data:
+        A0 = A = sd.A
+        Z0 = Z = sd.Z
+        for r in b.RTYP:
+            if r == 0: pass
+            elif r == 1: Z += 1
+            elif r == 2: Z -= 1
+            elif r == 3: pass
+            elif r == 4: Z -=2; A -= 2
+            elif r == 5: A -= 1
+            else: assert False
+        if A == A0 and Z == Z0 and b.RFS == sd.LISO:
+            assert False
+            s += "\n\t*** Daughter is same???"
+            continue
+        ss = EDB.find_F8MT457(A, Z, b.RFS, b.RFS)
+        if not ss:
+            assert False
+            s += "\n\n\t*** Daughter not found."
+        else: s += '\n\n'+indent('** ' + dchain(ss, EDB), '\t')
+    return s
 
 if __name__=="__main__":
 
@@ -24,6 +51,7 @@ if __name__=="__main__":
     parser.add_argument("--count",  action="store_true", help="Count entries matching query")
     parser.add_argument("--list",   action="store_true", help="Short-form listing of entries matching query")
     parser.add_argument("--fail",   action="store_true", help="Fail on unparsed data")
+    parser.add_argument("--dchain", action="store_true", help="display decay chain")
 
     options = parser.parse_args()
 
@@ -38,6 +66,10 @@ if __name__=="__main__":
 
     EDB = ENDFDB(options.db)
     EDB.letFail = options.fail
+
+    if options.dchain:
+        sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": 8, "MT": 457, "MAT": options.MAT})
+        for sid in sids: print(dchain(sid,EDB))
 
     if options.load:
 
@@ -77,4 +109,5 @@ if __name__=="__main__":
         for s in sids:
             s = EDB.get_section(s)
             print(s.printid() if s is not None else None)
+    if len(sids) and not options.count:  print("\n(%i matching records.)"%len(sids))
 

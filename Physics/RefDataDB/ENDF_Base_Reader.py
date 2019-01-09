@@ -7,6 +7,7 @@ import fortranformat as ff
 # from builtins import *
 
 from bisect import bisect
+from textwrap import indent
 
 class ENDF_Record(object):
     """Generic record (line in file) parser"""
@@ -135,7 +136,7 @@ class ENDF_Ranges(ENDF_CONT_Record):
         if i == 4 or i == 5: return exp(log(y0) + log(y1/y0)*l)
 
         # unsupported interpolation scheme
-        assert False
+        raise NotImplementedError
 
 class ENDF_Tab1(ENDF_Ranges):
     """(x,y) table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NP/x int /y(x)]TAB1"""
@@ -176,8 +177,7 @@ class ENDF_Tab2(ENDF_Ranges):
 
     def __init__(self, iterlines, subelementClass = None):
         super().__init__(iterlines)
-        self.rnm("NP","NZ") # dimension of sub-tables
-        self.entries = [subelementClass(iterlines) for i in range(self.NZ)] if subelementClass else []
+        self.entries = [subelementClass(iterlines) for i in range(self.NP)] if subelementClass else []
         self.rectp = "TAB2"
 
     def __repr__(self):
@@ -186,7 +186,7 @@ class ENDF_Tab2(ENDF_Ranges):
         for n,r in enumerate(self.NBT):
             s += "\n-- range interpolation %i --"%self.INT[n]
             if self.entries:
-                for i in range(i0, r): s += "\n%3i: "%i+str(self.entries[i])
+                for i in range(i0, r): s += "\n%3i:"%i + indent(str(self.entries[i]), '\t')
             i0 = r
         return s + "\n------- end TAB2 -------\n"
 
