@@ -28,7 +28,7 @@ class ENDF_File33_NI_SSSec(ENDF_List):
             self.Fl = self.data[n+1:][::2]
             self.data = []
             self.rectp += " {%i %g -- %g"%(self.NP-self.LT, self.Ek[0], self.Ek[-1])
-            if self.LT: self.rectp += ", %i %g -- %g"%(self.LT, self.Er[0], self.Er[-1])
+            if self.LT: self.rectp += ", %i %g -- %g"%(self.LT, self.El[0], self.El[-1])
             self.rectp += "}"
 
         elif self.LB == 5:      # space-efficient energy-averaged relative covariance matrix representation

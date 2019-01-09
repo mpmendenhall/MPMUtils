@@ -1,4 +1,5 @@
 from ENDF_File1_Reader import *
+from ENDF_File2_Reader import *
 from ENDF_File3_Reader import *
 from ENDF_File4_Reader import *
 from ENDF_File5_Reader import *
@@ -32,6 +33,7 @@ def load_ENDF_Section(iterlines):
     if h.MAT <= 0 or h.MF == 0: return ENDF_CONT_Record(l0) # material, tape, or file end
 
     if h.MF == 1:  return ENDF_File1_Sec(iterlines, l0)
+    if h.MF == 2:  return ENDF_File2_Sec(iterlines, l0)
     if h.MF == 3:  return ENDF_File3_Sec(iterlines, l0)
     if h.MF == 4:  return ENDF_File4_Sec(iterlines, l0)
     if h.MF == 5:  return ENDF_File5_Sec(iterlines, l0)

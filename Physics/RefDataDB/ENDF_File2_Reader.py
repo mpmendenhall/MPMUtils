@@ -1,5 +1,3 @@
-# TODO not up-to-date
-
 from ENDF_Base_Reader import *
 
 class ENDF_ReichMoore_Resonances(ENDF_List):
@@ -24,7 +22,7 @@ class ENDF_ReichMoore_Resonances(ENDF_List):
 class ENDF_Unresolved_Resonances_EdepParams_LJ(ENDF_List):
     """Specification for unresolved resonances with energy-dependent parameters for L,J"""
     def __init__(self, iterlines):
-        ENDF_List.__init__(self,iterlines)
+        super().__init__(self, iterlines)
         # AJ    floating-point spin J, with sign for parity
         # INT   interpolation scheme between cross-sections
         # AMU[XNGF]  degrees of freedom in competitive, neutron, gamma, fission distributions
@@ -49,21 +47,20 @@ class ENDF_Unresolved_Resonances_EdepParams_L:
             for j in self.jdat: s += "\n\t"+str(j)
         return s
 
-class ENDF_File2_Range:
+class ENDF_File2_Range(ENDF_CONT_Record):
 
     LRUdescrip = {0: "radius only", 1: "resolved", 2: "unresolved" }
     LRFdescrip = {0: ""}
 
-    def __init__(self, iterlines, LFW):
-        self.LFW = LFW
+    def __init__(self, iterlines):
+        super().__init__(next(iterlines))
 
-        # EL    energy lower limit
-        # EH    energy upper limit
-        # LRU   resolved or unresolved parameters
-        # LRF   representation of resonances
-        # NRO   energy dependence of radius: 0: none; 1: from table
-        # NAPS  interpretation of 2 radii
-        self.EL, self.EH, self.LRU, self.LRF, self.NRO, self.NAPS = ENDF_CONT_Record.parse(next(iterlines))
+        self.EL   = self.C1 # energy lower limit
+        self.EH   = self.C2 # energy upper limit
+        self.LRU  = self.L1 # resolved or unresolved parameters
+        self.LRF  = self.L2 # representation of resonances
+        self.NRO  = self.N1 # energy dependence of radius: 0: none; 1: from table
+        self.NAPS = self.N2 # interpretation of 2 radii
 
         if self.LRU == 0: # only scattering radius given
             self.load_SPI_line(iterlines)
@@ -111,11 +108,14 @@ class ENDF_File2_Range:
             print("LRU = %i unimplemented"%self.LRU)
             raise NotImplementedError
 
-    def load_SPI_line(self,iterlines):
-        # SPI   spin I of target nucleus
-        # AP    scattering radius in 10^-12 cm
-        # NLS   number of L-values
-        self.SPI, self.AP, self.hdr_L1, self.hdr_L2, self.NLS, self.hdr_N2 = ENDF_CONT_Record.parse(next(iterlines))
+    def load_SPI_line(self, iterlines):
+        c = ENDF_CONT_Record(next(iterlines))
+        self.SPI    = c.C1  # spin I of target nucleus
+        self.AP     = c.C2  # scattering radius in 10^-12 cm
+        self.hdr_L1 = c.L1
+        self.hdr_L2 = c.L2
+        self.NLS    = c.N1  # number of L-values
+        self.hdr_N2 = c.N2
 
     def __repr__(self, longform = False):
         s = "[Resonance range %g -- %g eV: %s, %s for %i l's]"
@@ -126,26 +126,25 @@ class ENDF_File2_Range:
         return s
 
 
-class ENDF_File2:
-    """File 2 'Resonance Parameters'"""
-    def __init__(self, iterlines):
-        # ZA
-        # AWR
-        # NIS   number of isotopes in material
-        self.ZA, self.AWR, u1, u2, self.NIS, u3 = ENDF_CONT_Record.parse(next(iterlines))
-        # ZAI   isotope Z,A
-        # ABN   isotope abundance in material, number fraction
-        # LFW   average fission widths given? 0: no, 1: yes
-        # NER   number of ranges
-        self.ZAI, self.ABN, u1, self.LFW, self.NER, u2 = ENDF_CONT_Record.parse(next(iterlines))
+class ENDF_File2_Sec(ENDF_HEAD_Record):
+    """File 2 'Resonance Parameters' section"""
+    def __init__(self, iterlines, l0 = None):
+        if l0 is None: l0 = next(iterlines)
+        super().__init__(l0)
+        self.NIS = self.N1 # NIS   number of isotopes in material
+        self.rectp = "Resonance Parameters"
 
-        self.ranges = [ENDF_File2_Range(iterlines, self.LFW) for ri in range(self.NER)]
-        assert skip_to_section_end(iterlines) == 1
-        skip_to_file_end(iterlines)
-        #assert skip_to_file_end(iterlines) == 1
+        c = ENDF_CONT_Record(next(iterlines))
+        self.ZAI = int(c.C1) # isotope Z,A
+        self.ABN = int(c.C2) # isotope abundance in material, number fraction
+        self.LFW = c.L2      # whether average fission widths given
+        self.NER = c.N1      # number of ranges
 
-    def __repr__(self, longform = False):
-        s = "[File 2: %i resonance parameter ranges]"%len(self.ranges)
-        if longform:
-            for r in self.ranges: s += "\n"+indent(r.__repr__(True),"\t")
+        self.ranges = [ENDF_File2_Range(iterlines) for ri in range(self.NER)]
+        footer = ENDF_HEAD_Record(next(iterlines))
+        assert footer.rectp == "SEND"
+
+    def __repr__(self):
+        s = self.printid()
+        for r in self.ranges: s += "\n\t"+str(r)
         return s
