@@ -4,10 +4,10 @@ class ENDF_File6_LAW1_List(ENDF_List):
     """List entry in LAW=1 File 6 table"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.E1 = self.C2       # incident energy
-        self.NEP =self.N2       # number of secondary energies listed
-        self.ND = self.L1       # number of discrete energies listed
-        self.NA = self.L2       # number of angular parameters
+        self.rnm("C2","E1") # incident energy
+        self.rnm("N2","NEP")# number of secondary energies listed
+        self.rnm("L1","ND") # number of discrete energies listed
+        self.rnm("L2","NA") # number of angular parameters
 
         nper = self.NA + 2
         self.contents = [(self.data[i*nper], self.data[i*nper + 1: (i+1)*nper]) for i in range(self.NEP)]
@@ -27,25 +27,23 @@ class ENDF_File6_LAW1(ENDF_Tab2):
         # (1) Legendre Coefficients,
         # (2) Kalbach-Mann systematics,
         # (11)-(15) interpolation tables
-        self.LANG = self.L1
+        self.rnm("L1","LANG")
         # Interpolation scheme for secondary energy:
         # (1) histogram,
         # (2) linear-linear, etc.
-        self.LEP = self.L2
-        # number of sub-entries (one per incident energy)
-        self.NE = self.NZ
+        self.rnm("L2","LEP")
 
     def printid(self):
-        return super().printid() + ' LANG=%i, LEP=%i, NE=%i'%(self.LANG, self.LEP, self.NE)
+        return super().printid() + ' LANG=%i, LEP=%i'%(self.LANG, self.LEP)
 
 
 class ENDF_File6_LAW2_List(ENDF_List):
     """List entry in LAW=2 File 6 table [MAT, 6, MT/ 0.0, E_1 ,LANG, 0, NW, NL/ A_l(E)]LIST"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.E1 = self.C2       # incident energy
-        self.LANG = self.L1     # angular distribution type
-        self.NL = self.N2       # LANG=0: highest Legendre order used; else number of cosines tabulated.
+        self.rnm("C2","E1")     # incident energy
+        self.rnm("L1","LANG")   # angular distribution type
+        self.rnm("N2","NL")     # LANG=0: highest Legendre order used; else number of cosines tabulated.
         self.rectp = "LIST.LAW2"
 
     def __repr__(self):
@@ -56,8 +54,6 @@ class ENDF_File6_LAW2(ENDF_Tab2):
     def __init__(self, iterlines):
         super().__init__(iterlines, ENDF_File6_LAW2_List)
         self.rectp += " Discrete 2-body scattering"
-        # number of sub-entries
-        self.NE = self.NZ
 
 class ENDF_File6_LAW5(ENDF_Tab2):
     """LAW=5 angular distribution"""
@@ -70,8 +66,8 @@ class ENDF_File6_LAW6(ENDF_CONT_Record):
     def __init__(self, iterlines):
         super().__init__(next(iterlines))
         self.rectp = "N-body phase space"
-        self.APSX = self.C1 # total mass (neutron units) of particles
-        self.NPSX = self.N2 # number of particles
+        self.rnm("C1","APSX")   # total mass (neutron units) of particles
+        self.rnm("N2","NPSX")   # number of particles
 
     def __repr__(self):
         return self.rectp + " N=%i, A=%g"%(self.NPSX, self.APSX)
@@ -87,10 +83,11 @@ class ENDF_File6_Tab1(ENDF_Tab1):
     def __init__(self, iterlines):
         super().__init__(iterlines)
         self.rectp += " Products Distribution"
-        self.ZAP = self.ZA # product 1000*Z + A
-        self.AWP = self.C2 # product mass, neutron units; or, energy of primary photon for ZAP=0
-        self.LIP = self.L1 # product modifier flag
-        self.LAW = self.L2 # distribution type
+        self.rnm("C1","ZAP")    # product 1000*Z + A
+        self.rnm("C2","AWP")    # product mass, neutron units; or, energy of primary photon for ZAP=0
+        self.rnm("L1","LIP")    # product modifier flag
+        self.rnm("L2","LAW")    # distribution type
+        self.ZAP = int(self.ZAP)
         self.xu = "product energy [eV]"
         self.yu = "product yield multiplicity [1]"
 
@@ -126,8 +123,8 @@ class ENDF_File6_Sec(ENDF_HEAD_Record):
         else: super().__init__(next(iterlines))
         assert self.MF%20 == 6
         self.rectp = "File %i 'Product Energy-Angle Distributions' section %i"%(self.MF, self.MT)
-        self.LCT = self.N2 # reference frame for secondary energy, angle specification
-        self.NK = self.N1  # number of subsections
+        self.rnm("N2","LCT")    # reference frame for secondary energy, angle specification
+        self.rnm("N1","NK")     # number of subsections
 
         self.sections = [ENDF_File6_Tab1(iterlines) for i in range(self.NK)]
         footer = ENDF_HEAD_Record(next(iterlines))

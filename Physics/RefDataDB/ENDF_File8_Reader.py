@@ -8,8 +8,9 @@ class ENDF_File8_FPY(ENDF_HEAD_Record):
         footer = ENDF_HEAD_Record(next(iterlines))
         assert footer.rectp == "SEND"
 
-        self.LE = self.L1 - 1
-        self.contents = [ENDF_List(iterlines) for i in range(self.L1)]
+        self.rnm("L1","LE")
+        self.LE -= 1
+        self.contents = [ENDF_List(iterlines) for i in range(self.LE+1)]
 
         footer = ENDF_HEAD_Record(next(iterlines))
         assert footer.rectp == "SEND"
@@ -18,9 +19,9 @@ class ENDF_File8_MT457_Spectrum(ENDF_List):
     """Spectrum data structure in File 8, section 457 data"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.STYP = self.C2 # decay radiation type
-        self.LCON = self.L1 # continuum spectrum flag. 0: no continuous given; 1: only continuous given; 2: discrete and continuous given
-        self.NER = self.N2  # number of tabulated discrete energies
+        self.rnm("C2","STYP")   # decay radiation type
+        self.rnm("L1","LCON")   # continuum spectrum flag. 0: no continuous given; 1: only continuous given; 2: discrete and continuous given
+        self.rnm("N2","NER")    # number of tabulated discrete energies
 
         self.discrete = [ENDF_List(iterlines) for i in range(self.NER)] if self.LCON != 1 else None
         self.continuous = ENDF_Tab1(iterlines) if self.LCON != 0 else None
@@ -44,15 +45,16 @@ class ENDF_File8_DecayProducts(ENDF_List):
     def __init__(self, iterlines):
         super().__init__(iterlines)
 
-        ZAP = int(self.C1)      # nuclide produced in reaction
-        self.Z = ZAP//1000
-        self.A = ZAP%1000
-        self.ELFS = self.C2     # excitation state of ZAP, eV
-        self.LMF = self.L1      # file containing cross section / multiplicity data
-        self.LMS = self.L2      # excitation state number of ZAP
-        self.ND = self.N1 // 6  # number of decay product entries
+        self.rnm("C1","ZAP")    # nuclide produced in reaction
+        self.rnm("C2","ELFS")   # excitation state of ZAP, eV
+        self.rnm("L1","LMF")    # file containing cross section / multiplicity data
+        self.rnm("L2","LMS")    # excitation state number of ZAP
+        self.ND = self.NPL // 6 # number of decay product entries
         self.rectp = "%i Decay Products"%self.ND
         self.data = [ENDF_File8_DecayProduct(self.data[6*i : 6*i+6]) for i in range(self.ND)]
+        self.ZAP = int(self.ZAP)
+        self.Z = self.ZAP//1000
+        self.A = self.ZAP%1000
 
     def __repr__(self):
         s = super().__repr__() + " product %i/%i (%i: %g eV) MF %i"%(self.Z, self.A, self.LMS, self.ELFS, self.LMF)
@@ -77,9 +79,9 @@ class ENDF_File8_FPY(ENDF_List):
     def __init__(self, iterlines):
         super().__init__(iterlines)
 
-        self.E = self.C1    # incident energy
-        self.I = self.L1    # interpolation scheme to previous energy point, if energy dependence given
-        self.NFP = self.N2  # number of fission products specified
+        self.rnm("C1","E")  # incident energy
+        self.rnm("L1","I")  # interpolation scheme to previous energy point, if energy dependence given
+        self.rnm("N2","NFP")# number of fission products specified
         self.rectp = "Fission Product Yields"
 
         self.data = [ENDF_File8_FissProd(self.data[4*i : 4*i+4]) for i in range(self.NFP)]
@@ -101,18 +103,18 @@ class ENDF_File8_Sec(ENDF_HEAD_Record):
         elif self.MT == 459: self.rectp += "Fission Products Cumulative Yields,"
         else: self.rectp += "Radioactive Nuclide Production from process MT=%i"%self.MT
 
-        self.LIS  = self.L1 # state number of target
-        self.LISO = self.L2 # isomeric state number of target
+        self.rnm("L1","LIS")    # state number of target
+        self.rnm("L2","LISO")   # isomeric state number of target
 
         self.products = []
 
         if self.MT in (454,459):
-            self.LE = self.L1 - 1   # whether energy-dependent fission product yields given
+            self.LE = self.LIS - 1   # whether energy-dependent fission product yields given
             self.products = [ENDF_File8_FPY(iterlines) for i in range(self.LE+1)]
 
         elif self.MT == 457:
-            self.NST = self.N1 # nucleus stability: 0 = radioactive, 1 = stable
-            self.NSP = self.N2 # number of spectrum blocks
+            self.rnm("N1","NST")    # nucleus stability: 0 = radioactive, 1 = stable
+            self.rnm("N2","NSP")    # number of spectrum blocks
             if self.NST: assert not self.NSP
             self.info1 = ENDF_List(iterlines)
             self.T_h = self.info1.C1    # halflife
@@ -121,8 +123,8 @@ class ENDF_File8_Sec(ENDF_HEAD_Record):
             self.products = [ENDF_File8_MT457_Spectrum(iterlines) for i in range(self.NSP)]
 
         else:
-            self.NS   = self.N1 # number of states for which data is provided
-            self.NO   = self.N2 # 0: complete chain; 1: see MT=457 data
+            self.rnm("N1","NS") # number of states for which data is provided
+            self.rnm("N2","NO") # 0: complete chain; 1: see MT=457 data
 
             if self.NO == 1: self.products = [ENDF_CONT_Record(next(iterlines)) for i in range(self.NS)]
             else: self.products = [ENDF_File8_DecayProducts(iterlines) for i in range(self.NS)]

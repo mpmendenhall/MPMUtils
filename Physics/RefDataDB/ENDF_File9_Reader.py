@@ -5,10 +5,10 @@ class ENDF_File9_Sec(ENDF_HEAD_Record):
     def __init__(self, iterlines, l0 = None):
         if l0 is None: l0 = next(iterlines)
         super().__init__(l0)
-        assert self.MF == 9
+        assert self.MF in (9,10)
         self.rectp = "File 9 'Multiplicities for production of radioactive nuclides' section %i"%self.MT
-        self.LIS = self.L1  # Level number of target
-        self.NS  = self.N1  # Number of final states
+        self.rnm("L1","LIS")    # Level number of target
+        self.rnm("N1","NS")     # Number of final states
         self.contents = [ENDF_Tab1(iterlines) for i in range(self.NS)]
 
     def __repr__(self):

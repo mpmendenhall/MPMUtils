@@ -3,13 +3,11 @@ from ENDF_Base_Reader import *
 class ENDF_ReichMoore_Resonances(ENDF_List):
     """Specification for resolved resonances in Reich-Moore formalism"""
     def __init__(self,iterlines):
-        ENDF_List.__init__(self,iterlines)
-        # AWRI  ratio of isotope mass to neutron
-        # APL   l-depedent scattering radius; use APL=AP if 0
-        # L     quantum number l
-        self.AWRI = self.header.C1
-        self.APL = self.header.C2
-        self.L = self.header.L1
+        super().__init__(iterlines)
+
+        self.rnm("C1","AWRI")   # ratio of isotope mass to neutron
+        self.rnm("C2","APL")    # l-depedent scattering radius; use APL = AP if 0
+        self.rnm("L1","L")      # quantum number l
         self.data = list(zip(*[iter(self.data)]*6))
 
     def __repr__(self, longform=False):
@@ -22,23 +20,24 @@ class ENDF_ReichMoore_Resonances(ENDF_List):
 class ENDF_Unresolved_Resonances_EdepParams_LJ(ENDF_List):
     """Specification for unresolved resonances with energy-dependent parameters for L,J"""
     def __init__(self, iterlines):
-        super().__init__(self, iterlines)
-        # AJ    floating-point spin J, with sign for parity
-        # INT   interpolation scheme between cross-sections
+        super().__init__(iterlines)
+        self.rnm("C1","AJ") # floating-point spin J, with sign for parity
+        self.rnm("L1","INT")# interpolation scheme between cross-sections
         # AMU[XNGF]  degrees of freedom in competitive, neutron, gamma, fission distributions
-        self.AJ = self.header.C1
-        self.INT = self.header.L1
         self.AMUX, self.AMUN, self.AMUG, self.AMUF = self.data[2:6]
         # data = [(ES, D, GX, GNO, GG1, GF1), ...] energy-dependent average values
         self.data = list(zip(*[iter(self.data[6:])]*6))
 
     def __repr__(self):
-        return "[Unresolved resonances for j=%g, %i energy points]"%(self.AJ, len(self.data))
+        return "[Unresolved resonances for J=%g, %i energy points]"%(self.AJ, len(self.data))
 
-class ENDF_Unresolved_Resonances_EdepParams_L:
+class ENDF_Unresolved_Resonances_EdepParams_L(ENDF_CONT_Record):
     """Collection of unresolved resonance data with energy-dependent parameters for a given L"""
     def __init__(self, iterlines):
-        self.AWRI, u1, self.L, u2, self.NJS, u3 = ENDF_CONT_Record.parse(next(iterlines))
+        super().__init__(next(iterlines))
+        self.rnm("C1","AWRI")
+        self.rnm("L1","L")
+        self.rnm("N1","NJS")
         self.jdat = [ENDF_Unresolved_Resonances_EdepParams_LJ(iterlines) for j in range(self.NJS)]
 
     def __repr__(self, longform=False):
@@ -55,12 +54,12 @@ class ENDF_File2_Range(ENDF_CONT_Record):
     def __init__(self, iterlines):
         super().__init__(next(iterlines))
 
-        self.EL   = self.C1 # energy lower limit
-        self.EH   = self.C2 # energy upper limit
-        self.LRU  = self.L1 # resolved or unresolved parameters
-        self.LRF  = self.L2 # representation of resonances
-        self.NRO  = self.N1 # energy dependence of radius: 0: none; 1: from table
-        self.NAPS = self.N2 # interpretation of 2 radii
+        self.rnm("C1","EL")     # energy lower limit
+        self.rnm("C2","EH")     # energy upper limit
+        self.rnm("L1","LRU")    # resolved or unresolved parameters
+        self.rnm("L2","LRF")    # representation of resonances
+        self.rnm("N1","NRO")    # energy dependence of radius: 0: none; 1: from table
+        self.rnm("N2","NAPS")   # interpretation of 2 radii
 
         if self.LRU == 0: # only scattering radius given
             self.load_SPI_line(iterlines)

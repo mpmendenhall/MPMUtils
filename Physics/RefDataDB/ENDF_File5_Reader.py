@@ -4,9 +4,7 @@ class ENDF_File5_Distrib(ENDF_Tab1):
     """File 5 energy distribution distribution"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.LF = self.L2   # distribution representation flag
-        self.NR = self.N1   #
-        self.NP = self.N2
+        self.rnm("L2","LF") # distribution representation flag
 
         if self.LF == 1:
             self.rectp += " Arbitrary tabulated distribution"
@@ -39,7 +37,7 @@ class ENDF_File5_Sec(ENDF_HEAD_Record):
         super().__init__(l0)
         assert self.MF == 5
         self.rectp = "File 5 'Energy distributions of secondary particles' section %i"%self.MT
-        self.NK = self.N1   # number of subsections
+        self.rnm("N1","NK") # number of subsections
 
         self.distribs = [ENDF_File5_Distrib(iterlines) for i in range(self.NK)]
         footer = ENDF_HEAD_Record(next(iterlines))

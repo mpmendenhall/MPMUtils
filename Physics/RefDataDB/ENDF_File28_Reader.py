@@ -20,10 +20,10 @@ class ENDF_File28_List(ENDF_List):
 
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.SUBI = int(self.C1)        # subshell enumeration, 1,2,3 = K,L1,L2,...
+        self.rnm("C1","SUBI"); self.SUBI = int(self.SUBI)   # subshell enumeration, 1,2,3 = K,L1,L2,...
         self.EBI  = self.data[0]        # subshell binding energy
         self.ELN  = int(self.data[1])   # number of electrons in subshell when neutral
-        self.NTR  = self.N2             # number of transitions
+        self.rnm("N2","NTR")            # number of transitions
         self.transitions = [ENDF_File28_Transition(self.data[6*(i+1):]) for i in range(self.NTR)]
 
     def __repr__(self):
@@ -41,7 +41,7 @@ class ENDF_File28_Sec(ENDF_HEAD_Record):
         assert self.MT == 533
 
         self.rectp = "File 28 'Atomic relaxation data'"
-        self.NSS = self.N1  # number of subshell entries
+        self.rnm("N1","NSS")  # number of subshell entries
         self.contents = [ENDF_File28_List(iterlines) for i in range(self.NSS)]
 
 

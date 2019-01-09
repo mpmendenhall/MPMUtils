@@ -14,13 +14,12 @@ class ENDF_File33_NI_SSSec(ENDF_List):
     def __init__(self, iterlines):
         super().__init__(iterlines)
         self.rectp += " NI"
-        self.LB = self.L2   # flag for interpretation of contents
-        self.NT = self.N1   # total number of entries
+        self.rnm("L2","LB") # flag for interpretation of contents
 
 
         if self.LB in (0,1,2,3,4):
-            self.NP = self.N2   # total number of E,F pairs
-            self.LT = self.L1   # number of pairs in second array
+            self.rnm("N2","NP") # total number of E,F pairs
+            self.rnm("L1","LT") # number of pairs in second array
             n = 2*(self.NP-self.LT)
             self.Ek = self.data[0:n][::2]
             self.Fk = self.data[1:n][::2]
@@ -32,8 +31,8 @@ class ENDF_File33_NI_SSSec(ENDF_List):
             self.rectp += "}"
 
         elif self.LB == 5:      # space-efficient energy-averaged relative covariance matrix representation
-            self.NE = self.N2   # number of energy bin edge entries
-            self.LS = self.L1   # symmetric matrix flag
+            self.rnm("N2","NE") # number of energy bin edge entries
+            self.rnm("L1","LS") # symmetric matrix flag
             self.Er = self.data[:self.NE]
             self.rectp += " {%i^2 %g -- %g%s}"%(self.NE-1, self.Er[0], self.Er[-1], " S" if self.LS else "")
 
@@ -49,8 +48,8 @@ class ENDF_File33_NI_SSSec(ENDF_List):
                 self.data = d
 
         elif self.LB == 6:    # Non-square matrix for different reactions/materials
-            self.NER = self.N2                  # Number of energies defining rows (NER-1 intervals)
-            self.NEC = (self.NT - 1)//self.NER  # number of column energies
+            self.rnm("N2","NER")                # Number of energies defining rows (NER-1 intervals)
+            self.NEC = (self.NPL - 1)//self.NER # number of column energies
             self.Er = self.data[0:self.NER]     # Row energy bin edges
             self.Ec = self.data[self.NER:self.NER+self.NEC] # Column energy bin edges
             self.data = self.data[self.NER+self.NEC:]       # (NER-1)*(NEC-1) array
@@ -76,10 +75,10 @@ class ENDF_File33_SubSec(ENDF_CONT_Record):
         super().__init__(next(iterlines))
         self.XMF1  = int(self.C1)   # MF for the 2nd cross section of the pair; if MF1=MF, XMF1=0.0 or blank.
         self.XLFS1 = int(self.C2)   # final excited state of the 2nd energy-dependent cross section.
-        self.MAT1  = self.L1        # MAT for 2nd cross-section
-        self.MT1   = self.L2        # MT for 2nd cross-section
-        self.NC    = self.N1        # number of NC-type subsubsections
-        self.NI    = self.N2        # number of NI-type subsubsections
+        self.rnm("L1","MAT1")       # MAT for 2nd cross-section
+        self.rnm("L2","MT1")        # MT for 2nd cross-section
+        self.rnm("N1","NC")         # number of NC-type subsubsections
+        self.rnm("N2","NI")         # number of NI-type subsubsections
         self.rectp = "Covariance x [m%i(%i) f%i s%i]"%(self.MAT1, self.XLFS1, self.XMF1, self.MT1)
 
         self.subNC = [ENDF_File33_NC_SSSec(iterlines) for i in range(self.NC)]

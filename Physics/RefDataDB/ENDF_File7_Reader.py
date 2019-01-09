@@ -3,8 +3,8 @@ from ENDF_Base_Reader import *
 class ENDF_File7_TList(ENDF_List):
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.T = self.C1    # temperature
-        self.beta = self.C2 # energy transfer, (E'-E)/kT
+        self.rnm("C1","T")      # temperature
+        self.rnm("C2","beta")   # energy transfer, (E'-E)/kT
 
     def printid(self):
         return self.rectp + " \tT = %g"%self.T
@@ -13,9 +13,9 @@ class ENDF_File7_TTable(ENDF_Tab1):
     """Table with additional temperature columns"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.T0 = self.C1   # temperature
-        self.beta = self.C2 # energy transfer, (E'-E)/kT
-        self.LT = self.L1   # number of temperature-dependent columns
+        self.rnm("C1","T0")     # temperature
+        self.rnm("C2","beta")   # energy transfer, (E'-E)/kT
+        self.rnm("L1","LT")     # number of temperature-dependent columns
         self.cols = [ENDF_File7_TList(iterlines) for i in range(self.LT)]
 
     def printid(self):
@@ -52,7 +52,7 @@ class ENDF_File7_Sec(ENDF_HEAD_Record):
         elif self.MT == 4: self.rectp += " Thermal n inelastic"
         else: assert False
 
-        self.LTHR = self.L1 # interpretation flag; 1: elastic
+        self.rnm("L1","LTHR")   # interpretation flag; 1: elastic
 
         self.tbl = None
         if self.LTHR == 0:
