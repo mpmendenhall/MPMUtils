@@ -1,6 +1,6 @@
 #! /bin/env python3
 
-from NucCanvas import NucCanvas
+from NucCanvas import *
 from ENDF6_DB import *
 from argparse import ArgumentParser
 
@@ -30,7 +30,7 @@ def make_dplot(sid, EDB, outname = None):
 
                 # transitioning out of intermediate state in multi-component transition
                 if n:
-                    NucCanvas.addwt(c.nucs, (A, Z, 0.5), w*b.BR)
+                    NucCanvas.addwt(c.nucs, (A, Z, 0.9), w*b.BR)
                     c.HL[(A,Z,0.9)] = 1e-18
 
                 ZA = File8_DecayBranch.deltaZA(r, Z, A)
@@ -52,7 +52,7 @@ def make_dplot(sid, EDB, outname = None):
 
     NC = NucCanvas()
     sd = dchain(sid, EDB, NC)
-    if sd.NST: return # skip plotting stable
+    if sd.NST: return None # skip plotting stable
     NC.condense()
     NC.drawNucs()
 
@@ -60,6 +60,7 @@ def make_dplot(sid, EDB, outname = None):
         outname = "%03i%s%03i"%(sd.A, NC.elnames.elSym(sd.Z), sd.Z)
         if sd.LIS: outname += "_%i"%sd.LIS
         outname += "_Decay"
+    if not outname: return NC.c
     print("\nGenerating %s.pdf"%outname)
     NC.c.writePDFfile(outname)
 
@@ -76,19 +77,20 @@ if __name__ == "__main__":
     EDB = ENDFDB(options.db)
 
     if options.every:
-        NucCanvas.HLkey()
-
         options.Z = 999
-        os.system("rm *_Decay.pdf")
-        if options.out is None: options.out = "decays.pdf"
+        if options.out is None: options.out = "decays"
+
+        d = document.document()
+        d.append(document.page(NucCanvas.HLkey(None)))
         for Z in range(120):
             sids = EDB.find_sections({"Z": Z, "MF": 8, "MT": 457})
             if not sids: continue
-            for s in sids: make_dplot(s, EDB)
-            os.system("pdfunite *_Decay.pdf %03i_decays.pdf"%Z)
-            os.system("rm *_Decay.pdf")
-        os.system("pdfunite hlKey.pdf ???_decays.pdf "+options.out)
-        os.system("rm ???_decays.pdf")
+            print("Generating z =",Z)
+
+            for s in sids:
+                p = make_dplot(s, EDB, 0)
+                if p is not None: d.append(document.page(p))
+        d.writePDFfile(options.out)
 
 
     sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": 8, "MT": 457})

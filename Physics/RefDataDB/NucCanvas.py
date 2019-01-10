@@ -73,8 +73,8 @@ class NucCanvas:
         for n,(k,t) in enumerate(ts.items()):
             y = log(t/1e-12)/log(pi*1e9/1e-12)
             c.text(0, 7*y, k, [text.halign.boxcenter, NucCanvas.HLcolor(t)])
-        c.writePDFfile(outname)
-
+        if outname is not None: c.writePDFfile(outname)
+        else: return c
 
     def drawNucs(self):
 
