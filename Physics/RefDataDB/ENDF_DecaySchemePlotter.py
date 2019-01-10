@@ -13,14 +13,20 @@ def make_dplot(sid, EDB):
         if sd.NST: return sd
 
         for b in sd.branches.data:
-            Z,A = b.daughterZA(sd.Z, sd.A)
+            ZA = b.daughterZA(sd.Z, sd.A)
+            if not ZA: continue
+            Z,A = ZA
             assert A != sd.A or Z != sd.Z or b.RFS != sd.LISO
 
             if b.RTYP == (1,): NucCanvas.addwt(c.betas, (sd.A,sd.Z), w*b.BR)
             if b.RTYP == (4,): NucCanvas.addwt(c.alphas, (sd.A,sd.Z), w*b.BR)
 
-            ss = EDB.find_F8MT457(A, Z, b.RFS, b.RFS)
-            dchain(ss, EDB, c, w*b.BR)
+            ss = EDB.find_F8MT457(A, Z, b.RFS)
+            if ss: dchain(ss, EDB, c, w*b.BR)
+            else:
+                print("Missing", A, Z, b.RFS)
+                print(sd)
+                print(b)
 
         return sd
 

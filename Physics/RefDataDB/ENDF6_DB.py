@@ -28,8 +28,8 @@ class ENDFDB:
         self.curs.execute(cmd, [q[1] for q in qvals])
         return [r[0] for r in self.curs.fetchall()]
 
-    def find_F8MT457(self, A, Z, LIS, LISO):
-        self.curs.execute("SELECT section_id FROM MF8_MT457_directory WHERE A=? AND Z=? AND LIS=? AND LISO=?", (A, Z, LIS, LISO))
+    def find_F8MT457(self, A, Z, LISO):
+        self.curs.execute("SELECT section_id FROM MF8_MT457_directory WHERE A=? AND Z=? AND LISO=?", (A, Z, LISO))
         r = self.curs.fetchone()
         return r[0] if r else None
 

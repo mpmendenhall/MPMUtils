@@ -178,10 +178,12 @@ class File8_DecayBranch:
             elif r == 1: Z += 1
             elif r == 2: Z -= 1
             elif r == 3: pass
-            elif r == 4: Z -=2; A -= 2
+            elif r == 4: Z -=2; A -= 4
             elif r == 5: A -= 1
             elif r == 7: Z -= 1; A -= 1
-            else: return None
+            else:
+                print("Unhandled rtype", r)
+                return None
         return Z,A
 
     def __repr__(self):

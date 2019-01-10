@@ -36,7 +36,7 @@ class NucCanvas:
 
     def nucCenter(self,A,Z):
         """Drawing coordinates center for nuclide"""
-        return -0.5*A*self.dscale, (Z-3./8.*A)*self.dscale # good for alpha/beta chain
+        return -0.25*A*self.dscale, (Z-3./8.*A)*self.dscale # good for alpha/beta chain
 
     def drawNucs(self):
         for (A,Z),w in self.nucs.items():
@@ -57,5 +57,5 @@ class NucCanvas:
     def drawAlpha(self,A,Z,w=1):
         """Draw marker for alpha transition"""
         x0,y0 = self.nucCenter(A-0.5, Z-0.5)
-        x1,y1 = self.nucCenter(A-1.4, Z-1.5)
+        x1,y1 = self.nucCenter(A-2.4, Z-1.5)
         self.c.stroke(path.line(x0,y0,x1,y1),[style.linewidth.THick, rgb.red, color.transparency(1. - w), deco.earrow([deco.filled([rgb.red])], size=self.dscale*0.3)])
