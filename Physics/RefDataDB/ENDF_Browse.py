@@ -17,7 +17,7 @@ def dchain(sid, EDB):
     for b in sd.branches.data:
         Z,A = b.daughterZA(sd.Z, sd.A)
         assert A != sd.A or Z != sd.Z or b.RFS != sd.LISO
-        ss = EDB.find_F8MT457(A, Z, b.RFS, b.RFS)
+        ss = EDB.find_F8MT457(A, Z, b.RFS)
         if not ss:
             assert False
             s += "\n\n\t*** Daughter not found."

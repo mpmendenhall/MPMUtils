@@ -4,7 +4,7 @@ from NucCanvas import NucCanvas
 from ENDF6_DB import *
 from argparse import ArgumentParser
 
-def make_dplot(sid, EDB):
+def make_dplot(sid, EDB, outname = None):
 
     def dchain(sid, EDB, c, w = 1):
         sd = EDB.get_section(sid)
@@ -19,24 +19,24 @@ def make_dplot(sid, EDB):
             assert A != sd.A or Z != sd.Z or b.RFS != sd.LISO
 
             A0, Z0 = sd.A, sd.Z
-            for r in b.RTYP:
-                if r in (0,8,9): pass
-                elif r == 1:
-                    NucCanvas.addwt(c.betas, (A0, Z0), w*b.BR)
-                    Z0 += 1
-                elif r == 2:
-                    NucCanvas.addwt(c.betas, (A0,-Z0), w*b.BR)
-                    Z0 -= 1
-                elif r == 4:
-                    NucCanvas.addwt(c.alphas,(A0, Z0), w*b.BR)
-                    A0 -= 4; Z0 -= 2
-                elif r == 5:
-                    NucCanvas.addwt(c.nps,   (A0, Z0), w*b.BR)
-                    A0 -= 1
-                elif r == 7:
-                    NucCanvas.addwt(c.nps,   (A0,-Z0), w*b.BR)
-                    A0 -= 1; Z0 -= 1
+            for n,r in enumerate(b.RTYP):
+                if r in (0,8,9): continue # gammas, no change to A,Z
+
+                if   r == 1: NucCanvas.addwt(c.betas, (A0, Z0), w*b.BR)
+                elif r == 2: NucCanvas.addwt(c.betas, (A0,-Z0), w*b.BR)
+                elif r == 4: NucCanvas.addwt(c.alphas,(A0, Z0), w*b.BR)
+                elif r == 5: NucCanvas.addwt(c.nps,   (A0, Z0), w*b.BR)
+                elif r == 7: NucCanvas.addwt(c.nps,   (A0,-Z0), w*b.BR)
                 else: break
+
+                if (A0,Z0) != (sd.A,sd.Z): NucCanvas.addwt(c.nucs, (A0, Z0), w*b.BR)
+                if r == 1: Z0 += 1
+                elif r == 2: Z0 -= 1
+                elif r == 4: A0 -= 4; Z0 -= 2
+                elif r == 5: A0 -= 1
+                elif r == 7: A0 -= 1; Z0 -= 1
+
+
 
             ss = EDB.find_F8MT457(A, Z, b.RFS)
             if ss: dchain(ss, EDB, c, w*b.BR)
@@ -44,6 +44,7 @@ def make_dplot(sid, EDB):
                 print("Missing", A, Z, b.RFS)
                 print(sd)
                 print(b)
+                NucCanvas.addwt(c.nucs, (A, Z), w*b.BR)
 
         return sd
 
@@ -51,9 +52,11 @@ def make_dplot(sid, EDB):
     sd = dchain(sid, EDB, NC)
     NC.condense()
     NC.drawNucs()
-    dname = "%03i%s%03i"%(sd.A, NC.elnames.elSym(sd.Z), sd.Z)
-    if sd.LIS: dname += "_%i"%sd.LIS
-    NC.c.writePDFfile(dname + "_Decay")
+    if outname is None:
+        outname = "%03i%s%03i"%(sd.A, NC.elnames.elSym(sd.Z), sd.Z)
+        if sd.LIS: outname += "_%i"%sd.LIS
+        outname += "_Decay"
+    NC.c.writePDFfile(outname)
 
 
 if __name__ == "__main__":
@@ -62,9 +65,24 @@ if __name__ == "__main__":
     parser.add_argument("--A",      type=int,   help="filter by A")
     parser.add_argument("--Z",      type=int,   help="filter by Z")
     parser.add_argument("--lvl",    type=int,   help="filter by level")
+    parser.add_argument("--every",  action="store_true", help="plot EVERYTHING!")
+    parser.add_argument("--out",    help="output filename (blank for auto)")
     options = parser.parse_args()
 
     EDB = ENDFDB(options.db)
 
+    if options.every:
+        options.Z = 999
+        os.system("rm *_Decay.pdf")
+        if options.out is None: options.out = "decays.pdf"
+        for Z in range(120):
+            sids = EDB.find_sections({"Z": Z, "MF": 8, "MT": 457})
+            if not sids: continue
+            for s in sids: make_dplot(s, EDB)
+            os.system("pdfunite *_Decay.pdf %03i_decays.pdf"%Z)
+            os.system("rm *_Decay.pdf")
+        os.system("pdfunite ???_decays.pdf "+options.out)
+
+
     sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": 8, "MT": 457})
-    for s in sids: make_dplot(s, EDB)
+    for s in sids: make_dplot(s, EDB, options.out)

@@ -89,7 +89,7 @@ class NucCanvas:
         isProton = Z < 0
         Z = abs(Z)
 
-        x0,y0 = self.nucCenter(A,   Z,   0.3, -0.3)
+        x0,y0 = self.nucCenter(A,   Z,   0.3, -0.3 if isProton else 0)
         c = rgb(1,0.5,0) if isProton else rgb(0,0.5,1)
         s = [style.linewidth.THick, c, color.transparency(1. - w), deco.earrow([deco.filled([c])], size=self.dscale*0.3)]
         if isProton: x1,y1 = self.nucCenter(A-1, Z-1, -0.35, 0)
