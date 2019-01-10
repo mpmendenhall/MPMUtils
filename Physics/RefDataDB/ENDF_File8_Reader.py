@@ -171,19 +171,26 @@ class File8_DecayBranch:
         self.BR = l[4]      # branching fraction
         self.dBR = l[5]     # uncertainty
 
+    def deltaZA(r, Z=0, A=0):
+        """Determine Z,A (delta) for transition number"""
+        if r == 0: pass
+        elif r == 1: Z += 1
+        elif r == 2: Z -= 1
+        elif r == 3: pass
+        elif r == 4: Z -=2; A -= 4
+        elif r == 5: A -= 1
+        elif r == 7: Z -= 1; A -= 1
+        else: return None
+        return Z,A
+
     def daughterZA(self, Z=0, A=0):
         """Determine Z,A (delta) for daughter nucleus"""
         for r in self.RTYP:
-            if r == 0: pass
-            elif r == 1: Z += 1
-            elif r == 2: Z -= 1
-            elif r == 3: pass
-            elif r == 4: Z -=2; A -= 4
-            elif r == 5: A -= 1
-            elif r == 7: Z -= 1; A -= 1
-            else:
+            d = File8_DecayBranch.deltaZA(r,Z,A)
+            if d is None:
                 print("Unhandled rtype", r)
-                return None
+                return d
+            Z,A = d
         return Z,A
 
     def __repr__(self):

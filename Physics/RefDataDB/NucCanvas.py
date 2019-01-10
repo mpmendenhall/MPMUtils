@@ -5,15 +5,17 @@ Draw table-of-isotopes figures"""
 from AtomsDB import *
 from math import *
 from pyx import *
-from pyx.color import rgb
+from pyx.color import rgb, hsb
+
+text.set(cls=text.LatexRunner)
+text.preamble(r"\usepackage{mathtools}")
 
 class NucCanvas:
     """Utilities for drawing nuclear decay chains on A:Z canvas"""
     def __init__(self):
         self.c = canvas.canvas()
-        text.set(cls=text.LatexRunner)
-        text.preamble(r"\usepackage{mathtools}")
         self.nucs = {}      # isotopes (A,Z,[L]) with weights
+        self.HL = {}        # half-lives for isotopes
         self.alphas = {}    # alpha decays with weights
         self.betas = {}     # beta (+positron, e.c.) decays with weights
         self.nps = {}       # neutron (proton, Z<0) decays with weights
@@ -52,6 +54,28 @@ class NucCanvas:
         A0 = self.Acondense.get(A,A)
         return (A0*self.dA[0] + Z*self.dZ[0] + dx)*self.dscale, (A*self.dA[1] + Z*self.dZ[1] + dy)*self.dscale
 
+    def HLcolor(t):
+        if not t: return rgb.black
+        x = log(t/1e-12)/log(pi*1e9/1e-12) if t else 1
+        x = min(max(0,x),1)
+        return hsb(0.90*x, 1, 1)
+
+    def HLkey(outname = "hlKey"):
+        c = canvas.canvas()
+        text.set(cls=text.LatexRunner)
+        ts = {"1 ps": 1e-12, "10 ps": 1e-11, "100 ps": 1e-10,
+              "1 ns": 1e-9, "10 ns": 1e-8, "100 ns": 1e-7,
+              "1 $\\mu$s": 1e-6, "10 $\\mu$s": 1e-5, "100 $\\mu$s": 1e-4,
+              "1 ms": 1e-3, "10 ms": 1e-2, "100 ms": 1e-1,
+              "second": 1, "minute": 60, "hour": 3600,
+              "day": 3600*24, "month": 2.63e6, "year": pi*1e7, "decade": pi*1e8, "century": pi*1e9}
+
+        for n,(k,t) in enumerate(ts.items()):
+            y = log(t/1e-12)/log(pi*1e9/1e-12)
+            c.text(0, 7*y, k, [text.halign.boxcenter, NucCanvas.HLcolor(t)])
+        c.writePDFfile(outname)
+
+
     def drawNucs(self):
 
         for (A,Z),w in self.SFs.items(): self.drawSF(A,Z,w)
@@ -63,7 +87,12 @@ class NucCanvas:
             c = color.transparency(1. - w)
             d = 0.9
             if len(n) >= 3 and n[2]: d -= 0.05*n[2]
-            self.c.stroke(path.rect(x0-0.5*d*self.dscale, y0-0.5*d*self.dscale, d*self.dscale, d*self.dscale), [deformer.smoothed(radius=0.1*self.dscale), c])
+            fc = self.__class__.HLcolor(self.HL.get(n,None))
+
+            self.c.stroke(path.rect(x0-0.5*d*self.dscale, y0-0.5*d*self.dscale, d*self.dscale, d*self.dscale), [deformer.smoothed(radius=0.1*self.dscale), fc, c])
+
+
+
             y0 -= 0.1*self.dscale
             c = color.transparency(min(0.9, 1. - w))
             self.c.text(x0, y0, r"$^{%i}_{%i}$%s"%(A,Z,self.elnames.elSym(Z)), [text.halign.boxcenter, c])
@@ -77,16 +106,18 @@ class NucCanvas:
         isPositron = Z < 0
         Z = abs(Z)
 
-        p0 = self.nucCenter(0,0)
-        pZ = self.nucCenter(0,1)
-        thz = atan2(pZ[0]-p0[0], pZ[1]-p0[1])
-
         if isPositron:
             x0,y0 = self.nucCenter(A, Z-0.5)
-            self.c.fill(self.ptri,[rgb(0.5,0,1), color.transparency(1. - w), trafo.scale(self.dscale), trafo.rotate(180/pi * thz), trafo.translate(x0,y0)])
+            c = rgb(1,0,1)
         else:
             x0,y0 = self.nucCenter(A, Z+0.5)
-            self.c.fill(self.btri,[rgb.blue, color.transparency(1. - w), trafo.scale(self.dscale), trafo.rotate(180/pi * thz), trafo.translate(x0,y0)])
+            c = rgb.blue
+
+        p0 = self.nucCenter(A,Z)
+        pZ = self.nucCenter(A,Z+(-1 if isPositron else 1))
+        thz = atan2(pZ[0]-p0[0], pZ[1]-p0[1])
+        self.c.fill(self.btri,
+                    [c, color.transparency(1. - w), trafo.scale(self.dscale), trafo.rotate(180/pi * thz), trafo.translate(x0,y0)])
 
     def drawAlpha(self,A,Z,w=1):
         """Draw marker for alpha transition"""
