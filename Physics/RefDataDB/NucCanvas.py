@@ -13,10 +13,12 @@ class NucCanvas:
         self.c = canvas.canvas()
         text.set(cls=text.LatexRunner)
         text.preamble(r"\usepackage{mathtools}")
-        self.nucs = {}      # isotopes (A,Z) with weights
+        self.nucs = {}      # isotopes (A,Z,[L]) with weights
         self.alphas = {}    # alpha decays with weights
         self.betas = {}     # beta (+positron, e.c.) decays with weights
         self.nps = {}       # neutron (proton, Z<0) decays with weights
+        self.its = {}       # IT transitions
+        self.SFs = {}       # spontaneous fission markers
         self.elnames =  ElementNames()
         self.dscale = 1.2       # overall drawing scale factor
 
@@ -30,7 +32,7 @@ class NucCanvas:
     def toZ(self, elem): return self.elnames.elNum(elem)
 
     def condense(self):
-        for A,Z in self.nucs: self.Acondense[A] = 0
+        for n in self.nucs: self.Acondense[n[0]] = 0
         ka = list(self.Acondense.keys())
         ka.sort()
         A = ka[0]
@@ -42,8 +44,8 @@ class NucCanvas:
         d.setdefault(k,0)
         d[k] += w
 
-    def addNuc(self, A, elem, w = 1):
-        self.addwt(self.nucs, (A, self.toZ(elem)), w)
+    def addNuc(self, A, elem, w = 1, L = None):
+        self.addwt(self.nucs, (A, self.toZ(elem), L), w)
 
     def nucCenter(self,A, Z, dx=0, dy=0):
         """Drawing coordinates center for nuclide"""
@@ -51,10 +53,17 @@ class NucCanvas:
         return (A0*self.dA[0] + Z*self.dZ[0] + dx)*self.dscale, (A*self.dA[1] + Z*self.dZ[1] + dy)*self.dscale
 
     def drawNucs(self):
-        for (A,Z),w in self.nucs.items():
+
+        for (A,Z),w in self.SFs.items(): self.drawSF(A,Z,w)
+        for (A,Z),w in self.its.items(): self.drawIT(A,Z,w)
+
+        for n,w in self.nucs.items():
+            A,Z = n[0], n[1]
             x0,y0 = self.nucCenter(A, Z)
             c = color.transparency(1. - w)
-            self.c.stroke(path.rect(x0-0.45*self.dscale, y0-0.45*self.dscale, 0.9*self.dscale, 0.9*self.dscale), [deformer.smoothed(radius=0.1*self.dscale), c])
+            d = 0.9
+            if len(n) >= 3 and n[2]: d -= 0.05*n[2]
+            self.c.stroke(path.rect(x0-0.5*d*self.dscale, y0-0.5*d*self.dscale, d*self.dscale, d*self.dscale), [deformer.smoothed(radius=0.1*self.dscale), c])
             y0 -= 0.1*self.dscale
             c = color.transparency(min(0.9, 1. - w))
             self.c.text(x0, y0, r"$^{%i}_{%i}$%s"%(A,Z,self.elnames.elSym(Z)), [text.halign.boxcenter, c])
@@ -95,3 +104,14 @@ class NucCanvas:
         if isProton: x1,y1 = self.nucCenter(A-1, Z-1, -0.35, 0)
         else: x1,y1 = self.nucCenter(A-1, Z, -0.35, 0)
         self.c.stroke(path.line(x0,y0,x1,y1), s)
+
+    def drawIT(self,A,Z,w=1):
+        """Draw marker for IT transition"""
+        x,y = self.nucCenter(A, Z, 0.30, 0.30)
+        self.c.fill(path.circle(x ,y, 0.07*self.dscale), [rgb.green, color.transparency(1. - w)])
+
+    def drawSF(self,A,Z,w=1):
+        """Draw marker for spontaneous fission"""
+        x,y = self.nucCenter(A, Z)
+        print(x,y,w)
+        self.c.stroke(path.circle(x ,y, 0.37*self.dscale), [style.linewidth.THICk, rgb(1,1,0), color.transparency(1. - w)])

@@ -8,28 +8,30 @@ def make_dplot(sid, EDB, outname = None):
 
     def dchain(sid, EDB, c, w = 1):
         sd = EDB.get_section(sid)
-        NucCanvas.addwt(c.nucs, (sd.A, sd.Z), w)
+        NucCanvas.addwt(c.nucs, (sd.A, sd.Z, sd.LISO), w)
 
         if sd.NST: return sd
 
         for b in sd.branches.data:
-            ZA = b.daughterZA(sd.Z, sd.A)
-            if not ZA: continue
-            Z,A = ZA
-            assert A != sd.A or Z != sd.Z or b.RFS != sd.LISO
 
             A0, Z0 = sd.A, sd.Z
             for n,r in enumerate(b.RTYP):
-                if r in (0,8,9): continue # gammas, no change to A,Z
-
-                if   r == 1: NucCanvas.addwt(c.betas, (A0, Z0), w*b.BR)
+                if r == 3:
+                    NucCanvas.addwt(c.its, (A0, Z0), w*b.BR) # gammas, no change to A,Z
+                    continue
+                elif r == 1: NucCanvas.addwt(c.betas, (A0, Z0), w*b.BR)
                 elif r == 2: NucCanvas.addwt(c.betas, (A0,-Z0), w*b.BR)
                 elif r == 4: NucCanvas.addwt(c.alphas,(A0, Z0), w*b.BR)
                 elif r == 5: NucCanvas.addwt(c.nps,   (A0, Z0), w*b.BR)
+                elif r == 6: NucCanvas.addwt(c.SFs,   (A0, Z0), w*b.BR); break
                 elif r == 7: NucCanvas.addwt(c.nps,   (A0,-Z0), w*b.BR)
-                else: break
+                else:
+                    print("Unhandled transition type", r)
+                    break
 
-                if (A0,Z0) != (sd.A,sd.Z): NucCanvas.addwt(c.nucs, (A0, Z0), w*b.BR)
+                if (A0,Z0,b) != (sd.A, sd.Z): # intermediate transition
+                    NucCanvas.addwt(c.nucs, (A0, Z0), w*b.BR)
+
                 if r == 1: Z0 += 1
                 elif r == 2: Z0 -= 1
                 elif r == 4: A0 -= 4; Z0 -= 2
@@ -37,6 +39,10 @@ def make_dplot(sid, EDB, outname = None):
                 elif r == 7: A0 -= 1; Z0 -= 1
 
 
+            ZA = b.daughterZA(sd.Z, sd.A)
+            if not ZA: continue
+            Z,A = ZA
+            assert A != sd.A or Z != sd.Z or b.RFS != sd.LISO
 
             ss = EDB.find_F8MT457(A, Z, b.RFS)
             if ss: dchain(ss, EDB, c, w*b.BR)
