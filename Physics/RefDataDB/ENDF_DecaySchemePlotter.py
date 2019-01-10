@@ -29,7 +29,7 @@ def make_dplot(sid, EDB, outname = None):
                     print("Unhandled transition type", r)
                     break
 
-                if (A0,Z0,b) != (sd.A, sd.Z): # intermediate transition
+                if (A0,Z0) != (sd.A, sd.Z): # intermediate transition
                     NucCanvas.addwt(c.nucs, (A0, Z0), w*b.BR)
 
                 if r == 1: Z0 += 1
@@ -58,12 +58,12 @@ def make_dplot(sid, EDB, outname = None):
     sd = dchain(sid, EDB, NC)
     NC.condense()
     NC.drawNucs()
+
     if outname is None:
         outname = "%03i%s%03i"%(sd.A, NC.elnames.elSym(sd.Z), sd.Z)
         if sd.LIS: outname += "_%i"%sd.LIS
         outname += "_Decay"
     NC.c.writePDFfile(outname)
-
 
 if __name__ == "__main__":
     parser = ArgumentParser()

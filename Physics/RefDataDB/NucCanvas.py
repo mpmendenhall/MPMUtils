@@ -113,5 +113,4 @@ class NucCanvas:
     def drawSF(self,A,Z,w=1):
         """Draw marker for spontaneous fission"""
         x,y = self.nucCenter(A, Z)
-        print(x,y,w)
         self.c.stroke(path.circle(x ,y, 0.37*self.dscale), [style.linewidth.THICk, rgb(1,1,0), color.transparency(1. - w)])
