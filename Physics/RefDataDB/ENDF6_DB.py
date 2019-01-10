@@ -15,6 +15,7 @@ class ENDFDB:
         self.curs.execute("PRAGMA foreign_keys=ON")
         self.readonly = False
         self.letFail = False
+        self.cache = {} # set to None to disable
 
     def find_section(self, MAT, MF, MT):
         """Return section_id(s) for by MAT, MF, MT identifiers"""
@@ -62,6 +63,8 @@ class ENDFDB:
 
     def get_section(self, sid):
         """Return section from DB"""
+        if self.cache is not None and sid in self.cache: return self.cache[sid]
+
         self.curs.execute("SELECT lines, pcl FROM ENDF_sections WHERE section_id = ?", (sid,))
         res = self.curs.fetchall()
         if not res: return None
@@ -78,5 +81,6 @@ class ENDFDB:
         if s is not None and not self.readonly:
             self.curs.execute("UPDATE ENDF_sections SET lines=?, pcl=? WHERE section_id=?", (None, pickle.dumps(s), sid))
             self.conn.commit()
+        if self.cache is not None: self.cache[sid] = s
         return s
 
