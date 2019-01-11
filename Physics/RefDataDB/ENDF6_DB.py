@@ -25,7 +25,7 @@ class ENDFDB:
     def find_sections(self, qdict):
         """Search sections table"""
         qvals = [("1 = ?", 1)] + [(k+" = ?", v) for k,v in qdict.items() if v is not None]
-        cmd = "SELECT section_id FROM ENDF_sections WHERE " + " AND ".join([q[0] for q in qvals])
+        cmd = "SELECT section_id FROM ENDF_sections WHERE " + " AND ".join([q[0] for q in qvals]) + " ORDER BY MAT"
         self.curs.execute(cmd, [q[1] for q in qvals])
         return [r[0] for r in self.curs.fetchall()]
 
