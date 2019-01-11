@@ -1,4 +1,5 @@
 from ENDF_Base_Reader import *
+from math import sqrt
 
 # names for RTYP = 0 to 10
 RTYP_names = ["gamma", "beta", "e.c./e+", "IT", "alpha", "n", "SF", "p", "e-", "xray", "?"]
@@ -122,7 +123,7 @@ class ENDF_File8_FissProd:
         ZAFP = int(l[0])    # 1000*Z + A
         self.Z = ZAFP//1000
         self.A = ZAFP%1000
-        self.FPS = l[1]     # state designator
+        self.FPS = int(l[1])# state designator
         self.Y = l[2]       # yield
         self.DY = l[3]      # uncertainty on Y
 
@@ -143,8 +144,8 @@ class ENDF_File8_FPY(ENDF_List):
         self.data = [ENDF_File8_FissProd(self.data[4*i : 4*i+4]) for i in range(self.NFP)]
 
     def __repr__(self):
-        s = super().__repr__() + ", incident E = %g eV (I=%i):"%(self.E, self.I)
-        for d in self.data: s += '\n\t'+str(d)
+        s = super().__repr__() + ", incident E = %g eV (interpolation mode %i):"%(self.E, self.I)
+        #for d in self.data: s += '\n\t'+str(d)
         return s
 
 class ENDF_File8_DecayEnergies(ENDF_List):
@@ -221,14 +222,15 @@ class ENDF_File8_Sec(ENDF_HEAD_Record):
         elif self.MT == 459: self.rectp += "Fission Products Cumulative Yields,"
         else: self.rectp += "Radioactive Nuclide Production from process MT=%i"%self.MT
 
-        self.rnm("L1","LIS")    # state number of target
-        self.rnm("L2","LISO")   # isomeric state number of target
-
-        self.products = []
+        if self.MT not in (454,459):
+            self.rnm("L1","LIS")    # state number of target
+            self.rnm("L2","LISO")   # isomeric state number of target
 
         if self.MT in (454,459):
-            self.LE = self.LIS - 1   # whether energy-dependent fission product yields given
+            self.rnm("L1","LE")
+            self.LE -= 1  # whether energy-dependent fission product yields given
             self.products = [ENDF_File8_FPY(iterlines) for i in range(self.LE+1)]
+            self.ips = InterpolationPoints([p.E for p in self.products], [p.I for p in self.products[1:]])
 
         elif self.MT == 457:
             self.rnm("N1","NST")    # nucleus stability: 0 = radioactive, 1 = stable
@@ -250,9 +252,28 @@ class ENDF_File8_Sec(ENDF_HEAD_Record):
         footer = ENDF_HEAD_Record(next(iterlines))
         assert footer.rectp == "SEND"
 
+    def eval_FPY(self, E):
+        """Get fission products yield interpolated to specified incident energy"""
+        assert self.MT in (454,459)
+        b,l = self.ips.locate(E)
+        if b is None: return []
+        i = self.ips.binterps[b]
+        assert i in (1,2,3)
+        prods = {}
+        for fp in self.products[b].data: prods[(fp.Z, fp.A, fp.FPS)] = (fp.Y * (1-l), fp.DY * (1-l))
+        if i == 1: return prods
+        for fp in self.products[b+1].data:
+            n = (fp.Z, fp.A, fp.FPS)
+            if n in prods:
+                p = prods[n]
+                prods[n] = (p[0]+fp.Y * l, sqrt(p[1]**2 + (fp.DY * l)**2))
+            else: prods[n] = (fp.Y * l, fp.DY * l)
+        return prods
+
+
     def printid(self):
-        s = super().printid() + " target state %i (iso. %i)"%(self.LIS, self.LISO)
-        #if self.MT in (454,459): s += "; NS=%i%s"%(self.NS, "" if not self.NO else " +aux in MT457")
+        s = super().printid()
+        if self.MT not in (454,459): s += " target state %i (iso. %i)"%(self.LIS, self.LISO)
         if self.MT == 457:
             if self.NST: s += " STABLE"
             else: s += "; T_1/2 = %g ~ %g"%(self.T_h, self.dT_h)
@@ -263,6 +284,6 @@ class ENDF_File8_Sec(ENDF_HEAD_Record):
         if self.MT == 457 and not self.NST:
             #s += "\n"+str(self.decayE)
             s += "\n"+indent(str(self.branches),'\t')
-        #if self.products: s += "\n * Products:"
-        #for t in self.products: s += '\n'+indent(str(t), '\t')
+        if self.MT in (454,459):
+            for t in self.products: s += '\n'+indent(str(t), '\t')
         return s

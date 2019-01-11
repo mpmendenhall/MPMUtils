@@ -138,6 +138,27 @@ class ENDF_Ranges(ENDF_CONT_Record):
         # unsupported interpolation scheme
         raise NotImplementedError
 
+class InterpolationPoints:
+    """Interpolation between (energy) points"""
+    def __init__(self, binedges = [], binterps = []):
+        self.binedges = binedges    # bin edge positions
+        self.binterps = binterps    # interpolation used within each bin
+
+    def locate(self, x):
+        """Locate bin number and fractional component 0 <= l <= 1"""
+        b = bisect(self.binedges, x)
+        if b < 1 or b >= len(self.binedges): return None, None
+        i = self.binterps[b-1]
+        if i == 1: return b-1, 0
+        x0 = self.binedges[b-1]
+        x1 = self.binedges[b]
+        if i == 3 or i == 5: l = log(x/x0)/log(x1/x0)
+        else:                l = (x-x0)/(x1-x0)
+        return b-1, l
+
+
+
+
 class ENDF_Tab1(ENDF_Ranges):
     """(x,y) table data format [MAT,MF,MT/ C1, C2, L1, L2, NR, NP/x int /y(x)]TAB1"""
     pair_reader = ff.FortranRecordReader('(6E11.0)')

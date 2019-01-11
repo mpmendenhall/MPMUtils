@@ -4,6 +4,20 @@ from NucCanvas import *
 from ENDF6_DB import *
 from argparse import ArgumentParser
 
+def FPyields(sid, EDB):
+    sd = EDB.get_section(sid)
+    prods = sd.eval_FPY(1.0)
+    NC = NucCanvas()
+    wmax = 0
+    for n in prods:
+        w = prods[n][0]
+        wmax = max(w,wmax)
+        if w: NucCanvas.addwt(NC.nucs, (n[1], n[0], n[2]), w)
+    for k in NC.nucs: NC.nucs[k] = max(1 + log(NC.nucs[k]/wmax)/log(1e3), 0)
+    NC.condense()
+    NC.drawNucs()
+    return NC.c
+
 def make_dplot(sid, EDB, outname = None):
 
     def dchain(sid, EDB, c, w = 1):
@@ -72,12 +86,12 @@ if __name__ == "__main__":
     parser.add_argument("--lvl",    type=int,   help="filter by level")
     parser.add_argument("--every",  action="store_true", help="plot EVERYTHING!")
     parser.add_argument("--out",    help="output filename (blank for auto)")
+    parser.add_argument("--FP",     action="store_true", help="fission products distribution")
     options = parser.parse_args()
 
     EDB = ENDFDB(options.db)
 
     if options.every:
-        options.Z = 999
         if options.out is None: options.out = "decays"
 
         d = document.document()
@@ -91,7 +105,16 @@ if __name__ == "__main__":
                 p = make_dplot(s, EDB, 0)
                 if p is not None: d.append(document.page(p))
         d.writePDFfile(options.out)
+        exit(0)
 
+    if options.FP:
+        if options.out is None: options.out = "FissProds"
+        for MT in (454,459):
+            sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": 8, "MT": MT})
+            for s in sids:
+                c = FPyields(s, EDB)
+                c.writePDFfile(options.out+("_Indep" if MT==454 else "_Cum"))
+        exit(0)
 
     sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": 8, "MT": 457})
     for s in sids: make_dplot(s, EDB, options.out)
