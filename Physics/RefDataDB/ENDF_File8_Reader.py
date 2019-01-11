@@ -257,7 +257,7 @@ class ENDF_File8_Sec(ENDF_HEAD_Record):
         assert self.MT in (454,459)
         b,l = self.ips.locate(E)
         if b is None: return []
-        i = self.ips.binterps[b]
+        i = self.ips.binterps[b] if self.ips.binterps else 1
         assert i in (1,2,3)
         prods = {}
         for fp in self.products[b].data: prods[(fp.Z, fp.A, fp.FPS)] = (fp.Y * (1-l), fp.DY * (1-l))

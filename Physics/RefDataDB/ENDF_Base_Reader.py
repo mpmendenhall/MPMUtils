@@ -146,6 +146,7 @@ class InterpolationPoints:
 
     def locate(self, x):
         """Locate bin number and fractional component 0 <= l <= 1"""
+        if len(self.binedges) == 1: return 0,0
         b = bisect(self.binedges, x)
         if b < 1 or b >= len(self.binedges): return None, None
         i = self.binterps[b-1]

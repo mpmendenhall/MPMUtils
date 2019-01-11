@@ -4,9 +4,12 @@ from NucCanvas import *
 from ENDF6_DB import *
 from argparse import ArgumentParser
 
-def FPyields(sid, EDB):
+def FPyields(sid, EDB, E = None):
+    """Plot fission product yields distribution"""
     sd = EDB.get_section(sid)
-    prods = sd.eval_FPY(1.0)
+    if E is None: E = sd.products[0].E
+    print("Fission yields for", sd.Z, sd.A, E)
+    prods = sd.eval_FPY(E)
     NC = NucCanvas()
     wmax = 0
     for n in prods:
@@ -14,6 +17,10 @@ def FPyields(sid, EDB):
         wmax = max(w,wmax)
         if w: NucCanvas.addwt(NC.nucs, (n[1], n[0], n[2]), w)
     for k in NC.nucs: NC.nucs[k] = max(1 + log(NC.nucs[k]/wmax)/log(1e3), 0)
+    if not NC.nucs:
+        print("\tNo fissions found!")
+        print(sd)
+        return None
     NC.condense()
     NC.drawNucs()
     return NC.c
@@ -67,23 +74,23 @@ def make_dplot(sid, EDB, outname = None):
     NC = NucCanvas()
     sd = dchain(sid, EDB, NC)
     if sd.NST: return None # skip plotting stable
+    print("\nGenerated decay for", sd.Z, sd.A)
     NC.condense()
     NC.drawNucs()
 
     if outname is None:
         outname = "%03i%s%03i"%(sd.A, NC.elnames.elSym(sd.Z), sd.Z)
         if sd.LIS: outname += "_%i"%sd.LIS
-        outname += "_Decay"
+        outname += "_Decay.pdf"
     if not outname: return NC.c
-    print("\nGenerating %s.pdf"%outname)
-    NC.c.writePDFfile(outname)
+    NC.c.writetofile(outname)
+    return None
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--db",     help="location of DB file")
     parser.add_argument("--A",      type=int,   help="filter by A")
     parser.add_argument("--Z",      type=int,   help="filter by Z")
-    parser.add_argument("--lvl",    type=int,   help="filter by level")
     parser.add_argument("--every",  action="store_true", help="plot EVERYTHING!")
     parser.add_argument("--out",    help="output filename (blank for auto)")
     parser.add_argument("--FP",     action="store_true", help="fission products distribution")
@@ -92,7 +99,7 @@ if __name__ == "__main__":
     EDB = ENDFDB(options.db)
 
     if options.every:
-        if options.out is None: options.out = "decays"
+        if options.out is None: options.out = "decays.pdf"
 
         d = document.document()
         d.append(document.page(NucCanvas.HLkey(None)))
@@ -104,17 +111,26 @@ if __name__ == "__main__":
             for s in sids:
                 p = make_dplot(s, EDB, 0)
                 if p is not None: d.append(document.page(p))
-        d.writePDFfile(options.out)
+        d.writetofile(options.out)
         exit(0)
 
     if options.FP:
-        if options.out is None: options.out = "FissProds"
+        if options.out is None: options.out = "FissProds.pdf"
+        d = document.document()
         for MT in (454,459):
             sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": 8, "MT": MT})
             for s in sids:
                 c = FPyields(s, EDB)
-                c.writePDFfile(options.out+("_Indep" if MT==454 else "_Cum"))
+                if c is not None: d.append(document.page(c))
+        d.writetofile(options.out)
         exit(0)
 
     sids = EDB.find_sections({"A": options.A, "Z": options.Z, "MF": 8, "MT": 457})
-    for s in sids: make_dplot(s, EDB, options.out)
+    d = document.document()
+    for s in sids:
+        p = make_dplot(s, EDB, 0 if len(sids) > 1 else options.out)
+        if p is not None: d.append(document.page(p))
+    if options.out is None: options.out = "decays.pdf"
+    if len(sids) > 1:
+        print("Outputting", options.out)
+        d.writetofile(options.out)
