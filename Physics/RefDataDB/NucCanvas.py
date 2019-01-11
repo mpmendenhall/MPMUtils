@@ -22,6 +22,7 @@ class NucState:
         self.alphamin = 0.10
         self.dx = 0
         self.dy = 0
+        self.frameStyle = []
 
     def idx(self): return (self.A, self.Z, self.L)
 
@@ -33,7 +34,7 @@ class NucState:
         if self.L: d -= 0.05*self.L
         fc = NC.HLcolor(self.HL) if self.HL else self.baseColor
         NC.stroke(path.rect(x0+(self.dx-0.5*d)*NC.dscale, y0+(self.dy-0.5*d)*NC.dscale, d*NC.dscale, d*NC.dscale),
-                  [deformer.smoothed(radius=0.1*NC.dscale), fc, alpha])
+                  self.frameStyle + [deformer.smoothed(radius=0.1*NC.dscale), fc, alpha])
 
         y0 -= 0.1*NC.dscale
         alpha = color.transparency(min(1.-self.alphamin, 1. - self.w))
@@ -86,8 +87,12 @@ class AlphaTrans(BaseTrans):
         alpha = color.transparency(1. - self.w)
         s = [style.linewidth.THick, c, alpha, deco.earrow([deco.filled([c])], size=NC.dscale*0.3)]
 
-        x0,y0 = NC.nucCenter(self.A,   self.Z,   0.3, -0.3)
-        x1,y1 = NC.nucCenter(self.A-4, self.Z-2, -0.35, 0)
+        if NC.dA[0] < 0:
+            x0,y0 = NC.nucCenter(self.A,   self.Z,   0.3, -0.3)
+            x1,y1 = NC.nucCenter(self.A-4, self.Z-2, -0.35, 0)
+        else:
+            x0,y0 = NC.nucCenter(self.A,   self.Z,   -0.3, -0.3)
+            x1,y1 = NC.nucCenter(self.A-4, self.Z-2, 0.35, -0.1)
         NC.stroke(path.line(x0,y0,x1,y1), s)
 
 class NPTrans(BaseTrans):
@@ -103,9 +108,14 @@ class NPTrans(BaseTrans):
         alpha = color.transparency(1. - self.w)
         s = [style.linewidth.THick, c, alpha, deco.earrow([deco.filled([c])], size=NC.dscale*0.3)]
 
-        x0,y0 = NC.nucCenter(A, Z, 0.3, -0.3 if isProton else 0)
-        if isProton: x1,y1 = NC.nucCenter(A-1, Z-1, -0.35, 0)
-        else: x1,y1 = NC.nucCenter(A-1, Z, -0.35, 0)
+        if NC.dA[0] < 0:
+            x0,y0 = NC.nucCenter(A, Z, 0.3, -0.3 if isProton else 0)
+            if isProton: x1,y1 = NC.nucCenter(A-1, Z-1, -0.35, 0)
+            else: x1,y1 = NC.nucCenter(A-1, Z, -0.35, 0)
+        else:
+            x0,y0 = NC.nucCenter(A, Z, -0.3, -0.3 if isProton else 0)
+            if isProton: x1,y1 = NC.nucCenter(A-1, Z-1, 0.35, 0)
+            else: x1,y1 = NC.nucCenter(A-1, Z, 0.35, 0)
         NC.stroke(path.line(x0,y0,x1,y1), s)
 
 class ITrans(BaseTrans):
@@ -158,8 +168,8 @@ class NucCanvas(canvas.canvas):
         self.dscale = 1.2 # overall drawing scale factor
 
         self.Acondense = {}
-        self.dZ = (0, 1)
-        self.dA = (-1, -3./8.)
+        self.dZ = [0, 1]
+        self.dA = [-1, -3./8.]
 
     def toZ(self, elem): return self.elnames.elNum(elem)
 
@@ -188,8 +198,7 @@ class NucCanvas(canvas.canvas):
         x = min(max(0,x),1)
         return hsb(0.90*x, 1, 1)
 
-    def HLkey(self):
-        text.set(cls=text.LatexRunner)
+    def HLkey(self, x0 = 0, y0 = 0):
         ts = {"1 ps": 1e-12, "10 ps": 1e-11, "100 ps": 1e-10,
               "1 ns": 1e-9, "10 ns": 1e-8, "100 ns": 1e-7,
               "1 $\\mu$s": 1e-6, "10 $\\mu$s": 1e-5, "100 $\\mu$s": 1e-4,
@@ -199,5 +208,5 @@ class NucCanvas(canvas.canvas):
 
         for n,(k,t) in enumerate(ts.items()):
             y = log(t/1e-12)/log(pi*1e9/1e-12)
-            self.text(0, 7*y, k, [text.halign.boxcenter, self.HLcolor(t)])
+            self.text(x0*self.dscale, y0*self.dscale+7*y, k, [text.halign.boxcenter, self.HLcolor(t)])
 

@@ -102,12 +102,47 @@ def make_dplot(sid, EDB, outname = None):
     NC.writetofile(outname)
     return None
 
+def IsoTable(EDB, withDK = True):
+    sids = EDB.find_sections({"MF": 8, "MT": 457})
+    DS = DecaySet()
+    for s in sids:
+        sd = EDB.get_section(s)
+        if sd.LISO: continue
+        n = NucState(sd.A, sd.Z, sd.LISO, 1)
+        n.frameStyle.append(style.linewidth.THick if sd.T_h else style.linewidth.THICk)
+        n.HL = sd.T_h
+        DS.addState(n)
+        if withDK:
+            for b in sd.branches.data:
+                ZA = (sd.Z, sd.A)
+                for n,r in enumerate(b.RTYP):
+
+                    Z,A = ZA
+                    if   r == 1: DS.addTrans(BetaTrans(A, Z, b.BR))
+                    elif r == 2: DS.addTrans(BetaTrans(A, -Z, b.BR))
+                    elif r == 3: DS.addTrans(ITrans(A, Z, b.BR), True)
+                    elif r == 4: DS.addTrans(AlphaTrans(A, Z, b.BR))
+                    elif r == 5: DS.addTrans(NPTrans(A, Z, b.BR))
+                    elif r == 6: DS.addTrans(SFTrans(A, Z, b.BR), True)
+                    elif r == 7: DS.addTrans(NPTrans(A, -Z, b.BR))
+
+                    ZA = File8_DecayBranch.deltaZA(r, Z, A)
+                    if ZA != (Z,A): break
+
+    print("Rendering graphic...")
+    NC = NucCanvas()
+    NC.dA[0] = 1
+    DS.draw(NC)
+    NC.HLkey(2.5, 3)
+    return NC
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--db",     help="location of DB file")
     parser.add_argument("--A",      type=int,   help="filter by A")
     parser.add_argument("--Z",      type=int,   help="filter by Z")
     parser.add_argument("--every",  action="store_true", help="plot EVERYTHING!")
+    parser.add_argument("--isots",  action="store_true", help="table of the isotopes")
     parser.add_argument("--out",    help="output filename (blank for auto)")
     parser.add_argument("--FP",     action="store_true", help="fission products distribution")
     options = parser.parse_args()
@@ -124,6 +159,10 @@ if __name__ == "__main__":
             c = FPyields((sids4[i],sids9[i]), EDB)
             if c is not None: d.append(document.page(c))
         d.writetofile(options.out)
+        exit(0)
+
+    if options.isots:
+        IsoTable(EDB).writetofile(options.out if options.out else "TableOfTheIsotopes.pdf")
         exit(0)
 
     if options.Z is None and options.A is None and not options.every: exit(0)
