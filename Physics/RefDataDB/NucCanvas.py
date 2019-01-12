@@ -91,7 +91,7 @@ class AlphaTrans(BaseTrans):
             x0,y0 = NC.nucCenter(self.A,   self.Z,   0.3, -0.3)
             x1,y1 = NC.nucCenter(self.A-4, self.Z-2, -0.35, 0)
         else:
-            x0,y0 = NC.nucCenter(self.A,   self.Z,   -0.3, -0.3)
+            x0,y0 = NC.nucCenter(self.A,   self.Z,   -0.3, -0.35)
             x1,y1 = NC.nucCenter(self.A-4, self.Z-2, 0.35, -0.1)
         NC.stroke(path.line(x0,y0,x1,y1), s)
 
@@ -113,7 +113,7 @@ class NPTrans(BaseTrans):
             if isProton: x1,y1 = NC.nucCenter(A-1, Z-1, -0.35, 0)
             else: x1,y1 = NC.nucCenter(A-1, Z, -0.35, 0)
         else:
-            x0,y0 = NC.nucCenter(A, Z, -0.3, -0.3 if isProton else 0)
+            x0,y0 = NC.nucCenter(A, Z, -0.3, -0.35 if isProton else 0)
             if isProton: x1,y1 = NC.nucCenter(A-1, Z-1, 0.35, 0)
             else: x1,y1 = NC.nucCenter(A-1, Z, 0.35, 0)
         NC.stroke(path.line(x0,y0,x1,y1), s)

@@ -1,5 +1,5 @@
 -- sqlite3 database schema for ENSDF card information
--- sqlite3 ENSDF.db < $MPMUTILS/Physics/RefDataDB/ENSDF_DB.sql
+-- sqlite3 $ENSDFDB < $MPMUTILS/Physics/RefDataDB/ENSDF_DB.sql
 
 -- cards in dataset, with rowid used elsewhere for card identifier; interpreted from Identification record
 CREATE TABLE ENSDF_cards (
@@ -189,7 +189,7 @@ CREATE UNIQUE INDEX idxlevel_records on level_records(line,E);
 
 -- Normalization records
 CREATE TABLE normalization_records (
-    line INTEGER,       -- rowid from ENSDF_lines defining this entry    
+    line INTEGER,       -- rowid from ENSDF_lines defining this entry
     n INTEGER,          -- multiple-parent identifier
     NR REAL,
     DNR REAL,

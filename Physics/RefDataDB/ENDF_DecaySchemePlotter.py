@@ -132,6 +132,7 @@ def IsoTable(EDB, withDK = True):
     print("Rendering graphic...")
     NC = NucCanvas()
     NC.dA[0] = 1
+    NC.dA[1] -= 0.015
     DS.draw(NC)
     NC.HLkey(2.5, 3)
     return NC

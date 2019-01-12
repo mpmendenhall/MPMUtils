@@ -47,15 +47,10 @@ class ENDF_CONT_Record(ENDF_Record):
 
     def __init__(self, line):
         super().__init__(line, "CONT")
-        self.C1, self.C2, self.L1, self.L2, self.N1, self.N2 = self.cont_reader.read(self.TEXT)
         # C1, C2         floating-point values
         # L1, L2, N1, N2 integer control values
-
-    def parse(line, withUID = False):
-        l = ENDF_Record(line)
-        ldat = ENDF_CONT_Record.cont_reader.read(l.text)
-        if withUID: return ldat + l.uid()
-        return ldat
+        self.C1, self.C2, self.L1, self.L2, self.N1, self.N2 = self.cont_reader.read(self.TEXT)
+        del self.TEXT
 
     def __repr__(self):
         return self.printid() +' C1,C2=%g,%g L1,L2=%i,%i N1,N2=%i,%i'%(self.C1, self.C2, self.L1, self.L2, self.N1, self.N2)
