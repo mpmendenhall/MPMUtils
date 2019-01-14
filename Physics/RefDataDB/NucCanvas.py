@@ -170,6 +170,9 @@ class NucCanvas(canvas.canvas):
         self.Acondense = {}
         self.dZ = [0, 1]
         self.dA = [-1, -3./8.]
+        self.HLmin = 1e-9
+        self.HLmax = 1e9
+
 
     def toZ(self, elem): return self.elnames.elNum(elem)
 
@@ -194,7 +197,7 @@ class NucCanvas(canvas.canvas):
     def HLcolor(self, t):
         """Half-life color scheme"""
         if not t: return rgb.black
-        x = log(t/1e-12)/log(pi*1e9/1e-12) if t else 1
+        x = log(t/self.HLmin)/log(pi*self.HLmax/self.HLmin) if t else 1
         x = min(max(0,x),1)
         return hsb(0.90*x, 1, 1)
 
@@ -206,7 +209,9 @@ class NucCanvas(canvas.canvas):
               "second": 1, "minute": 60, "hour": 3600,
               "day": 3600*24, "month": 2.63e6, "year": pi*1e7, "decade": pi*1e8, "century": pi*1e9}
 
+
         for n,(k,t) in enumerate(ts.items()):
-            y = log(t/1e-12)/log(pi*1e9/1e-12)
+            if t*sqrt(10.) < self.HLmin or t > self.HLmax*sqrt(10.): continue
+            y = log(t/self.HLmin)/log(pi*self.HLmax/self.HLmin)
             self.text(x0*self.dscale, y0*self.dscale+7*y, k, [text.halign.boxcenter, self.HLcolor(t)])
 

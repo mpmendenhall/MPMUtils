@@ -1,7 +1,7 @@
 #!/bin/env python3
 
 # rm $ENSDFDB; sqlite3 $ENSDFDB < ENSDF_DB_Schema.sql
-# for f in ~/Data/ENSDF_181101/ensdf.*; do ./ENSDF_Reader.py --load $f; done
+# for f in ~/Data/ENSDF_181101/ensdf.*; do ./ENSDF_Reader.py --load $f --quieter; done
 
 
 from textwrap import indent
@@ -9,7 +9,6 @@ from argparse import ArgumentParser
 from AtomsDB import *
 import pickle
 import os
-import traceback
 
 class ENSDF_Parse_Exception(Exception):
     def __init__(self, message, l):
@@ -533,27 +532,34 @@ class ENSDF_Nuclide(ENSDF_I):
             if rt == 'N' and l[6] == 'P': rt = 'Z'      # differentiate ProdNorm from Norm records
             if rt == ' ' and l[8] in 'NPDTA': rt = 'D'  # special case for 'prompt-' D records
 
-            # comment records
-            if l[6] != ' ' and l[6:8] != "PN":
-                if (current is None) or current.RTYPE() != rt: cset = self.comments
-                else: cset = current.comments
-                if l[5] == ' ': cset.append(ENSDF_C(l)) # start of new comment
-                else: cset[-1].TEXT += '\n'+l[9:80]     # continuation of previous
+            try:
+                # comment records
+                if l[6] != ' ' and l[6:8] != "PN":
+                    if (current is None) or current.RTYPE() != rt: cset = self.comments
+                    else: cset = current.comments
+                    if l[5] == ' ': cset.append(ENSDF_C(l)) # start of new comment
+                    else: cset[-1].TEXT += '\n'+l[9:80]     # continuation of previous
+                    continue
+
+                # (non-comment) continuation records
+                if l[5] != ' ':
+                    assert l[5] != '1'
+                    if rt == ' ': self.addCont(l) # ID continuation
+                    else: current.addCont(l)
+                    continue
+
+
+                current = {'A': ENSDF_A, 'B': ENSDF_B, 'E': ENSDF_E, 'G': ENSDF_G, 'D': ENSDF_D,
+                        'H': ENSDF_H, 'L': ENSDF_L, 'N': ENSDF_N, 'Z': ENSDF_PN,
+                        'P': ENSDF_P, 'Q': ENSDF_Q, 'R': ENSDF_R, 'X': ENSDF_X }[rt](l)
+
+            except Exception as ex:
+                print("Error parsing line; skipping")
+                print(ex)
                 continue
 
-            if self.NUCID != l[:5] and rt not in 'PHNZ':
-                raise ENSDF_Parse_Exception("Misplaced NUCID '%s'"%l[:5], l)
+            if self.NUCID != l[:5] and rt not in 'PHNZ': raise ENSDF_Parse_Exception("Misplaced NUCID '%s'"%l[:5], l)
 
-            # (non-comment) continuation records
-            elif l[5] != ' ':
-                assert l[5] != '1'
-                if rt == ' ': self.addCont(l) # ID continuation
-                else: current.addCont(l)
-                continue
-
-            current = {'A': ENSDF_A, 'B': ENSDF_B, 'E': ENSDF_E, 'G': ENSDF_G, 'D': ENSDF_D,
-                       'H': ENSDF_H, 'L': ENSDF_L, 'N': ENSDF_N, 'Z': ENSDF_PN,
-                       'P': ENSDF_P, 'Q': ENSDF_Q, 'R': ENSDF_R, 'X': ENSDF_X }[rt](l)
 
             if rt == 'H': self.history.append(current)
 
@@ -631,8 +637,9 @@ if __name__=="__main__":
                 if N.NUCID is None: break
                 EDB.upload_entry(N)
                 if not options.quieter: print(N)
-            except:
-                traceback.print_exc()
+            except Exception as ex:
+                print("Error parsing record; skipping:")
+                print(ex)
                 while next(f).strip(): continue
 
 
