@@ -1,4 +1,4 @@
-0	n	Neutron
+0	Nn	Neutron
 1	H	Hydrogen
 2	He	Helium
 3	Li	Lithium
@@ -111,11 +111,11 @@
 110	Ds	Darmstadtium
 111	Rg	Roentgenium
 112	Cn	Copernicium
-113	Uut	Ununtrium
+113	Nh	Nihonium
 114	Fl	Flerovium
-115	Uup	Ununpentium
+115	Mc	Moscovium
 116	Lv	Livermorium
-117	Uus	Ununseptium
-118	Uuo	Ununoctium
+117	Ts	Tennessine
+118	Og	Oganesson
 
 

@@ -14,7 +14,6 @@ class ENDF_Record(object):
     record_reader = ff.FortranRecordReader('(A66,I4,I2,I3,I5)')
 
     def __init__(self, line, rt="TEXT"):
-        self.line = line
         self.TEXT, self.MAT, self.MF, self.MT, self.NS = self.record_reader.read(line)
         self.rectp = rt
         # MAT: material identifier
@@ -216,8 +215,8 @@ def pop_section_lines(iterlines, endlvl=1):
     ls = []
     l = next(iterlines)
     while l:
+        ls.append(l)
         r = ENDF_Record(l)
-        ls.append(r.line)
         if r.endlvl >= endlvl: break
         l = next(iterlines)
     return ls
