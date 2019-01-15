@@ -32,7 +32,7 @@ class NucState:
         alpha = color.transparency(1. - self.w)
         d = 0.9
         if self.L: d -= 0.05*self.L
-        fc = NC.HLcolor(self.HL) if self.HL else self.baseColor
+        fc = NC.HLcolor(self.HL)
         NC.stroke(path.rect(x0+(self.dx-0.5*d)*NC.dscale, y0+(self.dy-0.5*d)*NC.dscale, d*NC.dscale, d*NC.dscale),
                   self.frameStyle + [deformer.smoothed(radius=0.1*NC.dscale), fc, alpha])
 
@@ -196,7 +196,8 @@ class NucCanvas(canvas.canvas):
 
     def HLcolor(self, t):
         """Half-life color scheme"""
-        if not t: return rgb.black
+        if (type(t) != type(1.0) and type(t) != type(1)) or t == 0: return rgb(.5, .5, .5)
+        if t == float("inf"): return rgb.black
         x = log(t/self.HLmin)/log(pi*self.HLmax/self.HLmin) if t else 1
         x = min(max(0,x),1)
         return hsb(0.90*x, 1, 1)

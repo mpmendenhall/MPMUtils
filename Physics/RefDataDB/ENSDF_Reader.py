@@ -2,6 +2,7 @@
 
 # rm $ENSDFDB; sqlite3 $ENSDFDB < ENSDF_DB_Schema.sql
 # for f in ~/Data/ENSDF_181101/ensdf.*; do ./ENSDF_Reader.py --load $f --quieter; done
+# ./ENSDF_Reader.py --didx
 
 
 from textwrap import indent
@@ -25,6 +26,11 @@ class ENSDFDB:
         self.curs.execute("PRAGMA foreign_keys=ON")
         self.cache = {} # set to None to disable
 
+    def list_entries(self):
+        """List all entries"""
+        self.curs.execute("SELECT entry_id FROM ENSDF_entries")
+        return [r[0] for r in self.curs.fetchall()]
+
     def find_entries(self, A, Z):
         """Return entry_id(s) by A,Z"""
         self.curs.execute("SELECT entry_id FROM ENSDF_entries WHERE A=? AND Z=?", (A,Z))
@@ -33,7 +39,15 @@ class ENSDFDB:
     def find_adopted(self, A, Z):
         """Find adopted levels/gammas entry_id for A,Z"""
         self.curs.execute("SELECT entry_id FROM ENSDF_entries WHERE A=? AND Z=? AND DSID LIKE ?", (A,Z,"ADOPTED LEVELS%"))
-        return self.curs.fetchone()[0]
+        r = self.curs.fetchone()
+        return r[0] if r else None
+
+    def adopted_for_entry(self, eid):
+        """Find adopted levels corresponding to entry_id's A/Z"""
+        self.curs.execute("SELECT entry_id FROM ENSDF_Entries WHERE (A,Z) = (SELECT A,Z FROM ENSDF_Entries WHERE entry_id = ?) AND DSID LIKE ?",
+                         (eid,"ADOPTED LEVELS%"))
+        r = self.curs.fetchone()
+        return r[0] if r else None
 
     def upload_entry(self, e):
         """Upload entry to DB"""
@@ -48,6 +62,21 @@ class ENSDFDB:
         e = pickle.loads(self.curs.fetchone()[0])
         if self.cache is not None: self.cache[eid] = e
         return e
+
+    def make_decay_index(self):
+        """Build parent/child isotopes index for decay chains"""
+        EN = ElementNames()
+        didx = []
+        for s in self.list_entries():
+            sd = self.get_entry(s)
+            if sd.parents: print(sd.printid())
+            for p in sd.parents:
+                A,Z = p.AZ(EN)
+                pid = self.find_adopted(A,Z)
+                if pid is None: print("*** No adopted levels for", p.NUCID,A,Z)
+                didx.append((pid,p.E,p.T,p.ION,s))
+        self.curs.execute("DELETE FROM Decay_Index WHERE 1")
+        self.curs.executemany("INSERT INTO Decay_Index(parent_id,E,T,ION,child_id) VALUES (?,?,?,?,?)", didx)
 
 
 def optfloat(s):
@@ -91,7 +120,7 @@ def str_stderr(x,dx):
         except: s += " "+str(dx)
     return s
 
-def parse_unit_stderr(s1,s2):
+def parse_time_stderr(s1,s2):
     """parse ENSDF number with units"""
     s1 = s1.strip()
     if s1[:1] == "(": return s1,s2
@@ -101,10 +130,9 @@ def parse_unit_stderr(s1,s2):
     unit = s1s[1].strip().upper() if len(s1s) == 2 else ""
 
     uvals = {"Y":365.25636*24*3600, "D": 24*3600, "H":3600,
-                "M":60., "S":1., "MS":1e-3, "US":1e-6, "NS":1e-9,
-                "PS":1e-12, "FS":1e-15, "AS":1e-18,
-                "EV": 1e-3, "KEV":1., "MEV":1e3,
-                "%":0.01, "":1}
+             "M":60., "S":1., "MS":1e-3, "US":1e-6, "NS":1e-9,
+             "PS":1e-12, "FS":1e-15, "AS":1e-18}
+    # "EV": 1e-3, "KEV":1., "MEV":1e3, "%":0.01, "":1
     if unit not in uvals: return s1,s2
     umul = uvals[unit]
 
@@ -127,6 +155,14 @@ class ENSDF_Record:
             self.rectp = line[5:9]
 
     def RTYPE(self): return self.rectp[2]
+
+    def AZ(self,EN):
+        """Determine A,Z from NUCID"""
+        A = int(self.NUCID[:3].strip())
+        Z = EN.elNum(self.NUCID[3:].strip())
+        if Z is None and self.NUCID[3:] != '  ': Z = 100 + int(self.NUCID[3:])
+        return (A,Z)
+
 
     def printid(self):
         """Short-form description"""
@@ -294,7 +330,8 @@ class ENSDF_P(ENSDF_Record):
         self.n = int(l[8]) if l[8] != ' ' else None
         self.E,  self.DE  = parse_stderr(l[9:19],l[19:21])
         self.J            = l[21:39].strip()
-        self.T,  self.DT  = parse_unit_stderr(l[39:50],l[50:64])
+        self.T,  self.DT  = parse_time_stderr(l[39:49],l[49:55])
+        if l[55:64].strip(): raise ENSDF_Parse_Exception("Expected blank, got '%s'"%l[55:64], l)
         self.QP, self.DQP = parse_stderr(l[64:74], l[74:76])
         self.ION          = l[76:80].strip()
 
@@ -349,7 +386,7 @@ class ENSDF_L(ENSDF_Record):
         self.E, self.DE = parse_stderr(l[9:19], l[19:21])
         self.J  = l[21:39].strip()
         T0 = l[39:49].strip()
-        self.T, self.DT = (float("inf"),None) if T0 == 'STABLE' else parse_unit_stderr(T0, l[49:55])
+        self.T, self.DT = (float("inf"),None) if T0 == 'STABLE' else parse_time_stderr(T0, l[49:55])
         self.L = l[55:64].strip()
         try:    self.S, self.DS = parse_stderr(l[64:74], l[74:76])
         except: self.S, self.DS = l[64:76].strip(), None
@@ -519,9 +556,7 @@ class ENSDF_Nuclide(ENSDF_I):
 
             if self.NUCID is None:
                 super().__init__(l)
-                self.A = int(self.NUCID[:3].strip())
-                self.Z = EN.elNum(self.NUCID[3:].strip())
-                if self.Z is None and self.NUCID[3:] != '  ': self.Z = 100 + int(self.NUCID[3:])
+                self.A, self.Z = self.AZ(EN)
                 continue
 
             if not l.strip(): break # end record
@@ -622,12 +657,16 @@ if __name__=="__main__":
     parser = ArgumentParser()
     parser.add_argument("--db",     help="location of DB file")
     parser.add_argument("--load",   help="import input file to DB")
+    parser.add_argument("--didx",   action="store_true", help="build decay parents index")
     parser.add_argument("--quieter",   action="store_true", help="quieter bulk upload")
     options = parser.parse_args()
 
+    EDB = ENSDFDB(options.db)
+
+    if options.didx: EDB.make_decay_index()
+
     if options.load:
 
-        EDB = ENSDFDB(options.db)
         print("\n------- Loading", options.load)
         f = open(options.load,"r")
 
@@ -643,5 +682,5 @@ if __name__=="__main__":
                 while next(f).strip(): continue
 
 
-        EDB.conn.commit()
+    EDB.conn.commit()
 
