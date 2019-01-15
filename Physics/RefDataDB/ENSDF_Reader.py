@@ -13,7 +13,7 @@ import os
 
 class ENSDF_Parse_Exception(Exception):
     def __init__(self, message, l):
-        super().__init__(message + "\n in line '%s'"%l)
+        super().__init__("In line '%s':\n  "%l + message)
 
 class ENSDFDB:
     """Connection to and manipulation of ENSDF data DB"""
@@ -163,7 +163,6 @@ class ENSDF_Record:
         if Z is None and self.NUCID[3:] != '  ': Z = 100 + int(self.NUCID[3:])
         return (A,Z)
 
-
     def printid(self):
         """Short-form description"""
         return "[%s] '%s'"%(self.NUCID, self.rectp)
@@ -222,18 +221,22 @@ class ENSDF_Record:
                 qvals.append((o,val.strip()))
             self.xdata[quant] = (qvals,xref)
 
+def checkSection(l,i0,i1,v=None):
+    if v is None and l[i0:i1].strip(): raise ENSDF_Parse_Exception("Expected blank in [%i:%i], got '%s'"%(i0+1,i1,l[i0:i1]), l)
+    elif v is not None and l[i0:i1] != v: raise ENSDF_Parse_Exception("Expected '%s' in [%i:%i], got '%s'"%(v, l[i0:i1]), l)
+
 class ENSDF_I(ENSDF_Record):
     """Identification record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp != "    ": raise ENSDF_Parse_Exception("expected [5:9] blank", l)
+        checkSection(l,5,9)
         self.DSID  = l[9:39].strip()
         self.DSREF = l[39:65].strip()
         self.PUB   = l[65:74].strip()
         self.EDATE = int(l[74:80]) if l[74:80].strip() else 0
 
     def addCont(self, l):
-        if l[39:].strip(): raise ENSDF_Parse_Exception("Expected blank, got '%s'"%l[39:], l)
+        checkSection(l,39,80)
         if self.DSID[-1] != ',': raise ENSDF_Parse_Exception("Continued DSID should end in comma; was '%s'+'%s'"%(self.DSID, l[9:39].strip()), l)
         self.DSID += " " + l[9:39].strip()
 
@@ -246,7 +249,7 @@ class ENSDF_H(ENSDF_Record):
     """History record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp[1:] != " H ": raise ENSDF_Parse_Exception("expected [6:9] == ' H '", l)
+        checkSection(l,6,9," H ")
         self.History = l[9:80]
 
     def addCont(self, l):
@@ -280,7 +283,7 @@ class ENSDF_Q(ENSDF_Record):
     """Q-value record"""
     def __init__(self, l):
         super().__init__(l)
-        assert self.rectp == "  Q "
+        checkSection(l,5,9,"  Q ")
         self.Qm, self.DQm = parse_stderr(l[9:19],  l[19:21])    # total energy available for beta- decay of ground state
         self.SN, self.DSN = parse_stderr(l[21:29], l[29:31])    # neutron separation energy
         self.SP, self.DSP = parse_stderr(l[31:39], l[39:41])    # proton separation energy
@@ -300,10 +303,10 @@ class ENSDF_X(ENSDF_Record):
     """Cross-reference record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp[:3] != "  X": raise ENSDF_Parse_Exception("expected [5:8] == '  X'", l)
+        checkSection(l,5,8,"  X")
         self.DSSYM = l[8]
         self.DSID =  l[9:39].strip()
-        if l[39:80].strip(): raise ENSDF_Parse_Exception("expected [39:80] blank, got '%s'"%l[39:80], l)
+        checkSection(l,39,80)
 
     def printid(self):
         """Short-form description"""
@@ -326,12 +329,12 @@ class ENSDF_P(ENSDF_Record):
     """Parent record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp[:3] != "  P": raise ENSDF_Parse_Exception("Expected '  P', got '%s'"%self.rectp[:3], l)
+        checkSection(l,5,8,"  P")
         self.n = int(l[8]) if l[8] != ' ' else None
         self.E,  self.DE  = parse_stderr(l[9:19],l[19:21])
         self.J            = l[21:39].strip()
         self.T,  self.DT  = parse_time_stderr(l[39:49],l[49:55])
-        if l[55:64].strip(): raise ENSDF_Parse_Exception("Expected blank, got '%s'"%l[55:64], l)
+        checkSection(l,55,64)
         self.QP, self.DQP = parse_stderr(l[64:74], l[74:76])
         self.ION          = l[76:80].strip()
 
@@ -350,14 +353,14 @@ class ENSDF_N(ENSDF_Record):
         self.BR, self.DBR = parse_stderr(l[31:39], l[39:41])
         self.NB, self.DNB = parse_stderr(l[41:49], l[49:55])
         self.NP, self.DNP = parse_stderr(l[55:62], l[62:64])
-        if l[64:80].strip(): raise ENSDF_Parse_Exception("Expected blank, got '%s'"%l[64:80], l)
+        checkSection(l,64,64)
         self.prodnorm = None
 
 class ENSDF_PN(ENSDF_Record):
     """Product Normalization record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp[:3] != " PN": raise ENSDF_Parse_Exception("Expected ' PN', got '%s'"%self.rectp[:3], l)
+        checkSection(l,5,8," PN")
         self.n = int(l[8]) if l[8] != ' ' else None
         self.NRxBR, self.DNRxBR = parse_stderr(l[9:19],  l[19:21])
         self.NTxBR, self.DNTxBR = parse_stderr(l[21:29], l[29:31])
@@ -382,7 +385,7 @@ class ENSDF_L(ENSDF_Record):
             self.MS = '  '
             return
 
-        if self.rectp[1:] != " L ": raise ENSDF_Parse_Exception("Expected ' L ', got '%s'"%self.rectp[1:], l)
+        checkSection(l,6,9," L ")
         self.E, self.DE = parse_stderr(l[9:19], l[19:21])
         self.J  = l[21:39].strip()
         T0 = l[39:49].strip()
@@ -415,12 +418,12 @@ class ENSDF_B(ENSDF_Record):
     """Beta- record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp[1:] != " B ": raise ENSDF_Parse_Exception("Expected ' B ', got '%s'"%self.rectp[1:], l)
+        checkSection(l,6,9," B ")
         self.E, self.DE      = parse_stderr(l[9:19],  l[19:21])
         self.IB, self.DIB    = parse_stderr(l[21:29], l[29:31])
         # ... undefined
         self.LOGFT, self.DFT = parse_stderr(l[41:49], l[49:55])
-        if l[55:66].strip(): raise ENSDF_Parse_Exception("Expected blank, got '%s'"%l[55:66], l)
+        checkSection(l,55,66)
         self.C  = l[66]
         self.UN = l[77:79]
         self.Q =  l[79]
@@ -435,7 +438,7 @@ class ENSDF_E(ENSDF_Record):
     """Beta+ or EC record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp[1:] != " E ": raise ENSDF_Parse_Exception("Expected ' E ', got '%s'"%self.rectp[1:], l)
+        checkSection(l,6,9," E ")
         self.E,  self.DE     = parse_stderr(l[9:19],  l[19:21])
         self.IB, self.DIB    = parse_stderr(l[21:29], l[29:31])
         self.IE, self.DIE    = parse_stderr(l[31:39], l[39:41])
@@ -457,13 +460,13 @@ class ENSDF_A(ENSDF_Record):
     """Alpha record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp != "  A ": raise ENSDF_Parse_Exception("Expected '  A ', got '%s'"%self.rectp, l)
+        checkSection(l,5,9,"  A ")
         self.E, self.DE   = parse_stderr(l[9:19],  l[19:21])
         self.IA, self.DIA = parse_stderr(l[21:29], l[29:31])
         self.HF, self.DHF = parse_stderr(l[31:39], l[39:41])
-        if l[41:74].strip(): raise ENSDF_Parse_Exception("Expected blank, got '%s'"%l[41:74], l)
+        checkSection(l,41,74)
         self.C = l[74]
-        if l[69:71].strip(): raise ENSDF_Parse_Exception("Expected blank, got '%s'"%l[69:71], l)
+        checkSection(l,69,71)
         self.Q = l[79]
 
     def printid(self):
@@ -476,7 +479,8 @@ class ENSDF_D(ENSDF_Record):
     """(Delayed-)particle record"""
     def __init__(self, l):
         super().__init__(l)
-        assert self.rectp[1] == " " and self.rectp[2] in ('D',' ')
+        checkSection(l,6,7)
+        assert self.rectp[2] in ('D',' ')
         self.particle = self.rectp[2]
         self.E,  self.DE  = parse_stderr(l[9:19],  l[19:21])
         self.IP, self.DIP = parse_stderr(l[21:29], l[29:31])
@@ -500,7 +504,7 @@ class ENSDF_G(ENSDF_Record):
     """Gamma record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp[1:] != " G ": raise ENSDF_Parse_Exception("Expected ' G ', got '%s'"%self.rectp[1:], l)
+        checkSection(l,6,9," G ")
         self.E,  self.DE  = parse_stderr(l[9:19],  l[19:21])
         self.RI, self.DRI = parse_stderr(l[21:29], l[29:31])
         self.M = l[31:41].strip()
@@ -509,7 +513,7 @@ class ENSDF_G(ENSDF_Record):
         self.TI, self.DTI = parse_stderr(l[64:74], l[74:76])
         self.C    = l[76]
         self.COIN = l[77]
-        if l[78] != ' ': raise ENSDF_Parse_Exception("Expected blank, got '%s'"%l[78], l)
+        checkSection(l,78,79)
         self.Q    = l[79]
 
     def printid(self):
@@ -521,7 +525,7 @@ class ENSDF_R(ENSDF_Record):
     """Reference record"""
     def __init__(self, l):
         super().__init__(l)
-        if self.rectp != "  R ": raise ENSDF_Parse_Exception("Expected '  R ', got '%s'"%self.rectp, l)
+        checkSection(l,5,9,"  R ")
         self.KEYNUM    = l[9:17].strip()
         self.REFERENCE = l[17:80].strip()
 
