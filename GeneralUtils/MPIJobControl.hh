@@ -11,6 +11,9 @@ class MPIJobControl {
 public:
     /// initialize with MPI information
     static void init(int argc, char **argv);
+    /// end-of-run completion
+    static void finish();
+
     /// run as intermediate controller node (automatic from init)
     static void runController();
     /// run as worker, processing and returning jobs

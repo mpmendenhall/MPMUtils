@@ -1,4 +1,5 @@
 /// \file MPIJobControl.cc
+// Michael P. Mendenhall, LLNL 2019
 
 #include "MPIJobControl.hh"
 #include <iostream>
@@ -64,6 +65,14 @@ void MPIJobControl::init(int argc, char **argv) {
         if(childRanks.size()) runController();
         else runWorker();
     }
+}
+
+void MPIJobControl::finish() {
+    // Send ending message to close worker process
+    for(auto r: childRanks) mpiSend<int>(r,1);
+
+    if(verbose > 1) printf(childRanks.size()? "Controller [%i] closing.\n" : "Worker [%i] closing.\n", rank);
+    MPI_Finalize();
 }
 
 void MPIJobControl::accumulate(KeyTable& kt) {
@@ -139,9 +148,6 @@ void MPIJobControl::runController() {
         // Farm out to individual worker nodes
         accumulate(kt); // also returns to parent
     }
-
-    // Send ending message to close worker process
-    for(auto r: childRanks) mpiSend<int>(r,1);
 }
 
 void MPIJobControl::runWorker() {
