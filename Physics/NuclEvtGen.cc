@@ -229,8 +229,15 @@ void ConversionGamma::scale(double s) {
 //-----------------------------------------
 
 AlphaDecayTrans::AlphaDecayTrans(NucLevel& f, NucLevel& t, const Stringmap& m): TransitionBase(f,t) {
-    Ealpha = m.getDefault("E", from.E-to.E);
     Itotal = m.getDefault("I", 0)/100.;
+
+    // relativistic calculation of alpha kinetic energy including nucleus recoil
+    const double Q = from.E-to.E;
+    const double ma = 3727379.378; // alpha particle mass, keV
+    const double m0 = to.Z*m_p + (to.A-to.Z)*m_n + ma + Q; // approximate initial nucleus mass, keV
+    Ealpha = Q*(1-(ma + 0.5*Q)/m0);
+    // optional direct specification of energy from config file
+    Ealpha = m.getDefault("E", Ealpha);
 }
 
 void AlphaDecayTrans::display(bool verbose) const {
@@ -318,10 +325,9 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
 
     if(Q.getDefault("norm","gamma","") == "groundstate") {
         double gsflux = 0;
-        for(auto& l: levels)
-            if(!l.fluxOut) gsflux += l.fluxIn;
-            for(auto& tr: transitions) tr->scale(1./gsflux);
-            for(auto& l: levels) l.scale(1./gsflux);
+        for(auto& l: levels) if(!l.fluxOut) gsflux += l.fluxIn;
+        for(auto& tr: transitions) tr->scale(1./gsflux);
+        for(auto& l: levels) l.scale(1./gsflux);
     }
 
     // set up Augers
