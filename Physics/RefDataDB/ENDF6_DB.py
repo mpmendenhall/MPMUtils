@@ -45,15 +45,19 @@ class ENDFDB:
             sids = self.find_section(sec.MAT, sec.MF, sec.MT)
             for sid in sids: self.delete_section(sid)
 
-        if self.letFail: s = load_ENDF_Section(iter(txt.split('\n')))
-        try:
-            if not self.letFail: s = load_ENDF_Section(iter(txt.split('\n')))
+        if self.letFail:
+            s = load_ENDF_Section(iter(txt.split('\n')))
             assert s is not None
             self.curs.execute("INSERT INTO ENDF_sections(MAT,MF,MT,A,Z,pcl) VALUES(?,?,?,?,?,?)", (sec.MAT, sec.MF, sec.MT, sec.A, sec.Z, pickle.dumps(s)))
-        except:
-            print("\n**** Unable to pre-parse ****")
-            print(sec)
-            self.curs.execute("INSERT INTO ENDF_sections(MAT,MF,MT,A,Z,lines) VALUES(?,?,?,?,?,?)", (sec.MAT, sec.MF, sec.MT, sec.A, sec.Z, txt))
+        else:
+            try:
+                if not self.letFail: s = load_ENDF_Section(iter(txt.split('\n')))
+                assert s is not None
+                self.curs.execute("INSERT INTO ENDF_sections(MAT,MF,MT,A,Z,pcl) VALUES(?,?,?,?,?,?)", (sec.MAT, sec.MF, sec.MT, sec.A, sec.Z, pickle.dumps(s)))
+            except:
+                print("\n**** Unable to pre-parse ****")
+                print(sec)
+                self.curs.execute("INSERT INTO ENDF_sections(MAT,MF,MT,A,Z,lines) VALUES(?,?,?,?,?,?)", (sec.MAT, sec.MF, sec.MT, sec.A, sec.Z, txt))
 
         sid = self.curs.lastrowid
         if sec.MF == 8 and sec.MT == 457:
@@ -67,7 +71,9 @@ class ENDFDB:
 
         self.curs.execute("SELECT lines, pcl FROM ENDF_sections WHERE section_id = ?", (sid,))
         res = self.curs.fetchall()
-        if not res: return None
+        if not res:
+            print("Section id",sid,"not in database!")
+            return None
         if res[0][1]: return pickle.loads(res[0][1])
 
         ls = res[0][0].split("\n")

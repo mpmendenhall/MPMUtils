@@ -1,6 +1,6 @@
 from ENDF_Base_Reader import *
 
-class ENDF_File1_Sec451(ENDF_HEAD_Record):
+class ENDF_File1_Sec(ENDF_HEAD_Record):
     """File 1 'General Information' section"""
     def __init__(self, iterlines, l0 = None):
         if l0 is None: l0 = next(iterlines)
@@ -97,14 +97,7 @@ class ENDF_File1_Sec451(ENDF_HEAD_Record):
             for t in self.txt: s += '\n## ' + t + " ##"
             s += "\n"+"#"*72
             return s
+        elif self.MT in (452, 456):
+            return self.printid() + '\n' + str(self.nubar)
         else: return super().__repr__()
 
-def ENDF_File1_Sec(iterlines, l0 = None):
-    if l0 is None: l0 = next(iterlines)
-    h = ENDF_HEAD_Record(l0)
-    assert h.MF == 1
-
-    f = None
-    if h.MT == 451: f = ENDF_File1_Sec451(iterlines, l0)
-
-    return f
