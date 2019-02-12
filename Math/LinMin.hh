@@ -30,8 +30,6 @@ class LinMin: protected EigSymmWorkspace {
 public:
     /// Constructor, for n variables with m equations
     LinMin(size_t nvar, size_t neq = 0): EigSymmWorkspace(nvar), Nvar(nvar) { setNeq(neq); }
-    /// Destructor
-    virtual ~LinMin();
 
     /// set number of equations (resize M)
     void setNeq(size_t neq);
@@ -52,11 +50,11 @@ public:
     /// get sum of squares of residuals ~ sigma^2 * nDF
     double ssresid() const;
     /// calculate and return UNNORMALIZED covariance matrix (sum X^T X)^-1 (needs sigma^2 scaling)
-    const gsl_matrix* calcCov();
+    const gsl_matrix_wrapper& calcCov();
     /// calculate, return unit eigenvectors of covariance matrix in columns
-    const gsl_matrix* calcPCA();
+    const gsl_matrix_wrapper& calcPCA();
     /// return eigenvalues for PCA vectors
-    const gsl_vector* PCAlambda() { calcPCA(); return lPCA; }
+    const gsl_vector_wrapper& PCAlambda() { calcPCA(); return lPCA; }
 
     /// get solution x
     void getx(vector<double>& vx) const { gsl2vector(x,vx); }
@@ -65,9 +63,9 @@ public:
     /// get residuals r
     void getr(vector<double>& vr) const { gsl2vector(r,vr); }
 
-    const size_t Nvar;  ///< number of variables
-
 protected:
+    size_t Nvar;  ///< number of variables
+
     /// solve after loading 'y' vector
     virtual void _solve();
     /// calculate QR decomposition of M (stored in M, tau)
@@ -75,17 +73,17 @@ protected:
 
     size_t Neq = 0;             ///< number of equations
 
-    gsl_matrix* M = nullptr;    ///< coefficients (design) matrix -> QR decomp
-    gsl_vector* tau = nullptr;  ///< from QR decomposition of M
-    gsl_matrix* Q = nullptr;    ///< unpacked Q decomposition matrix
-    gsl_matrix* R = nullptr;    ///< unpacked R decomposition
-    gsl_matrix* L = nullptr;    ///< L = R^T square corner, Cholesky Decomp M^T M = L L^T
-    gsl_matrix* Cov = nullptr;  ///< Cov = (M^T M)^-1 = (L L^T)^-1
-    gsl_matrix* PCA = nullptr;  ///< normalized eigenvectors of Cov in columns (for random realizations)
-    gsl_vector* lPCA = nullptr; ///< eigenvalues of Cov
-    gsl_vector* x = nullptr;    ///< solution vector
-    gsl_vector* y = nullptr;    ///< RHS vector
-    gsl_vector* r = nullptr;    ///< residuals vector
+    gsl_matrix_wrapper M;       ///< coefficients (design) matrix -> QR decomp
+    gsl_vector_wrapper tau;     ///< from QR decomposition of M
+    gsl_matrix_wrapper Q;       ///< unpacked Q decomposition matrix
+    gsl_matrix_wrapper R;       ///< unpacked R decomposition
+    gsl_matrix_wrapper L;       ///< L = R^T square corner, Cholesky Decomp M^T M = L L^T
+    gsl_matrix_wrapper Cov;     ///< Cov = (M^T M)^-1 = (L L^T)^-1
+    gsl_matrix_wrapper PCA;     ///< normalized eigenvectors of Cov in columns (for random realizations)
+    gsl_vector_wrapper lPCA;    ///< eigenvalues of Cov
+    gsl_vector_wrapper x;       ///< solution vector
+    gsl_vector_wrapper y;       ///< RHS vector
+    gsl_vector_wrapper r;       ///< residuals vector
 
     bool has_tau = false;       ///< QR decomposition calculated?
     bool has_Cov = false;       ///< Covariance matrix calculated?

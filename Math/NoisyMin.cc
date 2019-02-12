@@ -10,7 +10,6 @@ NoisyMin::NoisyMin(size_t n): N(n),
 NTERMS(Quadratic::nterms(N)), x0(N) {
     gsl_matrix_set_identity(dS);
 
-    vnames.resize(N);
     int i=0;
     std::stringstream ss;
     for(auto& s: vnames) {
@@ -20,8 +19,6 @@ NTERMS(Quadratic::nterms(N)), x0(N) {
 }
 
 void NoisyMin::initRange() {
-    x00 = x0;
-
     gsl_matrix_memcpy(SRm, dS);
     gsl_matrix_scale(SRm, 0.01);
     gsl_matrix_memcpy(sE.EC.L, dS);
@@ -30,12 +27,14 @@ void NoisyMin::initRange() {
     gsl_linalg_cholesky_decomp(SR0);
     gsl_matrix_memcpy(sE.EC.L, SR0);
 
-    if(verbose) {
-        printf("Initializing search range:\n");
-        for(auto c: x0) printf("\t%g", c);
-        printf("\n");
-        displayM(dS);
-    }
+    if(verbose) displaySearchRange();
+}
+
+void NoisyMin::displaySearchRange() const {
+    printf("Search range:\nx0 = ");
+    for(auto c: x0) printf("\t%g", c);
+    printf("\n");
+    displayM(dS);
 }
 
 void NoisyMin::initMinStep() {
@@ -51,6 +50,7 @@ NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
     vec_t r(N);
     do { // TODO more elegant algorithm!
         QRNG.Next(r.data());
+        QRNGn++;
         for(auto& x: r) x = 2*x-1;
     } while(vmag2(r) > 1.);
 
@@ -65,12 +65,14 @@ NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
 }
 
 Quadratic NoisyMin::fitHessian() {
+    if(verbose) displaySearchRange();
+
     // filter points to search region
     vector<evalpt> vs;
     for(auto& p: fvals) {
         for(size_t i=0; i<N; i++) v1(i) = p.x[i] - x0[i];
         gsl_blas_dtrmv(CblasLower, CblasTrans, CblasNonUnit, sE.EC.L, v1);
-        if(gsl_blas_dnrm2(v1) < 1) vs.push_back(p);
+        if(gsl_blas_dnrm2(v1) < 1.001) vs.push_back(p);
     }
     if(verbose) printf("\n**** NoisyMin fitting %zu/%zu datapoints...\n", vs.size(), fvals.size());
 
@@ -98,7 +100,7 @@ Quadratic NoisyMin::fitHessian() {
 vector<Quadratic> NoisyMin::LMvariants() {
     auto P = LM.calcPCA();
     auto l = LM.PCAlambda();
-    auto s2 = LM.ssresid()/LM.nDF();
+    auto s2 = LM.nDF() > 0? LM.ssresid()/LM.nDF() : 0;
     if(verbose) printf("RMS deviation %g\n", sqrt(s2));
     vec_t y;
     LM.getx(y);
@@ -118,6 +120,7 @@ void NoisyMin::fitMin() {
     if(verbose) QC.display();
     x0 = QC.x0;
     for(size_t i=0; i<N; i++) for(size_t j=0; j<=i; j++) sE.E1.L(i, j) = QC.L(i, j)/sqrt(h);
+    k0 = Q(x0);
 
     // fit parameter uncertainties to minimum location uncertainty
     auto vQ = LMvariants();
@@ -169,9 +172,9 @@ void NoisyMin::fitMinSingular() {
     vector<size_t> vG;  // good nonsingular axes in U_q
     vector<size_t> vS;  // singular subspace axes in U_q
     vector<double> vcontrib(N); // variable contributions to nonsingular space
-    if(verbose) printf("Hessian principal axes 1/width^2:\n");
+    if(verbose) printf("Hessian principal axes widths:\n");
     for(size_t j = 0; j<N; j++) {
-        if(verbose) printf("\t%g ~ %g\n", S_q(j), dS_q[j]);
+        if(verbose) printf("\t%g ~ %g\n", 1/sqrt(S_q(j)), 0.5*dS_q[j]*pow(S_q(j), -1.5));
         if(S_q(j) - 2*dS_q[j] <= 0) vS.push_back(j);
         else {
             vG.push_back(j);
@@ -238,7 +241,7 @@ void NoisyMin::fitMinSingular() {
     // untransform x0 = U_q x' best-fit point
     for(size_t i=0; i<nGood; i++) v1(vG[i]) = x0p[i];
     for(size_t i=0; i<nBad; i++) v1(vS[i]) = x0b(i);
-    if(nBad) gsl_blas_dgemv(CblasNoTrans, 1, U_q, v1, 0, v2);
+    gsl_blas_dgemv(CblasNoTrans, 1, U_q, v1, 0, v2);
     gsl2vector(v2, x0);
     k0 = Q(x0);
 
@@ -355,4 +358,47 @@ std::ostream& operator<<(std::ostream& o, const NoisyMin::evalpt& p) {
     for(auto c: p.x) o << c << "\t";
     o << p.f << "\t" << p.df2 << "\n";
     return o;
+}
+
+std::istream& operator>>(std::istream& i, NoisyMin::evalpt& p) {
+    for(auto& c: p.x) i >> c;
+    Quadratic::evalTerms(p.x, p.t);
+    i >> p.f >> p.df2;
+    return i;
+}
+
+std::ostream& operator<< (std::ostream &o, const NoisyMin& NM) {
+    o << NM.N << '\n';
+    o << NM.dS << NM.U_dx << NM.S_dx << NM.U_q << NM.S_q << NM.SR0 << NM.SRm;
+    o << NM.h << '\t' << NM.verbose << '\t' << NM.nSigmaStat << '\t' << NM.k0 << '\t' << NM.dk2 << '\t' << NM.minStep << '\n';
+
+    o << NM.fvals.size() << '\n';
+    for(auto& p: NM.fvals) o << p;
+
+    o << NM.QRNGn << '\n';
+
+    // internal / debugging quantities
+    //vector<std::string> vnames;     ///< variable names
+    //LinMin LM{NTERMS};              ///< fitter for quadratic surface x^T A x + b^T x + c around minimum
+
+    return o;
+}
+
+std::istream& operator>> (std::istream &i, NoisyMin& NM) {
+    size_t n = 0;
+    i >> n;
+    NM = NoisyMin(n);
+    i >> NM.dS >> NM.U_dx >> NM.S_dx >> NM.U_q >> NM.S_q >> NM.SR0 >> NM.SRm;
+    i >> NM.h >> NM.verbose >> NM.nSigmaStat >> NM.k0 >> NM.dk2 >> NM.minStep;
+
+    i >> n;
+    while(n--) {
+        NM.fvals.emplace_back(NM.N);
+        i >> NM.fvals.back();
+    }
+
+    i >> NM.QRNGn;
+    NM.QRNG.Skip(NM.QRNGn);
+
+    return i;
 }

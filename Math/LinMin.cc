@@ -27,23 +27,13 @@
 
 void LinMin::setNeq(size_t neq) {
     clear();
-    if(neq == Neq) return;
-
     Neq = neq;
-    if(M) { gsl_matrix_free(M); M = nullptr; }
-
-    if(!Neq) return;
-    M = gsl_matrix_alloc(Neq, Nvar);
-}
-
-LinMin::~LinMin() {
-    for(auto& m: {M,Q,R,L,Cov,PCA}) if(m) gsl_matrix_free(m);
-    for(auto& v: {tau,x,y,r,lPCA}) if(v) gsl_vector_free(v);
+    M = gsl_matrix_wrapper(Neq, Nvar);
 }
 
 void LinMin::calcQR() {
     if(has_tau) return; // already done
-    if(!tau) tau = gsl_vector_alloc(M->size2);
+    tau = gsl_vector_wrapper(M->size2);
     gsl_linalg_QR_decomp(M,tau);
     has_tau = true;
 }
@@ -55,37 +45,35 @@ void LinMin::_solve() {
     gsl_linalg_QR_lssolve(M, tau, y, x, r);
 }
 
-const gsl_matrix* LinMin::calcCov() {
+const gsl_matrix_wrapper& LinMin::calcCov() {
     if(has_Cov) return Cov; // already calculated
     calcQR();
 
     // unpack Q,R decomposition matrices
-    Q = gsl_matrix_alloc(Neq, Neq);
-    R = gsl_matrix_alloc(Neq, Nvar);
+    Q = gsl_matrix_wrapper(Neq, Neq);
+    R = gsl_matrix_wrapper(Neq, Nvar);
     gsl_linalg_QR_unpack(M, tau, Q, R);
 
     // copy to L
-    L = gsl_matrix_calloc(Nvar, Nvar);
+    L = gsl_matrix_wrapper(Nvar, Nvar);
     for(size_t i = 0; i < Nvar; i++)
         for(size_t j = i; j < Nvar; j++)
-            gsl_matrix_set(L, j, i, gsl_matrix_get(R, i, j));
-
+            L(j,i) = R(i,j);
 
     // Cov = (M^T M)^-1 = (L L^T)^-1
-    Cov = gsl_matrix_alloc(Nvar, Nvar);
-    gsl_matrix_memcpy(Cov, L);
+    Cov = L;
     gsl_linalg_cholesky_invert(Cov);
 
     has_Cov = true;
     return Cov;
 }
 
-const gsl_matrix* LinMin::calcPCA() {
+const gsl_matrix_wrapper& LinMin::calcPCA() {
     if(has_PCA) return PCA;
 
-    if(!PCA) PCA = gsl_matrix_alloc(Nvar, Nvar);
-    if(!lPCA) lPCA = gsl_vector_alloc(Nvar);
-    gsl_matrix_memcpy(PCA, calcCov());
+    PCA = gsl_matrix_wrapper(Nvar, Nvar);
+    lPCA = gsl_vector_wrapper(Nvar);
+    PCA = calcCov();
     decompSymm(PCA, lPCA);
 
     has_PCA = true;
@@ -98,7 +86,7 @@ void LinMin::getRealization(const vector<double>& vr, vector<double>& vx) {
     getx(vx);
     for(size_t i = 0; i < std::min(Nvar, vr.size()); i++)
         for(size_t j = 0; j < Nvar; j++)
-            vx[j] += vr[i] * gsl_vector_get(lPCA, i) * gsl_matrix_get(PCA, i, j);
+            vx[j] += vr[i] * lPCA(i) * PCA(i, j);
 }
 
 double LinMin::ssresid() const {

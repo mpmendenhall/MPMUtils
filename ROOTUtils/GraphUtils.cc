@@ -659,3 +659,20 @@ void histoverlap(const TH1& h1, const TH1& h2, double& o, double& xdiv) {
     xdiv = h1.GetBinLowEdge(bmn+1);
     delete[] csum;
 }
+
+TGraph derivative_logspaced(const TGraph& g, double x0, double x1, double ysc, size_t npts) {
+    TGraph dg(npts-1);
+    vector<double> xs(npts);
+    vector<double> ys(npts);
+    for(size_t n=0; n<npts; n++) {
+        double l = double(n)/(npts-1);
+        xs[n] = exp((1-l)*log(x0) + l*log(x1));
+        ys[n] = g.Eval(xs[n]);
+        if(n > 0) {
+            double xm = sqrt(xs[n]*xs[n-1]);
+            double dydx = ysc*(ys[n]-ys[n-1])/(xs[n]-xs[n-1]);
+            dg.SetPoint(n-1, xm, dydx);
+        }
+    }
+    return dg;
+}

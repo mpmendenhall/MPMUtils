@@ -16,6 +16,8 @@
 inline double b2gamma(double beta) { return 1/sqrt(1-beta*beta); }
 /// velocity/c from boost gamma
 inline double g2beta(double gamma) { return sqrt(gamma*gamma - 1)/gamma; }
+/// kinetic energy to momentum^2
+inline double ke2p2(double KE, double m) { return KE*(KE+2*m); }
 /// kinetic energy to momentum
 inline double ke2p(double KE, double m) { return sqrt(KE*(KE+2*m)); }
 /// momentum^2 to kinetic energy (low-KE stabilized)
@@ -29,7 +31,16 @@ double p_2body(double m1, double m2, double KE);
 class Lorentz_boost {
 public:
     double gamma = 1;   ///< boost factor
-    double beta = 0;    ///< velocity/c
+    double beta = 0;    ///< (signed) velocity/c
+
+    /// compose with another boost (in same direction); commutative
+    void operator*=(const Lorentz_boost& b);
+    /// compose with another boost (in opposite direction); commutative
+    void operator/=(const Lorentz_boost& b);
+    /// composed boosts
+    Lorentz_boost operator*(const Lorentz_boost& b) const { auto k = *this; k *= b; return k; }
+    /// composed boosts
+    Lorentz_boost operator/(const Lorentz_boost& b) const { auto k = *this; k /= b; return k; }
 
     /// boost 4-vector (v0, v1, ?, ?) in (1,0,0) direction; return boosted v0
     double boost(double v0, double& v1) const;
@@ -41,8 +52,13 @@ public:
     /// boosted momentum component given p_|| and total p^2 (OK in p << m limit)
     double unboost_p(double m, double px, double p2) const { unboost(sqrt(p2+m*m), px); return px; }
 
+    /// calculate particle CM frame boost from KE, mass
+    void particleCM(double KE, double m);
     /// calculate center-of-mass boost parameters given projectile KE on lab-frame static target; return KE in CM frame
-    double projectileCM(double KE, double mProj, double mTarg);
+    double projectileCM(double KE, double mProj, double mTarg, bool forward = true);
+
+    /// print desciption to stdout
+    void display() const;
 };
 
 /// display test calculation

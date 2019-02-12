@@ -1,4 +1,5 @@
 /// \file PointCloudPCA.cc
+// Michael P. Mendenhall, LLNL 2016
 
 #include "PointCloudPCA.hh"
 #include <stdio.h>
@@ -39,6 +40,15 @@ PointCloudPCA::PointCloudPCA(const vector<weightedpt>& v): n(v.size()) {
     size_t nplus = 0; // number of positive elements
     for(size_t i=0; i<n; i++) { w(0,i) = v[i].w; nplus += (v[i].w >= 0); }
     sw = w.Sum();
+
+    if(!sw || n < 2) {
+        for(auto i: {0,1,2}) {
+            mu[i] = 0;
+            for(size_t j=0; j<n; j++) mu[i] += v[j].x[i]/n;
+            for(auto j: {0,1,2}) PCA[i][j] = Cov[i][j] = 0;
+        }
+        return;
+    }
 
     // points matrix
     TMatrixD M(n,3);
@@ -97,6 +107,11 @@ void PointCloudPCA::flip() {
 }
 
 void PointCloudPCA::operator+=(const PointCloudPCA& P) {
+    if(!sw) {
+        *this = P;
+        return;
+    }
+
     PointCloudPCA Pnew;
 
     Pnew.n = n + P.n;
@@ -118,7 +133,7 @@ void PointCloudPCA::recalc() {
 }
 
 void PointCloudPCA::display() const {
-    printf("Cloud of %zu points (average weight %g):\n", n, sw/n);
+    printf("Cloud of %zu points (average weight %g):\n", n, n? sw/n : 0);
     printf("\tmean = %g\t%g\t%g\t\twidth2 = %g\t%g\t%g\n",
            mu[0], mu[1], mu[2],
            width2[0], width2[1], width2[2]);

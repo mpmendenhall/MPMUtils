@@ -139,4 +139,7 @@ TH1* histsep(const TH1& h1, const TH1& h2);
 /// calculate optimum dividing point and overlap error between two histograms
 void histoverlap(const TH1& h1, const TH1& h2, double& xdiv, double& o);
 
+/// Log-spaced-points numerical derivative of curve
+TGraph derivative_logspaced(const TGraph& g, double x0, double x1, double ysc = 1.0, size_t npts = 15);
+
 #endif

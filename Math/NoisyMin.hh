@@ -11,7 +11,6 @@
 #include <vector>
 using std::vector;
 #include <string>
-using std::string;
 
 /// Minimizer for N-dimensional ``noisy'' function evaluation
 /**
@@ -22,11 +21,11 @@ using std::string;
         - call fitMinSingular() for an update step
 */
 class NoisyMin {
+protected:
+    size_t N;                       ///< Number of dimensions being minimized over
+    size_t NTERMS;                  ///< Number of terms in quadratic surface fit
 public:
-
     typedef vector<double> vec_t;   ///< convenience shorthand
-    const size_t N;                 ///< Number of dimensions being minimized over
-    const size_t NTERMS;            ///< Number of terms in quadratic surface fit
 
     /// evaluated datapoint for fit
     struct evalpt {
@@ -41,6 +40,8 @@ public:
     /// Constructor, with number of dimensions
     NoisyMin(size_t n);
 
+    /// get number of terms
+    size_t nTerms() const { return NTERMS; }
     /// initialize search range from dS, x0
     void initRange();
     /// call after initRange (and modifying SRm) to set minimum step limits
@@ -55,6 +56,8 @@ public:
     void fitMinSingular();
     /// show summary information
     void display();
+    /// show search range info
+    void displaySearchRange() const;
 
     // initial values
     vec_t x0;                       ///< current best fit estimate
@@ -72,12 +75,11 @@ public:
     double nSigmaStat = 4;          ///< statistical uncertainty search region expansion
 
     // internal / debugging quantities
-    vector<string> vnames;          ///< variable names
+    vector<std::string> vnames{N};  ///< variable names
     vector<evalpt> fvals;           ///< collected function evaluations
     gsl_matrix_wrapper SR0{N,N};    ///< initial search range/limits ellipse (Cholesky form)
     bool minStep = false;           ///< whether to apply minimum step limits
     gsl_matrix_wrapper SRm{N,N};    ///< minimum search range ellipse (start in PCA form; converted to Cholesky form)
-    vec_t x00;                      ///< initial starting point
 
     LinMin LM{NTERMS};              ///< fitter for quadratic surface x^T A x + b^T x + c around minimum
     double k0 = 0;                  ///< fit minimum value
@@ -105,7 +107,16 @@ protected:
     gsl_vector_wrapper v2{N};   ///< temporary calculation vector
 
     ROOT::Math::QuasiRandomNiederreiter QRNG{(unsigned int)N};   ///< quasirandom distribution generator
+    size_t QRNGn = 0;           ///< number of points pulled from QRNG
+
+    friend std::ostream& operator<< (std::ostream &o, const NoisyMin& NM);
+    friend std::istream& operator>> (std::istream &i, NoisyMin& NM);
 };
+
+/// serialization
+std::ostream& operator<< (std::ostream &o, const NoisyMin& NM);
+/// deserialization
+std::istream& operator>> (std::istream &i, NoisyMin& NM);
 
 ///////////////////////
 ///////////////////////
@@ -122,5 +133,7 @@ NoisyMin::evalpt& NoisyMin::addSample(F& f) {
 
 /// output evalpt to text line
 std::ostream& operator<<(std::ostream& o, const NoisyMin::evalpt& p);
+/// deserialize (requires correct dimension to already be set)
+std::istream& operator>>(std::istream& i, NoisyMin::evalpt& p);
 
 #endif

@@ -3,6 +3,10 @@
 #include "RelKin.hh"
 #include <stdio.h>
 
+void Lorentz_boost::display() const {
+    printf("Lorentz boost with gamma = %g, beta = %g\n", gamma, beta);
+}
+
 double p22ke(double p2, double m) {
     double KE = sqrt(p2 + m*m) - m;
     return (p2 - KE*KE)/(2*m); // numerically stable for KE,p << m
@@ -25,6 +29,18 @@ double Lorentz_boost::boost(double v0, double& v3) const {
     return v0;
 }
 
+void Lorentz_boost::operator*=(const Lorentz_boost& b) {
+    double gnew = gamma*b.gamma + beta * gamma * b.beta * b.gamma;
+    beta = (beta*gamma + (beta+b.beta)*gamma*b.gamma)/gnew;
+    gamma = gnew;
+}
+
+void Lorentz_boost::operator/=(const Lorentz_boost& b) {
+    double gnew = gamma*b.gamma - beta * gamma * b.beta * b.gamma;
+    beta = (beta*gamma + (beta-b.beta)*gamma*b.gamma)/gnew;
+    gamma = gnew;
+}
+
 double Lorentz_boost::unboost(double v0, double& v3) const {
     const double vv0 = v0;
     const double vv3 = v3;
@@ -33,14 +49,19 @@ double Lorentz_boost::unboost(double v0, double& v3) const {
     return v0;
 }
 
-double Lorentz_boost::projectileCM(double KE, double mProj, double mTarg) {
+double Lorentz_boost::projectileCM(double KE, double mProj, double mTarg, bool forward) {
     double M = mProj + mTarg;       // total rest mass
     double pL = ke2p(KE, mProj);    // lab-frame projectile momentum
+    if(!forward) pL *= -1;
     beta = pL/(KE + M);             // cm velocity in lab frame
     gamma = b2gamma(beta);
     return gamma*KE + (gamma - 1)*M - beta*gamma*pL;
 }
 
+void Lorentz_boost::particleCM(double KE, double m) {
+    gamma = 1 + KE/m;
+    beta = g2beta(gamma);
+}
 
 void testRelKin() {
     double TKE = 100;

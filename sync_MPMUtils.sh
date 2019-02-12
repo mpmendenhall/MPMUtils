@@ -1,11 +1,16 @@
 #!/bin/bash
 
-for f in */*; do :
-if [ -e $MPMUTILS/$f ]; then
+for f0 in */*; do :
+f=`basename $f0`
+if [ "$f" == "Makefile" ]; then
+continue; fi
+for d1 in $MPMUTILS/*; do :
+if [ -e $d1/$f ]; then
     echo "--------------------------------------------------------" $f
-    if ! diff $f $MPMUTILS/$f; then
-    echo "cp" $f $MPMUTILS/$f
-    echo "cp" $MPMUTILS/$f $f
+    if ! diff $f0 $d1/$f; then
+    echo "cp" $f0 $d1/$f
+    echo "cp" $d1/$f $f0
     fi
-fi; done
+fi; done; done
 echo "< : here; > : MPMUtils"
+

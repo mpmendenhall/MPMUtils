@@ -11,36 +11,25 @@
 #include <utility>
 #include <cassert>
 #include <vector>
+#include <iostream>
 using std::vector;
 
 /// helper for memory-managing gsl_matrix
 class gsl_matrix_wrapper {
 public:
     /// Constructor with dimensions
-    gsl_matrix_wrapper(size_t m, size_t n, bool c = true): M(m && n? c? gsl_matrix_calloc(m,n) : gsl_matrix_alloc(m,n) : nullptr) { }
+    gsl_matrix_wrapper(size_t m = 0, size_t n = 0, bool c = true): M(m && n? c? gsl_matrix_calloc(m,n) : gsl_matrix_alloc(m,n) : nullptr) { }
     /// Copy constructor
-    gsl_matrix_wrapper(const gsl_matrix_wrapper& w): M(nullptr) {
-        if(w.M) {
-            M = gsl_matrix_alloc(w->size1, w->size2);
-            gsl_matrix_memcpy(M, w);
-        }
-    }
+    gsl_matrix_wrapper(const gsl_matrix_wrapper& w): M(nullptr) { *this = w; }
     /// Move constructor
     gsl_matrix_wrapper(gsl_matrix_wrapper&& other): M(nullptr) { *this = std::move(other); }
     /// Destructor
     ~gsl_matrix_wrapper() { if(M) gsl_matrix_free(M); }
 
-
-    /// Copy assignment forbidden
-    gsl_matrix_wrapper& operator=(const gsl_matrix_wrapper&) = delete;
+    /// Copy assignment
+    gsl_matrix_wrapper& operator=(const gsl_matrix_wrapper& w);
     /// Move assignemnt
-    gsl_matrix_wrapper& operator=(gsl_matrix_wrapper&& other) {
-        if(this == &other) return *this;
-        if(M) gsl_matrix_free(M);
-        M = other.M;
-        other.M = nullptr;
-        return *this;
-    }
+    gsl_matrix_wrapper& operator=(gsl_matrix_wrapper&& other);
 
     /// easy element access
     double operator()(size_t i, size_t j) const { return gsl_matrix_get(M,i,j); }
@@ -60,34 +49,27 @@ protected:
     gsl_matrix* M;  ///< the matrix
 };
 
+/// serialization
+std::ostream& operator<< (std::ostream &o, const gsl_matrix_wrapper& M);
+/// deserialization
+std::istream& operator>> (std::istream &i, gsl_matrix_wrapper& M);
+
 /// helper for memory-managing gsl_vector
 class gsl_vector_wrapper {
 public:
     /// Constructor with dimensions
-    gsl_vector_wrapper(size_t n, bool c = true): v(n? c? gsl_vector_calloc(n) : gsl_vector_alloc(n) : nullptr) { }
+    gsl_vector_wrapper(size_t n = 0, bool c = true): v(n? c? gsl_vector_calloc(n) : gsl_vector_alloc(n) : nullptr) { }
     /// Copy constructor
-    gsl_vector_wrapper(const gsl_vector_wrapper& w): v(nullptr) {
-        if(w.v) {
-            v = gsl_vector_alloc(w->size);
-            gsl_vector_memcpy(v, w);
-        }
-    }
+    gsl_vector_wrapper(const gsl_vector_wrapper& w): v(nullptr) { *this = w; }
     /// Move constructor
     gsl_vector_wrapper(gsl_vector_wrapper&& other): v(nullptr) { *this = std::move(other); }
     /// Destructor
     ~gsl_vector_wrapper() { if(v) gsl_vector_free(v); }
 
-
-    /// Copy assignment forbidden
-    gsl_vector_wrapper& operator=(const gsl_vector_wrapper&) = delete;
+    /// Copy assignment
+    gsl_vector_wrapper& operator=(const gsl_vector_wrapper&);
     /// Move assignemnt
-    gsl_vector_wrapper& operator=(gsl_vector_wrapper&& other) {
-        if(this == &other) return *this;
-        if(v) gsl_vector_free(v);
-        v = other.v;
-        other.v = nullptr;
-        return *this;
-    }
+    gsl_vector_wrapper& operator=(gsl_vector_wrapper&& other);
 
     /// easy element access
     double operator()(size_t i) const { return gsl_vector_get(v,i); }
@@ -106,6 +88,11 @@ public:
 protected:
     gsl_vector* v;      ///< the vector
 };
+
+/// serialization
+std::ostream& operator<< (std::ostream &o, const gsl_vector_wrapper& v);
+/// deserialization
+std::istream& operator>> (std::istream &i, gsl_vector_wrapper& v);
 
 /// print vector to stdout
 void displayV(const gsl_vector* v);
@@ -146,10 +133,10 @@ void vector2gsl(const YVec& v, gsl_vector*& g) {
 }
 /// extract gsl vector
 template<typename Vec>
-static void gsl2vector(const gsl_vector* g, Vec& v) {
-    if(!g) { v.clear(); return; }
-    v.resize(g->size);
-    for(size_t i=0; i<g->size; i++) v[i] = gsl_vector_get(g,i);
+static void gsl2vector(const gsl_vector* gv, Vec& v) {
+    if(!gv) { v.clear(); return; }
+    v.resize(gv->size);
+    for(size_t i=0; i<gv->size; i++) v[i] = gsl_vector_get(gv,i);
 }
 
 
@@ -160,12 +147,11 @@ static void gsl2vector(const gsl_vector* g, Vec& v) {
 class SVDWorkspace {
 public:
     /// Constructor
-    SVDWorkspace(size_t n): N(n), V(N,N), S(N), w(N) { }
+    SVDWorkspace(size_t n): V(n,n), S(n), w(n) { }
 
     /// Perform decomposition; outputs U in A
     int SVD(gsl_matrix* A) { return gsl_linalg_SV_decomp(A, V, S, w); }
 
-    const size_t N;         ///< input columns
     gsl_matrix_wrapper V;   ///< NxN orthogonal matrix
     gsl_vector_wrapper S;   ///< diagonal of NxN singular-values matrix
 
@@ -183,6 +169,17 @@ public:
     EigSymmWorkspace(size_t n): _N(n) { }
     /// Destructor
     ~EigSymmWorkspace() { if(evec) gsl_matrix_free(evec); if(W) gsl_eigen_symmv_free(W); }
+    /// Assignment
+    EigSymmWorkspace& operator=(const EigSymmWorkspace& E) {
+        if(_N != E._N) {
+            if(evec) gsl_matrix_free(evec);
+            if(W) gsl_eigen_symmv_free(W);
+            evec = nullptr;
+            W = nullptr;
+        }
+        _N = E._N;
+        return *this;
+    }
 
     /// Decompose symmetric (lower-triangle) A -> U D U^T; return eigenvectors in A -> U columns
     void decompSymm(gsl_matrix*& A, gsl_vector* D) {
@@ -192,9 +189,8 @@ public:
         std::swap(evec,A);
     }
 
-    const size_t _N;
-
 protected:
+    size_t _N;
     gsl_matrix* evec = nullptr;             ///< eigenvector storage
     gsl_eigen_symmv_workspace* W = nullptr; ///< symmetrix matrix eigendecomposition workspace
 };
@@ -207,7 +203,7 @@ class ellipse_affine_projector: public SVDWorkspace {
 public:
     /// Constructor
     ellipse_affine_projector(size_t n, size_t m): SVDWorkspace(n),
-    M(m), TT(M,N), P(M,M), Mmn(M,N), Mnn(N,N) { }
+    M(m), TT(M,n), P(M,M), Mmn(M,n), Mnn(n,n) { }
 
     /// Set T to vectors along specified axes
     template<typename V>

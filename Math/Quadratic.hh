@@ -194,8 +194,9 @@ public:
         for(size_t i=0; i<N; i++) k += x0[i]*b[i];
         k = c + 0.5*k;
     }
-
-    const size_t N;         ///< number of dimensions
+protected:
+    size_t N;               ///< number of dimensions
+public:
     vector<double> x0;      ///< extremum position
     double k = 0;           ///< extremum value
     gsl_matrix_wrapper L;   ///< lower-triangular NxN Cholesky decomposition L L^T = A
@@ -260,9 +261,7 @@ public:
 class CoveringEllipse {
 public:
     /// Constructor
-    CoveringEllipse(size_t n): N(n), E1(N), E2(N), EC(N), SVD(N), L2P(N,N) { }
-
-    const size_t N; ///< number of dimensions
+    CoveringEllipse(size_t n): E1(n), E2(n), EC(n), SVD(n), L2P(n,n) { }
 
     /// Calculate covering ellipse EC from E1, E2
     void calcCovering(bool cover = true) {
@@ -275,7 +274,7 @@ public:
         // L2' -> U Sigma V^T
         SVD.SVD(L2P);
         // Sigma -> ~S
-        for(size_t i=0; i<N; i++) {
+        for(size_t i=0; i<SVD.S->size; i++) {
             double s = SVD.S(i);
             SVD.S(i) = cover? std::min(s,1.) : std::max(s,1.);
         }
