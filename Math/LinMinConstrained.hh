@@ -52,18 +52,18 @@ protected:
     size_t Ncon;
 
     // for each M
-    gsl_matrix* Q = nullptr;        ///< Q from QR decomp
-    gsl_matrix* RT = nullptr;       ///< R^T from QR decomp (use with blas Cholesky Decomposition functions for R^T R)
-    gsl_matrix* RTRi = nullptr;     ///< (R^T R)^-1 = (M^T M)^-1 using Cholesky inverse
+    gsl_matrix_wrapper Q;       ///< Q from QR decomp
+    gsl_matrix_wrapper RT;      ///< R^T from QR decomp (use with blas Cholesky Decomposition functions for R^T R)
+    gsl_matrix_wrapper RTRi;    ///< (R^T R)^-1 = (M^T M)^-1 using Cholesky inverse
 
     // for each M,G
-    gsl_matrix* G = nullptr;        ///< Ncon*Nvar constraints matrix
-    gsl_vector* k = nullptr;        ///< RHS of constraints
-    gsl_matrix* GRRM  = nullptr;    ///< G (R^T R)^-1 M^T reusable intermediate
-    gsl_matrix* GRRG_CD = nullptr;  ///< Cholesky Decomposition for A*lambda = v solver
+    gsl_matrix_wrapper G;       ///< Ncon*Nvar constraints matrix
+    gsl_vector_wrapper k;       ///< RHS of constraints
+    gsl_matrix_wrapper GRRM;    ///< G (R^T R)^-1 M^T reusable intermediate
+    gsl_matrix_wrapper GRRG_CD; ///< Cholesky Decomposition for A*lambda = v solver
 
     // for each y,M,G
-    gsl_vector* l = nullptr;        ///< Lagrange Multipliers for constraints
+    gsl_vector_wrapper l;       ///< Lagrange Multipliers for constraints
 };
 
 #endif

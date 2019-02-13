@@ -42,6 +42,8 @@ public:
 
     /// get number of terms
     size_t nTerms() const { return NTERMS; }
+    /// get number of dimensions
+    size_t nDim() const { return N; }
     /// initialize search range from dS, x0
     void initRange();
     /// call after initRange (and modifying SRm) to set minimum step limits

@@ -43,7 +43,7 @@ public:
     /// configure fit matrix for polynomial over X grid
     template<typename LM>
     void configure(LM& fitter) {
-        assert(P.size() == fitter.Nvar);
+        assert(P.size() == fitter.nVar());
         fitter.setNeq(npts);
         size_t i = 0;
         for(auto& kv: P) {

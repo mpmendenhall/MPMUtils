@@ -35,6 +35,8 @@ public:
     void setNeq(size_t neq);
     /// get Neq
     size_t nEq() const { return Neq; }
+    /// get Nvar
+    size_t nVar() const { return Nvar; }
     /// get number of degrees of freedom
     size_t nDF() const { return Neq-Nvar; }
     /// clear previous calculation inputs

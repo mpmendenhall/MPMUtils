@@ -63,7 +63,7 @@ void fitFile(const char* fname) {
     // load datapoints from file specified on command line
     std::ifstream f(fname);
     while(f.good()) {
-        NM.fvals.emplace_back(NM.N);
+        NM.fvals.emplace_back(NM.nDim());
         auto& v = NM.fvals.back();
         for(auto& c: v.x) f >> c;
         Quadratic::evalTerms(v.x, v.t);
