@@ -6,6 +6,7 @@
 
 #include "BinaryIO.hh"
 #include "ObjectFactory.hh"
+#include "KeyTable.hh"
 #include <unistd.h>
 
 class JobComm;
@@ -64,24 +65,26 @@ public:
     virtual size_t nChunk() const { return ntasks; }
     /// check if is top-level controller
     bool isController() const { return !rank; }
+    /// signal that job is done; ready for close-out comms
+    virtual void signalDone() { }
 
     static MultiJobControl* JC; ///< singleton instance for job control type
     int verbose = 0;            ///< debugging verbosity level
 
     template<class T>
     void pushState(const string& n, const T& d) {
-        //auto& p = stateData[n];
-        //if(p.alive) delete (T*)p.alive;
-        //p.alive = (void*)(new T(d));
-        //if(!persistent) p.dead = KeyData(d);
+        auto& p = stateData[n];
+        if(p.alive) delete (T*)p.alive;
+        p.alive = (void*)(new T(d));
+        if(!persistent) p.dead = KeyData(d);
     }
     template<class T>
     void getState(const string& n, T& d) {
-        //auto it = stateData.find(n);
-        //assert(it != stateData.end());
-        //assert(bool(it->second.alive) == persistent);
-        //if(it->second.alive) d = *(T*)it->second.alive;
-        //else it->second.dead.Get(d);
+        auto it = stateData.find(n);
+        assert(it != stateData.end());
+        assert(bool(it->second.alive) == persistent);
+        if(it->second.alive) d = *(T*)it->second.alive;
+        else it->second.dead.Get(d);
     }
 
 protected:
@@ -100,8 +103,6 @@ protected:
     virtual bool _isRunning(int) = 0;
     /// Allocate an available worker; possibly blocking if necessary
     virtual int _allocWorker() = 0;
-    /// Signal that job is done
-    virtual void signalDone() { }
 
     /// Check if a job is running; perform end-of-job actions if completed.
     bool isRunning(int wid);
@@ -112,8 +113,7 @@ protected:
 
     struct sData {
         void* alive = nullptr;      ///< functioning object
-        void* dead; // TODO
-        //KeyData dead;               ///< serialized data
+        KeyData dead;               ///< serialized data
     };
     map<string, sData> stateData;   ///< saved state information
 };

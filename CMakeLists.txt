@@ -9,8 +9,12 @@ find_package(OpenGL)
 find_package(GLUT)
 include_directories(${HDF5_INCLUDE_DIRS})
 find_library(FFTW_LIBS fftw3)
-find_package(MPI)
 
+find_package(MPI)
+if(MPI_FOUND)
+    add_compile_options("-DWITH_MPI")
+    include_directories(${MPI_INCLUDE_PATH})
+endif()
 
 # force rebuild of CodeVersion
 #add_custom_command(OUTPUT always_rebuild COMMAND cmake -E echo)
@@ -42,10 +46,7 @@ if(GLUT_FOUND)
     add_compile_options("-DWITH_OPENGL")
 endif()
 
-if(MPI_FOUND)
-    add_compile_options("-DWITH_MPI")
-    include_directories(${MPI_INCLUDE_PATH})
-endif()
+
 
 if(FFTW_LIBS-NOTFOUND)
     message("Disabling FFTW3 dependency")

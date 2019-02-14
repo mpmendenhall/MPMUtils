@@ -66,6 +66,7 @@ void KTAccumJob::run(JobSpec J, BinaryIO& B) {
     JS = J;
     B.receive(kt);
     runAccum();
+    MultiJobControl::JC->signalDone();
     returnCombined(B);
 }
 

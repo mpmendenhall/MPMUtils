@@ -26,13 +26,14 @@ REGISTER_FACTORYOBJECT(JobWorker)
 void JobWorker::run(JobSpec JS, BinaryIO&) {
     printf("JobWorker does nothing for ");
     JS.display();
+    MultiJobControl::JC->signalDone();
 }
 
 void MultiJobControl::runWorker() {
     map<size_t, JobWorker*> workers;
 
     do {
-        dataSrc = parentRank;
+        dataDest = dataSrc = parentRank;
         auto JS = receive<JobSpec>();
 
         // null worker type indicates end of run
@@ -50,9 +51,6 @@ void MultiJobControl::runWorker() {
             if(!W) exit(44);
         } else if(verbose > 4) printf("Already have worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
         W->run(JS, *this);
-
-        dataSrc = parentRank;
-        signalDone();
 
     } while(persistent);
     if(verbose > 2 && !persistent) printf("\nrunWorker completed on [%i]\n\n", rank);
@@ -99,7 +97,7 @@ void MultiJobControl::waitComplete() {
             for(auto i: js) printf("%i ",i);
             printf("to complete.\n");
         }
-        usleep(1000000);
+        usleep(verbose > 4? 1000000 : 10000);
     }
 }
 
@@ -109,6 +107,6 @@ void MultiJobControl::waitFor(const vector<int>& v) {
         wids.erase(std::remove_if(wids.begin(), wids.end(), [&](int i){return !isRunning(i);}), wids.end());
         if(!wids.size()) break;
         //checkJobs();
-        usleep(1000000);
+        usleep(verbose > 4? 1000000 : 10000);
     }
 }

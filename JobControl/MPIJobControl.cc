@@ -6,11 +6,11 @@
 #ifdef WITH_MPI
 
 void MPIJobControl::_send(void* vptr, int size) {
-    MPI_Send(vptr, size, MPI_UNSIGNED_CHAR, dataDest, 0, MPI_COMM_WORLD);
+    MPI_Send(vptr, size, MPI_UNSIGNED_CHAR, dataDest, 2, MPI_COMM_WORLD);
 }
 
 void MPIJobControl::_receive(void* vptr, int size) {
-    MPI_Recv(vptr, size, MPI_UNSIGNED_CHAR, dataSrc, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(vptr, size, MPI_UNSIGNED_CHAR, dataSrc, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 }
 
 void MPIJobControl::init(int argc, char **argv) {
@@ -78,7 +78,7 @@ void MPIJobControl::finish() {
 void MPIJobControl::signalDone() {
     // send with tag '1' to signal done
     int i = 1;
-    MPI_Send(&i, sizeof(i), MPI_UNSIGNED_CHAR, dataDest, 1, MPI_COMM_WORLD);
+    MPI_Send(&i, 1, MPI_INT, dataDest, 1, MPI_COMM_WORLD);
 }
 
 bool MPIJobControl::_isRunning(int wid) {
@@ -87,7 +87,7 @@ bool MPIJobControl::_isRunning(int wid) {
     int i = MPI_Iprobe(wid, 1, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
     if(!flag) return true;
 
-    MPI_Recv(&i, sizeof(i), MPI_UNSIGNED_CHAR, wid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(&i, 1, MPI_INT, wid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     availableRanks.insert(wid);
     return false;
 }

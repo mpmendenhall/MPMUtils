@@ -22,6 +22,8 @@ public:
     void _send(void* vptr, int size) override;
     /// blocking data receive
     void _receive(void* vptr, int size) override;
+    /// signal that job is done; ready for close-out comms
+    void signalDone() override;
 
     char hostname[MPI_MAX_PROCESSOR_NAME];  ///< hostname for this machine
 
@@ -32,8 +34,6 @@ protected:
     bool _isRunning(int) override;
     /// Allocate an available thread, blocking if necessary
     int _allocWorker() override;
-    /// signal that job is done
-    void signalDone() override;
 };
 
 #endif
