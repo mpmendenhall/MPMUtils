@@ -5,6 +5,30 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <cstdlib> // for system(...)
+
+int runSysCmd(const string& cmd) {
+    int ret = std::system(cmd.c_str());
+    if(ret) {
+        auto e = WEXITSTATUS(ret);
+        printf("*** '%s' exited with return %i!\n", cmd.c_str(), e);
+        exit(e);
+    }
+    return ret;
+}
+
+void FDBinaryIO::openIn(const string& s) {
+    if(fIn >= 0) close(fIn);
+    fIn = s.size()? open(s.c_str(), O_RDONLY) : -1;
+}
+
+void FDBinaryIO::openOut(const string& s) {
+    if(fOut >= 0) close(fOut);
+    fOut = s.size()? open(s.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR) : -1;
+    if(s.size() && fOut < 0) exit(99);
+}
 
 void DiskIOJobControl::init(int argc, char **argv) {
     rank = 0;
@@ -29,11 +53,7 @@ void DiskIOJobControl::init(int argc, char **argv) {
             }
         } else if(verbose > 2) printf("No saved state available at '%s'\n", fn.str().c_str());
 
-    } else {
-        int ret = std::system(("rm -f "+data_bpath+"/SavedState_*.dat").c_str());
-        ret = std::system(("rm -f "+data_bpath+"/CommBuffer_*.dat").c_str());
-        if(ret) exit(111);
-    }
+    } else runSysCmd("rm -f "+data_bpath+"/SavedState_*.dat");
 }
 
 void DiskIOJobControl::finish() {
@@ -41,31 +61,37 @@ void DiskIOJobControl::finish() {
     fn << data_bpath << "/SavedState_" << rank << ".dat";
 
     if(stateData.size()) {
-        std::ofstream o(fn.str());
-        IOStreamBIO b(nullptr, &o);
-
+        FDBinaryIO b("",fn.str());
         b.send<size_t>(stateData.size());
         for(auto& kv: stateData) {
             b.send(kv.first);
             b.send(kv.second.dead);
         }
-        o.close();
-    } else if(std::system(("rm -f "+fn.str()).c_str())) exit(111);
+    } else runSysCmd("rm -f "+fn.str());
 
-    if(rank) {
-        std::stringstream fn2;
-        fn2 << "rm -f " << data_bpath << "/CommBuffer_0_to_" << rank << ".dat";
-        if(std::system(fn2.str().c_str())) exit(112);
-    }
+    if(!rank) runSysCmd("rm -f " + data_bpath + "/CommBuffer_0_to_*.dat");
+}
+
+void DiskIOJobControl::clearOut() {
+    std::stringstream fn;
+    fn << "rm -f " << data_bpath << "/CommBuffer_" << rank << "_to_" << dataDest << ".dat";
+    if(verbose > 4) printf("clearOut %s\n", fn.str().c_str());
+    runSysCmd(fn.str());
+}
+
+void DiskIOJobControl::clearIn() {
+    srcpos[dataSrc] = 0;
+    std::stringstream fn;
+    fn << "rm -f " << data_bpath << "/CommBuffer_" << dataSrc << "_to_" << rank << ".dat";
+    if(verbose > 4) printf("clearIn %s\n", fn.str().c_str());
+    runSysCmd(fn.str());
 }
 
 void DiskIOJobControl::_send(void* vptr, int size) {
-    std::ofstream of;
     std::stringstream fn;
     fn << data_bpath << "/CommBuffer_" << rank << "_to_" << dataDest << ".dat";
-    of.open(fn.str(),  std::ios_base::app);
-    of.write((char*)vptr, size);
-    of.close();
+    FDBinaryIO b("", fn.str());
+    b._send((char*)vptr, size);
 }
 
 void DiskIOJobControl::_receive(void* vptr, int size) {
@@ -78,6 +104,7 @@ void DiskIOJobControl::_receive(void* vptr, int size) {
     do { // wait for file available
         fin.open(fn.str(), std::ios_base::binary);
         if(fin.good() && fin.is_open()) break;
+        fin.close();
         usleep(100000);
     } while(true);
 

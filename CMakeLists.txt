@@ -35,7 +35,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 
-add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++14" ${MPI_COMPILE_FLAGS})
+add_compile_options("-fPIC" "-Wpedantic" "-Wall" "-std=c++14" ${MPI_COMPILE_FLAGS})
+string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
 
 if(GLUT_FOUND)
     add_compile_options("-DWITH_OPENGL")

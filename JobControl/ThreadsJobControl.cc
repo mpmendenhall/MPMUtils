@@ -4,7 +4,6 @@
 #include "ThreadsJobControl.hh"
 #include <sstream>
 #include <unistd.h>
-#include <cstdlib> // for system(...)
 #include <thread>
 
 static vector<int> stillRunning;
@@ -28,13 +27,20 @@ bool ThreadsJobControl::_isRunning(int wid) {
     }
 
     if(stillRunning[it->first]) {
-        if(verbose > 4) printf("Worker ID %i is nominally still running.\n", wid);
+        if(verbose > 4) printf("Worker ID %i is still running.\n", wid);
         return true;
     }
 
     if(verbose > 4) printf("Assuring worker thread %i is done.\n", wid);
-    pthread_join(it->second, nullptr);
+    void* ret = nullptr;
+    pthread_join(it->second, &ret);
     cthreads.erase(it);
+    int iret = size_t(ret);
+    if(iret) {
+        printf("**** Worker %i exited on code '%i'!\n", wid, iret);
+        exit(iret);
+    }
+    if(verbose > 4) printf("\tWorker thread %i is indeed done.\n", wid);
     return false;
 }
 
@@ -49,8 +55,7 @@ void* runcmd(void* s) {
     runcmd_args a = *(runcmd_args*)s;
     stillRunning[a.r] = 1;
     pthread_barrier_wait(&runcmdInit); // release lock on arguments
-    int ret = std::system(a.s.c_str());
-    if(ret) exit(99);
+    runSysCmd(a.s);
     stillRunning[a.r] = 0;
     return nullptr;
 }

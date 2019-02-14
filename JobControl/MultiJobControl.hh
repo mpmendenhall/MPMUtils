@@ -54,7 +54,7 @@ public:
     /// Blocking wait for listed jobs to have finished
     void waitFor(const vector<int>& v);
     /// Blocking wait for all jobs to complete
-    void waitComplete() { while(checkJobs()) usleep(1000000); }
+    void waitComplete();
 
     /// start-of-process initialization
     virtual void init(int argc, char **argv) = 0;

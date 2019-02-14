@@ -40,7 +40,9 @@ public:
     template<typename T>
     KeyData(const T*): TMessage(0) { static_assert(_false<T>::value, "Unimplemented pointer type"); }
     /// Constructor, writing generic non-ROOT object
-    template<typename T, typename std::enable_if<!std::is_base_of<TObject, T>::value>::type* = nullptr>
+    template<typename T,
+             typename std::enable_if<!std::is_base_of<TObject, T>::value>::type* = nullptr,
+             typename std::enable_if<!std::is_pointer<T>::value>::type* = nullptr >
     KeyData(const T& x): TMessage(kMESS_BINARY) { whut(); send(x); SetReadMode(); }
     /// Constructor, writing ROOT object
     template<typename T, typename std::enable_if<std::is_base_of<TObject, T>::value>::type* = nullptr>

@@ -6,7 +6,7 @@
 MultiJobControl* MultiJobControl::JC = nullptr;
 
 void JobSpec::display() const {
-    printf("JobSpec [%i: %zu -- %zu] for class '%s'\n", uid, N0, N1, ObjectFactory::nameOf(wclass).c_str());
+    printf("JobSpec [Job %i: %zu -- %zu] for class '%s' on worker [%i]\n", uid, N0, N1, ObjectFactory::nameOf(wclass).c_str(), wid);
 }
 
 void JobComm::splitJobs(vector<JobSpec>& vJS, size_t nSplit, size_t nItms, size_t wclass, int uid) {
@@ -46,20 +46,20 @@ void MultiJobControl::runWorker() {
         if(!W) {
             if(verbose > 3) printf("Instantiating worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
             it->second = W = dynamic_cast<JobWorker*>(ObjectFactory::construct(JS.wclass));
-            if(!W) exit(-1);
+            if(!W) exit(44);
         } else if(verbose > 4) printf("Already have worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
         W->run(JS, *this);
 
     } while(persistent);
-    if(verbose > 2 && !persistent) printf("runWorker completed on [%i]\n", rank);
+    if(verbose > 2 && !persistent) printf("\nrunWorker completed on [%i]\n\n", rank);
 
     // cleanup
     for(auto& kv: workers) delete kv.second;
 }
 
 int MultiJobControl::submitJob(JobSpec& JS) {
-    if(verbose > 4) { printf("Submitting "); JS.display(); }
     dataSrc = dataDest = JS.wid = _allocWorker();
+    if(verbose > 4) { printf("Submitting "); JS.display(); }
     send(JS);
     if(JS.C) JS.C->startJob(*this);
     jobs[JS.wid] = JS;
@@ -70,12 +70,13 @@ bool MultiJobControl::isRunning(int wid) {
     auto it = jobs.find(wid);
     if(it == jobs.end()) return false;
     if(_isRunning(wid)) return true;
+
     auto C = it->second.C;
     jobs.erase(it);
-    if(C) {
-        dataSrc = dataDest = wid;
-        C->endJob(*this);
-    }
+    dataSrc = dataDest = wid;
+    if(C) C->endJob(*this);
+    clearOut();
+    clearIn();
     return false;
 }
 
@@ -85,6 +86,14 @@ int MultiJobControl::checkJobs() {
     int nrunning = 0;
     for(auto wid: wids) nrunning += isRunning(wid);
     return nrunning;
+}
+
+void MultiJobControl::waitComplete() {
+    int i = 0;
+    while((i = checkJobs())) {
+        if(verbose > 4) printf("Waiting for %i jobs to complete.\n", i);
+        usleep(1000000);
+    }
 }
 
 void MultiJobControl::waitFor(const vector<int>& v) {

@@ -2,22 +2,19 @@
 
 #include "ThreadsJobControl.hh"
 #include "KTAccumJob.hh"
+#include <TH1F.h>
 
 /// Test job class interfacing with KeyData
 class MyAccumJob: public KTAccumJob {
 protected:
     /// operate on kt data to produce accumulables
     void run(JobSpec S) {
+        auto f = kt.GetROOT<TH1>("v");
+        assert(f);
+        for(int i=0; i<10; i++) f->Fill(i+0.5);
+        printf("Integral %g in ", f->Integral());
         S.display();
-        auto k = kt.FindKey("v", true);
-        assert(k);
-        auto n = k->vSize<double>();
-        auto v = k->GetPtr<double>();
-        printf("Vector of size %i\n", n);
-        while(n--) {
-            v[n] = 2;
-            usleep(100000);
-        }
+        kt.Set("v", *f);
     }
 };
 
@@ -31,9 +28,10 @@ int main(int argc, char **argv) {
     MultiJobControl::JC->init(argc, argv);
 
     if(MultiJobControl::JC->rank == 0) {
+
         KTAccumJobComm KTC;
-        vector<double> v(10);
-        KTC.kt.Set("v", v);
+        auto foo = new TH1F("foo","bar",20,0,10);
+        KTC.kt.Set("v", *foo);
         KTC.kt.Set("Combine","v");
 
         for(int i=0; i<10; i++) {
@@ -46,16 +44,16 @@ int main(int argc, char **argv) {
             }
             MultiJobControl::JC->submitJob(JS);
         }
+        printf("\n\nAll submitted!\n\n");
+
         MultiJobControl::JC->waitComplete();
+
         printf("\n\nAll done!\n");
 
         KTC.gather();
-        auto k = KTC.kt.FindKey("v", true);
-        assert(k);
-        auto n = k->vSize<double>();
-        auto p = k->GetPtr<double>();
-        printf("Vector of size %i\n", n);
-        while(n--) printf("\t%g\n", p[n]);
+        auto f = KTC.kt.GetROOT<TH1>("v");
+        assert(f);
+        for(int i=1; i<=f->GetNbinsX(); i++) printf("\t%i\t%g\n", i, f->GetBinContent(i));
 
     } else MultiJobControl::JC->runWorker();
 

@@ -4,7 +4,6 @@
 #include "KTAccumJob.hh"
 
 void KTAccumJobComm::endJob(BinaryIO& B) {
-
     if(!combos.size()) {
         for(auto& kv: kt) {
             if(kv.first.substr(0,7) != "Combine") continue;
@@ -23,16 +22,19 @@ void KTAccumJobComm::endJob(BinaryIO& B) {
 
     for(size_t i=0; i<combos.size(); i++) {
         auto cd = kt.FindKey(combos[i]);
-        assert(cd);
+        if(!cd) exit(22);
         auto kd = B.receive<KeyData*>();
-        assert(kd);
+        if(!kd) exit(23);
 
         auto tp = cd->What();
-        if(tp == KeyData::kMESS_DOUBLE) {
-            cd->accumulate<double>(*kd);
-        } else if(tp == kMESS_OBJECT) {
+        if(tp != kd->What()) exit(24);
+
+
+        if(tp == KeyData::kMESS_DOUBLE) cd->accumulate<double>(*kd);
+        else if(tp == kMESS_OBJECT) {
             auto h = kd->GetROOT<TH1>();
-            if(h) objs[i]->Add(h);
+            if(!h || !objs[i]) exit(25);
+            objs[i]->Add(h);
             delete h;
         }
         delete kd;

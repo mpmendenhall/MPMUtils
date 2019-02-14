@@ -26,6 +26,12 @@ public:
     virtual void _send(void* vptr, int size) = 0;
     /// blocking data receive
     virtual void _receive(void* vptr, int size) = 0;
+    /// flush output to disk
+    virtual void flush() { }
+    /// clear output buffer
+    virtual void clearOut() { }
+    /// clear input buffer
+    virtual void clearIn() { }
 
     /// generic data send
     template<typename T>
