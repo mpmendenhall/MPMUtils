@@ -25,5 +25,12 @@ map<size_t, ObjectFactory*>& ObjectFactory::byIdx() { return singleton<map<size_
 map<string, size_t>& ObjectFactory::classIndices() { return singleton<map<string, size_t>>(); }
 map<size_t, string>& ObjectFactory::classNames() { return singleton<map<size_t, string>>(); }
 
+string ObjectFactory::nameOf(size_t i) {
+    if(!i) return "NULL";
+    auto& m = classNames();
+    auto it = m.find(i);
+    return it == m.end()? "UNREGISTERED" : it->second;
+}
+
 REGISTER_TYPENAME(ObjectFactory)
 REGISTER_FACTORYOBJECT(FactoryObject)

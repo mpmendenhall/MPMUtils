@@ -57,18 +57,34 @@ void MPIJobControl::init(int argc, char **argv) {
         for(auto r: childRanks) std::cout << " " << r;
         std::cout << " >\n";
     }
-
-    if(rank) {
-        if(childRanks.size()) runController();
-        else runWorker();
-    }
 }
 
 void MPIJobControl::finish() {
     // Send ending message to close worker process
-    KeyTable kt0;
-    for(auto r: childRanks) send(r, kt0);
+    JobSpec JS0;
+    for(auto r: childRanks) {
+        dataDest = r;
+        send(JS0);
+    }
 
     if(verbose > 1) printf(childRanks.size()? "Controller [%i] closing.\n" : "Worker [%i] closing.\n", rank);
     MPI_Finalize();
 }
+
+
+bool MPIJobControl::_isRunning(int wid) {
+    assert(false);
+}
+
+int MPIJobControl::_allocWorker() {
+    while(checkJobs() == ntasks) usleep(10000); // wait for a slot
+
+    assert(false);
+    for(int i=0; i<ntasks; i++) {
+
+        return i;
+    }
+
+    exit(1); // should have a slot available???
+}
+
