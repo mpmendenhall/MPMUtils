@@ -83,10 +83,14 @@ public:
     template<typename T>
     void accumulate(KeyData& kd) {
         auto n = vSize<T>();
+        //printf("Accumulating %i items\n", n);
         if(n != kd.vSize<T>()) exit(5);
         auto p0 = (T*)fBufCur;
         auto p1 = (T*)kd.fBufCur;
-        for(UInt_t i=0; i<n; i++) *(p0++) += *(p1++);
+        for(UInt_t i=0; i<n; i++) {
+            //printf("\t%g += %g\n", *p0, *p1);
+            *(p0++) += *(p1++);
+        }
     }
 
     /// clear array contents

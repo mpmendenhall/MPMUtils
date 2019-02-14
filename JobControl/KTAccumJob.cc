@@ -1,9 +1,10 @@
-/// \file KTAccumulateJobComm.cc
+/// \file KTAccumJob.cc
 // Michael P. Mendenhall, LLNL 2019
 
-#include "KTAccumulateJobComm.hh"
+#include "KTAccumJob.hh"
 
-void KTAccumulateJobComm::endJob(BinaryIO& B) {
+void KTAccumJobComm::endJob(BinaryIO& B) {
+
     if(!combos.size()) {
         for(auto& kv: kt) {
             if(kv.first.substr(0,7) != "Combine") continue;
@@ -22,11 +23,14 @@ void KTAccumulateJobComm::endJob(BinaryIO& B) {
 
     for(size_t i=0; i<combos.size(); i++) {
         auto cd = kt.FindKey(combos[i]);
+        assert(cd);
         auto kd = B.receive<KeyData*>();
+        assert(kd);
 
         auto tp = cd->What();
-        if(tp == KeyData::kMESS_DOUBLE) cd->accumulate<double>(*kd);
-        else if(tp == kMESS_OBJECT) {
+        if(tp == KeyData::kMESS_DOUBLE) {
+            cd->accumulate<double>(*kd);
+        } else if(tp == kMESS_OBJECT) {
             auto h = kd->GetROOT<TH1>();
             if(h) objs[i]->Add(h);
             delete h;
@@ -35,7 +39,7 @@ void KTAccumulateJobComm::endJob(BinaryIO& B) {
     }
 }
 
-void KTAccumulateJobComm::gather() {
+void KTAccumJobComm::gather() {
     for(size_t i=0; i<combos.size(); i++) {
         if(kt.FindKey(combos[i])->What() == kMESS_OBJECT) kt.Set(combos[i], *objs[i]);
         delete objs[i];
@@ -44,7 +48,7 @@ void KTAccumulateJobComm::gather() {
     objs.clear();
 }
 
-void KTAccumulateJobComm::launchAccumulate(size_t wid, int uid) {
+void KTAccumJobComm::launchAccumulate(size_t wid, int uid) {
     vector<JobSpec> vJS;
     int nsamp = MultiJobControl::JC->ntasks;
     kt.Get("NSamples", nsamp);

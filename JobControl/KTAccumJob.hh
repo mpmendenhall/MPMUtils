@@ -1,18 +1,18 @@
-/// \file KTAccumulateJobComm.hh KeyTable-based accumulate protocol communicator
+/// \file KTAccumJob.hh KeyTable-based accumulate protocol communicator
 // Michael P. Mendenhall, LLNL 2019
 
-#ifndef KTACCUMULATEJOBCOMM_HH
-#define KTACCUMULATEJOBCOMM_HH
+#ifndef KTAccumJobComm_HH
+#define KTAccumJobComm_HH
 
 #include "MultiJobControl.hh"
 #include "KeyTable.hh"
 #include <TH1.h>
 
 /// KeyTable-based accumulate protocol communicator
-class KTAccumulateJobComm: public JobComm {
+class KTAccumJobComm: public JobComm {
 public:
     /// Destructor
-    virtual ~KTAccumulateJobComm() { for(auto p: objs) delete p; }
+    virtual ~KTAccumJobComm() { for(auto p: objs) delete p; }
 
     KeyTable kt;            ///< associated KeyTable
 
@@ -32,7 +32,7 @@ protected:
     vector<TH1*> objs;      ///< accumulation TH1's
 };
 
-/// Base job working with KTAccumulateJobComm
+/// Base job working with KTAccumJobComm
 class KTAccumJob: public JobWorker {
 public:
     /// run job

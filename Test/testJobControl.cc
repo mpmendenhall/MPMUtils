@@ -1,7 +1,7 @@
 /// \file testJobControl.cc Test of job control classes
 
 #include "ThreadsJobControl.hh"
-#include "KTAccumulateJobComm.hh"
+#include "KTAccumJob.hh"
 
 /// Test job class interfacing with KeyData
 class MyAccumJob: public KTAccumJob {
@@ -15,7 +15,6 @@ protected:
         auto v = k->GetPtr<double>();
         printf("Vector of size %i\n", n);
         while(n--) {
-            printf("\t%i\t%g\n", n, v[n]);
             v[n] = 2;
             usleep(100000);
         }
@@ -32,7 +31,7 @@ int main(int argc, char **argv) {
     MultiJobControl::JC->init(argc, argv);
 
     if(MultiJobControl::JC->rank == 0) {
-        KTAccumulateJobComm KTC;
+        KTAccumJobComm KTC;
         vector<double> v(10);
         KTC.kt.Set("v", v);
         KTC.kt.Set("Combine","v");

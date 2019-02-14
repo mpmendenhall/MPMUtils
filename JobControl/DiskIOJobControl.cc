@@ -39,21 +39,23 @@ void DiskIOJobControl::init(int argc, char **argv) {
 void DiskIOJobControl::finish() {
     std::stringstream fn;
     fn << data_bpath << "/SavedState_" << rank << ".dat";
-    std::ofstream o(fn.str());
-    IOStreamBIO b(nullptr, &o);
 
-    b.send<size_t>(stateData.size());
-    for(auto& kv: stateData) {
-        b.send(kv.first);
-        b.send(kv.second.dead);
-    }
-    o.close();
+    if(stateData.size()) {
+        std::ofstream o(fn.str());
+        IOStreamBIO b(nullptr, &o);
+
+        b.send<size_t>(stateData.size());
+        for(auto& kv: stateData) {
+            b.send(kv.first);
+            b.send(kv.second.dead);
+        }
+        o.close();
+    } else if(std::system(("rm -f "+fn.str()).c_str())) exit(111);
 
     if(rank) {
         std::stringstream fn2;
         fn2 << "rm -f " << data_bpath << "/CommBuffer_0_to_" << rank << ".dat";
-        int ret = std::system(fn2.str().c_str());
-        if(ret) exit(112);
+        if(std::system(fn2.str().c_str())) exit(112);
     }
 }
 
