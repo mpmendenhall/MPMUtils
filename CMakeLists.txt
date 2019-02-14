@@ -9,6 +9,7 @@ find_package(OpenGL)
 find_package(GLUT)
 include_directories(${HDF5_INCLUDE_DIRS})
 find_library(FFTW_LIBS fftw3)
+find_package(MPI)
 
 
 # force rebuild of CodeVersion
@@ -17,7 +18,7 @@ add_custom_command(OUTPUT codeversion COMMAND touch ${PROJECT_SOURCE_DIR}/Utilit
 add_custom_target(update_codeversion DEPENDS codeversion)
 
 foreach(dir IN ITEMS
-    Framework Math Utility Visualization
+    Framework JobControl Math Utility Visualization
 )
 include_directories(${PROJECT_SOURCE_DIR}/${dir})
 file(GLOB DIRSRC ${dir}/*.c*)
@@ -34,10 +35,15 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 
-add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++14")
+add_compile_options("-O3" "-fPIC" "-Wpedantic" "-Wall" "-std=c++14" ${MPI_COMPILE_FLAGS})
 
 if(GLUT_FOUND)
     add_compile_options("-DWITH_OPENGL")
+endif()
+
+if(MPI_FOUND)
+    add_compile_options("-DWITH_MPI")
+    include_directories(${MPI_INCLUDE_PATH})
 endif()
 
 if(FFTW_LIBS-NOTFOUND)
@@ -79,7 +85,7 @@ SET_SOURCE_FILES_PROPERTIES(Utility/CodeVersion.cc PROPERTIES COMPILE_FLAGS "-DR
 
 # libMPM omnibus
 add_library(MPM SHARED ${SOURCE_FILES})
-target_link_libraries(MPM ${CONFIG_LIBS} ${FFTW_LIBS} ${GLUT_LIBRARIES} ${GSL_LIBRARIES} ${OPENGL_LIBRARIES} ${ROOT_LIBRARIES} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
+target_link_libraries(MPM ${CONFIG_LIBS} ${FFTW_LIBS} ${GLUT_LIBRARIES} ${GSL_LIBRARIES} ${OPENGL_LIBRARIES} ${ROOT_LIBRARIES} ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} ${MPI_LIBRARIES})
 add_dependencies(MPM update_codeversion)
 
 # test programs

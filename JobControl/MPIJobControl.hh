@@ -1,6 +1,7 @@
 /// \file MPIJobControl.hh MultiJobControl communicating via MPI
 // Michael P. Mendenhall, LLNL 2019
 
+#ifdef WITH_MPI
 #ifndef MPIJOBCONTROL_HH
 #define MPIJOBCONTROL_HH
 
@@ -31,4 +32,5 @@ protected:
     int _allocWorker() override;
 };
 
+#endif
 #endif

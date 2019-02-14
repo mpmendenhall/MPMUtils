@@ -3,6 +3,8 @@
 
 #include "MPIJobControl.hh"
 
+#ifdef WITH_MPI
+
 void MPIJobControl::_send(void* vptr, int size) {
     MPI_Send(vptr, size, MPI_UNSIGNED_CHAR, dataDest, 0, MPI_COMM_WORLD);
 }
@@ -88,3 +90,4 @@ int MPIJobControl::_allocWorker() {
     exit(1); // should have a slot available???
 }
 
+#endif
