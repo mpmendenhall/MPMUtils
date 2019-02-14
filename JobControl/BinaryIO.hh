@@ -40,7 +40,10 @@ public:
 
     /// vector data send
     template<typename T>
-    void send(const vector<T>& v) { send<int>(v.size()); for(auto& x: v) send(x); }
+    void send(const vector<T>& v) {
+        send<int>(v.size()*sizeof(T));
+        for(auto& x: v) send(x);
+    }
 
     /// generic data receive
     template<typename T>
@@ -58,7 +61,7 @@ public:
 
     /// vector data receive
     template<typename T>
-    void receive(vector<T>& v) { v.resize(receive<int>()); for(auto& x: v) receive(x); }
+    void receive(vector<T>& v) { v.resize(receive<int>()/sizeof(T)); for(auto& x: v) receive(x); }
 };
 
 /// Binary I/O via iostream objects

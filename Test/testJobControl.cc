@@ -9,8 +9,15 @@ protected:
     /// operate on kt data to produce accumulables
     void run(JobSpec S) {
         S.display();
-        for(auto& kv: kt) {
-            printf("\tKey %s\n", kv.first.c_str());
+        auto k = kt.FindKey("v", true);
+        assert(k);
+        auto n = k->vSize<double>();
+        auto v = k->GetPtr<double>();
+        printf("Vector of size %i\n", n);
+        while(n--) {
+            printf("\t%i\t%g\n", n, v[n]);
+            v[n] = 2;
+            usleep(100000);
         }
     }
 };
@@ -26,6 +33,9 @@ int main(int argc, char **argv) {
 
     if(MultiJobControl::JC->rank == 0) {
         KTAccumulateJobComm KTC;
+        vector<double> v(10);
+        KTC.kt.Set("v", v);
+        KTC.kt.Set("Combine","v");
 
         for(int i=0; i<10; i++) {
             JobSpec JS;
@@ -39,6 +49,15 @@ int main(int argc, char **argv) {
         }
         MultiJobControl::JC->waitComplete();
         printf("\n\nAll done!\n");
+
+        KTC.gather();
+        auto k = KTC.kt.FindKey("v", true);
+        assert(k);
+        auto n = k->vSize<double>();
+        auto p = k->GetPtr<double>();
+        printf("Vector of size %i\n", n);
+        while(n--) printf("\t%g\n", p[n]);
+
     } else MultiJobControl::JC->runWorker();
 
     MultiJobControl::JC->finish();

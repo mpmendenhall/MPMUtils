@@ -39,7 +39,7 @@ public:
     /// Base for pointer-type objects
     template<typename T>
     KeyData(const T*): TMessage(0) { static_assert(_false<T>::value, "Unimplemented pointer type"); }
-    /// Constructor, writing generic object
+    /// Constructor, writing generic non-ROOT object
     template<typename T, typename std::enable_if<!std::is_base_of<TObject, T>::value>::type* = nullptr>
     KeyData(const T& x): TMessage(kMESS_BINARY) { whut(); send(x); SetReadMode(); }
     /// Constructor, writing ROOT object
@@ -101,11 +101,14 @@ protected:
     /// append data to current write point
     void _send(void* vptr, int size) override { WriteBuf(vptr, size); }
     /// pull data from current readpoint
-    void _receive(void* vptr, int size) override { ReadBuf(vptr,size); }
+    void _receive(void* vptr, int size) override { ReadBuf(vptr, size); }
 };
 
 template<>
 KeyData::KeyData(const char* x);
+
+template<>
+KeyData::KeyData(const vector<double>& v);
 
 /// string key : polymorphic value table
 class KeyTable: public map<string, KeyData*> {

@@ -10,6 +10,13 @@ KeyData::KeyData(const char* x): TMessage(kMESS_STRING) {
     SetReadMode();
 }
 
+template<>
+KeyData::KeyData(const vector<double>& v): TMessage(kMESS_DOUBLE) {
+    whut();
+    send(v);
+    SetReadMode();
+}
+
 KeyData& KeyData::operator=(const KeyData& d) {
     Expand(d.BufferSize());
     std::copy(d.Buffer(), d.Buffer()+d.BufferSize(), Buffer());
