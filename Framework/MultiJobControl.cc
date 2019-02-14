@@ -62,6 +62,7 @@ int MultiJobControl::submitJob(JobSpec& JS) {
     dataSrc = dataDest = JS.wid = _allocWorker();
     send(JS);
     if(JS.C) JS.C->startJob(*this);
+    jobs[JS.wid] = JS;
     return JS.wid;
 }
 

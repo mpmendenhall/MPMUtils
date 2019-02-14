@@ -22,11 +22,20 @@ void ThreadsJobControl::init(int argc, char **argv) {
 
 bool ThreadsJobControl::_isRunning(int wid) {
     auto it = cthreads.find(wid);
-    if(it == cthreads.end()) return false;
-    if(stillRunning[it->first]) return true;
+    if(it == cthreads.end()) {
+        if(verbose > 4) printf("Worker ID %i not in threads list.\n", wid);
+        return false;
+    }
+
+    if(stillRunning[it->first]) {
+        if(verbose > 4) printf("Worker ID %i is nominally still running.\n", wid);
+        return true;
+    }
+
+    if(verbose > 4) printf("Assuring worker thread %i is done.\n", wid);
     pthread_join(it->second, nullptr);
     cthreads.erase(it);
-    return true;
+    return false;
 }
 
 pthread_barrier_t runcmdInit;

@@ -21,9 +21,6 @@ public:
     /// end-of-job communication (get returnCombined() results)
     void endJob(BinaryIO& B) override;
 
-    /// Use in worker to return 'combine' entries from a KeyTable
-    static void returnCombined(BinaryIO& B, KeyTable& kt0);
-
     /// collect accumulated objects back into kt
     void gather();
 
@@ -34,5 +31,21 @@ protected:
     vector<string> combos;  ///< accumulation object names
     vector<TH1*> objs;      ///< accumulation TH1's
 };
+
+/// Base job working with KTAccumulateJobComm
+class KTAccumJob: public JobWorker {
+public:
+    /// run job
+    void run(JobSpec J, BinaryIO& B) override;
+
+protected:
+    /// subclass me with calculation on kt, J!
+    virtual void run(JobSpec J) { printf("KTAccumJob does nothing for "); J.display(); }
+    /// Return 'combine' entries from a KeyTable
+    void returnCombined(BinaryIO& B);
+
+    KeyTable kt; ///< received KeyTable data
+};
+
 
 #endif

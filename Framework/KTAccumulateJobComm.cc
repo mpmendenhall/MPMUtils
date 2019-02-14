@@ -44,20 +44,30 @@ void KTAccumulateJobComm::gather() {
     objs.clear();
 }
 
-void KTAccumulateJobComm::returnCombined(BinaryIO& B, KeyTable& kt0) {
-    for(auto& kv: kt0) {
-        if(kv.first.substr(0,7) != "Combine") continue;
-        auto kd = kt0.FindKey(kv.second->Get<string>());
-        if(!kd) exit(11);
-        B.send(*kd);
-    }
-}
-
 void KTAccumulateJobComm::launchAccumulate(size_t wid, int uid) {
     vector<JobSpec> vJS;
     int nsamp = MultiJobControl::JC->ntasks;
     kt.Get("NSamples", nsamp);
     splitJobs(vJS, MultiJobControl::JC->ntasks, nsamp, wid, uid);
     for(auto& j: vJS) MultiJobControl::JC->submitJob(j);
+}
+
+///////////////////////////////////////////////
+
+REGISTER_FACTORYOBJECT(KTAccumJob)
+
+void KTAccumJob::run(JobSpec J, BinaryIO& B) {
+    B.receive(kt);
+    run(J);
+    returnCombined(B);
+}
+
+void KTAccumJob::returnCombined(BinaryIO& B) {
+    for(auto& kv: kt) {
+        if(kv.first.substr(0,7) != "Combine") continue;
+        auto kd = kt.FindKey(kv.second->Get<string>());
+        if(!kd) exit(11);
+        B.send(*kd);
+    }
 }
 
