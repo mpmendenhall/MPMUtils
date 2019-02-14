@@ -40,11 +40,12 @@ public:
 
 protected:
     /// subclass me with calculation on kt, J!
-    virtual void run(JobSpec J) { printf("KTAccumJob does nothing for "); J.display(); }
+    virtual void runAccum() { printf("KTAccumJob does nothing for "); JS.display(); }
     /// Return 'combine' entries from a KeyTable
     void returnCombined(BinaryIO& B);
 
-    KeyTable kt; ///< received KeyTable data
+    JobSpec JS;     ///< current job info
+    KeyTable kt;    ///< received KeyTable data
 };
 
 

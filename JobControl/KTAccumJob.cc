@@ -52,9 +52,9 @@ void KTAccumJobComm::gather() {
 
 void KTAccumJobComm::launchAccumulate(size_t wid, int uid) {
     vector<JobSpec> vJS;
-    int nsamp = MultiJobControl::JC->ntasks;
+    int nsamp = MultiJobControl::JC->nChunk();
     kt.Get("NSamples", nsamp);
-    splitJobs(vJS, MultiJobControl::JC->ntasks, nsamp, wid, uid);
+    splitJobs(vJS, MultiJobControl::JC->nChunk(), nsamp, wid, uid);
     for(auto& j: vJS) MultiJobControl::JC->submitJob(j);
 }
 
@@ -63,8 +63,9 @@ void KTAccumJobComm::launchAccumulate(size_t wid, int uid) {
 REGISTER_FACTORYOBJECT(KTAccumJob)
 
 void KTAccumJob::run(JobSpec J, BinaryIO& B) {
+    JS = J;
     B.receive(kt);
-    run(J);
+    runAccum();
     returnCombined(B);
 }
 

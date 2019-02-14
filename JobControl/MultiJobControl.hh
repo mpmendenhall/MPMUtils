@@ -60,19 +60,13 @@ public:
     virtual void init(int argc, char **argv) = 0;
     /// end-of-run completion
     virtual void finish() = 0;
-
-    int ntasks = 0;         ///< total number of job slots available
-    int rank = 0;           ///< this job's number
-    int coresPerNode = 0;   ///< number of cores per node
-    int parentRank = 0;     ///< ``parent'' job number to return results
-    int verbose = 0;        ///< debugging verbosity level
-    bool persistent = true; ///< whether child processes are persistent or one-shot
-    bool runLocal = true;   ///< whether to run one portion of job locally on controller
-
-    int dataSrc = 0;        ///< source for data receive
-    int dataDest = 0;       ///< destination for data send
+    /// recommended number of parallel tasks
+    virtual size_t nChunk() const { return ntasks; }
+    /// check if is top-level controller
+    bool isController() const { return !rank; }
 
     static MultiJobControl* JC; ///< singleton instance for job control type
+    int verbose = 0;            ///< debugging verbosity level
 
     template<class T>
     void pushState(const string& n, const T& d) {
@@ -92,15 +86,27 @@ public:
 
 protected:
 
+    int ntasks = 0;         ///< total number of job slots available
+    int rank = 0;           ///< this job's number
+    int coresPerNode = 0;   ///< number of cores per node
+    int parentRank = 0;     ///< ``parent'' job number to return results
+    bool persistent = true; ///< whether child processes are persistent or hne-shot
+    bool runLocal = true;   ///< whether to run one portion of job locally on controller
+
+    int dataSrc = 0;        ///< source for data receive
+    int dataDest = 0;       ///< destination for data send
+
     /// Check if a job is running or completed
     virtual bool _isRunning(int) = 0;
     /// Allocate an available worker; possibly blocking if necessary
     virtual int _allocWorker() = 0;
+    /// Signal that job is done
+    virtual void signalDone() { }
 
     /// Check if a job is running; perform end-of-job actions if completed.
     bool isRunning(int wid);
     /// Check status for all running jobs, performing post-return jobs as needed; return number of still-running jobs
-    int checkJobs();
+    vector<int> checkJobs();
 
     map<int,JobSpec> jobs;          ///< active jobs by worker ID
 

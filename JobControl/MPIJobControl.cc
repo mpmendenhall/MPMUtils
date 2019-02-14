@@ -29,7 +29,7 @@ void MPIJobControl::init(int argc, char **argv) {
 
     if(ntasks <= coresPerNode) { // local single-level distribution
 
-        if(!rank) for(int i = 1; i < ntasks; i++) childRanks.push_back(i);
+        if(!rank) for(int i = 1; i < ntasks; i++) availableRanks.insert(i);
 
     } else { // multi-level distribution
 
@@ -38,25 +38,27 @@ void MPIJobControl::init(int argc, char **argv) {
             int numControllers = ntasks/coresPerNode;
             for(int i = 0; i < numControllers; i++) {
                 int r = i*coresPerNode;
-                childRanks.push_back(r? r : 1);
+                availableRanks.insert(r? r : 1);
             }
 
         } else if(rank == 1 || rank % coresPerNode == 0) { // controller nodes
 
             int rankStart = rank + 1;
             int rankEnd = ((rank/coresPerNode)+1)*coresPerNode;
-            for(int i=rankStart; i<rankEnd; i++) childRanks.push_back(i);
+            for(int i=rankStart; i<rankEnd; i++) availableRanks.insert(i);
         }
 
-        parentRank = childRanks.size()? 0 : (rank/coresPerNode)*coresPerNode;
+        parentRank = availableRanks.size()? 0 : (rank/coresPerNode)*coresPerNode;
         if(rank > 1 && parentRank == 0) parentRank = 1;
     }
+
+    ntasks = availableRanks.size();
 
     if(verbose) {
         std::cout << "Rank " << rank << " task of " << ntasks << " available on " << hostname;
         std::cout << " (" << coresPerNode << " cores) starting run.\n";
         std::cout << "\tParent: " << parentRank << "; children: <";
-        for(auto r: childRanks) std::cout << " " << r;
+        for(auto r: availableRanks) std::cout << " " << r;
         std::cout << " >\n";
     }
 }
@@ -64,30 +66,41 @@ void MPIJobControl::init(int argc, char **argv) {
 void MPIJobControl::finish() {
     // Send ending message to close worker process
     JobSpec JS0;
-    for(auto r: childRanks) {
+    for(auto r: availableRanks) {
         dataDest = r;
         send(JS0);
     }
 
-    if(verbose > 1) printf(childRanks.size()? "Controller [%i] closing.\n" : "Worker [%i] closing.\n", rank);
+    if(verbose > 1) printf(availableRanks.size()? "Controller [%i] closing.\n" : "Worker [%i] closing.\n", rank);
     MPI_Finalize();
 }
 
+void MPIJobControl::signalDone() {
+    // send with tag '1' to signal done
+    int i = 1;
+    MPI_Send(&i, sizeof(i), MPI_UNSIGNED_CHAR, dataDest, 1, MPI_COMM_WORLD);
+}
 
 bool MPIJobControl::_isRunning(int wid) {
-    assert(false);
+    // check for tag '1' message
+    int flag = 0;
+    int i = MPI_Iprobe(wid, 1, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
+    if(!flag) return true;
+
+    MPI_Recv(&i, sizeof(i), MPI_UNSIGNED_CHAR, wid, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    availableRanks.insert(wid);
+    return false;
 }
 
 int MPIJobControl::_allocWorker() {
-    while(checkJobs() == ntasks) usleep(10000); // wait for a slot
-
-    assert(false);
-    for(int i=0; i<ntasks; i++) {
-
-        return i;
+    while(!availableRanks.size()) {
+        if((int)checkJobs().size() < ntasks) break;
+        usleep(10000);
     }
 
-    exit(1); // should have a slot available???
+    int wid = *availableRanks.begin();
+    availableRanks.erase(wid);
+    return wid;
 }
 
 #endif

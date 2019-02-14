@@ -61,7 +61,7 @@ void* runcmd(void* s) {
 }
 
 int ThreadsJobControl::_allocWorker() {
-    while(checkJobs() == ntasks) usleep(10000); // wait for a slot
+    while((int)checkJobs().size() == ntasks) usleep(10000); // wait for a slot
 
     for(int i=1; i<=ntasks; i++) {
         if(cthreads.count(i)) continue;

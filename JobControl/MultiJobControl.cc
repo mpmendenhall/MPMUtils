@@ -2,6 +2,7 @@
 // Michael P. Mendenhall, LLNL 2019
 
 #include "MultiJobControl.hh"
+#include <algorithm>
 
 MultiJobControl* MultiJobControl::JC = nullptr;
 
@@ -50,6 +51,9 @@ void MultiJobControl::runWorker() {
         } else if(verbose > 4) printf("Already have worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
         W->run(JS, *this);
 
+        dataSrc = parentRank;
+        signalDone();
+
     } while(persistent);
     if(verbose > 2 && !persistent) printf("\nrunWorker completed on [%i]\n\n", rank);
 
@@ -80,18 +84,21 @@ bool MultiJobControl::isRunning(int wid) {
     return false;
 }
 
-int MultiJobControl::checkJobs() {
+vector<int> MultiJobControl::checkJobs() {
     vector<int> wids;
     for(auto& kv: jobs) wids.push_back(kv.first);
-    int nrunning = 0;
-    for(auto wid: wids) nrunning += isRunning(wid);
-    return nrunning;
+    wids.erase(std::remove_if(wids.begin(), wids.end(), [&](int i){return !isRunning(i);}), wids.end());
+    return wids;
 }
 
 void MultiJobControl::waitComplete() {
-    int i = 0;
-    while((i = checkJobs())) {
-        if(verbose > 4) printf("Waiting for %i jobs to complete.\n", i);
+    vector<int> js;
+    while((js = checkJobs()).size()) {
+        if(verbose > 4) {
+            printf("Waiting for job%s ", js.size() > 1? "s" : "");
+            for(auto i: js) printf("%i ",i);
+            printf("to complete.\n");
+        }
         usleep(1000000);
     }
 }
@@ -99,10 +106,8 @@ void MultiJobControl::waitComplete() {
 void MultiJobControl::waitFor(const vector<int>& v) {
     vector<int> wids = v;
     while(wids.size()) {
-        vector<int> stillgoing;
-        for(auto wid: wids) if(isRunning(wid)) stillgoing.push_back(wid);
-        if(!stillgoing.size()) break;
-        wids = stillgoing;
+        wids.erase(std::remove_if(wids.begin(), wids.end(), [&](int i){return !isRunning(i);}), wids.end());
+        if(!wids.size()) break;
         //checkJobs();
         usleep(1000000);
     }
