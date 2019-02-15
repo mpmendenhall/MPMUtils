@@ -73,41 +73,43 @@ bool KeyTable::_Set(const string& s, KeyData* v) {
 
 template<>
 void BinaryIO::send<KeyData>(const KeyData& M) {
+    start_wtx();
     send<UInt_t>(M.BufferSize());
-    _send(M.Buffer(), M.BufferSize());
+    append_write(M.Buffer(), M.BufferSize());
+    end_wtx();
 }
 
 template<>
 KeyData* BinaryIO::receive<KeyData*>() {
-    auto s = receive<UInt_t>();
-    if(!s) return nullptr;
-
+    UInt_t s = receive<UInt_t>();
     auto buf = new char[s];
-    _receive(buf, s);
+    _receive((void*)buf, s);
     return new KeyData(buf, s);
 }
 
 template<>
 void BinaryIO::receive(KeyData& d) {
-    auto s = receive<UInt_t>();
+    UInt_t s = receive<UInt_t>();
     auto buf = new char[s];
-    _receive(buf, s);
+    _receive((void*)buf, s);
     d = KeyData(buf, s);
 }
 
 template<>
 void BinaryIO::send(const KeyTable& kt) {
+    start_wtx();
     send<size_t>(kt.size());
     for(auto& kv: kt) {
         send(kv.first);
         send(*kv.second);
     }
+    end_wtx();
 }
 
 template<>
 void BinaryIO::receive(KeyTable& kt) {
     kt.Clear();
-    auto ktSize = receive<size_t>();
+    size_t ktSize = receive<size_t>();
     while(ktSize--) {
         auto kn = receive<string>();
         kt._Set(kn, receive<KeyData*>());

@@ -32,8 +32,9 @@ void countdown(const string& s, unsigned int n) {
 
 int main(int, char**) {
 
-    // optional: set scheduler. This is the default.
+    // optional: set scheduler. This is the default:
     boost::fibers::use_scheduling_algorithm< boost::fibers::algo::round_robin >();
+
     // get current context
     auto ctx = boost::fibers::context::active();
     assert(ctx);
