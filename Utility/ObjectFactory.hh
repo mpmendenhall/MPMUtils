@@ -17,7 +17,8 @@ public:
     virtual ~FactoryObject() { }
 };
 
-/// Base from which object factories are defined
+/// Base from which object factories are defined.
+/// Singleton instances provide class metadata.
 class ObjectFactory {
 public:
     /// index for classes by name
@@ -70,5 +71,6 @@ public:
 #define REGISTER_TYPENAME(NAME) static _NameRegistrar<NAME> the_##NAME##_NameRegistrar(#NAME);
 /// Compile-time registration of dynamically-constructable objects
 #define REGISTER_FACTORYOBJECT(NAME) static _ObjectFactory<NAME> the_##NAME##_Factory(#NAME);
+
 
 #endif
