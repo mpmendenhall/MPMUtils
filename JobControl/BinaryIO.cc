@@ -2,6 +2,7 @@
 // Michael P. Mendenhall, LLNL 2019
 
 #include "BinaryIO.hh"
+#include <string.h> // for memcpy
 
 void BinaryIO::end_wtx() {
     assert(wtxdepth);

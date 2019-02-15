@@ -36,13 +36,8 @@ public:
     /// Constructor, holding arbitrary binary blob
     KeyData(size_t n, const void* p);
 
-    /// Base for pointer-type objects
-    template<typename T>
-    KeyData(const T*): TMessage(0) { static_assert(_false<T>::value, "Unimplemented pointer type"); }
     /// Constructor, writing generic non-ROOT object
-    template<typename T,
-             typename std::enable_if<!std::is_base_of<TObject, T>::value>::type* = nullptr,
-             typename std::enable_if<!std::is_pointer<T>::value>::type* = nullptr >
+    template<typename T, typename std::enable_if<!std::is_base_of<TObject, T>::value>::type* = nullptr>
     KeyData(const T& x): TMessage(kMESS_BINARY) { whut(); send(x); SetReadMode(); }
     /// Constructor, writing ROOT object
     template<typename T, typename std::enable_if<std::is_base_of<TObject, T>::value>::type* = nullptr>
@@ -107,9 +102,6 @@ protected:
 };
 
 template<>
-KeyData::KeyData(const char* x);
-
-template<>
 KeyData::KeyData(const vector<double>& v);
 
 /// string key : polymorphic value table
@@ -165,22 +157,21 @@ public:
     bool GetBool(const string& k, bool dflt = false) { Get(k,dflt,false); return dflt; }
 };
 
-
-/// Send KeyTable
-template<>
-void BinaryIO::send(const KeyTable& kt);
-/// Receive KeyTable
-template<>
-void BinaryIO::receive(KeyTable& kt);
-
 /// Send KeyData buffered object
 template<>
 void BinaryIO::send(const KeyData& M);
 /// Receive (and accept memory management of) KeyData
 template<>
-void BinaryIO::receive<KeyData>(KeyData& d);
+void BinaryIO::receive(KeyData& d);
 /// Receive (and accept memory management of) KeyData
 template<>
 KeyData* BinaryIO::receive<KeyData*>();
+
+/// Send KeyTable
+template<>
+inline void BinaryIO::send(const KeyTable& kt) { send((const map<string,KeyData*>&)kt); }
+/// Receive KeyTable
+template<>
+inline void BinaryIO::receive(KeyTable& kt) { receive((map<string,KeyData*>&)kt); }
 
 #endif

@@ -3,14 +3,6 @@
 #include "KeyTable.hh"
 
 template<>
-KeyData::KeyData(const char* x): TMessage(kMESS_STRING) {
-    string s(x);
-    whut();
-    send(s);
-    SetReadMode();
-}
-
-template<>
 KeyData::KeyData(const vector<double>& v): TMessage(kMESS_DOUBLE) {
     whut();
     send(v);
@@ -95,23 +87,4 @@ void BinaryIO::receive(KeyData& d) {
     d = KeyData(buf, s);
 }
 
-template<>
-void BinaryIO::send(const KeyTable& kt) {
-    start_wtx();
-    send<size_t>(kt.size());
-    for(auto& kv: kt) {
-        send(kv.first);
-        send(*kv.second);
-    }
-    end_wtx();
-}
 
-template<>
-void BinaryIO::receive(KeyTable& kt) {
-    kt.Clear();
-    size_t ktSize = receive<size_t>();
-    while(ktSize--) {
-        auto kn = receive<string>();
-        kt._Set(kn, receive<KeyData*>());
-    }
-}

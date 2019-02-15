@@ -5,15 +5,14 @@
 #define BINARYIO_HH
 
 #include <cassert>
+#include <type_traits>
+
 #include <string>
 using std::string;
-#include <string.h> // for memcpy
 #include <vector>
 using std::vector;
-#include <iostream>
-#include <type_traits>
-#include <utility>
-using std::pair;
+#include <map>
+using std::map;
 
 // workaround for older gcc without std::is_trivially_copyable
 #if __GNUG__ && __GNUC__ < 5
@@ -36,14 +35,26 @@ public:
     /// end buffered write transaction
     void end_wtx();
 
-    /// generic data send
+    /// Dereference pointers by default
     template<typename T>
+    void send(const T* p) { assert(p); send(*p); }
+    /// generic data send
+    template<typename T, typename std::enable_if<!std::is_pointer<T>::value>::type* = nullptr>
     void send(const T& v) {
         static_assert(IS_TRIVIALLY_COPYABLE(T), "Object needs custom send method");
         start_wtx();
         append_write((char*)&v, sizeof(T));
         end_wtx();
     }
+    /// generic data receive
+    template<typename T>
+    void receive(T& v) {
+        static_assert(IS_TRIVIALLY_COPYABLE(T), "Object needs custom receive method");
+        _receive((void*)&v, sizeof(v));
+    }
+    /// out-of-place generic data receive
+    template<typename T>
+    T receive() { T v; receive(v); return v; }
 
     /// tuple data send
     template<typename... T>
@@ -52,6 +63,9 @@ public:
         for(auto& c: t) send(c);
         end_wtx();
     }
+    /// tuple data receive
+    template<typename... T>
+    void receive(std::tuple<T...>& t) { for(auto& c: t) receive(c); }
 
     /// vector data send
     template<typename T>
@@ -61,27 +75,33 @@ public:
         for(auto& x: v) send(x);
         end_wtx();
     }
-
-    /// out-of-place generic data receive
-    template<typename T>
-    T receive() { T v; receive(v); return v; }
-
-    /// generic data receive
-    template<typename T>
-    void receive(T& v) {
-        static_assert(IS_TRIVIALLY_COPYABLE(T), "Object needs custom receive method");
-        _receive((void*)&v, sizeof(v));
-    }
-
-    /// tuple data receive
-    template<typename... T>
-    void receive(std::tuple<T...>& t) { for(auto& c: t) receive(c); }
-
     /// vector data receive
     template<typename T>
     void receive(vector<T>& v) {
         v.resize(receive<int>()/sizeof(T));
         for(auto& x: v) receive(x);
+    }
+
+    /// map data send
+    template<typename K, typename V>
+    void send(const map<K,V>& m) {
+        start_wtx();
+        send<size_t>(m.size());
+        for(auto& kt: m) {
+            send(kt.first);
+            send(kt.second);
+        }
+        end_wtx();
+    }
+    /// map data receive
+    template<typename K, typename V>
+    void receive(map<K,V>& m) {
+        m.clear();
+        auto n = receive<size_t>();
+        while(n--) {
+            auto k = receive<K>();
+            m.emplace(k, receive<V>());
+        }
     }
 
 protected:
@@ -110,5 +130,8 @@ void BinaryIO::send<string>(const string& s);
 /// Receive string
 template<>
 void BinaryIO::receive<string>(string& s);
+/// treat const char* as string
+template<>
+inline void BinaryIO::send(const char* x) { assert(x); send(string(x)); }
 
 #endif
