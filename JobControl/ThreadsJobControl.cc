@@ -12,8 +12,7 @@ void ThreadsJobControl::init(int argc, char **argv) {
     exec_name = argv[0];
     DiskIOJobControl::init(argc, argv);
 
-    ntasks = coresPerNode = std::thread::hardware_concurrency();
-    if(!ntasks) ntasks = coresPerNode = 1;
+    ntasks = std::max(1, (int)std::thread::hardware_concurrency());
     if(!rank && verbose) printf("ThreadsJobControl running on %i cores.\n", ntasks);
     if(rank && verbose > 2) printf("ThreadsJobControl running on core %i.\n", rank);
     stillRunning.resize(ntasks+1);

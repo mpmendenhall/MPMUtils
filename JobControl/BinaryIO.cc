@@ -6,15 +6,17 @@
 void BinaryIO::end_wtx() {
     assert(wtxdepth);
     if(--wtxdepth) return;
-    if(!buff.size()) return;
-    _send(buff.data(), buff.size());
-    buff.clear();
+
+    if(!wbuff.size()) return;
+    _send(wbuff.data(), wbuff.size());
+    wbuff.clear();
+    flush();
 }
 
 void BinaryIO::append_write(const char* d, size_t n) {
-    auto n0 = buff.size();
-    buff.resize(n0 + n);
-    memcpy(buff.data()+n0, d, n);
+    auto n0 = wbuff.size();
+    wbuff.resize(n0 + n);
+    memcpy(wbuff.data()+n0, d, n);
 }
 
 template<>

@@ -4,38 +4,7 @@
 #define DISKIOJOBCONTROL_HH
 
 #include "MultiJobControl.hh"
-#include <unistd.h>
-
-/// Binary I/O via Unix file descriptors
-class FDBinaryIO: public BinaryIO {
-public:
-    /// Constructor
-    FDBinaryIO(int fdIn = -1, int fdOut = -1): fIn(fdIn), fOut(fdOut) { }
-    /// Constructor with filenames
-    FDBinaryIO(const string& nIn, const string& nOut) { openIn(nIn); openOut(nOut); }
-    /// Destructor
-    ~FDBinaryIO() { closeIn(); flush(); closeOut(); }
-
-    /// open input file
-    void openIn(const string& s);
-    /// open output file
-    void openOut(const string& s);
-    /// close input file
-    void closeIn() { if(fIn >= 0) close(fIn); fIn = -1; }
-    /// close input file
-    void closeOut() { if(fOut >= 0) close(fOut); fOut = -1; }
-
-    /// blocking data send
-    void _send(void* vptr, int size) override { if(fOut >= 0 && size != write(fOut, vptr, size)) exit(1); }
-    /// blocking data receive
-    void _receive(void* vptr, int size) override { if(fIn >= 0 && size != read(fIn, vptr, size)) exit(1); }
-    /// flush output
-    void flush() override { if(fOut >= 0) fsync(fOut); }
-
-protected:
-    int fIn = -1;    ///< input file descriptor
-    int fOut = -1;   ///< output file descriptor
-};
+#include "DiskBIO.hh"
 
 /// Distribute and collect jobs via filesystem
 class DiskIOJobControl: public MultiJobControl {
@@ -58,7 +27,5 @@ public:
 protected:
     map<int, size_t> srcpos;    ///< input buffer position from given source rank
 };
-
-int runSysCmd(const string& cmd);
 
 #endif

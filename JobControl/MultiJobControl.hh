@@ -43,7 +43,7 @@ public:
 };
 
 /// Distribute and collect jobs
-class MultiJobControl: public BinaryIO {
+class MultiJobControl: virtual public BinaryIO {
 public:
 
     /// run as worker, processing and returning jobs
@@ -90,14 +90,10 @@ public:
 protected:
 
     int ntasks = 0;         ///< total number of job slots available
-    int rank = 0;           ///< this job's number
-    int coresPerNode = 0;   ///< number of cores per node
+    int rank = 0;           ///< identifier for this job process
     int parentRank = 0;     ///< ``parent'' job number to return results
     bool persistent = true; ///< whether child processes are persistent or hne-shot
     bool runLocal = true;   ///< whether to run one portion of job locally on controller
-
-    int dataSrc = 0;        ///< source for data receive
-    int dataDest = 0;       ///< destination for data send
 
     /// Check if a job is running or completed
     virtual bool _isRunning(int) = 0;

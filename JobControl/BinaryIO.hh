@@ -25,21 +25,16 @@ using std::pair;
 /// Base binary I/O class with serializer/deserializer functions
 class BinaryIO {
 public:
-    /// flush output to disk
-    virtual void flush() { }
-    /// clear output buffer
+    /// clear output
     virtual void clearOut() { }
-    /// clear input buffer
+    /// clear input
     virtual void clearIn() { }
 
-    // optional: use with caution to group together read/write objects
-    // must be employed in same manner on both read/write sides!
-
+    // optional: use to group writes together into a single transfer
     /// start buffered write transaction
     void start_wtx() { wtxdepth++; }
     /// end buffered write transaction
     void end_wtx();
-
 
     /// generic data send
     template<typename T>
@@ -67,7 +62,7 @@ public:
         end_wtx();
     }
 
-    /// out-of-place generic data receive; auto-splits within transaction.
+    /// out-of-place generic data receive
     template<typename T>
     T receive() { T v; receive(v); return v; }
 
@@ -95,27 +90,18 @@ protected:
     virtual void _send(void* vptr, int size) = 0;
     /// blocking data receive
     virtual void _receive(void* vptr, int size) = 0;
+    /// flush output
+    virtual void flush() { }
 
-    /// append data block to buffer
+    /// append data block to write buffer
     void append_write(const char* dat, size_t n);
 
+    int dataSrc = 0;        ///< source for data receive
+    int dataDest = 0;       ///< destination for data send
     size_t wtxdepth = 0;    ///< write transaction depth counter
-    vector<char> buff;      ///< deferred write buffer
-};
-
-/// Binary I/O via iostream objects
-class IOStreamBIO: public BinaryIO {
-public:
-    /// Constructor
-    IOStreamBIO(std::istream* i, std::ostream* o): fIn(i), fOut(o) { }
-
-    /// blocking data send
-    void _send(void* vptr, int size) override { if(fOut) fOut->write((char*)vptr, size); }
-    /// blocking data receive
-    void _receive(void* vptr, int size) override { if(fIn) fIn->read((char*)vptr, size); }
-
-    std::istream* fIn = nullptr;    ///< input stream
-    std::ostream* fOut = nullptr;   ///< output stream
+    vector<char> wbuff;     ///< deferred write buffer
+    vector<char> rbuff;     ///< read buffer
+    size_t rpt = 0;         ///< position in read buffer
 };
 
 /// string data send
