@@ -84,10 +84,10 @@ public:
 
     /// map data send
     template<typename K, typename V>
-    void send(const map<K,V>& m) {
+    void send(const map<K,V>& mp) {
         start_wtx();
-        send<size_t>(m.size());
-        for(auto& kt: m) {
+        send<size_t>(mp.size());
+        for(auto& kt: mp) {
             send(kt.first);
             send(kt.second);
         }
@@ -95,12 +95,12 @@ public:
     }
     /// map data receive
     template<typename K, typename V>
-    void receive(map<K,V>& m) {
-        m.clear();
+    void receive(map<K,V>& mp) {
+        mp.clear();
         auto n = receive<size_t>();
         while(n--) {
             auto k = receive<K>();
-            m.emplace(k, receive<V>());
+            mp.emplace(k, receive<V>());
         }
     }
 

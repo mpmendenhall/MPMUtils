@@ -2,6 +2,7 @@
 // Michael P. Mendenhall, LLNL 2019
 
 #include "MPIJobControl.hh"
+#include <iostream> // for std::cout
 
 #ifdef WITH_MPI
 

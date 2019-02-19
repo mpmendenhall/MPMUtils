@@ -3,6 +3,8 @@
 
 #ifdef WITH_MPI
 #include "MPIBinaryIO.hh"
+#include <string.h> // for std::memcpy
+#include <iostream> // for std::cout
 
 void MPIBinaryIO::_send(void* vptr, int size) {
     if(!size) return;
