@@ -4,6 +4,7 @@
 import sqlite3
 import subprocess
 import os
+import sys
 from argparse import ArgumentParser, SUPPRESS
 import time
 import multiprocessing
@@ -12,14 +13,15 @@ import datetime
 jobstates = {"Idle":2, "ReqNodeNotA":2, "Starting":3, "Running":3, "Completed":4, "Unknown":5, "Removed":6, "Bundled":7}
 statenames = {-1:"hold", 0:"waiting", 1:"sumitted", 2:"queued", 3:"running", 4: "done", 6:"removed", 7:"bundled" }
 def statename(i): return statenames.get(i,"status %i"%i)
-dbfile = None # path to database file
 jobscript_dir = os.environ["HOME"]+"/jobs/"
+dbfile = jobscript_dir+"/jdb.sql" # path to database file
 resource_ids = { } # cached resource IDs by name
 
 def connect_JobsDB(fname, remake = True):
     """Get cursor and connection for Jobs DB"""
     if remake and not os.path.exists(fname):
         print("Initializing new JobsDB at", fname)
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         os.system("sqlite3 %s < %s/pyUtils/JobsDB_Schema.sql"%(fname, os.environ["MPMUTILS"]))
     conn = sqlite3.connect(fname, timeout = 60, isolation_level = "DEFERRED")
     curs = conn.cursor()
@@ -62,10 +64,9 @@ def summarize_DB_runstatus(curs):
 def clear_completed(conn, clearlogs = True):
     curs = conn.cursor()
     if clearlogs:
-        curs.execute("SELECT jobfile, outlog FROM jobs WHERE status=4 OR status=6 OR status=7")
+        curs.execute("SELECT outlog FROM jobs WHERE status=4 OR status=6 OR status=7")
         for r in curs.fetchall():
-            for f in r:
-                if(f): os.system("rm -f "+f)
+            if(r[0]): os.system("rm -f "+r[0])
     curs.execute("DELETE FROM jobs WHERE status=4 OR status=6 OR status=7")
     conn.commit()
 
@@ -206,33 +207,29 @@ def checkjob(jid):
     print(jdat)
     return jdat
 
-def msub_job(curs, jid, account, qname, mcmds=["-j oe", "-V"]):
+def msub_job(curs, jid, mcmds=["-j oe", "-V"]):
     """Submit job via msub; update DB"""
 
-    curs.execute("SELECT name,jobfile,outlog FROM jobs WHERE job_id = ?",(jid,))
+    curs.execute("SELECT name,jobscript,outlog,q_name,q_acct FROM jobs WHERE job_id = ?",(jid,))
     j = curs.fetchone()
     if not j: return
+
     wtreq = get_walltime_requested(curs,jid)
     if wtreq is None: wtreq = 1800
     ncores = get_cores_requested(curs,jid)
     if ncores is None: ncores = 1
 
-    # modify job script with msub commands
-    jobin = open(j[1],"r").read()
-    jobout = open(j[1],"w")
+    cmd = ["msub", "-l", "nodes=%i"%ncores, "-l", "walltime=%i"%wtreq]
+    if j[0]: cmd += ["-N", "%s_%i"%(j[0],jid)]
+    if j[2]: cmd += ["-o", j[2]]
+    if j[3]: cmd += ["-q", j[3]]
+    if j[4]: cmd += ["-A", j[4]]
 
-    jobout.write("#!/usr/bin/bash\n")
-    jobout.write("#MSUB -A %s\n"%account)
-    if j[2]: jobout.write("#MSUB -o %s\n"%j[2])
-    if j[0]: jobout.write("#MSUB -N %s_%i\n"%(j[0],jid))
-    jobout.write("#MSUB -q %s\n"%qname)
-    jobout.write("#MSUB -l nodes=%i\n"%ncores)
-    jobout.write("#MSUB -l walltime=%i\n"%wtreq)
-    for m in mcmds: jobout.write("#MSUB "+m+"\n")
+    msub = subprocess.Popen(cmd, stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
+    msub.stdin.write('\n'.join(["#MSUB "+m for m in mcmds]+[j[1],]).encode())
+    ou,er = msub.communicate()
 
-    jobout.write(jobin)
-    jobout.close()
-    o = subprocess.getoutput('msub "%s"'%j[1]).strip()
+    o = ou.decode().strip()
     print("Job '%s' submitted as '%s'"%(j[0],o))
     qid = int(o.split()[-1].split(".")[0])
     curs.execute("UPDATE jobs SET queue_id=?, status=1, t_submit = ? WHERE job_id = ?",(qid,time.time(),jid))
@@ -242,7 +239,7 @@ def update_DB_qrunstatus(curs,jstatus):
     curs.executemany("UPDATE jobs SET status=? WHERE queue_id=?",[(j[1],j[0]) for j in jstatus])
 
     jknown = frozenset([j[0] for j in jstatus if 1 <= j[1] <= 3])
-    curs.execute("SELECT queue_id FROM jobs WHERE 1 <= status AND (status <= 3 OR status == 5) AND q_name != 'local'")
+    curs.execute("SELECT queue_id FROM jobs WHERE 1 <= status AND (status <= 3 OR status == 5) AND (q_name is NULL OR q_name != 'local')")
     missingjobs = [(j[0],checkjob(j[0])) for j in curs.fetchall() if j[0] not in jknown]
     missingjobs = [(j[1]["status"],j[1].get("ret_code",None),j[1].get("walltime",None),j[0]) for j in missingjobs]
     if missingjobs: curs.executemany("UPDATE jobs SET status=?,return_code=?,use_walltime=? WHERE queue_id=?",missingjobs)
@@ -263,9 +260,9 @@ def update_qstatus(conn):
 
 def launch_local(curs, jobid):
     """Background-launch a job locally"""
-    curs.execute("SELECT jobfile,outlog FROM jobs WHERE job_id = ?", (jobid,))
+    assert False # TODO
+    curs.execute("SELECT jobscript,outlog FROM jobs WHERE job_id = ?", (jobid,))
     r = curs.fetchone()
-    os.system("chmod +x "+r[0])
     jcmd = r[0]
     if r[1]: jcmd += " > %s 2>&1"%r[1]
     jcmd += "; python3 %s --db %s --jid %i --setreturn $? --setstatus 4"%(__file__, dbfile, jobid)
@@ -296,9 +293,8 @@ def update_and_launch(conn, curs, trickle = None):
         print("Submitting %i new jobs."%len(jnext))
         t0 = datetime.datetime.now() if trickle else None
         for j in jnext:
-            curs.execute("SELECT q_name, q_acct FROM jobs WHERE job_id = ?", (j[0],))
-            q,acct = curs.fetchone()
-            if q == "local":
+            curs.execute("SELECT q_name FROM jobs WHERE job_id = ?", (j[0],))
+            if curs.fetchone()[0] == "local":
                 launch_local(curs,j[0])
                 if trickle: time.sleep(trickle)
             else:
@@ -306,7 +302,7 @@ def update_and_launch(conn, curs, trickle = None):
                 if t0:
                     t0 += datetime.timedelta(seconds=trickle)
                     mcmds.append("-a "+t0.strftime("%Y%m%d%H%M.%S"))
-                msub_job(curs, j[0], account, qname, mcmds)
+                msub_job(curs, j[0], mcmds)
             conn.commit()
 
     summarize_DB_runstatus(curs)
@@ -333,34 +329,24 @@ def kill_jobs(conn, usr, account):
 
 class Job:
     """Description of a job to run"""
-    def __init__(self, name=None, q=None, acct=None, infile=None, logfile=None, res_list=[]):
+    def __init__(self, name=None, q=None, acct=None, script=None, logfile=None, res_list=[]):
         self.name = name
         self.q = q
         self.acct = acct
-        self.infile = infile
+        self.script = script
         self.logfile = logfile
         self.res_list = res_list
         self.jid = None
 
     def upload(self, curs):
-        curs.execute("INSERT INTO jobs(name,q_name,q_acct,jobfile,outlog,status) VALUES (?,?,?,?,?,0)",
-                     (self.name, self.q, self.acct, self.infile, self.logfile))
+        curs.execute("INSERT INTO jobs(name,q_name,q_acct,jobscript,outlog,status) VALUES (?,?,?,?,?,0)",
+                     (self.name, self.q, self.acct, self.script, self.logfile))
         self.jid = curs.lastrowid
         for rs in self.res_list: set_job_resource(curs, self.jid, rs[0], rs[1])
         return self.jid
 
     def __str__(self):
         return "Job " + self.name + " [" + self.q + "," + str(self.acct) + "]"
-
-def setup_jobfiles(J, jc):
-    """Initialize default job and log files from command"""
-    try: os.remove(J.logfile)
-    except: pass
-    if type(jc)==type(""):
-        open(J.infile,"w").write(jc)
-    else:
-        J.logfile = jc[1]
-        open(J.infile, "w").write(jc[0])
 
 def make_upload_jobs(curs, jname, q, acct, jcmds, res_use):
     """Generate jobfiles for "one liners" and upload to DB"""
@@ -371,15 +357,7 @@ def make_upload_jobs(curs, jname, q, acct, jcmds, res_use):
     # look up named resources to DB IDs
     for rs in res_use: rs = (get_resource_id(curs,rs[0],rs[0]), rs[1])
 
-    joblist = []
-    for (n,jc) in enumerate(jcmds):
-        J = Job(jname, q, acct)
-        J.infile = jobdir + "/job_%i.sh"%n
-        J.logfile = jobdir+"/log_%i.txt"%n
-        J.res_list = res_use
-        setup_jobfiles(J,jc)
-        joblist.append(J)
-    return [J.upload(curs) for j in joblist]
+    return [Job(name=jname, q=q, acct=acct, script=jc, res_list=res_use, logfile=jobdir+"/log_%i.txt"%n).upload(curs) for (n,jc) in enumerate(jcmds)]
 
 def make_test_jobs(curs, njobs, q, acct):
     """Generate test run batch"""
@@ -407,21 +385,20 @@ def make_bundle_jobs(curs,nnodes,jname,bundledir,jlist,tmax,nmax):
     print("Bundling %i %i-node jobs\n"%(len(jlist),nnodes))
     for bn,jb in enumerate(choose_bundles([j[4] for j in jlist], tmax, nmax)):
         bfname = bundledir+"/bundle_"+jname+"_%i.sh"%bn
-        bjobfile = open(bfname, "w")
         tsum = 0
+        bcmd = ""
         for i in jb:
             tsum += jlist[i][4]
-            bcmd = "source %s"%jlist[i][1]
+            bcmd += jlist[i][1]
             if jlist[i][2]: bcmd += " > %s 2>&1"%jlist[i][2]
-            bjobfile.write(bcmd+"\n")
-        bjobfile.close()
-        bundle_id = upload_onejob(curs, "bundle_"+jname, bfname, bfname+"_log.txt", nnodes, tsum)
+            bcmd+="\n"
+        bundle_id = upload_onejob(curs, "bundle_"+jname, bcmd, bfname+"_log.txt", nnodes, tsum)
         for i in jb: curs.execute("UPDATE jobs SET status=7,associated=? WHERE job_id=?",(bundle_id,jlist[i][0]))
 
 def rebundle(curs,jname,bundledir,tmax,nmax=1000):
     """Bundle small jobs together into longer-time units"""
     assert False # TODO est_walltime
-    curs.execute("SELECT job_id,jobfile,outlog,n_nodes,est_walltime FROM jobs WHERE status=0 AND name=? AND est_walltime < ?",(jname,tmax))
+    curs.execute("SELECT job_id,jobscript,outlog,n_nodes,est_walltime FROM jobs WHERE status=0 AND name=? AND est_walltime < ?",(jname,tmax))
     njobs = {}
     for r in curs.fetchall(): njobs.setdefault(r[3],[]).append(r)
     for n in njobs: make_bundle_jobs(curs, n, jname, bundledir, njobs[n], tmax, nmax)
@@ -458,7 +435,9 @@ def run_commandline():
     parser.add_argument("--kill",     action="store_true", help="kill running jobs")
     parser.add_argument("--clear",    action="store_true", help="clear completed jobs")
     parser.add_argument("--jobfile",  help="run one-liners in file")
-    parser.add_argument("--walltime", type=int, help="wall time for 1-liner jobs in seconds")
+    parser.add_argument("--name",     help="name for job(s)")
+    parser.add_argument("--script",   action="store_true", help="supply script on stdin")
+    parser.add_argument("--walltime", type=int, help="wall time for 1-liner jobs in seconds", default = 1800)
     parser.add_argument("--nodes",    type=int, default=1, help="nodes for 1-liner jobs")
     parser.add_argument("--bundle",   help="bundle job name; specify bundled walltime")
     parser.add_argument("--test",     type=int, help="run test idle jobs")
@@ -473,9 +452,8 @@ def run_commandline():
 
     options = parser.parse_args()
 
-    qs = {"account":options.account, "queue":options.queue}
     global dbfile
-    dbfile = options.db
+    if options.db: dbfile = options.db
     curs,conn = connect_JobsDB(dbfile)
 
     if options.jid:
@@ -500,24 +478,31 @@ def run_commandline():
         conn.commit()
         return
 
-    cores_resource_id = get_resource_id(curs,"cores","number of cores")
-    local_cores_id = get_resource_id(curs,"local_cores","number of cores available on local machine", multiprocessing.cpu_count())
-    walltime_resource_id = get_resource_id(curs, "walltime", "run wall time [s]", 1e9)
-    if options.limit: set_resource_limit(curs, cores_resource_id, options.limit)
+    if options.limit:
+        cores_resource_id = get_resource_id(curs,"cores","number of cores")
+        set_resource_limit(curs, cores_resource_id, options.limit)
     display_resource_use(curs)
     summarize_DB_runstatus(curs)
 
-    if options.jobfile and options.walltime:
+    rsrc = [("walltime", options.walltime), ("local_cores" if options.queue == "local" else "cores", options.nodes)]
+    jcmds = []
+    jname = options.name
+    if options.jobfile:
+        if not jname: jname = options.jobfile
         jcmds = [l.strip() for l in open(options.jobfile,"r").readlines() if l[0]!='#']
-        rsrc = [("walltime",options.walltime), ("local_cores" if options.queue == "local" else "cores", options.nodes)]
-        make_upload_jobs(conn.cursor(), options.jobfile, jcmds, rsrc)
+    if options.script:
+        print("Input job script on stdin; end with ctrl-D:")
+        cmd = sys.stdin.read().strip()
+        if cmd: jcmds.append(cmd)
+    if jcmds:
+        make_upload_jobs(conn.cursor(), jname if jname else 'anon', options.queue, options.account, jcmds, rsrc)
         conn.commit()
 
     if options.test: make_test_jobs(curs, options.test, options.queue, options.account); conn.commit()
     if options.launch: update_and_launch(conn, curs, options.trickle)
     if options.status: update_qstatus(conn)
     if options.cancel: cancel_queued_jobs(conn)
-    if options.kill: kill_jobs(conn, os.environ["USER"], qs["account"])
+    if options.kill: kill_jobs(conn, os.environ["USER"], options.account)
     if options.clear: clear_completed(conn)
     if options.cycle: cycle_launcher(conn, options.trickle, twait=options.cycle)
 
@@ -528,7 +513,7 @@ def run_commandline():
     conn.close()
 
 """
-./JobManager.py --db ~/jobsdb.sql --test 10 --queue local --trickle 2 --cycle 30
+./JobManager.py --test 10 --limit 5 --cycle 5
 """
 
 if __name__ == "__main__": run_commandline()

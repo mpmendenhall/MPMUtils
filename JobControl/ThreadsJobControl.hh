@@ -5,7 +5,7 @@
 
 #include "DiskIOJobControl.hh"
 
-/// Distribute and collect jobs via filesystem and batch queue
+/// Distribute jobs as separate processes
 class ThreadsJobControl: public DiskIOJobControl {
 public:
     /// initialize

@@ -11,7 +11,7 @@ CREATE TABLE jobs (
     name TEXT,                  -- user-assigned (group) name
     q_name TEXT,                -- job queue name
     q_acct TEXT,                -- submission account
-    jobfile TEXT,               -- job commands file
+    jobscript TEXT,             -- script to run for job
     outlog TEXT,                -- output logfile path
     associated INTEGER,         -- associated job for bundling
     t_submit REAL,              -- submission time
