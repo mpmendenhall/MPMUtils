@@ -1,7 +1,2 @@
 *~
-*.o
-*.so
-*.a
 *.pyc
-html/
-latex/

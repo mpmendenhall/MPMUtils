@@ -2,7 +2,8 @@
 
 for f0 in */*; do :
 f=`basename $f0`
-if [ "$f" == "Makefile" ]; then
+ext="${f##*.}"
+if [ "$f" == "Makefile" ] || [ "$f" == "__pycache__" ] || [ "$ext" == "pyc" ]; then
 continue; fi
 for d1 in $MPMUTILS/*; do :
 if [ -e $d1/$f ]; then
