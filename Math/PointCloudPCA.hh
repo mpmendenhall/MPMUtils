@@ -1,5 +1,5 @@
 /// \file PointCloudPCA.hh Principal Components Analysis for weighted point cloud
-// Michael P. Mendenhall, LLNL 2016
+// Michael P. Mendenhall, LLNL 2018
 
 #ifndef POINTCLOUDPCA_HH
 #define POINTCLOUDPCA_HH
@@ -8,49 +8,77 @@
 using std::vector;
 #include <cstddef> // for size_t
 #include <cmath>
+#include <TMatrixD.h>
+#include <TMatrixDSym.h>
+#include <TMatrixDSymEigen.h>
+#include <cassert>
 
 /// point with weight in point cloud
+template<int N>
 struct weightedpt {
     /// Constructor
-    weightedpt(double xx=0, double y=0, double z=0, double ww=1): x{xx,y,z}, w(ww) { }
-    double x[3];    ///< position
+    weightedpt(double* xx = nullptr, double ww=1): w(ww) {
+        if(xx) std::copy(xx,xx+N,x);
+    }
+    double x[N];    ///< position
     double w = 1;   ///< weight
-    /// display to stdout
-    void display() const;
 };
 
-/// summary statistics calculator
+/// PCA calculation
+template<int N>
 class PointCloudPCA {
 public:
+    /// Default constructor
+    PointCloudPCA() { }
+
     /// Constructor, calculated from points
-    PointCloudPCA(const vector<weightedpt>& v = {});
-    /// display to stdout
-    void display() const;
-    /// rm spread squared along principal components direction
-    inline double sigma2(int a) const { return width2[a]/sw; }
+    PointCloudPCA(const vector<weightedpt<N>>& v): n(v.size()) {
+        // weights vector
+        TMatrixD w(1,n);
+        for(size_t i=0; i<n; i++) { w(0,i) = v[i].w; }
+        sw = w.Sum();
+
+        // points matrix
+        TMatrixD M(n,N);
+        for(size_t i=0; i<n; i++) for(int j = 0; j<N; j++) M(i,j) = v[i].x[j];
+
+        // calculate mean
+        auto u = w*M;
+        u *= 1./sw;
+        for(int j = 0; j<N; j++) mu[j] = u(0,j);
+
+        // subtract mean and apply weighting
+        for(size_t i=0; i<n; i++) {
+            double rw = sqrt(fabs(w(0,i)));
+            for(int j = 0; j<N; j++) M(i,j) = (M(i,j)-mu[j])*rw;
+        }
+
+        // weighted covariance matrix
+        TMatrixDSym MTM(TMatrixDSym::kAtA, M);
+        for(int i = 0; i<N; i++) for(int j = 0; j<N; j++) Cov[i][j] = MTM(i,j);
+
+        calcPrincipalComponents(MTM);
+    }
+
     /// rms spread along principal components direction
-    inline double sigma(int a) const { return sqrt(sigma2(a)); }
-    /// transverse width^2 from principal axis
-    inline double wT2() const { return width2[1] + width2[2]; }
-    /// transverse spread from principal axis
-    inline double sigmaT2() const { return wT2()/sw; }
+    double sigma(int a) const { return sqrt(width2[a]/sw); }
 
-    /// Combine data from another group of points
-    void operator+=(const PointCloudPCA& P);
-    /// combined sum
-    const PointCloudPCA operator+(const PointCloudPCA& P) const { auto PP = *this; PP += P; return PP; }
+    double mu[N];       ///< mean center
+    double Cov[N][N];   ///< covariance matrix
+    double PCA[N][N];   ///< orthogonal principal components vectors in PCA[i], largest to smallest
+    double width2[N];   ///< spread along principal directions (eigenvalues of Cov), largest to smallest
+    size_t n;           ///< number of points
+    double sw;          ///< sum of weights
 
-    /// Recalculate from updated covariance matrix
-    void recalc();
-    /// flip sign of components
-    void flip();
-
-    double mu[3];       ///< mean center
-    double Cov[3][3];   ///< covariance matrix
-    double PCA[3][3];   ///< orthogonal principal components vectors in PCA[i], largest to smallest
-    double width2[3];   ///< spread along principal directions (eigenvalues of Cov), largest to smallest
-    size_t n = 0;       ///< number of points
-    double sw = 0;      ///< sum of weights
+    void calcPrincipalComponents(const TMatrixDSym& Cov) {
+        const TMatrixDSymEigen eigen(Cov);
+        const TVectorD& eigenVal = eigen.GetEigenValues();
+        const TMatrixD& eigenVec = eigen.GetEigenVectors();
+        for(int i = 0; i<N; i++) {
+            width2[i] = eigenVal[i];
+            for(int j = 0; j<N; j++) PCA[j][i] = eigenVec(i,j);
+        }
+    }
 };
 
 #endif
