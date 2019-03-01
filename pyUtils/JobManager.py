@@ -128,7 +128,7 @@ def display_resource_use(curs):
     curs.execute("SELECT resource_id,name,descrip FROM resources")
     for rs in curs.fetchall():
         resuse = check_resource_use(curs,rs[0])
-        print("\t%s [%s]: %g / %g used"%(rs[1], rs[2], resuse[1], resuse[0]))
+        print(f"\t{rs[1]} [{rs[2]}]: {resuse[1]} / {resuse[0]} used")
     print("-----------------")
 
 def set_job_resource(curs, jid, rid, qty):

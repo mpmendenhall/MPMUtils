@@ -105,6 +105,8 @@ public:
     iterator rel_position(double dx) { return abs_position(xMid()+dx); }
     /// get window position range for range offset from mid
     pair<iterator, iterator> rel_range(double dx0, double dx1) { return {rel_position(dx0), rel_position(dx1)}; }
+    /// count items in range
+    size_t rel_count(double dx0, double dx1) { return rel_position(dx1).I - rel_position(dx0).I; }
     /// get window position range for absolute range
     pair<iterator, iterator> abs_range(double x0, double x1) { return {abs_position(x0), abs_position(x1)}; }
     /// start of full range

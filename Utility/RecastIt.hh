@@ -22,7 +22,6 @@ public:
     /// dereference
     T*& operator*() { return (T*&)*I; }
 
-protected:
     it0 I;  ///< underlying iterator
 };
 

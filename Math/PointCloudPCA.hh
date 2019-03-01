@@ -7,6 +7,7 @@
 #include <vector>
 using std::vector;
 #include <cstddef> // for size_t
+#include <stdio.h>
 #include <cmath>
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
@@ -17,9 +18,8 @@ using std::vector;
 template<int N>
 struct weightedpt {
     /// Constructor
-    weightedpt(double* xx = nullptr, double ww=1): w(ww) {
-        if(xx) std::copy(xx,xx+N,x);
-    }
+    weightedpt(double* xx = nullptr, double ww=1): w(ww) { if(xx) std::copy(xx,xx+N,x); }
+
     double x[N];    ///< position
     double w = 1;   ///< weight
 };
@@ -63,6 +63,9 @@ public:
     /// rms spread along principal components direction
     double sigma(int a) const { return sqrt(width2[a]/sw); }
 
+    /// reverse direction
+    void flip() {for(int i = 0; i<N-1; i++) for(int j = 0; j<N; j++) PCA[i][j] *= -1; }
+
     double mu[N];       ///< mean center
     double Cov[N][N];   ///< covariance matrix
     double PCA[N][N];   ///< orthogonal principal components vectors in PCA[i], largest to smallest
@@ -70,8 +73,30 @@ public:
     size_t n;           ///< number of points
     double sw;          ///< sum of weights
 
-    void calcPrincipalComponents(const TMatrixDSym& Cov) {
-        const TMatrixDSymEigen eigen(Cov);
+    void operator+=(const PointCloudPCA<N>& P) {
+        if(!sw) {
+            *this = P;
+            return;
+        }
+
+        PointCloudPCA<N> Pnew;
+
+        Pnew.n = n + P.n;
+        Pnew.sw = sw + P.sw;
+        for(int j = 0; j<N; j++) Pnew.mu[j] = (mu[j]*sw + P.mu[j]*P.sw)/Pnew.sw;
+
+        for(int i = 0; i<N-1; i++) {
+            for(int j = 0; j<N; j++) {
+                Pnew.Cov[i][j] = Cov[i][j] + P.Cov[i][j] + (mu[i]-P.mu[i])*(mu[j]-P.mu[j])*sw*P.sw/Pnew.sw;
+            }
+        }
+
+        *this = Pnew;
+        calcPrincipalComponents(TMatrixDSym(N,Cov[0]));
+    }
+
+    void calcPrincipalComponents(const TMatrixDSym& MCov) {
+        const TMatrixDSymEigen eigen(MCov);
         const TVectorD& eigenVal = eigen.GetEigenValues();
         const TMatrixD& eigenVec = eigen.GetEigenVectors();
         for(int i = 0; i<N; i++) {
@@ -79,6 +104,21 @@ public:
             for(int j = 0; j<N; j++) PCA[j][i] = eigenVec(i,j);
         }
     }
+
+    void display() const { printf("Cloud of %zu %i-points (average weight %g):\n", n, N, n? sw/n : 0); }
 };
+
+template<>
+void PointCloudPCA<3>::display() const {
+    printf("Cloud of %zu points (average weight %g):\n", n, n? sw/n : 0);
+    printf("\tmean = %g\t%g\t%g\t\twidth2 = %g\t%g\t%g\n",
+        mu[0], mu[1], mu[2],
+        width2[0], width2[1], width2[2]);
+    for(int i=0; i<3; i++) {
+        printf("\t%g\t%g\t%g\t\t%g\t%g\t%g\n",
+               Cov[i][0], Cov[i][1], Cov[i][2],
+               PCA[i][0], PCA[i][1], PCA[i][2] );
+    }
+}
 
 #endif
