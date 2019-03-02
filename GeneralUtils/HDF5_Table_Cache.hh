@@ -23,7 +23,7 @@ template<typename T>
 class HDF5_Table_Cache {
 public:
     /// Constructor, from name of table and struct offsets/sizes
-    HDF5_Table_Cache(const HDF5_Table_Spec& ts, hsize_t nc = 1024): Tspec(ts), nchunk(nc)  { }
+    HDF5_Table_Cache(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(0), hsize_t nc = 1024): Tspec(ts), nchunk(nc)  { }
 
     /// get next table row; return whether successful or failed (end-of-file)
     bool next(T& val);
@@ -64,7 +64,7 @@ template<typename T>
 class HDF5_Table_Writer {
 public:
     /// Constructor, from name of table and struct offsets/sizes
-    HDF5_Table_Writer(const HDF5_Table_Spec& ts, hsize_t nc = 1024): Tspec(ts), nchunk(nc) { }
+    HDF5_Table_Writer(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(0), hsize_t nc = 1024, int cmp = 9): Tspec(ts), nchunk(nc), compress(cmp) { }
     /// Destructor
     ~HDF5_Table_Writer() { flush(); }
 
@@ -72,8 +72,12 @@ public:
     void write(const T& val);
     /// write table rows
     void write(const vector<T>& vals);
+    /// get number of rows written
+    hsize_t getNWrite() const { return nwrite; }
     /// (re)set output file
     void setFile(hid_t f);
+    /// create table in output file
+    void initTable() { makeTable(Tspec, outfile_id, nchunk, compress); }
     /// flush to disk
     void flush();
 
@@ -81,9 +85,11 @@ public:
 
 protected:
     hid_t outfile_id = 0;       ///< file to read from
+    hsize_t nwrite = 0;         ///< number of rows written
 
     vector<T> cached;           ///< cached output data
     hsize_t nchunk;             ///< cacheing chunk size
+    int compress;               ///< output compression level
 };
 
 /// Combined HDF5 reader/writer for transferring select events subset
@@ -110,12 +116,14 @@ template<typename T>
 void HDF5_Table_Writer<T>::write(const vector<T>& vals) {
     cached.insert(cached.end(), vals.begin(), vals.end());
     if(cached.size() >= nchunk) flush();
+    nwrite += vals.size();
 }
 
 template<typename T>
 void HDF5_Table_Writer<T>::write(const T& val) {
     cached.push_back(val);
     if(cached.size() >= nchunk) flush();
+    nwrite++;
 }
 
 template<typename T>

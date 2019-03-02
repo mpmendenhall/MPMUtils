@@ -70,9 +70,9 @@ public:
 
     /// get first key value (double) or default
     double getDefault(const K& k, double d) const {
-        string s = this->getDefault(k,"");
-        if(!s.size()) return d;
-        std::stringstream ss(s);
+        string str = this->getDefault(k,"");
+        if(!str.size()) return d;
+        std::stringstream ss(str);
         ss >> d;
         return d;
     }
@@ -82,8 +82,8 @@ public:
         vector<double> v;
         double d;
         for(auto const& ss: this->retrieve(k)) {
-            std::stringstream s(ss);
-            s >> d;
+            std::stringstream str(ss);
+            str >> d;
             v.push_back(d);
         }
         return v;

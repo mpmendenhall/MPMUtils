@@ -3,7 +3,7 @@
 for f0 in */*; do :
 f=`basename $f0`
 ext="${f##*.}"
-if [ "$f" == "Makefile" ] || [ "$f" == "__pycache__" ] || [ "$ext" == "pyc" ]; then
+if [ "$f" == "Makefile" ] || [ "$f" == "__pycache__" ] || [ "$ext" == "pyc" ] || [ "$f" == "HDF5_StructInfo.hh" ] || [ "$f" == "HDF5_StructInfo.cc" ]; then
 continue; fi
 for d1 in $MPMUTILS/*; do :
 if [ -e $d1/$f ]; then

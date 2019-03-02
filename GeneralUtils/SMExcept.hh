@@ -38,9 +38,9 @@ public:
 };
 
 /// replacement for assert() that throws an SMExcept
-inline void smassert(bool b, const string& tp = "assert_error", const Stringmap& m = Stringmap()) {
+inline void smassert(bool b, const string& tp = "assert_error", const Stringmap& mp = Stringmap()) {
     if(b) return;
-    SMExcept e(tp); e += m; throw e;
+    SMExcept e(tp); e += mp; throw e;
 }
 
 #endif
