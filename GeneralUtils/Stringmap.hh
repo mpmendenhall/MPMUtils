@@ -81,7 +81,7 @@ public:
     vector<double> retrieveDouble(const K& k) const {
         vector<double> v;
         double d;
-        for(auto const& ss: retrieve(k)) {
+        for(auto const& ss: this->retrieve(k)) {
             std::stringstream s(ss);
             s >> d;
             v.push_back(d);

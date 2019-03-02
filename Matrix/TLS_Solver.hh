@@ -9,6 +9,8 @@
 #define TLS_SOLVER_HH
 
 #include "LAPACKE_Matrix.hh"
+#include "VarMat.hh"
+#include <stdlib.h> // for size_t
 
 /// Total Least Squares (TLS) solver for line through point cloud
 class TLS_Solver {

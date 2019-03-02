@@ -61,11 +61,17 @@ endif()
 find_package(ROOT REQUIRED COMPONENTS MathCore MathMore Core RIO Hist Tree Minuit)
 LIST(APPEND LINKLIBS ${ROOT_LIBRARIES})
 include_directories(${ROOT_INCLUDE_DIRS})
-#---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
-include(${ROOT_USE_FILE})
-#set(DICTFILES "Event.hh" "CumulativeData.hh" "TCumulative.hh" "TCumulativeMap.hh" "TDynamicHistogram.hh")
-#ROOT_GENERATE_DICTIONARY(P2x_RootDict ${DICTFILES} LINKDEF "FileIO/EventLinkDef.h")
-#LIST(APPEND SOURCE_FILES P2x_RootDict.cxx)
+include_directories(${PROJECT_SOURCE_DIR}/ROOTUtils/)
+include("${ROOT_USE_FILE}")
+ROOT_GENERATE_DICTIONARY(mpmu_Dict "CumulativeData.hh" "TCumulative.hh" "TCumulativeMap.hh" "TDynamicHistogram.hh" LINKDEF "ROOTUtils/LinkDef.h" OPTIONS "")
+
+######
+# HDF5
+######
+find_package(HDF5 REQUIRED COMPONENTS C HL)
+message("Including HDF5 paths '${HDF5_INCLUDE_DIRS}' and libraries '${HDF5_LIBRARIES}' in '${HDF5_LIBRARY_DIRS}'")
+include_directories(${HDF5_INCLUDE_DIRS})
+LIST(APPEND LINKLIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
 
 ##############################
@@ -77,13 +83,18 @@ add_custom_target(update_codeversion DEPENDS codeversion)
 #########################
 # Choose objects to build
 
-foreach(dir IN ITEMS Framework JobControl Math Utility Visualization )
+foreach(dir IN ITEMS Framework GeneralUtils JobControl Math Matrix ROOTUtils Utility Visualization )
 include_directories(${PROJECT_SOURCE_DIR}/${dir})
 file(GLOB DIRSRC ${dir}/*.c*)
 LIST(APPEND SOURCE_FILES ${DIRSRC})
 endforeach(dir)
 
-LIST(REMOVE_ITEM SOURCE_FILES ${PROJECT_SOURCE_DIR}/Utility/SQLite_Helper.cc)
+list(APPEND SOURCE_FILES "mpmu_Dict.cxx")
+
+# skip broken misc crud
+foreach(RM IN ITEMS GeneralUtils/Sketch3D.cc Matrix/TLS_Solver.cc)
+LIST(REMOVE_ITEM SOURCE_FILES ${PROJECT_SOURCE_DIR}/${RM})
+endforeach()
 
 LIST(APPEND SOURCE_FILES Physics/BetaSpectrumGenerator.cc Physics/PolarizedBetaAsym.cc Physics/RelKin.cc Physics/UnpolarizedBeta.cc)
 

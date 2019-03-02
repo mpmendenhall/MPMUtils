@@ -28,6 +28,8 @@
 #include <unistd.h>
 #include "StringManip.hh"
 #include "SMExcept.hh"
+#include <map>
+using std::map;
 
 TSQLHelper::TSQLHelper(const std::string& dbnm,
                      const std::string& dbAddress,
@@ -136,8 +138,8 @@ TSQLRow* TSQLHelper::getFirst() {
 string sm2insert(const Stringmap& m) {
     string svars = "(";
     string svals = "VALUES (";
-    for(map<std::string,std::string>::const_iterator it = m.dat.begin(); it != m.dat.end(); it++) {
-        if(it != m.dat.begin()) {
+    for(auto it = m.begin(); it != m.end(); it++) {
+        if(it != m.begin()) {
             svars += ",";
             svals += ",";
         }
