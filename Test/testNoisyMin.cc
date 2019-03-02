@@ -28,7 +28,7 @@ void gEllipse(TGraph& g, const gsl_matrix* pca, const C& x0) {
 }
 
 /// Plot out ellipse slice in specified axis plane from principal-axes matrix m
-TGraph vEllipse(const gsl_matrix* m, double x0, double y0, size_t ax = 0, size_t ay = 1, int npts = 100) {
+TGraph vEllipse(const gsl_matrix* m, double /*x0*/, double /*y0*/, size_t ax = 0, size_t ay = 1, int npts = 100) {
     TGraph g(npts+1);
 
     auto v = gsl_vector_calloc(m->size1);

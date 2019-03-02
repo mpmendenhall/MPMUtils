@@ -13,11 +13,15 @@ string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
 #####################
 # locate dependencies
 
-############
+###########
+# libconfig
+###########
 find_library(CONFIG_LIBS config++)
 LIST(APPEND LINKLIBS ${CONFIG_LIBS})
 
-############
+########
+# OpenGL
+########
 find_package(OpenGL)
 find_package(GLUT)
 if(GLUT_FOUND AND OPENGL_FOUND AND NOT NO_GL)
@@ -28,16 +32,22 @@ else()
     message("OpenGL dependencies disabled.")
 endif()
 
-############
+#######
+# BOOST
+#######
 find_package(Boost REQUIRED COMPONENTS fiber)
 include_directories(${Boost_INCLUDE_DIR})
 LIST(APPEND LINKLIBS ${Boost_LIBRARIES})
 
-############
+#####
+# GSL
+#####
 find_package(GSL REQUIRED)
 LIST(APPEND LINKLIBS ${GSL_LIBRARIES})
 
-############
+#######
+# FFTW3
+#######
 find_library(FFTW_LIBS fftw3)
 if(FFTW_LIBS-NOTFOUND OR NO_FFTW)
     message("Disabling FFTW3 dependency")
@@ -46,7 +56,9 @@ else()
     LIST(APPEND LINKLIBS ${FFTW_LIBS})
 endif()
 
-############
+#####
+# MPI
+#####
 find_package(MPI)
 if(MPI_FOUND AND NOT NO_MPI)
     add_compile_options("-DWITH_MPI")
@@ -57,7 +69,9 @@ else()
     message("MPI dependencies disabled.")
 endif()
 
-############
+######
+# ROOT
+######
 find_package(ROOT REQUIRED COMPONENTS MathCore MathMore Core RIO Hist Tree Minuit)
 LIST(APPEND LINKLIBS ${ROOT_LIBRARIES})
 include_directories(${ROOT_INCLUDE_DIRS})
@@ -74,6 +88,23 @@ include_directories(${HDF5_INCLUDE_DIRS})
 LIST(APPEND LINKLIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
 
+########
+# Geant4
+########
+# Find Geant4 package, activating all available UI and Vis drivers by default
+# You can set WITH_GEANT4_UIVIS to OFF via the command line or ccmake/cmake-gui
+# to build a batch mode only executable
+option(WITH_GEANT4_UIVIS "Build with Geant4 UI and Vis drivers" ON)
+if(WITH_GEANT4_UIVIS)
+  find_package(Geant4 REQUIRED ui_all vis_all)
+else()
+  find_package(Geant4 REQUIRED)
+endif()
+include(${Geant4_USE_FILE})
+Message("Geant4_USE_FILE = ${Geant4_USE_FILE}")
+LIST(APPEND LINKLIBS ${Geant4_LIBRARIES})
+
+
 ##############################
 # force rebuild of CodeVersion
 #add_custom_command(OUTPUT always_rebuild COMMAND cmake -E echo)
@@ -83,7 +114,7 @@ add_custom_target(update_codeversion DEPENDS codeversion)
 #########################
 # Choose objects to build
 
-foreach(dir IN ITEMS Framework GeneralUtils JobControl Math Matrix ROOTUtils Utility Visualization )
+foreach(dir IN ITEMS Framework GeneralUtils JobControl Math Matrix Physics ROOTUtils Utility Visualization )
 include_directories(${PROJECT_SOURCE_DIR}/${dir})
 file(GLOB DIRSRC ${dir}/*.c*)
 LIST(APPEND SOURCE_FILES ${DIRSRC})
@@ -95,8 +126,6 @@ list(APPEND SOURCE_FILES "mpmu_Dict.cxx")
 foreach(RM IN ITEMS GeneralUtils/Sketch3D.cc Matrix/TLS_Solver.cc)
 LIST(REMOVE_ITEM SOURCE_FILES ${PROJECT_SOURCE_DIR}/${RM})
 endforeach()
-
-LIST(APPEND SOURCE_FILES Physics/BetaSpectrumGenerator.cc Physics/PolarizedBetaAsym.cc Physics/RelKin.cc Physics/UnpolarizedBeta.cc)
 
 
 ################
@@ -133,11 +162,15 @@ endforeach(E)
 # Documentation with Doxygen
 #################
 
+#################
+# Documentation with Doxygen
+#################
 find_package(Doxygen QUIET)
 if(DOXYGEN_FOUND)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
     add_custom_target(doc
-        ${DOXYGEN_EXECUTABLE} ${PROJECT_SOURCE_DIR}/Doxyfile
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen" VERBATIM
     )
 endif(DOXYGEN_FOUND)

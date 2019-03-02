@@ -1,5 +1,5 @@
 /// \file BlockCMat.cpp
-/* 
+/*
  * BlockCMat.cpp, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -72,27 +72,27 @@ BlockCMat_SVD::~BlockCMat_SVD() {
     #endif
 }
 
+#ifdef WITH_LAPACKE
 double BlockCMat_SVD::getSV(size_t i) const {
-    #ifdef WITH_LAPACKE
     size_t idiag = i/Ms;
     assert(idiag < Mc);
     if(idiag>=Mc/2+1) idiag = Mc - idiag;
     return block_SVDs[idiag]->singular_values()[i%Ms];
-    #else
-    return 1;
-    #endif
 }
+#else
+double BlockCMat_SVD::getSV(size_t) const { return 1; }
+#endif
 
 void BlockCMat_SVD::sort_singular_values() {
     // clear any previous sorted lists
     svalues.getData().clear();
     sloc.getData().clear();
-    
+
     // sort internal singular value "ID numbers"
     for(size_t i=0; i<Ms*Mc; i++) sloc.push_back(i);
     Compare_BCM_SVD_singular_values CB(this);
     std::sort(sloc.getData().begin(), sloc.getData().end(), CB);
-    
+
     // sorted list of singular values
     for(size_t i=0; i<Ms*Mc; i++) svalues.push_back(getSV(sloc[i]));
 }
@@ -106,7 +106,7 @@ VarVec<double> BlockCMat_SVD::getRightSVec(size_t i) const {
     assert(idiag < Mc);
     bool iset = (idiag>Mc/2+1) || (idiag==Mc/2+1 && !(Mc%2));
     if(iset) idiag = Mc - idiag;
-    
+
     VarVec<lapack_complex_double> sv = block_SVDs[idiag]->getRightSVec(i%Ms);
     assert(sv.size()==M);
     for(size_t m=0; m<M; m++) {
@@ -119,12 +119,12 @@ VarVec<double> BlockCMat_SVD::getRightSVec(size_t i) const {
     return v;
 }
 
+#ifdef WITH_LAPACKE
 const BlockCMat& BlockCMat_SVD::calc_pseudo_inverse(double epsilon) {
-    #ifdef WITH_LAPACKE
     if(PsI && PsI_epsilon==epsilon) return *PsI;
     delete PsI;
     PsI_epsilon = epsilon;
-    
+
     PsI = new BlockCMat(M, N, Mc);
     for(size_t i=0; i<Mc/2+1; i++) {
         const VarMat<lapack_complex_double>& bPsI = block_SVDs[i]->calc_pseudo_inverse(epsilon*svalues[0]);
@@ -134,7 +134,9 @@ const BlockCMat& BlockCMat_SVD::calc_pseudo_inverse(double epsilon) {
             }
         }
     }
-    #endif
+#else
+const BlockCMat& BlockCMat_SVD::calc_pseudo_inverse(double) {
+#endif
     return *PsI;
 }
 

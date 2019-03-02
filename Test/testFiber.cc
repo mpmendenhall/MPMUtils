@@ -36,11 +36,11 @@ int main(int, char**) {
     boost::fibers::use_scheduling_algorithm< boost::fibers::algo::round_robin >();
 
     // get current context
-    auto ctx = boost::fibers::context::active();
-    assert(ctx);
+    //auto ctx = boost::fibers::context::active();
+
     // get current scheduler
-    auto sched = ctx->get_scheduler();
-    assert(sched);
+    //auto sched = ctx->get_scheduler();
+
 
     // by default fiber is added to scheduler (may start running) on construction
     // fiber is move but not copy-assignable

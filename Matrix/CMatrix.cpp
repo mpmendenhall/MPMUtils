@@ -1,5 +1,5 @@
 /// \file CMatrix.cpp
-/* 
+/*
  * CMatrix.cpp, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall
  *
@@ -40,7 +40,7 @@ cmatrix_fft::cmatrix_fft(size_t m): M(m), realspace(new double[M]), kspace(new c
         fftw_import_wisdom_from_file(fin);
         fclose(fin);
     }
-    
+
     forwardplan = fftw_plan_dft_r2c_1d(M,
                                        realspace,
                                        (fftw_complex*)kspace,
@@ -49,7 +49,7 @@ cmatrix_fft::cmatrix_fft(size_t m): M(m), realspace(new double[M]), kspace(new c
                                        (fftw_complex*)kspace,
                                        realspace,
                                        FFTW_EXHAUSTIVE);
-    
+
     FILE* fout = fopen("fftw_wisdom","w");
     if(fout) {
         fftw_export_wisdom_to_file(fout);
@@ -72,7 +72,7 @@ void CMatrix::writeToFile(ostream& o) const {
     o.write((char*)&M,                  sizeof(M));
     o.write((char*)&has_realspace,      sizeof(has_realspace));
     o.write((char*)&has_kspace,         sizeof(has_kspace));
-    
+
     if(has_realspace)
         o.write((char*)&data[0],        sizeof(data[0])*M);
     if(has_kspace)
@@ -87,7 +87,7 @@ CMatrix CMatrix::readFromFile(std::istream& s) {
     s.read((char*)&foo.M,               sizeof(foo.M));
     s.read((char*)&foo.has_realspace,   sizeof(foo.has_realspace));
     s.read((char*)&foo.has_kspace,      sizeof(foo.has_realspace));
-    
+
     if(foo.has_realspace) {
         foo.data.resize(foo.M);
         s.read((char*)&foo.data[0],     sizeof(foo.data[0])*foo.M);
@@ -261,23 +261,23 @@ ostream& operator<<(ostream& o, const CMatrix& m) {
 
 
 CMatrix& CMatrix::operator+=(const CMatrix& m) {
-    
+
     assert(m.nRows()==nRows());
     assert(has_realspace || has_kspace);
     assert(m.has_realspace || m.has_kspace);
-    
+
     if(has_kspace && (m.has_kspace || !has_realspace)) {
         const vector< complex<double> >& kd = m.getKData();
         for(size_t i=0; i<kdata.size(); i++)
             kdata[i] += kd[i];
     } else has_kspace = false;
-    
+
     if(has_realspace && (m.has_realspace || !has_kspace)) {
         const vector<double>& d = m.getRealData();
         for(size_t i=0; i<data.size(); i++)
             data[i] += d[i];
     } else has_realspace = false;
-    
+
     return *this;
 }
 
@@ -290,23 +290,23 @@ const CMatrix CMatrix::operator+(const CMatrix& m) const {
 
 
 CMatrix& CMatrix::operator-=(const CMatrix& m) {
-    
+
     assert(m.nRows()==nRows());
     assert(has_realspace || has_kspace);
     assert(m.has_realspace || m.has_kspace);
-    
+
     if(has_kspace && (m.has_kspace || !has_realspace)) {
         const vector< complex<double> >& kd = m.getKData();
         for(size_t i=0; i<kdata.size(); i++)
             kdata[i] -= kd[i];
     } else has_kspace = false;
-    
+
     if(has_realspace && (m.has_realspace || !has_kspace)) {
         const vector<double>& d = m.getRealData();
         for(size_t i=0; i<data.size(); i++)
             data[i] -= d[i];
     } else has_realspace = false;
-    
+
     return *this;
 }
 
@@ -319,13 +319,13 @@ const CMatrix CMatrix::operator-(const CMatrix& m) const {
 
 
 CMatrix& CMatrix::operator*=(double c) {
-    
+
     if(has_realspace)
         for(size_t i=0; i<data.size(); i++) data[i] *= c;
-        
+
     if(has_kspace)
         for(size_t i=0; i<kdata.size(); i++) kdata[i] *= c;
-            
+
     return *this;
 }
 
@@ -345,13 +345,13 @@ const CMatrix CMatrix::operator-() const {
 
 
 CMatrix& CMatrix::operator*=(const CMatrix& m) {
-    
+
     assert(m.nRows()==nRows());
-    
+
     vector< complex<double> >& kd = getKData();
     const vector< complex<double> >& mkd = m.getKData();
     for(size_t i=0; i<kd.size(); i++) kd[i] *= mkd[i];
-    
+
     return *this;
 }
 
@@ -363,18 +363,18 @@ const CMatrix CMatrix::operator*(const CMatrix& m) const {
 
 
 const VarVec<double> CMatrix::operator*(const VarVec<double>& v) const {
-    
+
     assert(M>0 && v.size()==M);
     const vector< complex<double> >& kd = getKData(); // make sure to do this first, since we need ffter's storage space after
-    
+
     cmatrix_fft& ffter = cmatrix_fft::get_ffter(M);
     ffter.realspace[0] = v[0];
     for(size_t i=1; i<M; i++) ffter.realspace[i] = v[M - i];
     fftw_execute(ffter.forwardplan);
-    
+
     for(size_t i=0; i<kd.size(); i++) ffter.kspace[i] *= kd[i];
     fftw_execute(ffter.reverseplan);
-    
+
     VarVec<double> out = VarVec<double>(M);
     out[0] = ffter.realspace[0];
     for(size_t i=1; i<M; i++) out[i] = ffter.realspace[M-i];
@@ -393,9 +393,9 @@ CMatrix& CMatrix::invert() {
 
 
 const CMatrix CMatrix::inverse() const {
-    CMatrix M = *this;
-    M.invert();
-    return M;
+    CMatrix M2 = *this;
+    M2.invert();
+    return M2;
 }
 
 const CMatrix CMatrix::transpose() const {

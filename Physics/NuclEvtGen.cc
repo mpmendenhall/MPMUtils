@@ -3,6 +3,8 @@
 #include "SMExcept.hh"
 #include "StringManip.hh"
 #include "PathUtils.hh"
+#include "NuclPhysConstants.hh"
+using namespace physconst;
 #include <math.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -83,7 +85,7 @@ DecayAtom::DecayAtom(BindingEnergyTable const* B): BET(B), Iauger(0), Ikxr(0), I
 }
 
 void DecayAtom::load(const Stringmap& m) {
-    for(auto& kv: m.dat) {
+    for(auto& kv: m) {
         smassert(kv.first.size());
         if(kv.first[0]=='a') Iauger += atof(kv.second.c_str())/100.0;
         else if(kv.first[0]=='k') Ikxr += atof(kv.second.c_str())/100.0;

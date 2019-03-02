@@ -24,8 +24,8 @@ void DataFrame::release() {
     assert(nrefs);
     if(--nrefs) return;
 
-    size_t i=0;
-    for(auto p: *this) if(p) M->dtypes[i++]->dispose(p);
+    size_t j=0;
+    for(auto p: *this) if(p) M->dtypes[j++]->dispose(p);
     drop = false;
     M->put(this);
 }

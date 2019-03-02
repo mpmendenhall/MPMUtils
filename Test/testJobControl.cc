@@ -5,8 +5,8 @@ export SLURM_CPUS_ON_NODE=4
 mpirun -np $SLURM_CPUS_ON_NODE bin/testJobControl
 */
 
+#include "MPIJobControl.hh" // put first to avoid std::string namespace conflicts
 #include "ThreadsJobControl.hh"
-#include "MPIJobControl.hh"
 #include "KTAccumJob.hh"
 #include <TH1F.h>
 

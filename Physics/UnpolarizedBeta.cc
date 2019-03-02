@@ -345,7 +345,7 @@ double Langer_Cs137_C2T(double W, double W0) {
     return (W0-W)*(W0-W)+k*(W*W-1);
 }
 
-double Behrens_l2(double W, double W0, double Z, double R) {
+double Behrens_l2(double W, double /*W0*/, double Z, double R) {
     double p = sqrt(W*W-1);
     double y = alpha*Z*W/p;
     double a2Z2 = alpha*alpha*Z*Z;

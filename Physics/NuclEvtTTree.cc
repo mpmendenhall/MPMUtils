@@ -1,4 +1,6 @@
 #include "NuclEvtTTree.hh"
+#include "AxisEnum.hh"
+#include <TRandom.h>
 
 void EventTreeScanner::setReadpoints(TTree* T) {
     SetBranchAddress(T,"num",&evt.eid);

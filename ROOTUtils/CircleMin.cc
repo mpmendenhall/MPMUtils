@@ -14,12 +14,12 @@ using std::cout;
 
 double CircleMin::circleMin(const double* params) {
     double s_err = 0;
-    
+
     iSigma(0,0) = params[2];
     iSigma(0,1) = iSigma(1,0) = params[3];
     iSigma(1,1) = params[4];
     iSigma.invert();
-    
+
     for(size_t i=0; i<xs.size(); i++) {
         cs[i] = xs[i]-params[0];
         ss[i] = ys[i]-params[1];
@@ -42,7 +42,7 @@ void CircleMin::initGuess(double& x0, double& y0, double& r0) {
     rfits.resize(npts);
     cs.resize(npts);
     ss.resize(npts);
-    
+
     x0 = y0 = 0;
     for(size_t i=0; i<npts; i++) {
         x0 += xs[i];
@@ -66,7 +66,7 @@ double CircleMin::doFit() {
     min.SetMaxFunctionCalls(1000);
     min.SetMaxIterations(1000);
     min.SetTolerance(0.0001);
-    
+
     const unsigned int nvar = 5;
     ROOT::Math::Functor f(this, &CircleMin::circleMin, nvar);
     double x0, y0, r0;
@@ -75,21 +75,21 @@ double CircleMin::doFit() {
     double step[nvar] = {r0/10., r0/10., variable[2]/10., variable[2]/10., variable[2]/10.};
     cout << "Initial guess: x = " << x0 << " y = " << y0 << " r = " << r0 << "\n";
     min.SetFunction(f);
-    
+
     // Set the free variables to be minimized!
     min.SetVariable(0,"x",variable[0], step[0]);
     min.SetVariable(1,"y",variable[1], step[1]);
     min.SetLimitedVariable(2,"rxx",variable[2], step[2], 0, 1.5*variable[2]);
     min.SetLimitedVariable(3,"rxy",variable[3], step[3], 0, 1.5*variable[2]);
     min.SetLimitedVariable(4,"ryy",variable[4], step[4], 0, 1.5*variable[2]);
-    
+
     min.Minimize();
-    
-    const double *xs = min.X();
+
+    const double* xm = min.X();
     verbose = true;
-    double rms = sqrt(circleMin(xs));
+    double rms = sqrt(circleMin(xm));
     cout << "Minimum: f( ";
-    for(unsigned int i=0; i<nvar; i++) cout << xs[i] << " ";
+    for(unsigned int i=0; i<nvar; i++) cout << xm[i] << " ";
     cout << "): rms = " << rms << "\n";
     return rms;
 }

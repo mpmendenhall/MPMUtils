@@ -150,9 +150,9 @@ int main(int, char**) {
     vector<double> x0 = {-5.7, -0.6, 1.4};
     printf("%g\n", R(x0));
 
-    array<double,10> c;
-    QuadraticT<3>::evalTerms(x0, c);
-    for(auto x: c) printf("\t%g",x);
+    array<double,10> cf;
+    QuadraticT<3>::evalTerms(x0, cf);
+    for(auto x: cf) printf("\t%g",x);
     printf("\n");
 
     TRandom3 TR;

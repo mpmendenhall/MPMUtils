@@ -111,10 +111,10 @@ void LinMinConstrained::_solve() {
         if(gsl_linalg_QR_unpack(M, tau, Q, R0)) throw;
 
         // Truncate, transpose R to lower-triangular form assumed by gsl Cholesky
-        gsl_matrix_wrapper R = R0;
-        if(gsl_matrix_transpose(R)) throw;
+        gsl_matrix_wrapper R1 = R0;
+        if(gsl_matrix_transpose(R1)) throw;
         // RTRi = (R^T R)^-1
-        RTRi = R; // renaming for inversion
+        RTRi = R1; // renaming for inversion
         gsl_linalg_cholesky_invert(RTRi);
 
         clear_constraints(); // need new constraints solver
@@ -135,7 +135,7 @@ void LinMinConstrained::_solve() {
                           GRR)          // C
           ) throw;
 
-        gsl_matrix_wrapper GRRG_CD(Ncon,Ncon);
+        GRRG_CD = gsl_matrix_wrapper(Ncon,Ncon);
         if(gsl_blas_dgemm(CblasNoTrans, // op(A)
                           CblasTrans,   // op(B)
                           1.0,          // a
@@ -147,7 +147,7 @@ void LinMinConstrained::_solve() {
         if(gsl_linalg_cholesky_decomp(GRRG_CD)) throw;      // older deprecated function call
         //if(gsl_linalg_cholesky_decomp1(GRRG_CD)) throw;   // newer GSL call
 
-        gsl_matrix_wrapper GRRM(Ncon,Neq);
+        GRRM = gsl_matrix_wrapper(Ncon,Neq);
         if(gsl_blas_dgemm(CblasNoTrans, // op(A)
                           CblasTrans,   // op(B)
                           1.0,          // a

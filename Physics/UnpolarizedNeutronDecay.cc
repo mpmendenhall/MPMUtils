@@ -464,7 +464,6 @@ double Gluck93_F_C(double E_2, double b) {
 double Gluck93_Distribution::calc_W_0C(double E_2, double E_f, double c_f) {
     // (3.3) neutrino energy and proton-recoil-corrected endpoints
     double E_1 = m_i - E_2 - E_f;
-    double E_2m = Delta - (Delta*Delta - m_2*m_2)/(2*m_i);
     double E_1m = Delta - (Delta*Delta + m_2*m_2)/(2*m_i);
     double E_fm = m_f + (Delta*Delta - m_2*m_2)/(2*m_i);
     // (3.2) recoil-order corrected spectrum without Fermi function
