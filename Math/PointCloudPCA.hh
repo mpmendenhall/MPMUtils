@@ -10,6 +10,7 @@ using std::vector;
 #include <stdio.h>
 #include <cmath>
 #include <array>
+using std::array;
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 #include <TMatrixDSymEigen.h>
@@ -19,13 +20,10 @@ using std::vector;
 template<int N>
 struct weightedpt {
     /// Constructor
-    weightedpt(double* xx = nullptr, double ww=1): w(ww) {
-        if(xx) std::copy(xx,xx+N,x);
-        else std::fill(xx,xx+N,0.);
-    }
+    weightedpt(double* xx = nullptr, double ww=1): w(ww) { if(xx) std::copy(xx, xx+N, x.data()); }
 
-    double x[N];    ///< coordinate
-    double w = 1;   ///< weight
+    array<double,N> x{};///< coordinate
+    double w = 1;       ///< weight
 };
 
 /// PCA calculation
@@ -77,12 +75,12 @@ public:
     /// reverse direction
     void flip() {for(int i = 0; i<N-1; i++) for(int j = 0; j<N; j++) PCA[i][j] *= -1; }
 
-    double mu[N];       ///< mean center
-    double Cov[N][N];   ///< covariance matrix
-    double PCA[N][N];   ///< orthogonal principal components vectors in PCA[i], largest to smallest
-    double width2[N];   ///< spread along principal directions (eigenvalues of Cov), largest to smallest
-    size_t n;           ///< number of points
-    double sw;          ///< sum of weights
+    array<double,N> mu;     ///< mean center
+    double Cov[N][N];       ///< covariance matrix
+    array<double,N> PCA[N]; ///< orthogonal principal components vectors in PCA[i], largest to smallest
+    array<double,N> width2; ///< spread along principal directions (eigenvalues of Cov), largest to smallest
+    size_t n;               ///< number of points
+    double sw;              ///< sum of weights
 
     void operator+=(const PointCloudPCA<N>& P) {
         if(!sw) {

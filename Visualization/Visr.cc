@@ -248,14 +248,14 @@ namespace vsr {
     void circle(vec3 o, vec3 n, int i) {
         int j0 = 0;
         for(auto j: {1,2}) if(fabs(n[j]) > fabs(n[j0])) j0 = j;
-        double dz[] = {0,0,0};
+        vec3 dz{};
         dz[(j0+1)%3] = 1;
 
         auto r = makeunit(n.data());
         r *= scale;
-        double dx[3];
-        double dy[3];
-        ortho_frame(dz, n.data(), dx, dy);
+        vec3 dx;
+        vec3 dy;
+        ortho_frame(dz, n, dx, dy);
 
         qcmd cp(_polyline);
         for(int p=0; p<i; p++) {

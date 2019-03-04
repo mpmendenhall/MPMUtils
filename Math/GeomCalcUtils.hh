@@ -23,7 +23,8 @@ inline array_contents_t<T> dot(const T& a,  const T& b) { return a[0]*b[0] + a[1
 
 /// vector cross product
 template<typename T>
-inline void cross(const T a[3], const T b[3], T c[3]) {
+inline void cross(const T& a, const T& b, T& c) {
+    static_assert(std::tuple_size<T>::value == 3, "Cross-product only defined for 3-vector");
     c[0] = a[2]*b[1] - a[1]*b[2];
     c[1] = a[2]*b[0] - a[0]*b[2];
     c[2] = a[0]*b[1] - a[1]*b[0];
@@ -221,8 +222,10 @@ T line_points_distance2(const T p1[3], const T d1[3],
  * @param vr unit radial vector va x vt
  */
 template<typename T>
-void local_polar_frame(const T va[3], T vt[3], T vr[3]) {
-    T d = sqrt(va[0]*va[0] + va[1]*va[1]);
+void local_polar_frame(const T& va, T& vt, T& vr) {
+    static_assert(std::tuple_size<T>::value == 3, "Only defined for 3-vector");
+
+    auto d = sqrt(va[0]*va[0] + va[1]*va[1]);
     vt[2] = 0;
     if(d > 1e-6) {
         vt[0] = -va[1]/d;
@@ -249,7 +252,7 @@ void local_polar_frame(const T va[3], T vt[3], T vr[3]) {
  * @param v2 unit vector v0 x v1
  */
 template<typename T>
-void ortho_frame(const T vu[3], const T v0[3], T v1[3], T v2[3]) {
+void ortho_frame(const T& vu, const T& v0, T& v1, T& v2) {
     cross(v0,vu,v1);
     makeunit(v1);
     cross(v0,v1,v2);
