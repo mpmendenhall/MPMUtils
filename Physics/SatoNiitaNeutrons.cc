@@ -1,10 +1,3 @@
-/// \file SatoNiitaNeutrons.cc
-// This file was produced under the employ of the United States Government,
-// and is consequently in the PUBLIC DOMAIN, free from all provisions of
-// US Copyright Law (per USC Title 17, Section 105).
-//
-// -- Michael P. Mendenhall, 2015
-
 #include "SatoNiitaNeutrons.hh"
 #include <cmath>
 #include <cassert>
@@ -45,7 +38,9 @@ double SatoNiitaNeutrons::calcAirSpectrum(double E) {
               + c_7*log10(E/c_8) * (1 + tanh(c_9*log10(E/c_10))) * (1 - tanh(c_11*log10(E/c_12))) )*scale_S;
 
     // Eq. (2)
-    return phi_inf = phi_B*phi_L;
+    phi_inf = phi_B*phi_L;
+
+    return phi_inf/E;
 }
 
 double SatoNiitaNeutrons::calcGroundSpectrum(double E) {
@@ -68,5 +63,7 @@ double SatoNiitaNeutrons::calcGroundSpectrum(double E) {
     phi_T_scaled = phi_L*phi_T*scale_T;
 
     // Eq. (10)
-    return phi_G = phi_L*phi_B*f_G + phi_T_scaled;
+    phi_G = phi_L*phi_B*f_G + phi_T_scaled;
+
+    return phi_G/E;
 }

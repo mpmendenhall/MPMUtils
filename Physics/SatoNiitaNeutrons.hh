@@ -1,10 +1,4 @@
 /// \file SatoNiitaNeutrons.hh ``Tuneable'' cosmic neutron spectrum parametrization.
-// This file was produced under the employ of the United States Government,
-// and is consequently in the PUBLIC DOMAIN, free from all provisions of
-// US Copyright Law (per USC Title 17, Section 105).
-//
-// -- Michael P. Mendenhall, 2015
-
 #ifndef SATONIITANEUTRONS_HH
 #define SATONIITANEUTRONS_HH
 
@@ -27,17 +21,17 @@ public:
 
     /// Calcuate energy-dependent spectrum terms at energy E
     double calcAirSpectrum(double E);
-    /// Calculate ground-level spectrum E*dPhi/dE (calls calcAirSpectrum)
+    /// Calculate ground-level spectrum dPhi/dE [/s/cm^2/MeV] (calls calcAirSpectrum)
     double calcGroundSpectrum(double E);
 
     double phi_L;               ///< Low-energy neutron flux (constant in E)
     double phi_B;               ///< "basic" neutron spectrum shape, 1/Lethargy
 
     double phi_inf;             ///< semi-infinite atmospheric flux, 1/Lethargy
-    double phi_T;               ///< thermal neutron spectrum
+    double phi_T;               ///< thermal neutron spectrum E*dPhi/dE [/s/cm^2]
     double phi_T_scaled;        ///< phi_T scaled as contribution to phi_G
     double f_G;                 ///< ground enhancement factor
-    double phi_G;               ///< ground-level spectrum
+    double phi_G;               ///< ground-level spectrum E*dPhi/dE [/s/cm^2]
 
     double scale_T = 1.0;       ///< extra scale factor for thermal contribution
     double scale_S = 1.0;       ///< extra scale factor for non-thermal spectrum
