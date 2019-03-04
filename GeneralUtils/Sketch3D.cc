@@ -1,4 +1,5 @@
 /// \file Sketch3D.cc
+// Michael P. Mendenhall, LLNL 2017
 
 #include "Sketch3D.hh"
 #include <algorithm>
@@ -45,12 +46,12 @@ void ProjectableBall::setPerspective(const Perspective& P) {
     P.project(c,cp);
     z = cp[2];
     s = cp[3];
-    myXML = make_shared<SVG::circle>(cp[0], cp[1], fabs(s*r));
+    myXML = new SVG::circle(cp[0], cp[1], fabs(s*r));
     setAttrs();
 }
 
 void ProjectablePoly::setPerspective(const Perspective& P) {
-    auto pg = make_shared<SVG::polyline>();
+    auto pg = new SVG::polyline;
     P.projectPoly(pts, pg->pts, s, z);
     if(closed) pg->name = "polygon";
     myXML = pg;
@@ -62,7 +63,7 @@ void ProjectablePoly::setPerspective(const Perspective& P) {
 
 void SketchLayer::makeSVG(const Perspective& P, const string& fname, double xborder, const string& ttl) {
     SVG::SVGDoc D;
-    if(ttl.size()) D.body.addChild(make_shared<SVG::title>(ttl));
+    if(ttl.size()) D.body.addChild(new SVG::title(ttl));
     drawInto(D.body, P);
     D.BB = D.body.getBB();
     D.BB.expand(xborder);
@@ -70,8 +71,8 @@ void SketchLayer::makeSVG(const Perspective& P, const string& fname, double xbor
 }
 
 void SketchLayer::makeStereo(Perspective& P, const string& fname, double xborder, const string& ttl) {
-    auto g1 = make_shared<SVG::group>();
-    auto g2 = make_shared<SVG::group>();
+    auto g1 = new SVG::group();
+    auto g2 = new SVG::group();
 
     drawInto(*g1, P);
     P.v0[0] *= -1;
@@ -86,7 +87,7 @@ void SketchLayer::makeStereo(Perspective& P, const string& fname, double xborder
     g2->translation = {-BB2.hi[0]-xborder, 0};
 
     SVG::SVGDoc D;
-    if(ttl.size()) D.body.addChild(make_shared<SVG::title>(ttl));
+    if(ttl.size()) D.body.addChild(new SVG::title(ttl));
     D.body.addChild(g1);
     D.body.addChild(g2);
     D.BB = D.body.getBB();
@@ -96,9 +97,9 @@ void SketchLayer::makeStereo(Perspective& P, const string& fname, double xborder
 
 //////////////////////////////////////
 
-void MultiLayer::drawInto(XMLBuilder& X, const Perspective& P) {
+void MultiLayer::drawInto(XMLTag& X, const Perspective& P) {
     for(auto l: myLayers) {
-        auto g = make_shared<SVG::group>();
+        auto g = new SVG::group;
         l->drawInto(*g, P);
         X.addChild(g);
     }
@@ -109,7 +110,7 @@ void MultiLayer::drawInto(XMLBuilder& X, const Perspective& P) {
 bool compare_projectables(const unique_ptr<ProjectablePrimitive>& lhs,
                           const unique_ptr<ProjectablePrimitive>& rhs) { assert(lhs && rhs); return lhs->z + lhs->z0 < rhs->z + rhs->z0; }
 
-void PrimitivesLayer::drawInto(XMLBuilder& X, const Perspective& P) {
+void PrimitivesLayer::drawInto(XMLTag& X, const Perspective& P) {
     for(auto& o: myObjs) { assert(o); o->setPerspective(P); }
     std::sort(myObjs.begin(), myObjs.end(), &compare_projectables);
     for(auto& o: myObjs) { assert(o->myXML); X.addChild(o->myXML); }

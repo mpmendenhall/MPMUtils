@@ -6,8 +6,13 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 
-list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
-add_compile_options("-fPIC" "-Wpedantic" "-Wall" $<$<COMPILE_LANGUAGE:CXX>:-std=c++14>)
+## how to require compile standards:
+#set(CMAKE_C_STANDARD 99)
+#set(CMAKE_C_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_STANDARD 14)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_compile_options("-fPIC" "-Wpedantic" "-Wall")
 string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
 
 #####################
@@ -78,6 +83,7 @@ include_directories(${ROOT_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/ROOTUtils/)
 include("${ROOT_USE_FILE}")
 ROOT_GENERATE_DICTIONARY(mpmu_Dict "CumulativeData.hh" "TCumulative.hh" "TCumulativeMap.hh" "TDynamicHistogram.hh" LINKDEF "ROOTUtils/LinkDef.h" OPTIONS "")
+list(APPEND SOURCE_FILES "mpmu_Dict.cxx")
 
 ######
 # HDF5
@@ -120,12 +126,13 @@ file(GLOB DIRSRC ${dir}/*.c*)
 LIST(APPEND SOURCE_FILES ${DIRSRC})
 endforeach(dir)
 
-list(APPEND SOURCE_FILES "mpmu_Dict.cxx")
-
 # skip broken misc crud
 foreach(RM IN ITEMS GeneralUtils/Sketch3D.cc Matrix/TLS_Solver.cc)
 LIST(REMOVE_ITEM SOURCE_FILES ${PROJECT_SOURCE_DIR}/${RM})
 endforeach()
+
+# additional required libraries
+LIST(APPEND LINKLIBS -lpthread)
 
 
 ################

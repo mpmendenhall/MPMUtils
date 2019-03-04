@@ -132,18 +132,21 @@ namespace vsr {
     void _startRecording(std::vector<float>& v) {
         glFlush();
         glFinish();
-        if(v.size()) {
+        if(!v.size()) {
             if(displaySegs.size() && glIsList(displaySegs.back()))
                 glDeleteLists(displaySegs.back(),1);
-            else displaySegs.push_back(glGenLists(1));
-        } else displaySegs.push_back(glGenLists(1));
+            else
+                displaySegs.push_back(glGenLists(1));
+        } else
+            displaySegs.push_back(glGenLists(1));
         glNewList(displaySegs.back(), GL_COMPILE);
     }
     void startRecording(bool newseg) {
         if(!window_open) return;
         pthread_mutex_lock(&commandLock);
+        if(newseg) commands.clear();
         qcmd c(_startRecording);
-        if(newseg) { c.v.push_back(1); commands.clear(); }
+        if(!newseg) c.v.push_back(1);
         addCmd(c);
     }
 
@@ -437,7 +440,12 @@ namespace vsr {
     void keypress(unsigned char key, int x, int y) {
         if(key == 32 || key == 13) pause_display = false; // spacebar or return
         else if(key == 27) resetViewTransformation();     // escape
-        else if(key == 100) screendump("screendump.tga"); // 'd'
+        else if(key == 100) { // 'd'
+            static int ndumps = 0;
+            char dname[1024];
+            sprintf(dname, "screendump_%03i.tga", ndumps++);
+            screendump(dname);
+        }
         else printf("Un-assigned keypress %u at %i,%i\n", key, x, y);
     }
 

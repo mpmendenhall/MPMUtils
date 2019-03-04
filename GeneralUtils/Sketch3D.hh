@@ -45,10 +45,13 @@ public:
 /// Base for generating z-orderable projected SVG primitives
 class ProjectablePrimitive {
 public:
+    /// Destructor
+    virtual ~ProjectablePrimitive() { delete myXML; }
+
     /// Generate XML and calculate z for perspective
     virtual void setPerspective(const Perspective& P) = 0;
 
-    std::shared_ptr<SVGBuilder> myXML;   ///< generated XML
+    XMLTag* myXML = nullptr;        ///< generated XML
     double z0 = 0;                  ///< depth-sorting shift for all projections
     double z = 0;                   ///< depth-sorting z in projected state
     double s = 0;                   ///< overall scale factor
@@ -57,7 +60,6 @@ public:
 protected:
     /// apply (scaled) attributes
     void setAttrs() {
-        assert(myXML);
         for(auto& kv: attrs) myXML->addAttr(kv.first, kv.second);
         for(auto& kv: sattrs) myXML->addAttr(kv.first, s*kv.second);
     }
@@ -91,7 +93,7 @@ public:
 class SketchLayer {
 public:
     /// "Draw" contents into provided parent using projection
-    virtual void drawInto(XMLBuilder& X, const Perspective& P) = 0;
+    virtual void drawInto(XMLTag& X, const Perspective& P) = 0;
     /// Render contents to file
     void makeSVG(const Perspective& P, const string& fname, double xborder = 0, const string& ttl="");
     /// Render contents to stereo pair
@@ -102,7 +104,7 @@ public:
 class MultiLayer: public SketchLayer {
 public:
     /// "Draw" contents into provided parent using projection
-    void drawInto(XMLBuilder& X, const Perspective& P) override;
+    void drawInto(XMLTag& X, const Perspective& P) override;
 
     vector<SketchLayer*> myLayers;  /// layers, back to front
 };
@@ -111,7 +113,7 @@ public:
 class PrimitivesLayer: public SketchLayer {
 public:
     /// "Draw" contents into provided parent using projection
-    void drawInto(XMLBuilder& X, const Perspective& P) override;
+    void drawInto(XMLTag& X, const Perspective& P) override;
 
     vector<unique_ptr<ProjectablePrimitive>> myObjs; ///< drawable objects
 };
@@ -121,7 +123,7 @@ public:
 class PlaneLayer: public SketchLayer {
 public:
     /// "Draw" contents into provided parent using projection
-    void drawInto(XMLBuilder& X, const Perspective& P) override {
+    void drawInto(XMLTag& X, const Perspective& P) override {
         auto gg = make_shared<group>(g);
         gg->attrs["transform"] = "matrix()"; // TODO
         X.addChild(gg);

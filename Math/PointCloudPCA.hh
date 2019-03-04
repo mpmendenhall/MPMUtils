@@ -9,6 +9,7 @@ using std::vector;
 #include <cstddef> // for size_t
 #include <stdio.h>
 #include <cmath>
+#include <array>
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 #include <TMatrixDSymEigen.h>
@@ -18,9 +19,12 @@ using std::vector;
 template<int N>
 struct weightedpt {
     /// Constructor
-    weightedpt(double* xx = nullptr, double ww=1): w(ww) { if(xx) std::copy(xx,xx+N,x); }
+    weightedpt(double* xx = nullptr, double ww=1): w(ww) {
+        if(xx) std::copy(xx,xx+N,x);
+        else std::fill(xx,xx+N,0.);
+    }
 
-    double x[N];    ///< position
+    double x[N];    ///< coordinate
     double w = 1;   ///< weight
 };
 
@@ -60,8 +64,15 @@ public:
         calcPrincipalComponents(MTM);
     }
 
+    /// mean square spread along principal components direction
+    inline double sigma2(int a) const { return width2[a]/sw; }
     /// rms spread along principal components direction
-    double sigma(int a) const { return sqrt(width2[a]/sw); }
+    inline double sigma(int a) const { return sqrt(sigma2(a)); }
+    /// transverse width^2 from principal axis
+    inline double wT2() const { double s = 0; for(int i = 0; i<N-1; i++) s += width2[i]; return s; }
+    /// transverse spread from principal axis
+    inline double sigmaT2() const { return wT2()/sw; }
+
 
     /// reverse direction
     void flip() {for(int i = 0; i<N-1; i++) for(int j = 0; j<N; j++) PCA[i][j] *= -1; }
@@ -95,6 +106,9 @@ public:
         calcPrincipalComponents(TMatrixDSym(N,Cov[0]));
     }
 
+    /// out-of-place sum
+    const PointCloudPCA operator+(const PointCloudPCA& P) const { auto PP = *this; PP += P; return PP; }
+
     void calcPrincipalComponents(const TMatrixDSym& MCov) {
         const TMatrixDSymEigen eigen(MCov);
         const TVectorD& eigenVal = eigen.GetEigenValues();
@@ -105,20 +119,18 @@ public:
         }
     }
 
-    void display() const { printf("Cloud of %zu %i-points (average weight %g):\n", n, N, n? sw/n : 0); }
-};
-
-template<>
-void PointCloudPCA<3>::display() const {
-    printf("Cloud of %zu points (average weight %g):\n", n, n? sw/n : 0);
-    printf("\tmean = %g\t%g\t%g\t\twidth2 = %g\t%g\t%g\n",
-        mu[0], mu[1], mu[2],
-        width2[0], width2[1], width2[2]);
-    for(int i=0; i<3; i++) {
-        printf("\t%g\t%g\t%g\t\t%g\t%g\t%g\n",
-               Cov[i][0], Cov[i][1], Cov[i][2],
-               PCA[i][0], PCA[i][1], PCA[i][2] );
+    void display() const {
+        printf("Cloud of %zu %i-points (average weight %g):\n", n, N, n? sw/n : 0);
+        if(N==3) {
+            printf("\tmean = %g\t%g\t%g\t\twidth2 = %g\t%g\t%g\n",
+            mu[0], mu[1], mu[2], width2[0], width2[1], width2[2]);
+            for(int i=0; i<3; i++) {
+                printf("\t%g\t%g\t%g\t\t%g\t%g\t%g\n",
+                    Cov[i][0], Cov[i][1], Cov[i][2],
+                PCA[i][0], PCA[i][1], PCA[i][2] );
+            }
+        }
     }
-}
+};
 
 #endif

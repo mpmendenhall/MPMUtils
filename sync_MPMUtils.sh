@@ -4,13 +4,14 @@
 shopt -s globstar
 
 for f0 in **/*; do :
-f=`basename $f0`
+f=`basename "$f0"`
 ext="${f##*.}"
 
-if [ "$f" == "Makefile" ] || [ "$f" == "__pycache__" ] || [ "$ext" == "pyc" ] || [ "$f" == "HDF5_StructInfo.hh" ] || [ "$f" == "HDF5_StructInfo.cc" ]; then
+if [ "$f" == "Makefile" ] || [ "$f" == "__pycache__" ] || [ "$ext" == "pyc" ] \
+|| [ "$f" == "HDF5_StructInfo.hh" ] || [ "$f" == "HDF5_StructInfo.cc" ] || [ "$f" == "LinkDef.h" ]; then
 continue; fi
 for d1 in $MPMUTILS/*; do :
-if [ -e $d1/$f ]; then
+if [ -e "$d1/$f" ]; then
     echo "--------------------------------------------------------" $f
     if ! diff $f0 $d1/$f; then
     echo "cp" $f0 $d1/$f
