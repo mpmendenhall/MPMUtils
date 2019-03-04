@@ -251,7 +251,7 @@ namespace vsr {
         vec3 dz{};
         dz[(j0+1)%3] = 1;
 
-        auto r = makeunit(n.data());
+        auto r = makeunit(n);
         r *= scale;
         vec3 dx;
         vec3 dy;

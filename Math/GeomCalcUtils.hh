@@ -1,5 +1,5 @@
 /// \file GeomCalcUtils.hh Geometry calculation utilities
-// Michael P. Mendenhall, 2018
+// Michael P. Mendenhall, 2019
 
 #ifndef GEOMCALCUTILS_HH
 #define GEOMCALCUTILS_HH
@@ -15,11 +15,27 @@ using array_contents_t = typename std::remove_reference<decltype(std::declval<T&
 template<typename V>
 array_contents_t<V> vmag2(const V& v) {
     typedef array_contents_t<V> T;
-    return std::accumulate(v.begin(), v.end(), T(0), [](T a, T b) { return a + b*b; });
+    T m2{};
+    return std::accumulate(v.begin(), v.end(), m2, [](T a, T b) { return a + b*b; });
 }
 
+/// Vector dot product
 template<typename T>
-inline array_contents_t<T> dot(const T& a,  const T& b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+inline array_contents_t<T> dot(const T& a,  const T& b) {
+    array_contents_t<T> d{};
+    auto it = b.begin();
+    for(auto v: a) d += v * *(it++);
+    return d;
+}
+
+/// Vector difference a-b
+template<typename T>
+T vdiff(const T& a, const T& b) {
+    T d = a;
+    auto itb = b.begin();
+    for(auto& x: d) x -= *(itb++);
+    return d;
+}
 
 /// vector cross product
 template<typename T>
@@ -32,6 +48,7 @@ inline void cross(const T& a, const T& b, T& c) {
 /// vector triple product
 template<typename T>
 inline array_contents_t<T> triple_prod(const T& a,  const T& b, const T& c) {
+    static_assert(std::tuple_size<T>::value == 3, "Triple-product only defined for 3-vector");
     return a[0]*b[1]*c[2] + a[2]*b[0]*c[1] + a[1]*b[2]*c[0] - a[2]*b[1]*c[0] - a[1]*b[0]*c[2] - a[0]*b[2]*c[1];
 }
 
@@ -44,9 +61,9 @@ template<typename T>
 inline array_contents_t<T> mag(const T& v) { return sqrt(mag2(v)); }
 /// normalize to unit vector; return original length
 template<typename T>
-inline array_contents_t<T> makeunit(T v) {
+inline array_contents_t<T> makeunit(T& v) {
     auto d = mag(v);
-    v[0] /= d; v[1] /= d; v[2] /= d;
+    for(auto& x: v) x /= d;
     return d;
 }
 
@@ -59,12 +76,12 @@ inline array_contents_t<T> makeunit(T v) {
  */
 template<typename T>
 inline array_contents_t<T> triangle_height2(const T& b0,  const T& b1, const T& h) {
-    const T d = { b1[0]-b0[0], b1[1]-b0[1], b1[2]-b0[2] };
-    const T v = { h[0]-b0[0],  h[1]-b0[1],  h[2]-b0[2] };
+    const auto d = vdiff(b1,b0);
+    const auto v = vdiff(h,b0);
     auto d2 = dot(d,d);
     auto v2 = dot(v,v);
     auto x =  dot(d,v);
-    return v2-x*x/d2;
+    return v2 - x*x/d2;
 }
 
 /// area of triangle
@@ -76,8 +93,8 @@ inline array_contents_t<T> triangle_height2(const T& b0,  const T& b1, const T& 
  */
 template<typename T>
 inline array_contents_t<T> triangle_area2(const T& b0,  const T& b1, const T& h) {
-    const T d = { b1[0]-b0[0], b1[1]-b0[1], b1[2]-b0[2] };
-    const T v = { h[0]-b0[0],  h[1]-b0[1],  h[2]-b0[2] };
+    const auto d = vdiff(b1,b0);
+    const auto v = vdiff(h,b0);
     auto d2 = dot(d,d);
     auto v2 = dot(v,v);
     auto x =  dot(d,v);
@@ -93,8 +110,8 @@ inline array_contents_t<T> triangle_area2(const T& b0,  const T& b1, const T& h)
  */
 template<typename T>
 inline array_contents_t<T> cos_abc(const T& a,  const T& b, const T& c) {
-    const T v0 = { b[0]-a[0], b[1]-a[1], b[2]-a[2] };
-    const T v1 = { c[0]-b[0], c[1]-b[1], c[2]-b[2] };
+    const auto v0 = vdiff(b,a);
+    const auto v1 = vdiff(c,b);
     return dot(v0,v1)/sqrt(dot(v0,v0)*dot(v1,v1));
 }
 
@@ -108,7 +125,7 @@ inline array_contents_t<T> cos_abc(const T& a,  const T& b, const T& c) {
  */
 template<typename T>
 inline void line_coords(const T& c,  const T& vn, const T& x, array_contents_t<T>& z, array_contents_t<T>& r2) {
-    const T d = { x[0]-c[0], x[1]-c[1], x[2]-c[2] };
+    const auto d = vdiff(x,c);
     z = dot(d,vn);
     r2 = fabs(dot(d,d) - z*z);
 }
@@ -124,7 +141,8 @@ inline void line_coords(const T& c,  const T& vn, const T& x, array_contents_t<T
  * @param r2 distance squared of x from closest point on line
  */
 template<typename T>
-inline void lineseg_coords(const T c[3],  const T vn[3], const T x[3], T z0, T z1, T& z, T& r2) {
+inline void lineseg_coords(const T& c,  const T& vn, const T& x,
+                           array_contents_t<T> z0, array_contents_t<T> z1, array_contents_t<T>& z, array_contents_t<T>& r2) {
     line_coords(c,vn,x,z,r2);
     if(z1 < z0) std::swap(z0,z1);
     if(z < z0) r2 += (z-z0)*(z-z0);
@@ -141,18 +159,18 @@ inline void lineseg_coords(const T c[3],  const T vn[3], const T x[3], T z0, T z
  * @param[out] c2 closest approach is at p2 + c2*d2
  */
 template<typename T>
-void closest_approach_points(const T p1[3], const T d1[3],
-                             const T p2[3], const T d2[3],
-                             T& c1, T& c2) {
-    T d0[3] = {p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]};
-    T a01 = dot(d0,d1);
-    T a02 = dot(d0,d2);
-    T a11 = dot(d1,d1); // =1 for normalized directions
-    T a12 = dot(d1,d2);
-    T a12a12 = a12*a12;
-    T a22 = dot(d2,d2); // =1 for normalized directions
+void closest_approach_points(const T& p1, const T& d1,
+                             const T& p2, const T& d2,
+                             array_contents_t<T>& c1, array_contents_t<T>& c2) {
+    auto d0  = vdiff(p2,p1);
+    auto a01 = dot(d0,d1);
+    auto a02 = dot(d0,d2);
+    auto a11 = dot(d1,d1); // =1 for normalized directions
+    auto a12 = dot(d1,d2);
+    auto a12a12 = a12*a12;
+    auto a22 = dot(d2,d2); // =1 for normalized directions
 
-    T dd = a11*a22 - a12a12;
+    auto dd = a11*a22 - a12a12;
     if(dd < 1e-6*a12a12) { // parallel lines special case
         c1 = c2 = 0;
         return;
@@ -173,17 +191,17 @@ void closest_approach_points(const T p1[3], const T d1[3],
  */
 template<typename T>
 void closest_approach_points_normalized(
-    const T p1[3], const T d1[3],
-    const T p2[3], const T d2[3],
-    T& c1, T& c2) {
+    const T& p1, const T& d1,
+    const T& p2, const T& d2,
+    array_contents_t<T>& c1, array_contents_t<T>& c2) {
 
-    T d0[3] = {p2[0]-p1[0], p2[1]-p1[1], p2[2]-p1[2]};
-    T a01 = dot(d0,d1);
-    T a02 = dot(d0,d2);
-    T a12 = dot(d1,d2);
-    T a12a12 = a12*a12;
+    auto d0 = vdiff(p2,p1[0]);
+    auto a01 = dot(d0,d1);
+    auto a02 = dot(d0,d2);
+    auto a12 = dot(d1,d2);
+    auto a12a12 = a12*a12;
 
-    T dd = 1 - a12a12;
+    auto dd = 1 - a12a12;
     if(dd < 1e-6*a12a12) { // parallel lines special case
         c1 = c2 = 0;
         return;
@@ -204,15 +222,17 @@ void closest_approach_points_normalized(
  * @return distance^2 between first and second point
  */
 template<typename T>
-T line_points_distance2(const T p1[3], const T d1[3],
-                        const T p2[3], const T d2[3],
-                        T c1, T c2) {
-    T s = 0;
-    for(auto i: {0,1,2}) {
-        T l = (p1[i]+c1*d1[i]) - (p2[i]+c2*d2[i]);
-        s += l*l;
+T line_points_distance2(const T& p1, const T& d1,
+                        const T& p2, const T& d2,
+                        array_contents_t<T> c1, array_contents_t<T> c2) {
+    array_contents_t<T> s2{};
+    size_t i = 0;
+    for(auto x: p1) {
+        T l = (x+c1*d1[i]) - (p2[i]+c2*d2[i]);
+        s2 += l*l;
+        ++i;
     }
-    return s;
+    return s2;
 }
 
 /// Calculate tangential and radial unit vectors frame relative to specified unit direction and z axis
