@@ -9,6 +9,8 @@ using std::map;
 #include <array>
 using std::array;
 #include <stdio.h>
+#include <utility>
+using std::pair;
 
 /// Print Cayley Table for generic finite group
 template<class G>
@@ -26,13 +28,13 @@ class ProductGroup {
 public:
     /// Number of elements
     static constexpr size_t N = G1::N * G2::N;
+    /// element representation
+    typedef pair<typename G1::elem_t, typename G2::elem_t> elem_t;
 
-    /// enumeration for subelement (a,b)
-    static inline int elnum(int a, int b) { return a + b*G1::N; }
     /// Get element inverse
-    static inline int invert(int a) { return elnum(G1::invert(a%G1::N), G2::invert(a/G1::N)); }
+    static inline elem_t invert(elem_t a) { return {G1::invert(a.first), G2::invert(a.second)}; }
     /// Get group element c = ab
-    static inline int apply(int a, int b) { return elnum(G1::apply(a%G1::N, b%G1::N), G2::apply(a/G1::N, b/G1::N)); }
+    static inline elem_t apply(elem_t a, elem_t b) { return {G1::apply(a.first,b.first), G2::apply(a.second,b.second)}; }
 };
 
 /// Cyclic group on N elements
@@ -41,48 +43,59 @@ class CyclicGroup {
 public:
     /// Number of elements
     static constexpr size_t N = _N;
+    /// element representation
+    typedef int elem_t;
+
     /// Get element inverse
-    static inline int invert(int a) { return N-a; }
+    static inline elem_t invert(elem_t a) { return N-a; }
     /// Get group element c = ab
-    static inline int apply(int a, int b) { return (a+b)%N; }
+    static inline elem_t apply(elem_t a, elem_t b) { return (a+b)%N; }
 };
 
 /// Compile-time-evaluable factorial function
-constexpr size_t factorial(size_t i) { return i? i*factorial(i-1) : 1; }
+constexpr size_t factorial(size_t i) { return i > 1? i*factorial(i-1) : 1; }
 
-/// Compile-time permutation number i of n! on first n elements of A
-template<class Arr>
-constexpr Arr PermuteArray(size_t i, size_t n, Arr A) {
-    if(!i) return A; // identity permutation
-
-    auto nsub = factorial(n-1); // sub-perms on n-1 elements
-    auto j = i/nsub;
-    if(j) std::swap(A[j-1], A[n-1]);
-    return PermuteArray(i%nsub, n-1, A);
+/// Apply permutation to array
+template<class A, class P>
+A permute(const A& v, const P& p) {
+    size_t j=0;
+    auto vv = v;
+    for(auto i: p) vv[j++] = v[i];
+    return vv;
 }
 
 /// Symmetric Group (permutations) of N elements
 template<size_t _N>
 class SymmetricGroup {
+public:
     /// Number of elements
     static constexpr size_t N = factorial(_N);
     /// Permutation representation
-    typedef array<int,_N> perm;
+    typedef array<int,_N> elem_t;
 
-    /*
-    /// get i^th permutation
-    static const perm& getPerm(int i) {
+    /// Compile-time calculation of permutation number i of _N!
+    static constexpr elem_t permutation(size_t i) {
+        elem_t p = identity();
+        if(!i) return p;
+
+        auto nsub = factorial(_N-1);
+        auto j = i/nsub;
+        if(j) std::swap(p[j-1], p[_N-1]);
+        return permute(p, SymmetricGroup<_N-1>::permutation(i%nsub));
     }
 
-    /// enumeration for subelement (a,b)
-    static inline int elnum(int a, int b) { return a + b*G1::N; }
-    /// Get element inverse
-    static inline int invert(int a) { return elnum(G1::invert(a%G1::N), G2::invert(a/G1::N)); }
-    /// Get group element c = ab
-    static inline int apply(int a, int b) { return elnum(G1::apply(a%G1::N, b%G1::N), G2::apply(a/G1::N, b/G1::N)); }
-    */
+    /// identity element
+    static constexpr elem_t identity() {
+        elem_t p{};
+        int i = 0;
+        for(auto& x: p) x = i++;
+        return p;
+    }
 };
 
+/// Null permutation special case
+template<>
+SymmetricGroup<0>::elem_t SymmetricGroup<0>::permutation(size_t) { return {}; }
 
 
 #endif
