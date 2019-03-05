@@ -27,7 +27,7 @@ template<class G1, class G2>
 class ProductGroup {
 public:
     /// Number of elements
-    static constexpr size_t N = G1::N * G2::N;
+    static constexpr size_t order = G1::order * G2::order;
     /// element representation
     typedef pair<typename G1::elem_t, typename G2::elem_t> elem_t;
 
@@ -38,11 +38,11 @@ public:
 };
 
 /// Cyclic group on N elements
-template<size_t _N>
+template<size_t N>
 class CyclicGroup {
 public:
     /// Number of elements
-    static constexpr size_t N = _N;
+    static constexpr size_t order = N;
     /// element representation
     typedef int elem_t;
 
@@ -65,23 +65,23 @@ A permute(const A& v, const P& p) {
 }
 
 /// Symmetric Group (permutations) of N elements
-template<size_t _N>
+template<size_t N>
 class SymmetricGroup {
 public:
     /// Number of elements
-    static constexpr size_t N = factorial(_N);
+    static constexpr size_t order = factorial(N);
     /// Permutation representation
-    typedef array<int,_N> elem_t;
+    typedef array<int,N> elem_t;
 
-    /// Compile-time calculation of permutation number i of _N!
+    /// Compile-time calculation of permutation number i of N!
     static constexpr elem_t permutation(size_t i) {
         elem_t p = identity();
         if(!i) return p;
 
-        auto nsub = factorial(_N-1);
+        auto nsub = factorial(N-1);
         auto j = i/nsub;
-        if(j) std::swap(p[j-1], p[_N-1]);
-        return permute(p, SymmetricGroup<_N-1>::permutation(i%nsub));
+        if(j) std::swap(p[j-1], p[N-1]);
+        return permute(p, SymmetricGroup<N-1>::permutation(i%nsub));
     }
 
     /// identity element
@@ -91,11 +91,49 @@ public:
         for(auto& x: p) x = i++;
         return p;
     }
-};
 
+    /// Get element inverse
+    static constexpr elem_t invert(elem_t a) {
+        elem_t e{};
+        int j = 0;
+        for(auto i: a) e[i] = j++;
+        return e;
+    }
+
+    /// Get group element c = ab
+    static constexpr elem_t apply(elem_t a, elem_t b) { return permute(b,a); }
+};
 /// Null permutation special case
 template<>
 SymmetricGroup<0>::elem_t SymmetricGroup<0>::permutation(size_t) { return {}; }
 
+/// Alternating Group (even permutations) of N elements
+template<size_t N>
+class AlternatingGroup {
+public:
+    /// Number of elements
+    static constexpr size_t order = (factorial(N)+1)/2;
+    /// Permutation representation
+    typedef array<int,N> elem_t;
+
+    /// Compile-time calculation of permutation number i of _N!
+    static constexpr elem_t permutation(size_t i) { return SymmetricGroup<N>::permutation(2*i); }
+
+    /// identity element
+    static constexpr elem_t identity() { return SymmetricGroup<N>::identity(); }
+
+    /// Get element inverse
+    static constexpr elem_t invert(elem_t a) { return SymmetricGroup<N>::invert(a); }
+
+    /// Get group element c = ab
+    static constexpr elem_t apply(elem_t a, elem_t b) { return permute(b,a); }
+};
+
+/*
+ * Polyhedral groups:
+ * tetrahedron isomorphic to A4
+ * octohedral (+cube): isormorphic to S4
+ * icosohedral (+dodecahedron): isomorphic to A5
+ */
 
 #endif
