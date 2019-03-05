@@ -50,10 +50,10 @@ public:
 /// Compile-time-evaluable factorial function
 constexpr size_t factorial(size_t i) { return i? i*factorial(i-1) : 1; }
 
-/// Compile-time Heap's Algorithm permutation #i/n! on first n elements of A
+/// Compile-time permutation number i of n! on first n elements of A
 template<class Arr>
-constexpr Arr PermuteArray(int i, int n, Arr A) {
-    if(n <= 1) return A; // permutation on 1 element is easy!
+constexpr Arr PermuteArray(size_t i, size_t n, Arr A) {
+    if(!i) return A; // identity permutation
 
     auto nsub = factorial(n-1); // sub-perms on n-1 elements
     auto j = i/nsub;
