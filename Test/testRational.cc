@@ -51,10 +51,12 @@ int main(int, char**) {
     }
 
     auto r3 = SurdSum::sqrt(3);
-    auto r5 = SurdSum::sqrt(5);
+    r3 /= 8;
+    auto r5 = (SurdSum::sqrt(-5) + 1)/2;
     auto r35 = SurdSum(1)/(SurdSum::sqrt(2) + SurdSum::sqrt(3) + SurdSum::sqrt(5) + SurdSum::sqrt(84));
     r35.invert();
-    cout << r5 << " . " << r5 + 1 << " . " << (r5 + r3)*(r5 - r3) << " & " << r35 << "\n";
+    cout << r5 << " . " << r5.inverse() + 1 << " . " << (r5 + r3)*(r5 - r3) << " & " << r35 << "\n";
+    r3 /= 0;
 
     return EXIT_SUCCESS;
 }

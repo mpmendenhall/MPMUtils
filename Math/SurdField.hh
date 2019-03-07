@@ -1,4 +1,5 @@
 /// \file SurdField.hh Field of sums of square roots of rational numbers
+// Michael P. Mendenhall, 2019
 
 #ifndef SURDFIELD_HH
 #define SURDFIELD_HH
@@ -7,7 +8,7 @@
 #include <set>
 #include <cmath>
 
-/// Square root of prime factors
+/// Square root of prime factors; constructor defaults to 1
 class PrimeRoot_t: public std::set<int> {
 public:
     /// multiply square roots
@@ -21,14 +22,9 @@ public:
 /// Sums of square roots of rational numbers, with field operations
 class SurdSum: protected std::map<PrimeRoot_t, Rational> {
 public:
-    /// Default 0 constructor
-    SurdSum() { }
-    /// Constructor from integer
-    SurdSum(const int i) { *this = SurdSum(Rational(i)); }
-    /// Constructor from rational
-    SurdSum(const Rational& R) { if(R) this->emplace(PrimeRoot_t(), R); }
-
-    /// Square-root of rational
+    /// Constructor from rational; defaults to 0. Automatically converts from int.
+    SurdSum(const Rational& R = {}) { if(R) this->emplace(PrimeRoot_t(), R); }
+    /// Square-root of rational (or auto from int) --- imaginary allowed!
     static SurdSum sqrt(const Rational& R);
 
     /// check if 0
@@ -38,6 +34,20 @@ public:
 
     /// unary minus
     const SurdSum operator-() const { auto r = *this; for(auto& kv: r) kv.second = -kv.second; return r; }
+    /// inplace addition
+    SurdSum& operator+=(const SurdSum& r);
+    /// inplace addition of Rational (also picks up int)
+    SurdSum& operator+=(const Rational& r);
+    /// addition (automatic type detection)
+    template<class T>
+    const SurdSum operator+(const T& R) const { auto c = *this; return c += R; }
+    /// inplace subtraction (automatic type detection)
+    template<class T>
+    SurdSum& operator-=(const T& R) { return *this += -R; }
+    /// subtraction (automatic type detection)
+    template<class T>
+    const SurdSum operator-(const T& R) const { return *this + -R; }
+
     /// invert this = 1/this
     void invert();
     /// inverse 1/this
@@ -45,31 +55,19 @@ public:
 
     /// inplace multiplication by SurdSum
     SurdSum& operator*=(const SurdSum& R);
-    /// inplace multiplication by rational
+    /// inplace multiplication by Rational (also picks up int)
     SurdSum& operator*=(const Rational& R) { if(!R) clear(); else for(auto& kv: *this) kv.second *= R; return *this; }
-    /// inplace multiplication by integer
-    SurdSum& operator*=(int i) { if(!i) clear(); else for(auto& kv: *this) kv.second *= i; return *this; }
-
-    /// out-of-place multiplication
+    /// out-of-place multiplication (automatic type detection)
     template<class T>
-    const SurdSum operator*(const T& R) const { auto c = *this; c *= R; return c; }
+    const SurdSum operator*(const T& R) const { auto c = *this; return c *= R; }
 
     /// inplace division
     SurdSum& operator/=(const SurdSum& R) { return (*this) *= R.inverse(); }
-    /// division
-    SurdSum operator/(const SurdSum& R) const { auto q = *this; return q /= R; }
-
-    /// inplace addition
-    SurdSum& operator+=(const SurdSum& r);
-    /// addition
+    /// inplace rational division, also picks up int
+    SurdSum& operator/=(const Rational& R) { if(!R) throw std::range_error("Refuse to divide by 0!"); for(auto& kv: *this) kv.second /= R; return *this; }
+    /// out-of-place division (automatic type detection)
     template<class T>
-    const SurdSum operator+(const T& R) const { auto c = *this; c += R; return c; }
-    /// inplace subtraction
-    SurdSum& operator-=(const SurdSum& R) { return *this += -R; }
-    /// subtraction
-    template<class T>
-    const SurdSum operator-(const T& R) const { return *this + -R; }
-
+    const SurdSum operator/(const T& R) const { auto q = *this; return q /= R; }
 
     /// Separate out terms containing prime root factor: separate(3, 2+sqrt(15)) -> (sqrt(5), 2)
     pair<SurdSum,SurdSum> separateRoot(int i) const;

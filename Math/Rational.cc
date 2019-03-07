@@ -3,7 +3,8 @@
 #include "Rational.hh"
 
 Rational::Rational(int n, int d) {
-    assert(d);
+    if(!d) throw std::domain_error("Divide-by-0 is bad!");
+
     if(!n) {
         emplace_back(0,1);
         return;
@@ -79,7 +80,10 @@ Rational& Rational::operator+=(const Rational& r) {
 }
 
 const Rational Rational::pow(int i) const {
-    if(!i) { assert(!this); return Rational(1); }
+    if(!i) {
+        if(!this) throw std::range_error("0^0 is bad!");
+        return Rational(1);
+    }
     Rational R = *this;
     for(auto& kv: R) kv.second *= i;
     if(!(i%2)) R.positive = true;

@@ -5,6 +5,7 @@
 
 #include "Abstract.hh"
 #include "Eratosthenes.hh"
+#include <stdexcept>
 
 /// Rational numbers as lists of prime factors; implements operations for field
 class Rational: protected SGVec_t<> {
@@ -45,7 +46,7 @@ public:
     const Rational operator-() const { auto r = *this; r.positive = !positive; return r; }
 
     /// invert contents
-    Rational& invert() { for(auto& kv: *this) { kv.second = -kv.second; } return *this; }
+    Rational& invert() { if(!*this) throw std::range_error("1/0 is bad!"); for(auto& kv: *this) { kv.second = -kv.second; } return *this; }
 
     /// inplace multiplication
     Rational& operator*=(const Rational& R);

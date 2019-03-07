@@ -19,8 +19,9 @@ SurdSum SurdSum::sqrt(const Rational& R) {
     if(!R) return SurdSum();
 
     PrimeRoot_t r;
-    Rational::fmap_t ifact;
+    Rational::fmap_t ifact; // perfect squares factored out
 
+    // support imaginary numbers!
     if(!R.positive) r.insert(-1);
 
     for(auto& kv: R) {
@@ -53,14 +54,14 @@ pair<SurdSum,SurdSum> SurdSum::separateRoot(int i) const {
 }
 
 void SurdSum::invert() {
-    assert(size()); // 1/0 is bad!
+    if(!*this) throw std::range_error("Refuse to calculate 1/0!");
 
     auto denom = *this; // remaining denominator
     *this = SurdSum(1); // inverse being constructed
 
     while(denom.size() > 1) {
         // choose factor r = sqrt(rr)
-        auto rr = *(denom.rbegin()->first.begin());
+        auto rr = *(denom.rbegin()->first.rbegin());
         // split denom -> a + k*r
         auto ka = denom.separateRoot(rr);
         // S/(a+k*r) = S*(a-k*r)/(a^2 - k^2 r^2)
@@ -111,6 +112,17 @@ SurdSum& SurdSum::operator+=(const SurdSum& r) {
             it->second += kv.second;
             if(!it->second) erase(it);
         }
+    }
+    return *this;
+}
+
+SurdSum& SurdSum::operator+=(const Rational& r) {
+    if(!r) return *this;
+    auto it = find(PrimeRoot_t());
+    if(it == end()) emplace(PrimeRoot_t(), r);
+    else {
+        it->second += r;
+        if(!it->second) erase(it);
     }
     return *this;
 }
