@@ -23,9 +23,9 @@
 #define ABSTRACT_HH
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// _Semigroup: set, operator *: a,b in S => a*b in s
+// Semigroup: set closed under operator * (a,b in S => a*b in s)
 //
-// monoid: _Semigroup with identity element 1 in S, 1*a = a*1 = a for all a in S
+// monoid: Semigroup with identity element 1 in S, 1*a = a*1 = a for all a in S
 //
 // group: monoid with inverses; for all a in S, exists a^-1 such that a a^-1 = 1 = a^-1 a
 //

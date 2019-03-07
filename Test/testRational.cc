@@ -4,6 +4,7 @@
 #include "Eratosthenes.hh"
 #include "Rational.hh"
 #include "TestOperators.hh"
+#include "SurdField.hh"
 #include "Abstract.hh"
 #include <stdio.h>
 #include <iostream>
@@ -39,7 +40,7 @@ int main(int, char**) {
 
     auto& PS = theSieve();
     summary(PS);
-    for(PrimeSieve::int_t i=0; i<=10000000; i++) {
+    for(PrimeSieve::int_t i=0; i<=100000; i++) {
         auto v = PS.factor(i);
         assert(i == PS.prod(v));
         if(rand() > 1e-5*RAND_MAX) continue;
@@ -48,6 +49,12 @@ int main(int, char**) {
         printf("\n");
         summary(PS);
     }
+
+    auto r3 = SurdSum::sqrt(3);
+    auto r5 = SurdSum::sqrt(5);
+    auto r35 = SurdSum::sqrt(2) + SurdSum::sqrt(3) + SurdSum::sqrt(5) + SurdSum::sqrt(7);
+    r35.invert();
+    cout << r5 << " . " << r5 + 1 << " . " << (r5 + r3)*(r5 - r3) << " & " << r35 << "\n";
 
     return EXIT_SUCCESS;
 }

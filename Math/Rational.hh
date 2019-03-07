@@ -6,19 +6,29 @@
 #include "Abstract.hh"
 #include "Eratosthenes.hh"
 
+/// Rational numbers as lists of prime factors; implements operations for field
 class Rational: protected SGVec_t<> {
 public:
-    /// Default constructor 0
-    Rational(): positive(true) { this->push_back({0,1}); }
-    /// Construct from integer
-    Rational(int n);
-    /// Default constructor from numerator, denominator
-    Rational(int n, unsigned int d);
+    /// for iterating through contents
+    using SGVec_t<>::begin;
+    /// for iterating through contents
+    using SGVec_t<>::end;
+    /// for map-style construction
+    typedef map<gen_t, num_t> fmap_t;
+
+    /// Default constructor to 0
+    Rational() { emplace_back(0,1); }
+    /// Constructor from numerator, denominator
+    Rational(int n, int d);
+    /// constructor from numerator
+    Rational(int n) { *this = Rational(n,1); }
     /// Constructor from sorted factors list
     Rational(const PrimeSieve::factors_t& f);
+    /// From factor : power list
+    Rational(const fmap_t& m, bool pos = true);
 
-    /// check if 0
-    operator bool() const { return  !this->size() || (*this)[0].first; }
+    /// check if 0 (explictly constructed as 0^1); empty contents => 1
+    operator bool() const { return  size() != 1 || (*this)[0].first; }
 
     /// numerator, denominator pair
     pair<int,int> components() const;
@@ -45,6 +55,8 @@ public:
     Rational& operator/=(Rational R) { return (*this) *= R.invert(); }
     /// division
     const Rational operator/(Rational R) const { return *this * R.invert(); }
+    /// raise to integer power
+    const Rational pow(int i) const;
 
 
     /// inplace addition
@@ -56,7 +68,7 @@ public:
     /// subtraction
     const Rational operator-(const Rational& R) const { return *this + -R; }
 
-    bool positive; ///< sign
+    bool positive = true; ///< sign
 };
 
 

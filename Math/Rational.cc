@@ -2,22 +2,25 @@
 
 #include "Rational.hh"
 
-Rational::Rational(int n) {
-    *this = Rational(n,1);
-}
-
-Rational::Rational(int n, unsigned int d): positive(n >= 0) {
-    if(!positive) n = -n;
+Rational::Rational(int n, int d) {
+    assert(d);
+    if(!n) {
+        emplace_back(0,1);
+        return;
+    }
 
     auto& PS = theSieve();
-    if(d==1) *this = Rational(PS.factor(n));
-    else {
-        auto r1 = Rational(PS.factor(n));
-        r1.positive = positive;
-        auto r2 = Rational(PS.factor(d));
+    *this = Rational(PS.factor(abs(n)));
+    positive = (n >= 0) == (d >= 0);
+    if(d != 1) {
+        Rational r2(abs(d),1);
         r2.invert();
-        *this = r1*r2;
+        *this *= r2;
     }
+}
+
+Rational::Rational(const fmap_t& m, bool pos): positive(pos) {
+    for(auto kv: m) if(kv.second) push_back(kv);
 }
 
 Rational::Rational(const PrimeSieve::factors_t& f): positive(true) {
@@ -47,6 +50,7 @@ Rational& Rational::operator*=(const Rational& R) {
 pair<int,int> Rational::components() const {
     pair<int,int> n(1,1);
     for(auto& kv: *this) {
+        assert(kv.first >= 0);
         auto e = kv.second;
         while(e > 0) { n.first *= kv.first; --e; }
         while(e < 0) { n.second *= kv.first; ++e; }
@@ -61,16 +65,25 @@ Rational& Rational::operator+=(const Rational& r) {
     if(!(*this)) { *this = r; return *this; }
 
     auto R = r;
-    auto cf = relPrime(R);
+    auto cf = relPrime(R); // common factors as SGVec_t of (factor,power); integer remainder in this, R
 
     auto c1 = R.components();
     auto c2 = this->components();
     assert(c1.second == 1 && c2.second == 1);
-    auto rf = Rational(c1.first + c2.first);
+    int rf = c1.first + c2.first;
 
     (SGVec_t<>&)(*this) = cf;
+    positive = true;
     *this *= rf;
     return *this;
+}
+
+const Rational Rational::pow(int i) const {
+    if(!i) { assert(!this); return Rational(1); }
+    Rational R = *this;
+    for(auto& kv: R) kv.second *= i;
+    if(!(i%2)) R.positive = true;
+    return R;
 }
 
 bool Rational::operator<(const Rational& R) const {
