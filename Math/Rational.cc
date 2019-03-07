@@ -45,6 +45,8 @@ Rational& Rational::operator*=(const Rational& R) {
 
     (SGVec_t<>&)(*this) += R;
     if(!R.positive) positive = !positive;
+    // normalize powers of 1 ... TODO eliminate '1' factor, with symbol for 0?
+    if(size() && (*this)[0].first == 1) (*this)[0].second = 1;
     return *this;
 }
 
@@ -81,7 +83,7 @@ Rational& Rational::operator+=(const Rational& r) {
 
 const Rational Rational::pow(int i) const {
     if(!i) {
-        if(!this) throw std::range_error("0^0 is bad!");
+        if(!*this) throw std::range_error("0^0 is bad!");
         return Rational(1);
     }
     Rational R = *this;

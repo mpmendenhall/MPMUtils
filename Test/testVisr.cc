@@ -1,6 +1,7 @@
 /// \file testVisr.cc Test program showing visualizer
 
 #include "Visr.hh"
+#include "Icosahedral.hh"
 #include <stdlib.h>
 
 void* visthread(void*) {
@@ -9,6 +10,10 @@ void* visthread(void*) {
 }
 
 int main(int, char**) {
+
+    std::cout << IcosahedralSymmetry::Rs.size() << " icosahedral rotations\n";
+    for(auto& m: IcosahedralSymmetry::Rs) std::cout << m << "\n";
+
     vsr::initWindow("testVisr");
 
     pthread_t thread;

@@ -31,6 +31,12 @@ public:
     operator bool() const { return size(); }
     /// double value
     operator double() const { double s = 0; for(auto& kv: *this) s += double(kv.first)*double(kv.second); return s; }
+    /// comparison
+    bool operator<(const SurdSum& S) const { return double(*this-S) < 0; }
+    /// equality
+    bool operator==(const SurdSum& S) const { return (std::map<PrimeRoot_t, Rational>&)*this == S; }
+    /// inequality
+    bool operator!=(const SurdSum& S) const { return !(*this == S); }
 
     /// unary minus
     const SurdSum operator-() const { auto r = *this; for(auto& kv: r) kv.second = -kv.second; return r; }

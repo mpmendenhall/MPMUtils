@@ -139,9 +139,19 @@ public:
 /////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////
 
+/// Example wrapper to identify '*' as group operation
+template<class T>
+class ApplyMul {
+public:
+    /// element representation
+    typedef T elem_t;
+    /// apply a*b
+    static constexpr elem_t apply(const elem_t& a, const elem_t& b) { return a*b; }
+};
+
 /// All unique elements produced as combinations of input elements
 template<class G>
-constexpr map<typename G::elem_t, vector<int>> span(const vector<typename G::elem_t>& gs) {
+map<typename G::elem_t, vector<int>> spanM(const vector<typename G::elem_t>& gs) {
     map<typename G::elem_t, vector<int>> M;
     int i = 0;
     for(auto& e: gs) M[e].push_back(i++);
@@ -166,6 +176,15 @@ constexpr map<typename G::elem_t, vector<int>> span(const vector<typename G::ele
         vNew = vv;
     }
     return M;
+}
+
+/// All unique elements produced as combinations of input elements
+template<class G>
+vector<typename G::elem_t> span(const vector<typename G::elem_t>& gs) {
+    auto M = spanM<G>(gs);
+    vector<typename G::elem_t> v;
+    for(auto& kv: M) v.push_back(kv.first);
+    return v;
 }
 
 #endif

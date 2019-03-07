@@ -41,6 +41,10 @@ public:
 
     /// comparison
     bool operator<(const Rational& R) const;
+    /// equality
+    bool operator==(const Rational& R) const { return (positive == R.positive || (!*this && !R)) && (vector<pair<unsigned int,int>>&)(*this) == R; }
+    /// inequality
+    bool operator!=(const Rational& R) const { return !this->operator==(R); }
 
     /// unary minus
     const Rational operator-() const { auto r = *this; r.positive = !positive; return r; }

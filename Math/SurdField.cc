@@ -128,7 +128,8 @@ SurdSum& SurdSum::operator+=(const Rational& r) {
 }
 
 std::ostream& operator<<(std::ostream& o, const SurdSum& r) {
-    if(!r) o << "0";
+    o << "( ";
+    if(!r) o << "0 ";
 
     for(auto& kv: r) {
         auto c =  kv.first.square();
@@ -137,6 +138,6 @@ std::ostream& operator<<(std::ostream& o, const SurdSum& r) {
         if(c != 1) o << "√" << c;
         o << " ";
     }
-
+    o << ")";
     return o;
 }

@@ -28,7 +28,7 @@
 using std::vector;
 #include <cassert>
 
-/// A templatized, fixed size, statically allocated matrix class.
+/// A templatized, fixed size, statically allocated matrix class, stored in rows order.
 /**
  * Not particularly optimized or clever, but convenient for smallish matrices
  * or matrices of unusual special types (e.g. a matrix of circulant matrices)
@@ -36,17 +36,24 @@ using std::vector;
 template<size_t M, size_t N, typename T>
 class Matrix {
 public:
+    /// number of rows
+    static constexpr size_t nRows = M;
+    /// number of columns
+    static constexpr size_t nCols = N;
+
     /// Constructor
-    Matrix(): vv(Vec<M*N,T>()) { }
+    Matrix(): vv{} { }
     /// Constructor from vector
-    Matrix(const Vec<M*N,T>& v): vv(v) { }
+    Matrix(const array<T,M*N>& v): vv(v) { }
+    /// Ordering comparison
+    bool operator<(const Matrix<M,N,T>& rhs) const { return vv < rhs.vv; }
 
     /// generate a random-filled matrix
     static Matrix<M,N,T> random();
     /// generate identity matrix
-    static Matrix<M,N,T> identity();
+    static constexpr Matrix<M,N,T> identity();
     /// generate rotation between two axes
-    static Matrix<M,N,T> rotation(size_t a1, size_t a2, T th);
+    static constexpr Matrix<M,N,T> rotation(size_t a1, size_t a2, T th);
 
     /// const element access
     const T& operator()(size_t m, size_t n) const { assert(m<M && n<N); return vv[m+n*M]; }
@@ -116,15 +123,15 @@ Matrix<M,N,T> Matrix<M,N,T>::random() {
 }
 
 template<size_t M, size_t N, typename T>
-Matrix<M,N,T> Matrix<M,N,T>::identity() {
+constexpr Matrix<M,N,T> Matrix<M,N,T>::identity() {
     Matrix<M,N,T> foo;
     for(size_t i=0; i < std::min(M,N); i++)
-        foo(i,i) = 1;
+        foo(i,i) = T(1);
     return foo;
 }
 
 template<size_t M, size_t N, typename T>
-Matrix<M,N,T> Matrix<M,N,T>::rotation(size_t a1, size_t a2, T th) {
+constexpr Matrix<M,N,T> Matrix<M,N,T>::rotation(size_t a1, size_t a2, T th) {
     assert(a1 < std::min(M,N) && a2 < std::min(M,N) && a1 != a2);
     Matrix<M,N,T> foo = Matrix<M,N,T>::identity();
     foo(a1,a1) = foo(a2,a2) = cos(th);
