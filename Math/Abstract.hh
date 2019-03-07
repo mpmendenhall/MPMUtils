@@ -23,9 +23,9 @@
 #define ABSTRACT_HH
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// Semigroup: set closed under operator * (a,b in S => a*b in s)
+// _Semigroup: set, operator *: a,b in S => a*b in s
 //
-// monoid: Semigroup with identity element 1 in S, 1*a = a*1 = a for all a in S
+// monoid: _Semigroup with identity element 1 in S, 1*a = a*1 = a for all a in S
 //
 // group: monoid with inverses; for all a in S, exists a^-1 such that a a^-1 = 1 = a^-1 a
 //
@@ -137,7 +137,7 @@ public:
     static constexpr auto N = 1;
 
     /// Constructor
-    _Semigroup(const T& X = 0): x(X) { }
+    _Semigroup(const T& X = {}): x(X) { }
 
     /// get standard-form element representation
     elem_t get() const { return {{0,x}}; }
@@ -430,7 +430,7 @@ using SGMap_t = _Semigroup<_SGMap<map<K,V>>>;
 ////////////////////////////////////////////////
 
 /// Formal abstract polynomial, with +/- and * operations
-// R is a ring with operators +,*, inverse -, default constructor '0'
+// R is a ring with operators +,*, inverse -, default constructor '0', for the coefficients
 // S is a Semigroup with operator + for exponent symbols x^i, x^k, x^(i+k)
 template<typename R, typename S, typename _X = void>
 class AbstractPolynomial: public SGMap_t<S,R> {
@@ -448,9 +448,11 @@ public:
     /// default constructor
     AbstractPolynomial() { }
     /// Costructor for constant
-    AbstractPolynomial(const coeff_t& c) { (*this)[monomial_t(0,0)] = c; }
+    AbstractPolynomial(const coeff_t& c) { (*this)[monomial_t{}] = c; }
     /// Costructor for single-variable x_i
     AbstractPolynomial(const coeff_t& c, typename monomial_t::gen_t i) { (*this)[monomial_t(i,1)] = c; }
+    template<class U>
+    AbstractPolynomial(const U& c) { (*this)[monomial_t{}] = R(c); }
 
     //////////////////////////////////////
     // core "required" polyomial functions

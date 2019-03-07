@@ -52,7 +52,7 @@ int main(int, char**) {
 
     auto r3 = SurdSum::sqrt(3);
     auto r5 = SurdSum::sqrt(5);
-    auto r35 = SurdSum::sqrt(2) + SurdSum::sqrt(3) + SurdSum::sqrt(5) + SurdSum::sqrt(7);
+    auto r35 = SurdSum(1)/(SurdSum::sqrt(2) + SurdSum::sqrt(3) + SurdSum::sqrt(5) + SurdSum::sqrt(84));
     r35.invert();
     cout << r5 << " . " << r5 + 1 << " . " << (r5 + r3)*(r5 - r3) << " & " << r35 << "\n";
 

@@ -1,3 +1,5 @@
+/// \file Matrix.hh Templatized fixed-size matrix class
+
 /*
  * Matrix.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2016 Michael P. Mendenhall
@@ -18,13 +20,12 @@
  *
  */
 
-/// \file Matrix.hh Templatized fixed-size matrix class
 #ifndef MATRIX_HH
-/// Make sure this header is only loaded once
 #define MATRIX_HH
 
 #include "Vec.hh"
 #include <vector>
+using std::vector;
 #include <cassert>
 
 /// A templatized, fixed size, statically allocated matrix class.

@@ -1,18 +1,45 @@
 /// \file testFiniteGroup.cc Test of finite group code
 
 #include "FiniteGroup.hh"
+#include "Polynomial.hh"
+#include "Matrix.hh"
+#include "Rational.hh"
+#include <stdlib.h>
+#include <stdio.h>
+
+template<class V>
+void pperm(const V& v) { for(auto i: v) printf(" %i",i); }
 
 int main(int, char**) {
-    //typedef CyclicGroup<2> C2;
-    //typedef CyclicGroup<3> C3;
-    //displayGroup<ProductGroup<C2,C3>>();
+    typedef CyclicGroup<2> C2;
+    typedef CyclicGroup<3> C3;
+    typedef ProductGroup<C2,C3> P23;
 
-    typedef AlternatingGroup<4> G;
+    const size_t N = 3;
+
+    typedef AlternatingGroup<N> G;
     for(size_t i=0; i<G::order; i++) {
-        auto P = G::permutation(i);
-        printf("%zu]\t%i %i %i %i", i, P[0], P[1], P[2], P[3]);
+        auto P = G::element(i);
+        printf("%zu]\t", i);
+        pperm(P);
         auto Q = G::invert(P);
-        printf("\t\t%i %i %i %i\n", Q[0], Q[1], Q[2], Q[3]);
+        printf("\t\t");
+        pperm(Q);
+        printf("\n");
         if(G::apply(Q,P) != G::identity()) exit(-1);
     }
+
+    vector<G::elem_t> gs = {G::element(1), G::element(2)};
+    auto M = span<G>(gs);
+    for(auto& kv: M) {
+        auto& P = kv.first;
+        pperm(P);
+        printf("\t\t");
+        pperm(kv.second);
+        printf("\n");
+    }
+
+    AbstractPolynomial<Rational, ArithmeticRing_t<int>> Pr({{1,2}, {3,{4,5}}});
+    Pr += Rational(1,2);
+    std::cout << Pr << Pr.pow(5) << "\n";
 }

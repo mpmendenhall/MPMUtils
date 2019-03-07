@@ -40,29 +40,40 @@ SurdSum SurdSum::sqrt(const Rational& R) {
     return SS;
 }
 
-void SurdSum::invert() {
-    std::cout << "Inverting " << *this << "\n";
+pair<SurdSum,SurdSum> SurdSum::separateRoot(int i) const {
+    if(i==1) return {*this, SurdSum(0)};
 
-    assert(size());
-
-    auto t = rbegin();
-    auto rr = t->first.square();
-    auto k  = t->second;
-
-    if(size() == 1) {
-        // 1/(k*r) = r/(k*rr);
-        t->second *= rr;
-        t->second.invert();
-    } else {
-        // 1/(a+k*r) = (a-k*r)/(a^2 - k^2 r^2)
-        auto S = *this;
-        S.rbegin()->second = -S.rbegin()->second;
-        erase(t->first);
-        *this *= *this;
-        *this += k*k*Rational(-rr);
-        invert();
-        *this *= S;
+    pair<SurdSum,SurdSum> SS;
+    for(auto& kv: *this) {
+        auto ps = kv.first;
+        if(ps.erase(i)) SS.first.emplace(ps, kv.second);
+        else SS.second.emplace(ps, kv.second);
     }
+    return SS;
+}
+
+void SurdSum::invert() {
+    assert(size()); // 1/0 is bad!
+
+    auto denom = *this; // remaining denominator
+    *this = SurdSum(1); // inverse being constructed
+
+    while(denom.size() > 1) {
+        // choose factor r = sqrt(rr)
+        auto rr = *(denom.rbegin()->first.begin());
+        // split denom -> a + k*r
+        auto ka = denom.separateRoot(rr);
+        // S/(a+k*r) = S*(a-k*r)/(a^2 - k^2 r^2)
+        *this *= ka.second - ka.first * sqrt(rr);
+        denom = ka.second*ka.second - ka.first*ka.first*rr;
+    }
+
+    // S/(k*r) = r*S/(k*rr);
+    auto rr = denom.begin()->first.square();
+    auto k  = denom.begin()->second;
+    k *= rr;
+    k.invert();
+    *this *= sqrt(Rational(rr)) * k;
 }
 
 SurdSum& SurdSum::operator*=(const SurdSum& R) {

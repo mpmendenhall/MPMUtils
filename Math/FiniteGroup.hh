@@ -8,21 +8,12 @@
 using std::map;
 #include <array>
 using std::array;
-#include <stdio.h>
 #include <utility>
 using std::pair;
+#include <vector>
+using std::vector;
 
-/// Print Cayley Table for generic finite group
-template<class G>
-void displayGroup() {
-    printf("Finite group with %zu elements\n", G::N);
-    for(size_t i=0; i<G::N; i++) {
-        for(size_t j=0; j<G::N; j++) printf("\t%i", G::apply(i,j));
-        printf("\n");
-    }
-}
-
-/// Product group (G1,G2)
+/// Product group (G1,G2), and prototype for group classes
 template<class G1, class G2>
 class ProductGroup {
 public:
@@ -31,10 +22,14 @@ public:
     /// element representation
     typedef pair<typename G1::elem_t, typename G2::elem_t> elem_t;
 
+    /// Get identity element
+    static constexpr elem_t identity() { return {G1::identity(), G2::identity()}; }
+    /// Get enumerated element
+    static constexpr elem_t element(size_t i) { return {G1::element(i%order), G2::element(i/order)}; }
     /// Get element inverse
-    static inline elem_t invert(elem_t a) { return {G1::invert(a.first), G2::invert(a.second)}; }
+    static constexpr elem_t invert(elem_t a) { return {G1::invert(a.first), G2::invert(a.second)}; }
     /// Get group element c = ab
-    static inline elem_t apply(elem_t a, elem_t b) { return {G1::apply(a.first,b.first), G2::apply(a.second,b.second)}; }
+    static constexpr elem_t apply(elem_t a, elem_t b) { return {G1::apply(a.first,b.first), G2::apply(a.second,b.second)}; }
 };
 
 /// Cyclic group on N elements
@@ -46,16 +41,20 @@ public:
     /// element representation
     typedef int elem_t;
 
+    /// Get identity element
+    static constexpr elem_t identity() { return 0; }
+    /// Get enumerated element
+    static constexpr elem_t element(size_t i) { return i; }
     /// Get element inverse
-    static inline elem_t invert(elem_t a) { return N-a; }
+    static constexpr elem_t invert(elem_t a) { return (N-a)%N; }
     /// Get group element c = ab
-    static inline elem_t apply(elem_t a, elem_t b) { return (a+b)%N; }
+    static constexpr elem_t apply(elem_t a, elem_t b) { return (a+b)%N; }
 };
 
 /// Compile-time-evaluable factorial function
 constexpr size_t factorial(size_t i) { return i > 1? i*factorial(i-1) : 1; }
 
-/// Apply permutation to array
+/// Apply permutation p to array A
 template<class A, class P>
 A permute(const A& v, const P& p) {
     size_t j=0;
@@ -74,14 +73,14 @@ public:
     typedef array<int,N> elem_t;
 
     /// Compile-time calculation of permutation number i of N!
-    static constexpr elem_t permutation(size_t i) {
+    static constexpr elem_t element(size_t i) {
         elem_t p = identity();
         if(!i) return p;
 
         auto nsub = factorial(N-1);
         auto j = i/nsub;
         if(j) std::swap(p[j-1], p[N-1]);
-        return permute(p, SymmetricGroup<N-1>::permutation(i%nsub));
+        return permute(p, SymmetricGroup<N-1>::element(i%nsub));
     }
 
     /// identity element
@@ -101,11 +100,11 @@ public:
     }
 
     /// Get group element c = ab
-    static constexpr elem_t apply(elem_t a, elem_t b) { return permute(b,a); }
+    static constexpr elem_t apply(elem_t a, elem_t b) { return permute(a,b); }
 };
 /// Null permutation special case
 template<>
-SymmetricGroup<0>::elem_t SymmetricGroup<0>::permutation(size_t) { return {}; }
+SymmetricGroup<0>::elem_t SymmetricGroup<0>::element(size_t) { return {}; }
 
 /// Alternating Group (even permutations) of N elements
 template<size_t N>
@@ -117,7 +116,7 @@ public:
     typedef array<int,N> elem_t;
 
     /// Compile-time calculation of permutation number i of _N!
-    static constexpr elem_t permutation(size_t i) { return SymmetricGroup<N>::permutation(2*i); }
+    static constexpr elem_t element(size_t i) { return SymmetricGroup<N>::element(2*i); }
 
     /// identity element
     static constexpr elem_t identity() { return SymmetricGroup<N>::identity(); }
@@ -135,5 +134,38 @@ public:
  * octohedral (+cube): isormorphic to S4
  * icosohedral (+dodecahedron): isomorphic to A5
  */
+
+/////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////
+
+/// All unique elements produced as combinations of input elements
+template<class G>
+constexpr map<typename G::elem_t, vector<int>> span(const vector<typename G::elem_t>& gs) {
+    map<typename G::elem_t, vector<int>> M;
+    int i = 0;
+    for(auto& e: gs) M[e].push_back(i++);
+
+    auto vNew = gs;
+    while(vNew.size()) {
+        vector<typename G::elem_t> vv;
+        for(auto& e0: vNew) {
+            i = 0;
+            for(auto& e1: gs) {
+                auto e2 = G::apply(e1,e0);
+                auto it = M.find(e2);
+                if(it == M.end()) {
+                    auto g0 = M[e0];
+                    g0.push_back(i);
+                    M[e2] = g0;
+                    vv.push_back(e2);
+                }
+                ++i;
+            }
+        }
+        vNew = vv;
+    }
+    return M;
+}
 
 #endif

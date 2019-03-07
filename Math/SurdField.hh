@@ -40,6 +40,8 @@ public:
     const SurdSum operator-() const { auto r = *this; for(auto& kv: r) kv.second = -kv.second; return r; }
     /// invert this = 1/this
     void invert();
+    /// inverse 1/this
+    SurdSum inverse() const { auto i = *this; i.invert(); return i; }
 
     /// inplace multiplication by SurdSum
     SurdSum& operator*=(const SurdSum& R);
@@ -53,9 +55,9 @@ public:
     const SurdSum operator*(const T& R) const { auto c = *this; c *= R; return c; }
 
     /// inplace division
-    //SurdSum& operator/=(SurdSum R) { return (*this) *= R.invert(); }
+    SurdSum& operator/=(const SurdSum& R) { return (*this) *= R.inverse(); }
     /// division
-    //const SurdSum operator/(const SurdSum& R) const { return *this * R.invert(); }
+    SurdSum operator/(const SurdSum& R) const { auto q = *this; return q /= R; }
 
     /// inplace addition
     SurdSum& operator+=(const SurdSum& r);
@@ -67,6 +69,10 @@ public:
     /// subtraction
     template<class T>
     const SurdSum operator-(const T& R) const { return *this + -R; }
+
+
+    /// Separate out terms containing prime root factor: separate(3, 2+sqrt(15)) -> (sqrt(5), 2)
+    pair<SurdSum,SurdSum> separateRoot(int i) const;
 
     friend std::ostream& operator<<(std::ostream& o, const SurdSum& r);
 };

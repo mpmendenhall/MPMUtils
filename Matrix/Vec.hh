@@ -1,3 +1,5 @@
+/// \file Vec.hh Templatized fixed-length array class with mathematical operations
+
 /*
  * Vec.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2016 Michael P. Mendenhall
@@ -18,19 +20,16 @@
  *
  */
 
-/// \file Vec.hh Templatized fixed-length array class with mathematical operations
 #ifndef VEC_HH
-/// Make sure this header is only loaded once
 #define VEC_HH
 
 #include <stdlib.h>
 #include <math.h>
 #include <iostream>
 #include <array>
-#include <vector>
+#include <algorithm>
 
 using std::ostream;
-using std::vector;
 using std::array;
 
 /// Fixed-length vector arithmetic class
@@ -39,11 +38,11 @@ class Vec: public array<T,N> {
 public:
 
     /// Default constructor for zero-filled vector
-    Vec() { this->fill(T()); }
+    Vec(): array<T,N>({}) { }
     /// Constructor from std::array
     Vec(const array<T,N>& a): array<T,N>(a) { }
     /// Construct a basis vector with 1 in the n^th spot
-    static Vec<N,T> basis(size_t n) { Vec<N,T> v = Vec<N,T>(); v[n] = 1; return v; }
+    static Vec<N,T> basis(size_t n) { Vec<N,T> v; v[n] = 1; return v; }
 
     /// dot product with another vector
     T dot(const Vec<N,T>& v) const { T s = (*this)[0]*v[0]; for(size_t i=1; i<N; i++) s+=(*this)[i]*v[i]; return s; }
@@ -159,14 +158,5 @@ template<typename T>
 Vec<2,T> polarVec(T r, T th) {
     return Vec<2,T>(r*cos(th),r*sin(th));
 }
-
-/// Vec to vector<double>
-template<size_t N, typename T>
-vector<double> vec2doublevec(const Vec<N,T>& v) {
-    vector<double> dv(N);
-    for(size_t i=0; i<N; i++) dv[i] = (double)v[i];
-    return dv;
-}
-
 
 #endif
