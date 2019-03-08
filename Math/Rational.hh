@@ -42,7 +42,7 @@ public:
     /// comparison
     bool operator<(const Rational& R) const;
     /// equality
-    bool operator==(const Rational& R) const { return (positive == R.positive || (!*this && !R)) && (vector<pair<unsigned int,int>>&)(*this) == R; }
+    bool operator==(const Rational& R) const { return (!*this && !R) || (positive == R.positive && (vector<pair<unsigned int,int>>&)(*this) == R); }
     /// inequality
     bool operator!=(const Rational& R) const { return !this->operator==(R); }
 

@@ -11,8 +11,8 @@ void* visthread(void*) {
 
 int main(int, char**) {
 
-    std::cout << IcosahedralSymmetry::Rs.size() << " icosahedral rotations\n";
-    for(auto& m: IcosahedralSymmetry::Rs) std::cout << m << "\n";
+    std::cout << Icosahedral::Rs.size() << " icosahedral rotations\n";
+    for(auto& m: Icosahedral::Rs) std::cout << m << "\n";
 
     vsr::initWindow("testVisr");
 

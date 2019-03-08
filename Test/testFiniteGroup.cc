@@ -30,11 +30,11 @@ int main(int, char**) {
         if(G::apply(Q,P) != G::identity()) exit(-1);
     }
 
-    std::cout << IcosahedralSymmetry::Rs.size() << " icosahedral rotations\n";
-    for(auto& m: IcosahedralSymmetry::Rs) std::cout << m << "\n";
+    std::cout << Icosahedral::Rs.size() << " icosahedral rotations\n";
+    for(auto& m: Icosahedral::Rs) std::cout << m << "\n";
 
-    //auto vs = IcosahedralSymmetry::points({{{ {1},{0},{0} }}});
-    auto vs = IcosahedralSymmetry::points({{{ {1},{0},{1} }}});
+    // fix 31 points, and find 12-point version!
+    auto vs = Icosahedral::points(Icosahedral::u12);
     std::cout << vs.size() << " points:\n";
     for(auto& v: vs) std::cout << v << "\n";
 
