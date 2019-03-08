@@ -133,9 +133,11 @@ std::ostream& operator<<(std::ostream& o, const SurdSum& r) {
 
     for(auto& kv: r) {
         auto c =  kv.first.square();
-        //if(kv.second != 1 || c==1)
-        o << kv.second;
+        auto nd = kv.second.components();
+        o << (kv.second.positive? "+" : "-");
+        if(abs(nd.first) != 1 || c == 1) o << abs(nd.first);
         if(c != 1) o << "√" << c;
+        if(nd.second != 1) o << "/" << nd.second;
         o << " ";
     }
     o << ")";
