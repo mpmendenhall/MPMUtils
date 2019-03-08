@@ -18,6 +18,29 @@ typedef double precision_t;
 //typedef long double precision_t;
 //typedef __float128 precision_t;
 
+
+/// apply semigroup operator as multiply
+template<typename SG, typename T, typename Data>
+T& SGmultiply(const SG& o, const Data& d, T& x0) {
+    auto ts = o.get();
+    for(auto& kv: ts) {
+        auto e = kv.second;
+        while(e-- > 0) x0 *= d[kv.first];
+    }
+    return x0;
+}
+
+/// apply semigroup operator as add
+template<typename SG, typename T, typename Data>
+T& SGadd(const SG& o, const Data& d, T& x0) {
+    auto ts = o.get();
+    for(auto& kv: ts) {
+        auto e = kv.second;
+        while(e-- > 0) x0 += d(kv.first);
+    }
+    return x0;
+}
+
 /// Comparison simple algorithm
 template<class P, class T, class Cvec>
 void addSimple(const P& p, vector<T>& v, const Cvec& c) {
@@ -36,29 +59,20 @@ void addSimple(const P& p, vector<T>& v, const Cvec& c) {
 int main(int, char**) {
     CodeVersion::display_code_version();
 
-    /////////////
-    // base types
-
-    // arithmetic ring
-    ArithmeticRing_t<int> SGA_a(3);
-    ArithmeticRing_t<int> SGA_b(5);
-    testAdd(SGA_a, SGA_b);
-    testMul(SGA_a, SGA_b);
-
     // array addition Semigroup
     SGArray_t<3> SGa3_a({1,2,3});
     SGArray_t<3> SGa3_b({4,5,6});
-    testAdd(SGa3_a, SGa3_b);
+    //testAdd(SGa3_a, SGa3_b);
 
     // map-type Semigroup
     SGMap_t<> SGm_a({{1,2},{3,4}});
     SGMap_t<> SGm_b({{5,6},{7,8}});
-    testAdd(SGm_a, SGm_b);
+    //testAdd(SGm_a, SGm_b);
 
     // sorted-vector Semigroup
     SGVec_t<> SGv_a(1,2);
     SGVec_t<> SGv_b(3,4);
-    testAdd(SGv_a, SGv_b);
+    //testAdd(SGv_a, SGv_b);
 
     ////////////////////////
     // construct polynomials

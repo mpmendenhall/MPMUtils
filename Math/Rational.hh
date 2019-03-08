@@ -7,7 +7,7 @@
 #include "Eratosthenes.hh"
 #include <stdexcept>
 
-/// Rational numbers as lists of prime factors; implements operations for field
+/// Rational numbers as sorted list of prime factors; implements operations for field
 class Rational: protected SGVec_t<> {
 public:
     /// for iterating through contents
@@ -79,5 +79,10 @@ public:
 
 /// output representation for rational fraction
 std::ostream& operator<<(std::ostream& o, const Rational& r);
+
+/// Euclid's algorithm for relatively prime numbers, returning c,d: c*p = d*q + 1
+pair<int,int> EuclidRelPrime(int p, int q);
+
+/// Goal: expand p/q -> a + b/p1 + c/p2 + ..., primes p1,p2,...
 
 #endif

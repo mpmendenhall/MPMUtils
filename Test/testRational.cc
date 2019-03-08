@@ -34,7 +34,7 @@ int main(int, char**) {
     }
     a += 2;
 
-    PolynomialV_t<void,Rational> Pr(1,0);
+    PolynomialV_t<Rational> Pr(1,0);
     Pr += Rational(1,2);
     cout << Pr << Pr.pow(5) << "\n";
 
@@ -56,7 +56,10 @@ int main(int, char**) {
     auto r35 = SurdSum(1)/(SurdSum::sqrt(2) + SurdSum::sqrt(3) + SurdSum::sqrt(5) + SurdSum::sqrt(84));
     r35.invert();
     cout << r5 << " . " << r5.inverse() + 1 << " . " << (r5 + r3)*(r5 - r3) << " & " << r35 << "\n";
-    r3 /= 0;
+    //r3 /= 0;
+
+    auto ii = EuclidRelPrime(1027,712);
+    std::cout << ii.first << " " << ii.second << "\n";
 
     return EXIT_SUCCESS;
 }

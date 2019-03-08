@@ -41,7 +41,7 @@ int main(int, char**) {
     std::cout << vs.size() << " points:\n";
     for(auto& v: vs) std::cout << v << "\n";
 
-    AbstractPolynomial<Rational, ArithmeticRing_t<int>> Pr({{1,2}, {3,{4,5}}});
+    AbstractPolynomial<Rational, SemigroupPlus<int>> Pr({{1,2}, {3,{4,5}}});
     Pr += Rational(1,2);
     std::cout << Pr << Pr.pow(5) << "\n";
 }

@@ -20,10 +20,10 @@ int main(int, char**) {
 
     /// 3-variable polynomial
     typedef Polynomial_t<3,precision_t> P3_t;
-    NGrid<3, P3_t::exp_t> NG0({4,4,4});
+    NGrid<3, unsigned int> NG0({4,4,4});
     P3_t P3_o3;
     for(auto& a: NG0) if(a[0]+a[1]+a[2] < 4) P3_o3[a] = 3.14;
-    cout << P3_o3 << "\n";
+    //cout << P3_o3 << "\n";
 
     ///////////////////////////
     // generate evaluation grid

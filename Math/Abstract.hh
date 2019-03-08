@@ -23,9 +23,9 @@
 #define ABSTRACT_HH
 
 /////////////////////////////////////////////////////////////////////////////////////////
-// _Semigroup: set, operator *: a,b in S => a*b in s
+// Semigroup: set, operator +: a,b in S => a+b in s
 //
-// monoid: _Semigroup with identity element 1 in S, 1*a = a*1 = a for all a in S
+// monoid: Semigroup with identity element 1 in S, 1*a = a*1 = a for all a in S
 //
 // group: monoid with inverses; for all a in S, exists a^-1 such that a a^-1 = 1 = a^-1 a
 //
@@ -60,28 +60,32 @@ using std::map;
 using std::array;
 using std::pair;
 
-//template<typename A>
-//using array_contents_t = typename std::tuple_element<0,A>::type;
-
+/// Get type for contents of array
 template<typename T>
 using array_contents_t = typename std::remove_reference<decltype(std::declval<T&>()[0])>::type;
 
+/// Get type for map key
 template<typename M>
 using map_key_t = typename std::remove_reference<decltype(std::declval<M&>().begin()->first)>::type;
 
+/// Get type for map value
 template<typename M>
 using map_value_t = typename std::remove_reference<decltype(std::declval<M&>().begin()->second)>::type;
 
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////
 
-/// Pass-through _Semigroup identification class
-template<class G>
-class _Semigroup { };
+// Semigroup expectations:
+// operators +=, +
+// "standard form" = { {g1,k1}, {g2,k2}, ... }, generator ID's g to the k^th power
+// typedef <standard form {{gi,ki},...}> elem_t;
+// get standard-form element representation
+// elem_t get() const { return <my element>; }
 
-/// output representation for standard-form _Semigroup
+/*
+/// output representation for standard-form Semigroup
 template<class G>
-std::ostream& operator<<(std::ostream& o, const _Semigroup<G>& s) {
+std::ostream& operator<<(std::ostream& o, const Semigroup<G>& s) {
     auto e = s.get();
     o << "( ";
     for(auto& p: e) {
@@ -94,114 +98,59 @@ std::ostream& operator<<(std::ostream& o, const _Semigroup<G>& s) {
     o << ")";
     return o;
 }
-
-/// apply semigroup operator as multiply
-template<typename SG, typename T, typename Data>
-T& SGmultiply(const SG& o, const Data& d, T& x0) {
-    auto ts = o.get();
-    for(auto& kv: ts) {
-        auto e = kv.second;
-        while(e-- > 0) x0 *= d[kv.first];
-    }
-    return x0;
-}
-
-/// apply semigroup operator as add
-template<typename SG, typename T, typename Data>
-T& SGadd(const SG& o, const Data& d, T& x0) {
-    auto ts = o.get();
-    for(auto& kv: ts) {
-        auto e = kv.second;
-        while(e-- > 0) x0 += d(kv.first);
-    }
-    return x0;
-}
+*/
 
 ////////////////////////////////////////////////
 
-/// Arithmetic type pass-through class
+/// Semigroup wrapper for using T::+
 template<typename T>
-class _ArithmeticRing { };
-
-/// Arithmetic operations as _Semigroup
-template<typename T>
-class _Semigroup<_ArithmeticRing<T>> {
+class SemigroupPlus {
 public:
     /// numbering type for generator multiplicity
     typedef T num_t;
     /// generator enumeration index --- only one generator!
     typedef int gen_t;
-    /// _Semigroup element
+    /// Semigroup element standard form
     typedef vector<pair<gen_t,num_t>> elem_t;
     /// array size
     static constexpr auto N = 1;
 
     /// Constructor
-    _Semigroup(const T& X = {}): x(X) { }
+    SemigroupPlus(const T& X = {}): x(X) { }
+
+    T x;    ///< wrapped value
 
     /// get standard-form element representation
-    elem_t get() const { return {{0,x}}; }
-    /// recast to base type
-    operator T() const { return x; }
-
-    T x;    ///< arithmetic value
+    elem_t get() const { return {{0, x}}; }
 
     /// comparison
-    bool operator<(const _Semigroup& rhs) const { return x < rhs.x; }
+    bool operator<(const SemigroupPlus& rhs) const { return x < rhs.x; }
     /// inplace addition
-    _Semigroup& operator+=(const _Semigroup& rhs) { x += rhs.x; return *this; }
+    SemigroupPlus& operator+=(const SemigroupPlus& rhs) { x += rhs.x; return *this; }
     /// out-of-place addition
-    const _Semigroup operator+(const _Semigroup& rhs) const { return x + rhs.x; }
-    /// inplace multiplication
-    _Semigroup& operator*=(const _Semigroup& rhs) { x *= rhs.x; return *this; }
-    /// out-of-place multiplication
-    const _Semigroup operator*(const _Semigroup& rhs) const { return x * rhs.x; }
-    /// inplace division
-    _Semigroup& operator/=(const _Semigroup& rhs) { x /= rhs.x; return *this; }
-    /// out-of-place division
-    const _Semigroup operator/(const _Semigroup& rhs) const { return x / rhs.x; }
-    /// unary minus
-    const _Semigroup operator-() const { return -x; }
+    const SemigroupPlus operator+(const SemigroupPlus& rhs) const { return x + rhs.x; }
 };
 
-/// convenience typedef for Arithmetic on T
-template<typename T>
-using ArithmeticRing_t = _Semigroup<_ArithmeticRing<T>>;
-
-/// output representation for arithmetic value
-template<typename T>
-std::ostream& operator<<(std::ostream& o, const ArithmeticRing_t<T>& s) {
-    o << T(s);
-    return o;
-}
-
-/////////////////////////////////////////
-
-/// Array-type pass-through tag
+//////////////////////////////////////////////////
+/// Semigroup operating element-wise on array type
 template<typename A>
-class _SGArray { };
-
-/// Specialization for array-type _Semigroups
-template<typename A>
-class _Semigroup<_SGArray<A>>: public A {
+class ArraySemigroup: public A {
 public:
     /// exponent type from array contents
     typedef array_contents_t<A> num_t;
     /// generator enumeration index
     typedef unsigned int gen_t;
-    /// _Semigroup element
-    typedef vector<pair<gen_t,num_t>> elem_t;
     /// array size
     static constexpr auto N = std::tuple_size<A>::value;
+    /// standard-form element type
+    typedef vector<pair<gen_t,num_t>> elem_t;
 
     /// inherit Array constructors
     using A::A;
-    /// default constructor
-    _Semigroup(): A() { }
-    /// constructor from array; allows curly-brackets init SGarray_t<3>({1,2,3});
-    _Semigroup(const A& a): A(a) { }
-    /// Costructor for single-variable x_i^n
-    _Semigroup(gen_t i, num_t n): A() { assert(i < this->size()); (*this)[i] = n; }
+    /// Constructor from array
+    ArraySemigroup(const A& a): A(a) { }
+    /// Constructor for single-variable x_i^n
+    ArraySemigroup(gen_t i, num_t n): A() { assert(i < this->size()); (*this)[i] = n; }
 
     /// get standard-form element representation
     elem_t get() const {
@@ -215,13 +164,13 @@ public:
     }
 
     /// inplace addition
-    _Semigroup& operator+=(const _Semigroup& rhs) {
+    ArraySemigroup& operator+=(const ArraySemigroup& rhs) {
         size_t i=0;
         for(auto& e: *this) e += rhs[i++];
         return *this;
     }
     /// out-of-place addition
-    const _Semigroup operator+(const _Semigroup& rhs) const { auto s = *this; s += rhs; return s; }
+    const ArraySemigroup operator+(const ArraySemigroup& rhs) const { auto s = *this; return s += rhs; }
 
     /// an appropriate coordinate type
     template<typename T>
@@ -243,17 +192,13 @@ public:
 
 /// convenience typedef for N-dimensional SGArray of T (default uint)
 template<long unsigned int N, typename T = unsigned int>
-using SGArray_t = _Semigroup<_SGArray<array<T,N>>>;
+using SGArray_t = ArraySemigroup<array<T,N>>;
 
 /////////////////////////////////////////
 
-/// sorted-vector type pass-through tag
+/// Specialization for element-wise Semigroup on tagged pairs (internally stored as sorted vector<pair<tag,x>>)
 template<typename V>
-class _SGVec: public V { };
-
-/// Specialization for sorted-vector _Semigroups
-template<typename V>
-class _Semigroup<_SGVec<V>>: protected V {
+class SVSemigroup: protected V {
 public:
     /// base map object
     typedef V elem_t;
@@ -265,18 +210,18 @@ public:
     typedef typename std::remove_reference<decltype(std::declval<factor_t>().second)>::type num_t;
 
     /// comparison for sorting
-    bool operator<(const _Semigroup& rhs) const { return (V&)(*this) < (V&)(rhs); }
+    bool operator<(const SVSemigroup& rhs) const { return (V&)(*this) < (V&)(rhs); }
 
     /// default constructor
-    _Semigroup() { }
+    SVSemigroup() { }
     /// Costructor for single-variable x_i^n
-    _Semigroup(gen_t i, num_t n) { if(n) this->push_back({i,n}); }
+    SVSemigroup(gen_t i, num_t n) { if(n) this->push_back({i,n}); }
 
     /// get standard-form element representation
     elem_t get() const { return elem_t(*this); }
 
     /// inplace addition
-    _Semigroup& operator+=(const _Semigroup& rhs) {
+    SVSemigroup& operator+=(const SVSemigroup& rhs) {
         elem_t vnew;
         auto it0 = this->begin();
         auto it1 = rhs.begin();
@@ -296,25 +241,20 @@ public:
         return *this;
     }
     /// addition
-    const _Semigroup operator+(const _Semigroup& rhs) const { auto s = *this; s += rhs; return s; }
-
-    /// remove 0-exponent generators
-    void removeNull() {
-        this->erase(std::remove_if(this->begin(), this->end(), [](factor_t f){return !f.second;}), this->end());
-    }
+    const SVSemigroup operator+(const SVSemigroup& rhs) const { auto s = *this; return s += rhs; }
 
     /// split negative-exponent generators into separate V
-    _Semigroup splitNegative() {
+    SVSemigroup splitNegative() {
         auto it = std::stable_partition(this->begin, this->end(), [](factor_t f){return f.second > 0;});
-        _Semigroup SG;
+        SVSemigroup SG;
         SG.assign(it, this->end());
         this->erase(it, this->end());
         return SG;
     }
 
     /// make this and other relatively prime (and positive), returning common factors
-    _Semigroup relPrime(_Semigroup& S) {
-        _Semigroup P, ip0, ip1;
+    SVSemigroup relPrime(SVSemigroup& S) {
+        SVSemigroup P, ip0, ip1;
         auto it0 = this->begin();
         auto it1 = S.begin();
 
@@ -368,19 +308,15 @@ public:
     }
 };
 
-/// convenience typedef for SGVec of T (default unsigned int)
+/// convenience typedef for SVSemigroup
 template<typename K = unsigned int, typename V = int>
-using SGVec_t = _Semigroup<_SGVec<vector<pair<K,V>>>>;
+using SGVec_t = SVSemigroup<vector<pair<K,V>>>;
 
 /////////////////////////////////////////
 
-/// Map-type pass-through tag
+/// Specialization for map-type key:value Semigroups, element-wise + on map values
 template<typename M>
-class _SGMap: public M { };
-
-/// Specialization for map-type _Semigroups
-template<typename M>
-class _Semigroup<_SGMap<M>>: public M {
+class MapSemigroup: public M {
 public:
     /// base map object
     typedef M map_t;
@@ -388,15 +324,15 @@ public:
     typedef map_key_t<M> gen_t;
     /// map value is exponent
     typedef map_value_t<M> num_t;
-    /// _Semigroup element
+    /// Semigroup element standard form
     typedef vector<pair<gen_t,num_t>> elem_t;
 
     /// default constructor
-    _Semigroup() { }
+    MapSemigroup() { }
     /// constructor from map
-    _Semigroup(const M& m): M(m) { }
+    MapSemigroup(const M& m): M(m) { }
     /// Costructor for single-variable x_i^n
-    _Semigroup(gen_t i, num_t n) { (*this)[i] = n; }
+    MapSemigroup(gen_t i, num_t n) { (*this)[i] = n; }
 
     /// get standard-form element representation
     elem_t get() const {
@@ -406,7 +342,7 @@ public:
     }
 
     /// inplace addition
-    _Semigroup& operator+=(const _Semigroup& rhs) {
+    MapSemigroup& operator+=(const MapSemigroup& rhs) {
         for(auto& kv: rhs) {
             auto it = this->find(kv.first);
             if(it == this->end()) {
@@ -419,32 +355,32 @@ public:
         return *this;
     }
     /// addition
-    const _Semigroup operator+(const _Semigroup& rhs) const { auto s = *this; s += rhs; return s; }
+    const MapSemigroup operator+(const MapSemigroup& rhs) const { auto s = *this; return s += rhs; }
 };
 
 /// convenience typedef for SGMap of T (default uint)
 template<typename K = unsigned int, typename V = unsigned int>
-using SGMap_t = _Semigroup<_SGMap<map<K,V>>>;
+using SGMap_t = MapSemigroup<map<K,V>>;
 
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////
 
 /// Formal abstract polynomial, with +/- and * operations
 // R is a ring with operators +,*, inverse -, default constructor '0', for the coefficients
-// S is a Semigroup with operator + for exponent symbols x^i, x^k, x^(i+k)
+// S is a Semigroup with operator + (monomial product) for monomial symbols (e.g. x, xy, x^2z ...)
+// Using SGMap_t to allow easy term lookup/insertion
 template<typename R, typename S, typename _X = void>
 class AbstractPolynomial: public SGMap_t<S,R> {
 public:
+    /// Convenience typedef for base class
     typedef SGMap_t<S,R> SG;
     /// coefficients ring member type
     typedef R coeff_t;
-    /// monomials _Semigroup member type
+    /// monomials Semigroup member type
     typedef S monomial_t;
-    /// exponent type
-    typedef typename S::num_t exp_t;
 
     /// inherit SGMap_t constructors
-    using SG::_Semigroup;
+    using SG::MapSemigroup;
     /// default constructor
     AbstractPolynomial() { }
     /// Costructor for constant
@@ -490,7 +426,6 @@ public:
         return P;
     }
 
-
     /////////////////////////////////
     // optional variants as-supported
 
@@ -505,16 +440,16 @@ public:
 
 /// convenience typedef for 1D polynomial
 template<typename T = double>
-using Pol1_t = AbstractPolynomial<ArithmeticRing_t<T>, ArithmeticRing_t<int>>;
+using Pol1_t = AbstractPolynomial<T, SemigroupPlus<int>>;
 /// convenience typdef for N-dimensional polynomial
-template<size_t N, typename T = double, typename C = ArithmeticRing_t<T>>
-using Polynomial_t = AbstractPolynomial<C, SGArray_t<N>>;
+template<size_t N, typename T = double>
+using Polynomial_t = AbstractPolynomial<T, SGArray_t<N>>;
 /// convenience typdef for map-type polynomial
-template<typename T = double, typename C = ArithmeticRing_t<T>>
-using PolynomialM_t = AbstractPolynomial<C, SGMap_t<>>;
+template<typename T = double>
+using PolynomialM_t = AbstractPolynomial<T, SGMap_t<>>;
 /// convenience typdef for sorted-vector-type polynomial
-template<typename T = double, typename C = ArithmeticRing_t<T>>
-using PolynomialV_t = AbstractPolynomial<C, SGVec_t<>>;
+template<typename T = double>
+using PolynomialV_t = AbstractPolynomial<T, SGVec_t<>>;
 
 /// output representation for polynomial
 template<class R, class S, typename _X>
