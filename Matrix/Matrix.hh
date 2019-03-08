@@ -40,6 +40,8 @@ public:
     static constexpr size_t nRows = M;
     /// number of columns
     static constexpr size_t nCols = N;
+    /// min(M,N)
+    static constexpr size_t nDiag = std::min(M,N);
 
     /// Constructor
     Matrix(): vv{} { }
@@ -106,6 +108,9 @@ public:
 
     /// inplace inverse
     const Matrix<M,N,T>& invert();
+
+    /// trace
+    const T trace() const { T t = (*this)(0,0); for(size_t i = 1; i<nDiag; ++i) t += (*this)(i,i); return t; }
 
 private:
     Vec<M*N,T> vv;

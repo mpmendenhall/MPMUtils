@@ -31,6 +31,9 @@ namespace Icosahedral {
 
     /// apply all rotations to vector, eliminating duplicates
     vector<vec_t> points(const vec_t& v);
+
+    /// unit rotation axis for matrix
+    vec_t axis(const elem_t& M);
 }
 
 #endif

@@ -34,4 +34,10 @@ namespace Icosahedral {
         vv.erase(std::unique(vv.begin(), vv.end()), vv.end());
         return vv;
     }
+
+    vec_t axis(const elem_t& M) {
+        auto t = M.trace();
+        if(t==SurdSum(-1) || t==SurdSum(3)) return {};
+        return vec_t{{M(2,1)-M(1,2), M(0,2)-M(2,0), M(1,0)-M(0,1)}};
+    }
 }

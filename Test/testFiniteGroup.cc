@@ -31,7 +31,10 @@ int main(int, char**) {
     }
 
     std::cout << Icosahedral::Rs.size() << " icosahedral rotations\n";
-    for(auto& m: Icosahedral::Rs) std::cout << m << "\n";
+    for(auto& m: Icosahedral::Rs) {
+        auto t = m.trace(); // (t+1)*(-t+3) = |axis(m)|^2
+        std::cout << m << "\n" << (t+1)*(-t+3) << "\n" << Icosahedral::axis(m) << "\n";
+    }
 
     // fix 31 points, and find 12-point version!
     auto vs = Icosahedral::points(Icosahedral::u12);
