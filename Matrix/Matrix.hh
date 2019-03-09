@@ -112,6 +112,14 @@ public:
     /// trace
     const T trace() const { T t = (*this)(0,0); for(size_t i = 1; i<nDiag; ++i) t += (*this)(i,i); return t; }
 
+    /// type conversion
+    template<typename W>
+    operator Matrix<M,N,W>() const {
+        Matrix<M,N,W> r;
+        for(size_t i=0; i<nRows*nCols; i++) r[i] = (*this)[i];
+        return r;
+    }
+
 private:
     Vec<M*N,T> vv;
 

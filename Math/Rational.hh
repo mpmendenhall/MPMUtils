@@ -34,11 +34,6 @@ public:
     /// numerator, denominator pair
     pair<int,int> components() const;
 
-    /// integer evaluation
-    operator int() const { auto c = components(); return c.first / c.second; }
-    /// floating point evaluation
-    operator double() const { auto c = components(); return double(c.first) / c.second; }
-
     /// comparison
     bool operator<(const Rational& R) const;
     /// equality
