@@ -16,6 +16,9 @@ int main(int, char**) {
     //typedef CyclicGroup<3> C3;
     //typedef ProductGroup<C2,C3> P23;
 
+    PhiField p{0,1};
+    std::cout << p << " -> " << p*p << " -> " << p.inverse() << "\n";
+
     const size_t N = 3;
 
     typedef AlternatingGroup<N> G;
@@ -33,7 +36,7 @@ int main(int, char**) {
     std::cout << Icosahedral::Rs.size() << " icosahedral rotations\n";
     for(auto& m: Icosahedral::Rs) {
         auto t = m.trace(); // (t+1)*(-t+3) = |axis(m)|^2
-        std::cout << m << "\n" << (t+1)*(-t+3) << "\n" << Icosahedral::axis(m) << "\n";
+        std::cout << m << "\n" << (t+1)*(-t+3) << "\n" << Icosahedral::axis(m) << "\t" << Icosahedral::cosTheta(m)  << "\n";
     }
 
     // fix 31 points, and find 12-point version!

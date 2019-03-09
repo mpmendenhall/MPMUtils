@@ -42,7 +42,7 @@ public:
     /// comparison
     bool operator<(const Rational& R) const;
     /// equality
-    bool operator==(const Rational& R) const { return (!*this && !R) || (positive == R.positive && (vector<pair<unsigned int,int>>&)(*this) == R); }
+    bool operator==(const Rational& R) const { return components() == R.components(); }
     /// inequality
     bool operator!=(const Rational& R) const { return !this->operator==(R); }
 
@@ -76,6 +76,8 @@ public:
     bool positive = true; ///< sign
 };
 
+/// absolute value of rational number
+inline Rational rabs(Rational r) { r.positive = true; return r; }
 
 /// output representation for rational fraction
 std::ostream& operator<<(std::ostream& o, const Rational& r);

@@ -35,7 +35,7 @@ int main(int, char**) {
     a += 2;
 
     PolynomialV_t<Rational> Pr(1,0);
-    Pr += Rational(1,2);
+    Pr += {1,2};
     cout << Pr << Pr.pow(5) << "\n";
 
     auto& PS = theSieve();
