@@ -55,9 +55,9 @@ namespace Icosahedral {
         return vv;
     }
 
-    vec_t axis(const elem_t& M) {
+    axis_t axis(const elem_t& M) {
         auto t = M.trace();
         if(t == PhiField{-1,0} || t == PhiField{3,0}) return {};
-        return vec_t{{M(2,1)-M(1,2), M(0,2)-M(2,0), M(1,0)-M(0,1)}};
+        return {{M(2,1)-M(1,2), M(0,2)-M(2,0), M(1,0)-M(0,1)}};
     }
 }

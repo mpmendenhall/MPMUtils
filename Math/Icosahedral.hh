@@ -7,7 +7,6 @@
 #include "Matrix.hh"
 #include "SurdField.hh"
 
-
 /// field of a+b*phi, phi = (1+sqrt(5))/2
 class PhiField: public std::pair<Rational,Rational> {
 public:
@@ -76,6 +75,8 @@ std::ostream& operator<<(std::ostream& o, const PhiField& r);
 namespace Icosahedral {
     /// Symmetry group element
     typedef Matrix<3,3,PhiField> elem_t;
+    /// Rotation axis type
+    typedef Vec<3,PhiField> axis_t;
     /// Vector operated on by group
     typedef Vec<3,SurdSum> vec_t;
 
@@ -101,7 +102,7 @@ namespace Icosahedral {
     inline SurdSum cosTheta(const elem_t& M) { return (M.trace()-1)/2; }
 
     /// (non-normalized) rotation axis for matrix
-    vec_t axis(const elem_t& M);
+    axis_t axis(const elem_t& M);
 }
 
 #endif

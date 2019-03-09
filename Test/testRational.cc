@@ -6,6 +6,7 @@
 #include "TestOperators.hh"
 #include "SurdField.hh"
 #include "Abstract.hh"
+#include "Quaternion.hh"
 #include <stdio.h>
 #include <iostream>
 #include <cassert>
@@ -60,6 +61,10 @@ int main(int, char**) {
 
     auto ii = EuclidRelPrime(1027,712);
     std::cout << ii.first << " " << ii.second << "\n";
+
+    typedef Quaternion<Rational> Quat;
+    Quat Q({1},{2},{3},{4});
+    std::cout << Q << "\n" << Q*Q << "\n" << Q.inverse() << "\n" << Q/Q << "\n";
 
     return EXIT_SUCCESS;
 }
