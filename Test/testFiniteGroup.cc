@@ -5,6 +5,7 @@
 #include "Matrix.hh"
 #include "Rational.hh"
 #include "Icosahedral.hh"
+#include "JankoGroup.hh"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -34,6 +35,10 @@ int main(int, char**) {
     typedef SymmetricGroup<5> S5;
     ConjugacyDecomposition<S5> GGD_S5;
     GGD_S5.display();
+
+    OrdersDecomposition<JankoGroup::J1_genspan_t> GGD_J1(JankoGroup::J1());
+    //ConjugacyDecomposition<JankoGroup::J1_genspan_t> GGD_J1(JankoGroup::J1());
+    GGD_J1.display();
 
     return EXIT_SUCCESS;
 

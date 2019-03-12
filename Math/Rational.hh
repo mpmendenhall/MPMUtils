@@ -50,7 +50,7 @@ public:
     /// inplace multiplication
     Rational& operator*=(const Rational& R);
     /// multiplication
-    const Rational operator*(const Rational& R) const { auto c = *this; c *= R; return c; }
+    const Rational operator*(const Rational& R) const { auto c = *this; return c *= R; }
     /// inplace division
     Rational& operator/=(Rational R) { return (*this) *= R.invert(); }
     /// division
@@ -62,7 +62,7 @@ public:
     /// inplace addition
     Rational& operator+=(const Rational& r);
     /// addition
-    const Rational operator+(const Rational& R) const { auto c = *this; c += R; return c; }
+    const Rational operator+(const Rational& R) const { auto c = *this; return c += R; }
     /// inplace subtraction
     Rational& operator-=(const Rational& R) { return *this += -R; }
     /// subtraction

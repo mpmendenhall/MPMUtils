@@ -94,9 +94,6 @@ namespace Icosahedral {
     /// Precalculated Cayley Table
     extern const cayley_t CT;
 
-    //extern const SurdSum phi;   ///< golden ratio (sqrt(5)+1)/2;
-    //extern const SurdSum ihp;   ///< 1/phi = (sqrt(5)-1)/2 = phi-1
-
     // special unit vectors with reduced symmetries
     extern const vec_t u12; ///< dodecahedral face center
     extern const vec_t u20; ///< icosahedral face center

@@ -43,12 +43,16 @@ public:
     /// min(M,N)
     static constexpr size_t nDiag = std::min(M,N);
 
-    /// Constructor
-    Matrix(): vv{} { }
+    /// Default Constructor
+    Matrix() { }
     /// Constructor from vector
     Matrix(const array<T,M*N>& v): vv(v) { }
     /// Ordering comparison
     bool operator<(const Matrix<M,N,T>& rhs) const { return vv < rhs.vv; }
+    /// Equality comparison
+    bool operator==(const Matrix<M,N,T>& rhs) const { return vv == rhs.vv; }
+    /// Inequality comparison
+    bool operator!=(const Matrix<M,N,T>& rhs) const { return vv != rhs.vv; }
 
     /// generate a random-filled matrix
     static Matrix<M,N,T> random();
@@ -121,7 +125,7 @@ public:
     }
 
 private:
-    Vec<M*N,T> vv;
+    Vec<M*N,T> vv{};
 
     /// step in inversion process
     void subinvert(size_t n);

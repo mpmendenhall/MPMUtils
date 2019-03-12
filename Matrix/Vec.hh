@@ -38,7 +38,7 @@ class Vec: public array<T,N> {
 public:
 
     /// Default constructor for zero-filled vector
-    Vec(): array<T,N>({}) { }
+    Vec(): array<T,N>{} { }
     /// Constructor from std::array
     Vec(const array<T,N>& a): array<T,N>(a) { }
     /// Construct a basis vector with 1 in the n^th spot
