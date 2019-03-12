@@ -39,6 +39,12 @@ int main(int, char**) {
         std::cout << m << "\n" << (t+1)*(-t+3) << "\n" << Icosahedral::axis(m) << "\t" << Icosahedral::cosTheta(m)  << "\n";
     }
 
+    using namespace Icosahedral;
+    GeneratorGroupDecomposition<ApplyMul<elem_t>> GGD({R10,R58});
+    GGD.display();
+
+    return EXIT_SUCCESS;
+
     // fix 31 points, and find 12-point version!
     auto vs = Icosahedral::points(Icosahedral::u12);
     std::cout << vs.size() << " points:\n";
