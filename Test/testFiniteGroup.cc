@@ -12,21 +12,6 @@ template<class V>
 void pperm(const V& v) { for(auto i: v) printf(" %i",i); }
 
 int main(int, char**) {
-    /*
-    const size_t N = 3;
-
-    typedef AlternatingGroup<N> G;
-    for(size_t i=0; i<G::order; i++) {
-        auto P = G::element(i);
-        printf("%zu]\t", i);
-        pperm(P);
-        auto Q = G::inverse(P);
-        printf("\t\t");
-        pperm(Q);
-        printf("\n");
-        if(G::apply(Q,P) != G::identity()) exit(-1);
-    }
-    */
 
     std::cout << Icosahedral::Rs.getOrder() << " icosahedral rotations\n";
     for(auto& m: Icosahedral::Rs) {
@@ -34,20 +19,20 @@ int main(int, char**) {
         std::cout << m << "\n" << (t+1)*(-t+3) << "\n" << Icosahedral::axis(m) << "\t" << Icosahedral::cosTheta(m)  << "\n";
     }
 
-    GroupDecomposition<Icosahedral::cayley_t> GGD(Icosahedral::CT);
+    ConjugacyDecomposition<Icosahedral::cayley_t> GGD(Icosahedral::CT);
     GGD.display();
 
     typedef CyclicGroup<6> C6;
     CayleyTable<C6> CT_C6;
-    GroupDecomposition<CayleyTable<C6>> GGD_C6;
+    ConjugacyDecomposition<CayleyTable<C6>> GGD_C6;
     GGD_C6.display();
 
     typedef SymmetricGroup<4> S4;
-    GroupDecomposition<S4> GGD_S4;
+    ConjugacyDecomposition<S4> GGD_S4;
     GGD_S4.display();
 
     typedef SymmetricGroup<5> S5;
-    GroupDecomposition<S5> GGD_S5;
+    ConjugacyDecomposition<S5> GGD_S5;
     GGD_S5.display();
 
     return EXIT_SUCCESS;
