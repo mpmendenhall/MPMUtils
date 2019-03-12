@@ -44,10 +44,12 @@ namespace Icosahedral {
                         ihp/2,   half,    phi/2,
                         half,   -phi/2,   ihp/2 }}};
 
-    const vector<elem_t> Rs = span<ApplyMul<elem_t>>({R10,R58});
+    const genspan_t Rs({R10,R58});
+
+    const cayley_t CT(Rs);
 
     vector<vec_t> points(const vec_t& v) {
-        vector<vec_t> vv(Rs.size());
+        vector<vec_t> vv(Rs.getOrder());
         auto it = vv.begin();
         for(auto& M: Rs) *(it++) = Matrix<3,3,SurdSum>(M)*v;
         std::sort(vv.begin(), vv.end());

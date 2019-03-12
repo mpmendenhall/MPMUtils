@@ -12,13 +12,7 @@ template<class V>
 void pperm(const V& v) { for(auto i: v) printf(" %i",i); }
 
 int main(int, char**) {
-    //typedef CyclicGroup<2> C2;
-    //typedef CyclicGroup<3> C3;
-    //typedef ProductGroup<C2,C3> P23;
-
-    PhiField p{0,1};
-    std::cout << p << " -> " << p*p << " -> " << p.inverse() << "\n";
-
+    /*
     const size_t N = 3;
 
     typedef AlternatingGroup<N> G;
@@ -26,22 +20,35 @@ int main(int, char**) {
         auto P = G::element(i);
         printf("%zu]\t", i);
         pperm(P);
-        auto Q = G::invert(P);
+        auto Q = G::inverse(P);
         printf("\t\t");
         pperm(Q);
         printf("\n");
         if(G::apply(Q,P) != G::identity()) exit(-1);
     }
+    */
 
-    std::cout << Icosahedral::Rs.size() << " icosahedral rotations\n";
+    std::cout << Icosahedral::Rs.getOrder() << " icosahedral rotations\n";
     for(auto& m: Icosahedral::Rs) {
         auto t = m.trace(); // (t+1)*(-t+3) = |axis(m)|^2
         std::cout << m << "\n" << (t+1)*(-t+3) << "\n" << Icosahedral::axis(m) << "\t" << Icosahedral::cosTheta(m)  << "\n";
     }
 
-    using namespace Icosahedral;
-    GeneratorGroupDecomposition<ApplyMul<elem_t>> GGD({R10,R58});
+    GroupDecomposition<Icosahedral::cayley_t> GGD(Icosahedral::CT);
     GGD.display();
+
+    typedef CyclicGroup<6> C6;
+    CayleyTable<C6> CT_C6;
+    GroupDecomposition<CayleyTable<C6>> GGD_C6;
+    GGD_C6.display();
+
+    typedef SymmetricGroup<4> S4;
+    GroupDecomposition<S4> GGD_S4;
+    GGD_S4.display();
+
+    typedef SymmetricGroup<5> S5;
+    GroupDecomposition<S5> GGD_S5;
+    GGD_S5.display();
 
     return EXIT_SUCCESS;
 

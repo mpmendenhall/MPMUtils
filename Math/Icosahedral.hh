@@ -6,6 +6,7 @@
 
 #include "Matrix.hh"
 #include "SurdField.hh"
+#include "FiniteGroup.hh"
 
 /// field of a+b*phi, phi = (1+sqrt(5))/2
 class PhiField: public std::pair<Rational,Rational> {
@@ -84,8 +85,14 @@ namespace Icosahedral {
     extern const elem_t R10;    ///< one generator
     extern const elem_t R58;    ///< another generator
 
+    /// generators span type
+    typedef GeneratorsSemigroup<MultiplySG<elem_t>> genspan_t;
     /// All 60 rotation matrices in icosahedral point group
-    extern const vector<elem_t> Rs;
+    extern const genspan_t Rs;
+    /// Cayley Table type for icosahedral rotations
+    typedef CayleyTable<genspan_t> cayley_t;
+    /// Precalculated Cayley Table
+    extern const cayley_t CT;
 
     //extern const SurdSum phi;   ///< golden ratio (sqrt(5)+1)/2;
     //extern const SurdSum ihp;   ///< 1/phi = (sqrt(5)-1)/2 = phi-1
