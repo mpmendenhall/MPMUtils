@@ -26,13 +26,4 @@ namespace JankoGroup {
         static J1_genspan_t J1({Y,Z});
         return J1;
     }
-
-    J1_cayley_t makeJ1CT() {
-        printf("Generating J1 Cayley table...\n");
-        J1_cayley_t _J1_CT(J1(),true);
-        printf("\tDone!\n");
-        return _J1_CT;
-    }
-
-    //const J1_cayley_t J1_CT = makeJ1CT();
 }

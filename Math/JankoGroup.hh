@@ -19,12 +19,9 @@ namespace JankoGroup {
 
     /// generators span type
     typedef GeneratorsSemigroup<MultiplySG<J1_repr_t>> J1_genspan_t;
-    /// fully enumerated group
+
+    /// fully enumerated group (static object produced when function first called)
     const J1_genspan_t& J1();
-    /// Cayley Table type
-    typedef CayleyTable<J1_genspan_t> J1_cayley_t;
-    /// Precalculated Cayley Table
-    //extern const J1_cayley_t J1_CT;
 }
 
 #endif

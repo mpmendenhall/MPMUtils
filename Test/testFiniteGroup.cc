@@ -6,6 +6,7 @@
 #include "Rational.hh"
 #include "Icosahedral.hh"
 #include "JankoGroup.hh"
+#include "MathieuGroup.hh"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -36,9 +37,19 @@ int main(int, char**) {
     ConjugacyDecomposition<S5> GGD_S5;
     GGD_S5.display();
 
-    OrdersDecomposition<JankoGroup::J1_genspan_t> GGD_J1(JankoGroup::J1());
+    OrdersDecomposition<JankoGroup::J1_genspan_t> OD_J1(JankoGroup::J1());
+    OD_J1.display();
+
     //ConjugacyDecomposition<JankoGroup::J1_genspan_t> GGD_J1(JankoGroup::J1());
-    GGD_J1.display();
+
+    OrdersDecomposition<MathieuGroup::M11_genspan_t> OD_M11(MathieuGroup::M11());
+    OD_M11.display();
+
+    OrdersDecomposition<MathieuGroup::M11_cayley_t> OD_M11CT(MathieuGroup::M11_CT());
+    OD_M11CT.display();
+
+    ConjugacyDecomposition<MathieuGroup::M11_cayley_t> Conj_M11(MathieuGroup::M11_CT());
+    Conj_M11.display();
 
     return EXIT_SUCCESS;
 
