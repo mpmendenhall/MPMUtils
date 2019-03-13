@@ -7,6 +7,7 @@
 #include "Icosahedral.hh"
 #include "JankoGroup.hh"
 #include "MathieuGroup.hh"
+#include "PermutationGroup.hh"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -37,19 +38,26 @@ int main(int, char**) {
     ConjugacyDecomposition<S5> GGD_S5;
     GGD_S5.display();
 
-    OrdersDecomposition<JankoGroup::J1_genspan_t> OD_J1(JankoGroup::J1());
-    OD_J1.display();
-
-    //ConjugacyDecomposition<JankoGroup::J1_genspan_t> GGD_J1(JankoGroup::J1());
-
+    //---------------------------------
     OrdersDecomposition<MathieuGroup::M11_genspan_t> OD_M11(MathieuGroup::M11());
     OD_M11.display();
 
-    OrdersDecomposition<MathieuGroup::M11_cayley_t> OD_M11CT(MathieuGroup::M11_CT());
-    OD_M11CT.display();
+    // tens of seconds:
+    //OrdersDecomposition<MathieuGroup::M11_cayley_t> OD_M11CT(MathieuGroup::M11_CT());
+    //OD_M11CT.display();
 
-    ConjugacyDecomposition<MathieuGroup::M11_cayley_t> Conj_M11(MathieuGroup::M11_CT());
-    Conj_M11.display();
+    // takes overnight to run:
+    //ConjugacyDecomposition<MathieuGroup::M11_cayley_t> ConjCT_M11(MathieuGroup::M11_CT());
+    //Conj_M11CT.display();
+
+    //---------------------------------
+    OrdersDecomposition<MathieuGroup::M12_genspan_t> OD_M12(MathieuGroup::M12());
+    OD_M12.display();
+
+    //---------------------------------
+    // a few seconds to construct:
+    OrdersDecomposition<JankoGroup::J1_genspan_t> OD_J1(JankoGroup::J1());
+    OD_J1.display();
 
     return EXIT_SUCCESS;
 

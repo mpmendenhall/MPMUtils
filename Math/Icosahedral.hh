@@ -109,4 +109,11 @@ namespace Icosahedral {
     axis_t axis(const elem_t& M);
 }
 
+/*
+ * Polyhedral groups:
+ * tetrahedron isomorphic to A4
+ * octohedral (+cube): isormorphic to S4
+ * icosohedral (+dodecahedron): isomorphic to A5
+ */
+
 #endif

@@ -13,6 +13,7 @@ set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 #set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_compile_options("-fPIC" "-Wpedantic" "-Wall")
+# cmake -DCMAKE_BUILD_TYPE=Release
 string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
 
 #####################

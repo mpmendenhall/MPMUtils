@@ -58,6 +58,8 @@ using std::pair;
 using std::vector;
 #include <set>
 using std::set;
+#include <list>
+using std::list;
 #include <iostream>
 #include <algorithm>
 #include <cassert>
@@ -334,36 +336,49 @@ public:
     /// Constructor from <Enumerated Semigroup>
     ConjugacyDecomposition(const G& g = {}): OrdersDecomposition<G>(g) {
         for(auto& os: this->by_order) {
-            //std::cout << "Order " << os.first << ";" << std::endl;
+            auto& CC = conjClasses[os.first];
+
             for(auto it0 = os.second.begin(); it0 != os.second.end(); it0++) {
-                conjClasses.add(*it0, *it0);        // every element equivalent to itself
+                CC.add(*it0, *it0);         // every element equivalent to itself
+                auto el0 = g.element(*it0);
+
+                vector<size_t> nocomm;      // elements not commuting with el0
+                for(auto& x: g) if(g.apply(x,el0) != g.apply(el0,x)) nocomm.push_back(g.idx(x));
+
                 for(auto it1 = std::next(it0); it1 != os.second.end(); it1++) {
-                    if(conjClasses.equiv(*it0,*it1)) continue; // already found equivalence
-                    for(auto& x: g) {
-                        if(g.apply(x,g.element(*it0)) == g.apply(g.element(*it1),x)) {
+                    if(CC.equiv(*it0, *it1)) continue; // already found equivalence
+                    for(auto x: nocomm) {
+                        if(g.apply(g.element(x), el0) == g.apply(g.element(*it1), g.element(x))) {
                             // all powers of elements are conjugate
                             auto& v0 = this->cycles[*it0];
                             auto c1 = this->cycles[*it1].begin();
-                            for(auto c0: v0) conjClasses.add(c0, *(c1++));
+                            for(auto c0: v0) conjClasses[this->cycles[c0].size()].add(c0, *(c1++));
                             break;
                         }
                     }
                 }
+            }
+
+            if(g.getOrder() > 1000) {
+                std::cout << "Order " << os.first << ": ";
+                for(auto& cc: CC) std::cout << "(" << cc.second.size() << ") ";
+                std::cout << std::endl;
             }
         }
     }
 
     /// Display info
     void display(std::ostream& o = std::cout) {
-        o << "Group with " << this->cycles.size() << " elements in " << conjClasses.size() << " conjugacy groups with:\n";
-        for(auto& kv: conjClasses) o << "\t" << kv.second.size() << " elements\t[order " << this->cycles[*kv.second.begin()].size() << "]\n";
+        o << "Group with " << this->cycles.size() << " elements in conjugacy classes:\n";
+        for(auto& kv: conjClasses)
+            for(auto& ec: kv.second)
+                o << "\t" << ec.second.size() << " elements\t[order " << kv.first << "]\n";
     }
 
-    EquivalenceClasses<size_t> conjClasses; ///< conjugacy classes
+    map<size_t, EquivalenceClasses<size_t>> conjClasses;    ///< conjugacy classes by order
 };
 
-///////////////
-///////////////
+
 ///////////////
 // Some Groups.
 ///////////////
@@ -392,115 +407,5 @@ public:
     /// element iteration end
     static constexpr auto end() { return range_iterator<elem_t>(N,N); }
 };
-
-/// Compile-time-evaluable factorial function
-constexpr size_t factorial(size_t i) { return i > 1? i*factorial(i-1) : 1; }
-
-/// Apply permutation p to array A
-template<class A, class P>
-A permute(const A& v, const P& p) {
-    size_t j=0;
-    auto vv = v;
-    for(auto i: p) vv[j++] = v[i];
-    return vv;
-}
-
-/// Symmetric Group (permutations) of N elements
-template<size_t N>
-class SymmetricGroup {
-public:
-    /// Number of elements
-    static constexpr size_t order = factorial(N);
-    /// Permutation representation
-    typedef array<int,N> elem_t;
-
-    /// permutation number i of N!
-    static constexpr elem_t element(size_t i) {
-        elem_t p = identity();
-        if(!i) return p;
-
-        auto nsub = factorial(N-1);
-        auto j = i/nsub;
-        if(j) std::swap(p[j-1], p[N-1]);
-        return permute(p, SymmetricGroup<N-1>::element(i%nsub));
-    }
-
-    /// enumeration index for permutation
-    static constexpr size_t idx(const elem_t& e) {
-        array<int,N-1> e0{};
-        size_t i = 0;
-        size_t j = N;
-        for(auto& c: e0) {
-            c = e[i++];
-            if(c == N-1) j = c = e[N-1];
-        }
-        return SymmetricGroup<N-1>::idx(e0) + (j < N? j+1 : 0)*factorial(N-1);
-    }
-
-    /// group order
-    static constexpr size_t getOrder() { return order; }
-
-    /// identity element
-    static constexpr elem_t identity() {
-        elem_t p{};
-        int i = 0;
-        for(auto& x: p) x = i++;
-        return p;
-    }
-
-    /// Get element inverse
-    static constexpr elem_t inverse(elem_t a) {
-        elem_t e{};
-        int j = 0;
-        for(auto i: a) e[i] = j++;
-        return e;
-    }
-
-    /// Get group element c = ab
-    static constexpr elem_t apply(elem_t a, elem_t b) { return permute(a,b); }
-
-    /// element iteration start
-    static constexpr auto begin() { return esg_siterator<SymmetricGroup<N>>(); }
-    /// element iteration end
-    static constexpr auto end() { return esg_siterator<SymmetricGroup<N>>(getOrder()); }
-};
-/// Null permutation special case
-template<>
-inline SymmetricGroup<0>::elem_t SymmetricGroup<0>::element(size_t) { return {}; }
-/// Null permutation special case
-template<>
-inline size_t SymmetricGroup<0>::idx(const elem_t&) { return 0; }
-
-
-/*
-/// Alternating Group (even permutations) of N elements TODO!
-template<size_t N>
-class AlternatingGroup {
-public:
-    /// Number of elements
-    static constexpr size_t order = (factorial(N)+1)/2;
-    /// Permutation representation
-    typedef array<int,N> elem_t;
-
-    /// Compile-time calculation of permutation number i of _N!
-    static constexpr elem_t element(size_t i) { return SymmetricGroup<N>::element(2*i); }
-
-    /// identity element
-    static constexpr elem_t identity() { return SymmetricGroup<N>::identity(); }
-
-    /// Get element inverse
-    static constexpr elem_t inverse(elem_t a) { return SymmetricGroup<N>::inverse(a); }
-
-    /// Get group element c = ab
-    static constexpr elem_t apply(elem_t a, elem_t b) { return permute(b,a); }
-};
-*/
-
-/*
- * Polyhedral groups:
- * tetrahedron isomorphic to A4
- * octohedral (+cube): isormorphic to S4
- * icosohedral (+dodecahedron): isomorphic to A5
- */
 
 #endif
