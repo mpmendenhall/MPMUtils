@@ -8,6 +8,7 @@
 #include "JankoGroup.hh"
 #include "MathieuGroup.hh"
 #include "PermutationGroup.hh"
+#include "Stopwatch.hh"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -22,42 +23,70 @@ int main(int, char**) {
         std::cout << m << "\n" << (t+1)*(-t+3) << "\n" << Icosahedral::axis(m) << "\t" << Icosahedral::cosTheta(m)  << "\n";
     }
 
-    ConjugacyDecomposition<Icosahedral::cayley_t> GGD(Icosahedral::CT);
-    GGD.display();
+    {
+        Stopwatch w; // ~.6 ms
 
-    typedef CyclicGroup<6> C6;
-    CayleyTable<C6> CT_C6;
-    ConjugacyDecomposition<CayleyTable<C6>> GGD_C6;
-    GGD_C6.display();
+        ConjugacyDecomposition<Icosahedral::cayley_t> GGD(Icosahedral::CT);
+        GGD.display();
 
-    typedef SymmetricGroup<4> S4;
-    ConjugacyDecomposition<S4> GGD_S4;
-    GGD_S4.display();
+        typedef CyclicGroup<6> C6;
+        CayleyTable<C6> CT_C6;
+        ConjugacyDecomposition<CayleyTable<C6>> GGD_C6;
+        GGD_C6.display();
 
-    typedef SymmetricGroup<5> S5;
-    ConjugacyDecomposition<S5> GGD_S5;
-    GGD_S5.display();
+        typedef SymmetricGroup<4> S4;
+        ConjugacyDecomposition<S4> GGD_S4;
+        GGD_S4.display();
 
-    //---------------------------------
-    OrdersDecomposition<MathieuGroup::M11_genspan_t> OD_M11(MathieuGroup::M11());
-    OD_M11.display();
+        typedef SymmetricGroup<5> S5;
+        ConjugacyDecomposition<S5> GGD_S5;
+        GGD_S5.display();
+    }
 
-    // tens of seconds:
-    //OrdersDecomposition<MathieuGroup::M11_cayley_t> OD_M11CT(MathieuGroup::M11_CT());
-    //OD_M11CT.display();
+    {
+        Stopwatch w; // ~0.98 s
+        MathieuGroup::M11_conj().display();
 
-    // takes overnight to run:
-    //ConjugacyDecomposition<MathieuGroup::M11_cayley_t> ConjCT_M11(MathieuGroup::M11_CT());
-    //Conj_M11CT.display();
+    }
 
-    //---------------------------------
-    OrdersDecomposition<MathieuGroup::M12_genspan_t> OD_M12(MathieuGroup::M12());
-    OD_M12.display();
+    {
+        Stopwatch w; // ~2.6 s
+        ConjugacyDecomposition<MathieuGroup::M21_genspan_t> CD_M21(MathieuGroup::M21());
+        CD_M21.display();
+    }
 
-    //---------------------------------
-    // a few seconds to construct:
-    OrdersDecomposition<JankoGroup::J1_genspan_t> OD_J1(JankoGroup::J1());
-    OD_J1.display();
+    {
+        Stopwatch w; // ~54 s
+        ConjugacyDecomposition<MathieuGroup::M12_genspan_t> CD_M12(MathieuGroup::M12());
+        CD_M12.display();
+    }
+
+    if(false) {
+        {
+            Stopwatch w; // ~53 s
+            MathieuGroup::M11_CT();
+        }
+
+        Stopwatch w; // ~60 ms using precalculated Cayley Table
+        OrdersDecomposition<MathieuGroup::M11_cayley_t> OD_M11CT(MathieuGroup::M11_CT());
+        OD_M11CT.display();
+    }
+
+    {
+        Stopwatch w; // ~ forever
+        //OrdersDecomposition<JankoGroup::J1_genspan_t> OD_J1(JankoGroup::J1());
+        //OD_J1.display();
+        ConjugacyDecomposition<JankoGroup::J1_genspan_t> CD_J1(JankoGroup::J1());
+        CD_J1.display();
+    }
+
+    {
+        Stopwatch w; // ~ forever
+        ConjugacyDecomposition<MathieuGroup::M22_genspan_t> CD_M22(MathieuGroup::M22());
+        CD_M22.display();
+    }
+
+
 
     return EXIT_SUCCESS;
 

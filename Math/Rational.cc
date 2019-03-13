@@ -54,7 +54,6 @@ Rational& Rational::operator*=(const Rational& R) {
 pair<int,int> Rational::components() const {
     pair<int,int> n(1,1);
     for(auto& kv: *this) {
-        assert(kv.first >= 0);
         auto e = kv.second;
         while(e > 0) { n.first *= kv.first; --e; }
         while(e < 0) { n.second *= kv.first; ++e; }

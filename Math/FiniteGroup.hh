@@ -335,47 +335,101 @@ class ConjugacyDecomposition: public OrdersDecomposition<G> {
 public:
     /// Constructor from <Enumerated Semigroup>
     ConjugacyDecomposition(const G& g = {}): OrdersDecomposition<G>(g) {
+        for(auto& x: g) vscramble.push_back(x);
+        std::random_shuffle(vscramble.begin(), vscramble.end());
+
         for(auto& os: this->by_order) {
-            auto& CC = conjClasses[os.first];
-
-            for(auto it0 = os.second.begin(); it0 != os.second.end(); it0++) {
-                CC.add(*it0, *it0);         // every element equivalent to itself
-                auto el0 = g.element(*it0);
-
-                vector<size_t> nocomm;      // elements not commuting with el0
-                for(auto& x: g) if(g.apply(x,el0) != g.apply(el0,x)) nocomm.push_back(g.idx(x));
-
-                for(auto it1 = std::next(it0); it1 != os.second.end(); it1++) {
-                    if(CC.equiv(*it0, *it1)) continue; // already found equivalence
-                    for(auto x: nocomm) {
-                        if(g.apply(g.element(x), el0) == g.apply(g.element(*it1), g.element(x))) {
-                            // all powers of elements are conjugate
-                            auto& v0 = this->cycles[*it0];
-                            auto c1 = this->cycles[*it1].begin();
-                            for(auto c0: v0) conjClasses[this->cycles[c0].size()].add(c0, *(c1++));
-                            break;
-                        }
-                    }
-                }
-            }
+            for(auto i: os.second) assign_CC(os.first, i, g);
 
             if(g.getOrder() > 1000) {
                 std::cout << "Order " << os.first << ": ";
-                for(auto& cc: CC) std::cout << "(" << cc.second.size() << ") ";
+                for(auto& cc: M[os.first].CCs) std::cout << "(" << cc.second.size() << ") ";
                 std::cout << std::endl;
             }
+
+            repr_cosets.erase(os.first);
         }
+
+        vscramble.clear();
     }
 
     /// Display info
-    void display(std::ostream& o = std::cout) {
+    void display(std::ostream& o = std::cout) const {
         o << "Group with " << this->cycles.size() << " elements in conjugacy classes:\n";
-        for(auto& kv: conjClasses)
-            for(auto& ec: kv.second)
+        for(auto& kv: M)
+            for(auto& ec: kv.second.CCs)
                 o << "\t" << ec.second.size() << " elements\t[order " << kv.first << "]\n";
     }
 
-    map<size_t, EquivalenceClasses<size_t>> conjClasses;    ///< conjugacy classes by order
+    /// information on elements of a particular order
+    struct oinfo {
+        /// Conjugacy class decomposition for elements of this order
+        EquivalenceClasses<size_t> CCs;
+        /// powerup structure {order, conjclass} for each conjugacy class of this order
+        vector<vector<pair<size_t,size_t>>> powerup;
+    };
+
+    map<size_t, oinfo> M;   ///< information by order
+
+protected:
+    vector<typename G::elem_t> vscramble;           ///< scrambled search order
+    map<size_t,vector<vector<size_t>>> repr_cosets; ///< representative cosets for each class --- cleared after construction
+
+    /// determine conj. class number to which element idx=i of order o belongs
+    size_t assign_CC(size_t o, size_t i, const G& g) {
+        auto& oi = M[o]; // already-identified conjugacy info for this order
+
+        // already categorized?
+        auto p = oi.CCs(i);
+        if(p.first) return p.second;
+
+        // check if element fits into any existing conjugacy class
+        auto e = g.element(i);
+        if(oi.CCs.size()) {
+            size_t j = 0;
+            for(auto& x: vscramble) {
+                auto ixe = g.idx(g.apply(x, e));
+                for(auto& CC: oi.CCs) {
+                    if(ixe != repr_cosets[o][CC.first][j]) continue;
+
+                    auto& pu = oi.powerup[CC.first];
+                    if(pu.size()) {
+                        // bulk assign all powers of this element if powerup structure already determined
+                        size_t k = 0;
+                        for(auto ii: this->cycles[i]) {
+                            auto oc = pu[k++];
+                            M[oc.first].CCs.addTo(ii, oc.second);
+                        }
+                    } else oi.CCs.addTo(i, CC.first); // only add this element
+
+                    return CC.first;
+                }
+                j++;
+            }
+        }
+
+        // start new conjugacy class
+        auto n = oi.CCs.add(i,i);
+
+        // build representative coset for class
+        auto& vcs = repr_cosets[o];
+        vcs.emplace_back();
+        auto& cs = vcs.back();
+        for(auto& x: vscramble) cs.push_back(g.idx(g.apply(e, x)));
+
+        // build powerup structure
+        assert(n == oi.powerup.size());
+        oi.powerup.emplace_back();
+        vector<pair<size_t,size_t>> pu(1, {o,n});
+        for(auto ii: this->cycles[i]) {
+            if(ii == i) continue;
+            auto oo = this->cycles[ii].size();
+            pu.emplace_back(oo, assign_CC(oo,ii,g));
+        }
+        oi.powerup[n] = pu;
+
+        return n;
+    }
 };
 
 

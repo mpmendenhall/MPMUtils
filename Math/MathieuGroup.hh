@@ -24,10 +24,17 @@ namespace MathieuGroup {
     /// fully enumerated group (static object produced when function first called)
     const M11_genspan_t& M11();
 
+    /// conjugacy group decomposition for M11
+    typedef ConjugacyDecomposition<M11_genspan_t> M11_conj_t;
+    /// static M11 conjugacy group decomposition
+    const M11_conj_t& M11_conj();
+
     /// Cayley Table type for M11
     typedef CayleyTable<M11_genspan_t> M11_cayley_t;
     /// Precalculated Cayley Table for M11
     const M11_cayley_t& M11_CT();
+
+    //------------------------------
 
     /// M12 representation element
     typedef Permutation<12> M12_repr_t;
@@ -41,6 +48,36 @@ namespace MathieuGroup {
 
     /// fully enumerated group (static object produced when function first called)
     const M12_genspan_t& M12();
+
+    //------------------------------
+
+    /// M21 representation element
+    typedef Permutation<21> M21_repr_t;
+
+    // M21 generators
+    extern const M21_repr_t M21a;   ///< one generator
+    extern const M21_repr_t M21b;   ///< another generator
+
+    /// generators span type
+    typedef GeneratorsSemigroup<SymmetricGroup<21>> M21_genspan_t;
+
+    /// fully enumerated group (static object produced when function first called)
+    const M21_genspan_t& M21();
+
+    //------------------------------
+
+    /// M22 representation element
+    typedef Permutation<22> M22_repr_t;
+
+    // M22 generators
+    extern const M22_repr_t M22a;   ///< one generator
+    extern const M22_repr_t M22b;   ///< another generator
+
+    /// generators span type
+    typedef GeneratorsSemigroup<SymmetricGroup<22>> M22_genspan_t;
+
+    /// fully enumerated group (static object produced when function first called)
+    const M22_genspan_t& M22();
 }
 
 #endif

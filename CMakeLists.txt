@@ -153,6 +153,10 @@ SET_SOURCE_FILES_PROPERTIES(Utility/CodeVersion.cc PROPERTIES COMPILE_FLAGS "-DR
 # build targets
 ################
 
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    add_compile_options("-O")
+endif()
+
 # libMPM omnibus
 add_library(MPM SHARED ${SOURCE_FILES})
 target_link_libraries(MPM ${LINKLIBS})
