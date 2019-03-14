@@ -27,6 +27,8 @@ public:
     Rational(const PrimeSieve::factors_t& f);
     /// From factor : power list
     Rational(const fmap_t& m, bool pos = true);
+    /// to double
+    operator double() const { auto nd = components(); return double(nd.first)/nd.second; }
 
     /// check if 0 (explictly constructed as 0^1); empty contents => 1
     operator bool() const { return  size() != 1 || (*this)[0].first; }
@@ -39,7 +41,7 @@ public:
     /// equality
     bool operator==(const Rational& R) const { return components() == R.components(); }
     /// inequality
-    bool operator!=(const Rational& R) const { return !this->operator==(R); }
+    bool operator!=(const Rational& R) const { return !(*this == R); }
 
     /// unary minus
     const Rational operator-() const { auto r = *this; r.positive = !positive; return r; }
@@ -76,10 +78,5 @@ inline Rational rabs(Rational r) { r.positive = true; return r; }
 
 /// output representation for rational fraction
 std::ostream& operator<<(std::ostream& o, const Rational& r);
-
-/// Euclid's algorithm for relatively prime numbers, returning c,d: c*p = d*q + 1
-pair<int,int> EuclidRelPrime(int p, int q);
-
-/// Goal: expand p/q -> a + b/p1 + c/p2 + ..., primes p1,p2,...
 
 #endif

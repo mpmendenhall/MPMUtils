@@ -62,11 +62,19 @@ public:
     static constexpr Matrix<M,N,T> rotation(size_t a1, size_t a2, T th);
 
     /// const element access
-    const T& operator()(size_t m, size_t n) const { assert(m<M && n<N); return vv[m+n*M]; }
+    const T& operator()(size_t m, size_t n) const { assert(m<M && n<N); return vv[m*N+n]; }
     /// mutable element access
-    T& operator()(size_t m, size_t n) { assert(m<M && n<N); return vv[m+n*M]; }
+    T& operator()(size_t m, size_t n) { assert(m<M && n<N); return vv[m*N+n]; }
     /// direct access to data vector
     const Vec<M*N,T>& getData() const { return vv; }
+    /// iteration through data vector
+    auto begin() { return vv.begin(); }
+    /// iteration through data vector
+    auto end() { return vv.end(); }
+    /// iteration through data vector
+    auto begin() const { return vv.begin(); }
+    /// iteration through data vector
+    auto end() const { return vv.end(); }
     /// mutable vector element access
     T& operator[](size_t i) { return vv[i]; }
     /// const vector element access

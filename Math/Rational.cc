@@ -104,10 +104,3 @@ std::ostream& operator<<(std::ostream& o, const Rational& r) {
     if(c.first && c.second != 1) o << "/" << c.second;
     return o;
 }
-
-pair<int,int> EuclidRelPrime(int p, int q) {
-    auto qr = std::div(p,q);
-    if(qr.rem == 1) return {1, qr.quot};
-    auto uv = EuclidRelPrime(q, qr.rem);
-    return {-uv.second, -(uv.second*qr.quot + uv.first)};
-}

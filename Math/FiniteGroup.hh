@@ -88,18 +88,24 @@ template<class G, class V = vector<typename G::elem_t>>
 map<typename G::elem_t, vector<int>> spanM(const V& gs, const G& GG = {}) {
     map<typename G::elem_t, vector<int>> M;
     int i = 0;
-    for(auto& e: gs) M[e].push_back(i++);
+    for(auto& e: gs) M[e].push_back(i++); // generators already ``found''
 
+    // "newly found" elements, to be combined with generators
     vector<typename G::elem_t> vNew;
     for(auto& x: gs) vNew.push_back(x);
+
     while(vNew.size()) {
+        // unique new combinations
         vector<typename G::elem_t> vv;
+
         for(auto& e0: vNew) {
+
             i = 0;
-            for(auto& e1: gs) {
-                auto e2 = GG.apply(e1,e0);
+            for(auto& g: gs) { // for each generator
+                auto e2 = GG.apply(g,e0);
                 auto it = M.find(e2);
-                if(it == M.end()) {
+
+                if(it == M.end()) { // new element not previously found?
                     auto g0 = M[e0];
                     g0.push_back(i);
                     M[e2] = g0;

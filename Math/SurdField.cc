@@ -32,8 +32,8 @@ SurdSum SurdSum::sqrt(const Rational& R) {
         auto k = kv.second;
         if(abs(k)%2) r.insert(x);
 
-        if(k < -1) ifact[x] -= (1-k)/2;
-        else if(k > 1) ifact[x] += k/2;
+        if(k < 0) ifact[x] -= (1-k)/2;
+        else ifact[x] += k/2;
     }
 
     SurdSum SS;

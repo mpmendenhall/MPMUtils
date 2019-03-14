@@ -1,10 +1,11 @@
-/// \file testRational.cc Test rational number functions
+/// \file testRational.cc Test rational numbers and associated fields
 
 #include "CodeVersion.hh"
 #include "Eratosthenes.hh"
 #include "Rational.hh"
 #include "TestOperators.hh"
 #include "SurdField.hh"
+#include "ModularField.hh"
 #include "Abstract.hh"
 #include "Quaternion.hh"
 #include <stdio.h>

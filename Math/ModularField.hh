@@ -3,8 +3,18 @@
 #ifndef MODULARFIELD_HH
 #define MODULARFIELD_HH
 
-#include "Abstract.hh"
 #include <stdexcept>
+#include <cassert>
+
+/// Euclid's algorithm for relatively prime numbers, returning c,d: c*p = d*q + 1
+constexpr inline pair<int,int> EuclidRelPrime(int p, int q) {
+    if(abs(p)==1) return {p,0};
+    if(abs(q)==1) return {0,-q};
+    auto qr = std::div(p,q);
+    if(qr.rem == 1) return {1, qr.quot};
+    auto uv = EuclidRelPrime(q, qr.rem);
+    return {-uv.second, -(uv.second*qr.quot + uv.first)};
+}
 
 /// Modular Integers field with N elements
 template<size_t N>
@@ -12,7 +22,7 @@ class ModularField {
 public:
     /// Default constructor to 0
     ModularField() { }
-    /// Default constructor to 0
+    /// Constructor from integer
     ModularField(int n): i((n<0? N*(-n/N + 1) + n : n)%N) { }
 
     /// check if 0
@@ -21,41 +31,75 @@ public:
     operator int() const { return i; }
 
     /// comparison
-    bool operator<(const ModularField<N>& Z) const { return i < Z.i; }
+    bool operator<(const ModularField& Z) const { return i < Z.i; }
     /// equality
-    bool operator==(const ModularField<N>& Z) const { return i == Z.i; }
+    bool operator==(const ModularField& Z) const { return i == Z.i; }
     /// inequality
-    bool operator!=(const ModularField<N>& Z) const { return i != Z.i; }
+    bool operator!=(const ModularField& Z) const { return i != Z.i; }
 
     /// unary minus
     const ModularField<N> operator-() const { return -i; }
 
-    /// invert contents
-    //Rational& invert() { if(!*this) throw std::range_error("1/0 is bad!"); for(auto& kv: *this) { kv.second = -kv.second; } return *this; }
-
     /// inplace multiplication
-    ModularField<N>& operator*=(const ModularField<N>& Z) { i = (i*Z.i)%N; return *this; }
+    ModularField& operator*=(ModularField Z) { i = (i*Z.i)%N; return *this; }
     /// multiplication
-    const ModularField<N> operator*(const ModularField<N>& Z) const { auto c = *this; return c *= Z; }
+    const ModularField operator*(ModularField Z) const { auto c = *this; return c *= Z; }
+    /// contents inverse
+    ModularField inverse() { if(!i) throw std::range_error("1/0 is bad!"); return EuclidRelPrime(i, N).first; }
+    /// invert this
+    ModularField& invert() { return (*this = inverse()); }
     /// inplace division
-    //ModularField<N>& operator/=(ModularField<N> R) { return (*this) *= R.invert(); }
+    ModularField& operator/=(ModularField Z) { return (*this) *= Z.inverse(); }
     /// division
-    //const ModularField<N> operator/(ModularField<N> R) const { return *this * R.invert(); }
+    const ModularField operator/(ModularField Z) const { return (*this) * Z.inverse(); }
 
     /// inplace addition
-    ModularField<N>& operator+=(const ModularField<N>& Z) { i = (i+Z.i)%N; return *this; }
+    ModularField& operator+=(ModularField Z) { i = (i+Z.i)%N; return *this; }
     /// addition
-    const ModularField<N> operator+(const ModularField<N>& Z) const { auto c = *this; return c += Z; }
+    const ModularField operator+(ModularField Z) const { auto c = *this; return c += Z; }
     /// inplace subtraction
-    ModularField<N>& operator-=(const ModularField<N>& Z) { return *this += -Z; }
+    ModularField& operator-=(ModularField Z) { return *this += -Z; }
     /// subtraction
-    const ModularField<N> operator-(const ModularField<N>& Z) const { return *this + -Z; }
+    const ModularField operator-(ModularField Z) const { return *this + -Z; }
+
+    friend class iterator;
+
+    /// iterator over range N; can use 'for(auto n: ModularField<N>::iterator()) { }'
+    class iterator: public std::iterator<std::forward_iterator_tag, const ModularField> {
+    public:
+        /// Constructor
+        constexpr iterator(ModularField n = {}): i(n) { }
+
+        /// increment
+        iterator& operator++() {
+            assert(i.i < N);
+            ++i.i;
+            return *this;
+        }
+        /// comparison
+        constexpr bool operator==(const iterator& rhs) const { return i == rhs.i; }
+        /// inequality
+        constexpr bool operator!=(const iterator& rhs) const { return i != rhs.i; }
+        /// dereference
+        constexpr ModularField operator*() const { assert(0 <= i.i && i.i < N); return i; }
+
+        /// start stepping through modular range
+        constexpr iterator begin() const { return iterator(); }
+        /// stop stepping through modular range
+        constexpr iterator end() const { return iterator(ModularField(N,true)); }
+
+    protected:
+        ModularField i; ///< internal index, N at range end
+    };
 
 protected:
+    /// Special-purpose constructor without modular bounds
+    ModularField(int n, bool): i(n) { }
+
     int i = 0;  ///< internal representation in [0,N)
 };
 
-/// output representation for rational fraction
+/// output representation for modular number
 template<size_t N>
 std::ostream& operator<<(std::ostream& o, const ModularField<N>& Z) { o << int(Z); return o; }
 

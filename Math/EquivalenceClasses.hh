@@ -79,11 +79,17 @@ public:
         egm[e] = c;
     }
 
-    /// get equivalence class of element e
-    const set<T>& getClass(const elem_t& e) const {
+    /// get numbered equivalence class
+    const set<T>& getClassNum(size_t n) const {
         static set<T> snull{};
-        auto it = this->find(e);
+        auto it = this->find(n);
         return it == this->end()? snull : it->second;
+    }
+    /// get equivalence class of element e
+    const set<T>& getClassFor(const elem_t& e) const {
+        static set<T> snull{};
+        auto it = egm->find(e);
+        return it == egm->end()? snull : getClassNum(it->second);
     }
 
 protected:
