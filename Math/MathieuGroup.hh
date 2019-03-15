@@ -1,4 +1,4 @@
-/// \file MathieuGroup.hh Mathieu M11 finite group
+/// \file MathieuGroup.hh Mathieu M11,12,21,22 simple finite groups
 // Michael P. Mendenhall, 2019
 
 #ifndef MATHIEUGROUP_HH
@@ -9,14 +9,18 @@
 #include "ModularField.hh"
 #include "PermutationGroup.hh"
 
-/// Information about icosahedral symmetry point group
+/// Information about Mathieu groups M11, M12, M21, M22
 namespace MathieuGroup {
-    /// Representation element
-    typedef Matrix<5,5,ModularField<3>> M11_repr_t;
+    /// Representation element as a matrix
+    typedef Matrix<5,5,ModularField<3>> M11_mrepr_t;
+    /// Representation element as a permutation
+    typedef Permutation<11> M11_repr_t;
 
     // M11 generators
-    extern const M11_repr_t M11a;   ///< one generator
-    extern const M11_repr_t M11b;   ///< another generator
+    extern const M11_mrepr_t M11ma; ///< one matrix generator
+    extern const M11_mrepr_t M11mb; ///< another matrix generator
+    extern const M11_repr_t M11a;   ///< one permutation generator
+    extern const M11_repr_t M11b;   ///< another permutation generator
 
     /// generators span type
     typedef GeneratorsSemigroup<MultiplySG<M11_repr_t>> M11_genspan_t;

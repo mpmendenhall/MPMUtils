@@ -8,20 +8,23 @@
 /// Compile-time-evaluable factorial function
 constexpr inline size_t factorial(size_t i) { return i > 1? i*factorial(i-1) : 1; }
 
+/// empirically fast type for permutation calcs on <= 2^16 = 65536 elements
+typedef uint16_t default_permute_idx_t;
+
 /// Permutation
-template<size_t N>
-class Permutation: protected array<int,N> {
+template<size_t N, typename idx_t = default_permute_idx_t>
+class Permutation: protected array<idx_t,N> {
 public:
     /// parent class
-    typedef array<int,N> super;
+    typedef array<idx_t,N> super;
 
     /// Default constructor for identity permutation
     constexpr Permutation(): super(_id()) { }
     /// Permutation from array
-    constexpr Permutation(const super& a): super(a) { assert(validate()); }
+    constexpr Permutation(const super& a, int i=0): super(a) { if(i) for(auto& c: *this) c -= i; assert(validate()); }
 
     /// element access
-    int operator[](size_t i) const { return ((super&)*this)[i]; }
+    idx_t operator[](size_t i) const { return ((super&)*this)[i]; }
     /// swap two elements
     void swap(size_t i, size_t j) { std::swap((*this)[i], (*this)[j]); }
 
@@ -35,7 +38,7 @@ public:
     /// get inverse
     Permutation inverse() const {
         Permutation e;
-        int j = 0;
+        idx_t j = 0;
         for(auto i: *this) e[i] = j++;
         return e;
     }
@@ -59,7 +62,7 @@ public:
     static constexpr size_t idx(const Permutation& e) {
         if(N<2) return 0;
 
-        array<int, N-1> e0{};
+        array<idx_t, N-1> e0{};
         size_t i = 0;
         size_t j = N;
         for(auto& c: e0) {
@@ -86,23 +89,23 @@ protected:
     /// build identity permutation
     static constexpr super _id() {
         super a{};
-        int i = 0;
+        idx_t i = 0;
         for(auto& x: a) x = i++;
         return a;
     }
 
     /// verify this is valid permutation
     bool validate() const {
-        set<int> i;
+        set<idx_t> i;
         for(auto c: *this) {
-            if(c < 0 || c >= int(N)) return false;
+            if(c < 0 || c >= idx_t(N)) return false;
             if(!i.insert(c).second) return false;
         }
         return i.size() == N;
     }
 
     /// mutable element access
-    int& operator[](size_t i) { return ((super&)*this)[i]; }
+    idx_t& operator[](size_t i) { return ((super&)*this)[i]; }
 
     friend class Permutation<N-1>; // for applying sub-permutation
 };
@@ -114,15 +117,15 @@ template<>
 inline Permutation<0> Permutation<0>::element(size_t) { return {}; }
 
 /// output representation for permutation
-template<size_t N>
-std::ostream& operator<<(std::ostream& o, const Permutation<N>& P) {
+template<size_t N, typename idx_t>
+std::ostream& operator<<(std::ostream& o, const Permutation<N,idx_t>& P) {
     o << "P_"<<N << "[" << P.idx() << "]";
     return o;
 }
 
 /// Symmetric Group of all permutations of N elements
-template<size_t N>
-class SymmetricGroup: public Permutation<N> {
+template<size_t N, typename idx_t = default_permute_idx_t>
+class SymmetricGroup: public Permutation<N,idx_t> {
 public:
     /// Number of elements
     static constexpr size_t order = factorial(N);
