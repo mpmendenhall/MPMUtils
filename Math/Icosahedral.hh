@@ -15,6 +15,8 @@ namespace Icosahedral {
 
     /// Symmetry group element
     typedef Matrix<3,3,PhiField> elem_t;
+    /// Group operation (matrix multiplication)
+    typedef MultiplySG<elem_t> groupop_t;
     /// Rotation axis type
     typedef Vec<3,PhiField> axis_t;
     /// Vector operated on by group
@@ -31,12 +33,12 @@ namespace Icosahedral {
     /// icosahedral, dodecahedral edges enumeration
     typedef ModularField<30> n30_t;
 
-    // generators for all Rs
-    extern const elem_t R10;    ///< one generator
-    extern const elem_t R58;    ///< another generator
+    // generators for all icosahedral symmetry rotations
+    extern const elem_t Ra; ///< one generator
+    extern const elem_t Rb; ///< another generator
 
     /// generators span type
-    typedef GeneratorsSemigroup<MultiplySG<elem_t>> genspan_t;
+    typedef GeneratorsSemigroup<groupop_t> genspan_t;
     /// All 60 rotation matrices in icosahedral point group
     extern const genspan_t Rs;
     /// Cayley Table type for icosahedral rotations
@@ -49,12 +51,12 @@ namespace Icosahedral {
     extern const conjugacy_t CD;
 
     /// identity element number
-    extern const size_t nID;
+    constexpr size_t nID = 0;
 
     /// dodecahedral face info
     struct f12_t {
         n12_t  i;       ///< enumeration index
-        axis_t center;  ///< central axis
+        axis_t c;       ///< central axis
         axis_t vs[5];   ///< vertices, clockwise loop
         elem_t R[5];    ///< ID and successive 2*pi/5 clockwise rotations
     };
@@ -63,7 +65,7 @@ namespace Icosahedral {
     /// icosahedral face info
     struct f20_t {
         n20_t  i;       ///< enumeration index
-        axis_t center;  ///< central axis
+        axis_t c;       ///< central axis
         axis_t vs[3];   ///< vertices, clockwise loop
         elem_t R[3];    ///< ID and successive 2*pi/3 clockwise rotations
     };
@@ -74,9 +76,6 @@ namespace Icosahedral {
 
     /// cos theta for rotation
     inline SurdSum cosTheta(const elem_t& M) { return (M.trace()-1)/2; }
-
-    /// (non-normalized) rotation axis for matrix
-    axis_t axis(const elem_t& M);
 
     /// print description of icosahedral symmetry to stdout
     void describe();

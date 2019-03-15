@@ -16,7 +16,7 @@ std::pair<int, PrimeRoot_t> PrimeRoot_t::mul(const PrimeRoot_t& r) const {
 
 SurdSum SurdSum::sqrt(const Rational& R) {
 
-    if(!R) return SurdSum();
+    if(R == 0) return SurdSum();
 
     PrimeRoot_t r;
     Rational::fmap_t ifact; // perfect squares factored out
@@ -54,7 +54,7 @@ pair<SurdSum,SurdSum> SurdSum::separateRoot(int i) const {
 }
 
 void SurdSum::invert() {
-    if(!*this) throw std::range_error("Refuse to calculate 1/0!");
+    if(*this == 0) throw std::range_error("Refuse to calculate 1/0!");
 
     auto denom = *this; // remaining denominator
     *this = SurdSum(1); // inverse being constructed
@@ -79,8 +79,8 @@ void SurdSum::invert() {
 
 SurdSum& SurdSum::operator*=(const SurdSum& R) {
     // special case for multiply-by-0
-    if(!R) *this = R;
-    if(!(*this)) return *this;
+    if(R == 0) *this = R;
+    if(*this == 0) return *this;
 
     SurdSum P;
 
@@ -95,7 +95,7 @@ SurdSum& SurdSum::operator*=(const SurdSum& R) {
             if(it == P.end()) P.emplace(ip.second, c);
             else {
                 it->second += c;
-                if(!it->second) P.erase(it);
+                if(it->second == 0) P.erase(it);
             }
 
         }
@@ -110,26 +110,26 @@ SurdSum& SurdSum::operator+=(const SurdSum& r) {
         if(it == end()) emplace(kv.first, kv.second);
         else {
             it->second += kv.second;
-            if(!it->second) erase(it);
+            if(it->second == 0) erase(it);
         }
     }
     return *this;
 }
 
 SurdSum& SurdSum::operator+=(const Rational& r) {
-    if(!r) return *this;
+    if(r == 0) return *this;
     auto it = find(PrimeRoot_t());
     if(it == end()) emplace(PrimeRoot_t(), r);
     else {
         it->second += r;
-        if(!it->second) erase(it);
+        if(it->second == 0) erase(it);
     }
     return *this;
 }
 
 std::ostream& operator<<(std::ostream& o, const SurdSum& r) {
     o << "( ";
-    if(!r) o << "0 ";
+    if(r == 0) o << "0 ";
 
     for(auto& kv: r) {
         auto c =  kv.first.square();

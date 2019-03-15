@@ -28,13 +28,14 @@ using std::vector;
 using std::map;
 #include <mutex>
 
+/// Sieve of Eratosthenes primes/factoring utility
 class PrimeSieve {
 public:
     /// Constructor, with option to "prime the pump"
-    PrimeSieve(size_t i0 = 10000);
+    PrimeSieve(size_t i0 = 100);
     /// Integer type handled
     typedef unsigned int int_t;
-    /// factorization
+    /// factorization (sorted); empty vector for 1, {0} for 0
     typedef vector<int_t> factors_t;
 
     /// get factorization (thread-safe)

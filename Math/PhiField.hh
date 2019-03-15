@@ -15,14 +15,15 @@ public:
     PhiField(Rational aa, Rational bb): a(aa), b(bb) { }
 
     /// convert to SurdSum
-    operator SurdSum() const { return SurdSum(a + b/Rational(2)) + SurdSum(b/Rational(2))*SurdSum::sqrt(5); }
+    operator SurdSum() const { return SurdSum(a + b/2) + SurdSum(b/2)*SurdSum::sqrt(5); }
 
-    /// check if nonzero
-    operator bool() const { return a || b; }
     /// equality
     bool operator==(const PhiField& S) const { return a == S.a && b == S.b; }
+    /// equality with rational (also picks up int)
+    bool operator==(const Rational& R) const { return a == R && b == 0; }
     /// inequality
-    bool operator!=(const PhiField& S) const { return !(*this == S); }
+    template<typename T>
+    bool operator!=(const T& x) const { return !(*this == x); }
     /// comparison
     bool operator<(const SurdSum& S) const { return SurdSum(*this) < S; }
 
@@ -44,9 +45,9 @@ public:
 
     /// invert this = 1/this
     void invert() {
-        auto x = a*Rational(2) + b;
-        if(!x) { b = Rational(4,5)/b; a = -b/Rational(2); }
-        else { x = x*x-Rational(5)*b; *this = {(a+b)*Rational(4)/x, b*Rational(-4)/x}; }
+        auto x = a*2 + b;
+        if(x == 0) { b = Rational(4,5)/b; a = -b/2; }
+        else { x = x*x-b*5; *this = {(a+b)*4/x, b*(-4)/x}; }
     }
     /// inverse 1/this
     PhiField inverse() const { auto i = *this; i.invert(); return i; }

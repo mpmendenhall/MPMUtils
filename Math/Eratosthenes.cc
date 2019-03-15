@@ -9,7 +9,7 @@ PrimeSieve& theSieve() {
 }
 
 PrimeSieve::PrimeSieve(size_t i0):
-factors({{0}, {1}}), factor_max(1) {
+factors({{0}, {}}), factor_max(1) {
     while(factors.size()<i0)
         checkNext();
 }

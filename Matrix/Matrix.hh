@@ -302,7 +302,23 @@ void Matrix<M,N,T>::subinvert(size_t n) {
 
 }
 
+/// unnormalized axis of 3D rotation
+template<typename T>
+Vec<3,T> R3axis(const Matrix<3,3,T>& M) {
+    auto t = M.trace();
 
+    if(t == 3) return {}; // M is identity matrix; return null axis
+
+    if(t == -1) { // special case: rotations by pi
+        for(auto i: {0,1,2}) {
+            if(M(i,i) == 1) // special case: rotation around a coordinate axis
+                return {{ (M(0,0)+1)/2, (M(1,1)+1)/2, (M(2,2)+1)/2 }};
+        }
+        return {{ M(0,1)*M(0,2)*4, M(1,0)*M(1,2)*4, M(2,0)*M(2,1)*4 }};
+    }
+
+    return {{M(2,1)-M(1,2), M(0,2)-M(2,0), M(1,0)-M(0,1)}};
+}
 
 /// string output representation for matrix
 template<size_t M, size_t N, typename T>

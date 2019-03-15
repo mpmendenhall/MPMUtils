@@ -23,20 +23,23 @@ public:
 class SurdSum: protected std::map<PrimeRoot_t, Rational> {
 public:
     /// Constructor from rational; defaults to 0. Automatically converts from int.
-    SurdSum(const Rational& R = {}) { if(R) this->emplace(PrimeRoot_t(), R); }
+    SurdSum(const Rational& R = {}) { if(R != 0) this->emplace(PrimeRoot_t(), R); }
     /// Square-root of rational (or auto from int) --- imaginary allowed!
     static SurdSum sqrt(const Rational& R);
 
-    /// check if 0
-    operator bool() const { return size(); }
+    /// check if 0 --- DANGER accidental cast to int
+    //operator bool() const { return size(); }
     /// double value
-    operator double() const { double s = 0; for(auto& kv: *this) s += double(kv.first)*double(kv.second); return s; }
+    double val() const { double s = 0; for(auto& kv: *this) s += kv.second.val()*kv.first; return s; }
     /// comparison
-    bool operator<(const SurdSum& S) const { return double(*this-S) < 0; }
+    bool operator<(const SurdSum& S) const { return (*this-S).val() < 0; }
     /// equality
     bool operator==(const SurdSum& S) const { return (std::map<PrimeRoot_t, Rational>&)*this == S; }
+    /// equality with rational (also picks up int)
+    bool operator==(const Rational& R) const { return (R == 0 && !this->size()) || (this->size() == 1 && !this->begin()->first.size() && this->begin()->second == R); }
     /// inequality
-    bool operator!=(const SurdSum& S) const { return !(*this == S); }
+    template<typename T>
+    bool operator!=(const T& x) const { return !(*this == x); }
 
     /// unary minus
     const SurdSum operator-() const { auto r = *this; for(auto& kv: r) kv.second = -kv.second; return r; }
@@ -62,7 +65,7 @@ public:
     /// inplace multiplication by SurdSum
     SurdSum& operator*=(const SurdSum& R);
     /// inplace multiplication by Rational (also picks up int)
-    SurdSum& operator*=(const Rational& R) { if(!R) clear(); else for(auto& kv: *this) kv.second *= R; return *this; }
+    SurdSum& operator*=(const Rational& R) { if(R==0) clear(); else for(auto& kv: *this) kv.second *= R; return *this; }
     /// out-of-place multiplication (automatic type detection)
     template<class T>
     const SurdSum operator*(const T& R) const { auto c = *this; return c *= R; }
@@ -70,7 +73,7 @@ public:
     /// inplace division
     SurdSum& operator/=(const SurdSum& R) { return (*this) *= R.inverse(); }
     /// inplace rational division, also picks up int
-    SurdSum& operator/=(const Rational& R) { if(!R) throw std::range_error("Refuse to divide by 0!"); for(auto& kv: *this) kv.second /= R; return *this; }
+    SurdSum& operator/=(const Rational& R) { for(auto& kv: *this) kv.second /= R; return *this; }
     /// out-of-place division (automatic type detection)
     template<class T>
     const SurdSum operator/(const T& R) const { auto q = *this; return q /= R; }

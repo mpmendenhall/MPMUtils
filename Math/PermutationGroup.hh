@@ -95,7 +95,7 @@ protected:
     bool validate() const {
         set<int> i;
         for(auto c: *this) {
-            if(c < 0 || c >= N) return false;
+            if(c < 0 || c >= int(N)) return false;
             if(!i.insert(c).second) return false;
         }
         return i.size() == N;

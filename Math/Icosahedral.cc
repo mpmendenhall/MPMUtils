@@ -1,7 +1,7 @@
 /// \file Icosahedral.cc
+// Michael P. Mendenhall, 2019
 
 #include "Icosahedral.hh"
-#include "FiniteGroup.hh"
 #include <algorithm>
 #include <iostream>
 using std::cout;
@@ -12,25 +12,18 @@ namespace Icosahedral {
     const auto ihp = phi.inverse();
     const PhiField half{{1,2},0};
 
-    const elem_t R10{{-phi/2,   ihp/2,    half,
-                       ihp/2,   -half,    phi/2,
-                       half,    phi/2,    ihp/2 }};
+    const elem_t Ra{{-phi/2,   ihp/2,    half,
+                      ihp/2,   -half,    phi/2,
+                      half,    phi/2,    ihp/2 }};
 
-    const elem_t R58{{ phi/2,   ihp/2,   -half,
-                       ihp/2,   half,    phi/2,
-                       half,   -phi/2,   ihp/2 }};
+    const elem_t Rb{{ phi/2,   ihp/2,   -half,
+                      ihp/2,   half,    phi/2,
+                      half,   -phi/2,   ihp/2 }};
 
-    // with "raw" original enumeration
-    genspan_t _Rs({R10,R58});
-    cayley_t _CT(_Rs);
-    conjugacy_t _CD(_CT);
-    // re-enumeration by conjugacy class
-    auto renum = _CD.make_renumeration();
-
-    const genspan_t Rs = _Rs.renumerate(renum);
-    const cayley_t CT = _CT.renumerate(renum);
-    const conjugacy_t CD = _CD.renumerate(renum);
-    const size_t nID = *CD.M.find(1)->second.CCs.getClassNum(0).begin();
+    const GeneratorsConjugacy<groupop_t> IC({Ra,Rb});
+    const genspan_t Rs = IC.Rs;
+    const cayley_t CT = IC.CT;
+    const conjugacy_t CD = IC.CD;
 
     vector<vec_t> points(const vec_t& v) {
         vector<vec_t> vv(Rs.getOrder());
@@ -40,24 +33,12 @@ namespace Icosahedral {
         vv.erase(std::unique(vv.begin(), vv.end()), vv.end());
         return vv;
     }
-
-    axis_t axis(const elem_t& M) {
-        auto t = M.trace();
-        if(t == PhiField{3,0}) return {}; // identity matrix
-        if(t == PhiField{-1,0}) { // 180-degree flips
-            for(auto i: {0,1,2})
-                if(M(i,i) == PhiField{1,0})
-                    return {{ (M(0,0)+1)/2, (M(1,1)+1)/2, (M(2,2)+1)/2 }}; // flip around i,j,k axis
-            return {{ M(0,1)*M(0,2)*4, M(1,0)*M(1,2)*4, M(2,0)*M(2,1)*4 }};
-        }
-        return {{M(2,1)-M(1,2), M(0,2)-M(2,0), M(1,0)-M(0,1)}};
-    }
 }
 
 void Icosahedral::describe() {
     cout << "\n---------------- Icosahedral Symmetry ----------------\n\n";
 
-    cout << "Starting from two generator rotation matrices:\n\n" << R10 << "\n" << R58 << "\n";
+    cout << "Starting from two generator rotation matrices:\n\n" << Ra << "\n" << Rb << "\n";
     cout << "(where φ = (1+√5)/2 is the `golden ratio')\n";
     cout << "we build the Icosahedral symmetry point group,\n";
     CD.display();
@@ -68,20 +49,33 @@ void Icosahedral::describe() {
     cout << "The 15 elements of order 2 are flips by pi around axes passing\n";
     cout << "through the midpoints of opposite icosahedral/dodecahedral edges:\n";
     auto& r15i = CD.M.find(2)->second.CCs.getClassNum(0);
-    for(auto i: r15i) cout << "\n#" << i << ":\t" << axis(Rs.element(i));
+    for(auto i: r15i) cout << "\n#" << i << ":\t" << R3axis(Rs.element(i));
     cout << "\n\n";
 
     cout << "The 20 elements of order 3 describe rotations of an icosahedral face,\n";
     cout << "or between 3 faces at a dodecahedron vertex, around axes:\n";
     auto& r20i = CD.M.find(3)->second.CCs.getClassNum(0);
-    for(auto i: r20i) cout << "\n#" << i << ":\t" << axis(Rs.element(i));
+    for(auto i: r20i) cout << "\n#" << i << ":\t" << R3axis(Rs.element(i));
     cout << "\n\n";
 
     cout << "Two sets of 12 elements of order 5 describe rotations by 2pi/3 and 4pi/3\n";
     cout << "of a dodecahedral face or icosahedral vertex, around axes:\n";
     auto& r12i = CD.M.find(5)->second.CCs.getClassNum(0);
-    for(auto i: r12i) cout << "\n#" << i << ":\t"<< axis(Rs.element(i));
+    for(auto i: r12i) cout << "\n#" << i << ":\t"<< R3axis(Rs.element(i));
     cout << "\n\n";
+
+    cout << "We can associate dodecahedral faces f with vertices v (same association\n";
+    cout << "vice-versa for icosahedra) by finding combinations vfvf = I:\n\n";
+    for(auto f: r12i) {
+        for(auto v: r20i) {
+            cout << " ";
+            auto n = apply(CT, f, {v,f,v});
+            if(n == nID) cout << " I";
+            else cout << n;
+        }
+        cout << "\n";
+    }
+    cout << "\n";
 
     cout << "-------------------------------------------------------\n\n";
 }
