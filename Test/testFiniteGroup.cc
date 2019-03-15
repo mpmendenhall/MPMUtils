@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
         typedef SymmetricGroup<4> S4;
         ConjugacyDecomposition<S4> GGD_S4;
         GGD_S4.display();
+        for(auto& P: S4()) std::cout << P.cycles() << "\n";
 
         typedef SymmetricGroup<5> S5;
         ConjugacyDecomposition<S5> GGD_S5;

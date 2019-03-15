@@ -11,6 +11,42 @@ constexpr inline size_t factorial(size_t i) { return i > 1? i*factorial(i-1) : 1
 /// empirically fast type for permutation calcs on <= 2^16 = 65536 elements
 typedef uint16_t default_permute_idx_t;
 
+/// permutation cycles decomposition
+template<size_t N, typename idx_t>
+struct cycles_t {
+    /// constructor from cycles lists
+    cycles_t(vector<vector<idx_t>>& v) {
+        // sort into "canonical" order, long to short cycles and low to high starting elements
+        std::sort(v.begin(), v.end(), [](auto& a, auto& b){ return a.size() > b.size() || (a.size()==b.size() && a[0] < b[0]); });
+        // fill arrays
+        size_t i = 0;
+        size_t j = 0;
+        for(auto& vc: v) {
+            for(auto e: vc) cycles[i++] = e;
+            l_cycs[j++] = vc.size();
+        }
+    }
+
+    array<idx_t,N> cycles;      ///< element cycles
+    array<idx_t,N> l_cycs{};    ///< length of each cycle
+};
+
+/// output representation for cycles
+template<size_t N, typename idx_t>
+std::ostream& operator<<(std::ostream& o, const cycles_t<N,idx_t>& C) {
+    size_t i = 0;
+    for(auto n: C.l_cycs) {
+        if(!n) break;
+        o << "(";
+        for(size_t j=0; j<n; j++) {
+            if(j) o << " ";
+            o << C.cycles[i++];
+        }
+        o << ")";
+    }
+    return o;
+}
+
 /// Permutation
 template<size_t N, typename idx_t = default_permute_idx_t>
 class Permutation: protected array<idx_t,N> {
@@ -85,6 +121,27 @@ public:
         return Permutation<N-1>::element(i%nsub) * p;
     }
 
+    /// calculate element cycles
+    cycles_t<N,idx_t> cycles() const {
+        // as-yet-unassigned elements
+        set<idx_t> s;
+        for(size_t i=0; i<N; i++) s.insert(s.end(),i);
+        // cycles as they are constructed
+        vector<vector<idx_t>> vcs;
+
+        while(s.size()) {
+            auto i0 = *s.begin();
+            auto i = i0;
+            vcs.emplace_back();
+            do {
+                vcs.back().push_back(i);
+                s.erase(i);
+            } while((i = (*this)[i]) != i0);
+        }
+
+        return vcs;
+    }
+
 protected:
     /// build identity permutation
     static constexpr super _id() {
@@ -118,7 +175,7 @@ inline Permutation<0> Permutation<0>::element(size_t) { return {}; }
 
 /// output representation for permutation
 template<size_t N, typename idx_t>
-std::ostream& operator<<(std::ostream& o, const Permutation<N,idx_t>& P) {
+std::ostream& operator<<(std::ostream& o, const Permutation<N, idx_t>& P) {
     o << "P_"<<N << "[" << P.idx() << "]";
     return o;
 }
