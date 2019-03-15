@@ -346,10 +346,10 @@ public:
         for(auto& kv: rhs) {
             auto it = this->find(kv.first);
             if(it == this->end()) {
-                if(kv.second != 0) this->insert(kv);
+                if(kv.second) this->insert(kv);
             } else {
                 it->second += kv.second;
-                if(it->second != 0) this->erase(it);
+                if(it->second) this->erase(it);
             }
         }
         return *this;
@@ -459,7 +459,7 @@ std::ostream& operator<<(std::ostream& o, const AbstractPolynomial<R,S,_X>& P) {
     auto e = P.get();
     o << "( ";
     for(auto& p: e) {
-        if(p.second != 0) o << p.second << "*";
+        if(p.second) o << p.second << "*";
 
         auto v = p.first.get();
         if(v.size()) {

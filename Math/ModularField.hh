@@ -21,14 +21,14 @@ template<size_t N>
 class ModularField {
 public:
     /// Default constructor to 0
-    ModularField() { }
+    ModularField(): i(0) { }
     /// Constructor from integer
     ModularField(int n): i((n<0? N*(-n/N + 1) + n : n)%N) { }
 
     /// check if 0
-    operator bool() const { return  i; }
+    explicit operator bool() const { return  i; }
     /// cast to int
-    operator int() const { return i; }
+    explicit operator int() const { return i; }
 
     /// comparison
     bool operator<(const ModularField& Z) const { return i < Z.i; }
@@ -38,7 +38,11 @@ public:
     bool operator!=(const ModularField& Z) const { return i != Z.i; }
 
     /// unary minus
-    const ModularField<N> operator-() const { return -i; }
+    const ModularField operator-() const { return ModularField(i? N-i : 0, true); }
+    /// increment
+    ModularField& operator++() { if(++i == N) i=0; return *this; }
+    /// decrement
+    ModularField& operator--() { if(--i < 0) i = N-1; return *this; }
 
     /// inplace multiplication
     ModularField& operator*=(ModularField Z) { i = (i*Z.i)%N; return *this; }
@@ -54,7 +58,7 @@ public:
     const ModularField operator/(ModularField Z) const { return (*this) * Z.inverse(); }
 
     /// inplace addition
-    ModularField& operator+=(ModularField Z) { i = (i+Z.i)%N; return *this; }
+    ModularField& operator+=(ModularField Z) { i += Z.i; if(i >= int(N)) i -= N; return *this; }
     /// addition
     const ModularField operator+(ModularField Z) const { auto c = *this; return c += Z; }
     /// inplace subtraction
@@ -96,7 +100,7 @@ protected:
     /// Special-purpose constructor without modular bounds
     ModularField(int n, bool): i(n) { }
 
-    int i = 0;  ///< internal representation in [0,N)
+    int i;  ///< internal representation in [0,N), or i=N for special iterator end
 };
 
 /// output representation for modular number

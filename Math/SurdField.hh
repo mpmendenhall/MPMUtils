@@ -16,27 +16,27 @@ public:
     /// squared value
     int square() const { int i = 1; for(auto x: *this) i *= x; return i; }
     /// double value
-    operator double() const { return sqrt(square()); }
+    explicit operator double() const { return sqrt(square()); }
 };
 
 /// Sums of square roots of rational numbers, with field operations
 class SurdSum: protected std::map<PrimeRoot_t, Rational> {
 public:
     /// Constructor from rational; defaults to 0. Automatically converts from int.
-    SurdSum(const Rational& R = {}) { if(R != 0) this->emplace(PrimeRoot_t(), R); }
+    SurdSum(const Rational& R = {}) { if(R) this->emplace(PrimeRoot_t(), R); }
     /// Square-root of rational (or auto from int) --- imaginary allowed!
     static SurdSum sqrt(const Rational& R);
 
-    /// check if 0 --- DANGER accidental cast to int
-    //operator bool() const { return size(); }
+    /// check if nonzero
+    explicit operator bool() const { return size(); }
     /// double value
-    double val() const { double s = 0; for(auto& kv: *this) s += kv.second.val()*kv.first; return s; }
+    explicit operator double() const { double s = 0; for(auto& kv: *this) s += double(kv.first)*double(kv.second); return s; }
     /// comparison
-    bool operator<(const SurdSum& S) const { return (*this-S).val() < 0; }
+    bool operator<(const SurdSum& S) const { return double(*this-S) < 0.0; }
     /// equality
     bool operator==(const SurdSum& S) const { return (std::map<PrimeRoot_t, Rational>&)*this == S; }
     /// equality with rational (also picks up int)
-    bool operator==(const Rational& R) const { return (R == 0 && !this->size()) || (this->size() == 1 && !this->begin()->first.size() && this->begin()->second == R); }
+    bool operator==(const Rational& R) const { return (!R && !*this) || (this->size() == 1 && !this->begin()->first.size() && this->begin()->second == R); }
     /// inequality
     template<typename T>
     bool operator!=(const T& x) const { return !(*this == x); }
@@ -65,7 +65,7 @@ public:
     /// inplace multiplication by SurdSum
     SurdSum& operator*=(const SurdSum& R);
     /// inplace multiplication by Rational (also picks up int)
-    SurdSum& operator*=(const Rational& R) { if(R==0) clear(); else for(auto& kv: *this) kv.second *= R; return *this; }
+    SurdSum& operator*=(const Rational& R) { if(!R) clear(); else for(auto& kv: *this) kv.second *= R; return *this; }
     /// out-of-place multiplication (automatic type detection)
     template<class T>
     const SurdSum operator*(const T& R) const { auto c = *this; return c *= R; }

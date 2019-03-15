@@ -1,7 +1,6 @@
 /// \file Rational.cc
 
 #include "Rational.hh"
-#include <cstdlib> // for std::div
 #include <cassert>
 
 Rational::Rational(int n, int d) {
@@ -48,7 +47,6 @@ Rational::Rational(const PrimeSieve::factors_t& f): positive(true) {
 
 Rational& Rational::invert() {
     if(isZero()) throw std::range_error("1/0 is bad!");
-    if(isUnit()) return *this;
     for(auto& kv: *this) kv.second = -kv.second;
     return *this;
 }
@@ -59,16 +57,6 @@ Rational& Rational::operator*=(const Rational& R) {
     if(isZero()) return *this;
 
     positive = (positive == R.positive);
-
-    // special case for +/-1
-    if(R.isUnit()) return *this;
-    if(isUnit()) {
-        bool _pos = positive;
-        *this = R;
-        positive = _pos;
-        return *this;
-    }
-
     (SGVec_t<>&)(*this) += R;
     return *this;
 }
@@ -115,7 +103,7 @@ Rational& Rational::operator+=(const Rational& r) {
 const Rational Rational::pow(int i) const {
     if(isZero()) {
         if(!i) throw std::range_error("0^0 is bad!");
-        return 0;
+        return *this;
     }
     if(!i) return 1;
 

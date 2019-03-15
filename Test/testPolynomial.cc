@@ -155,5 +155,9 @@ int main(int, char**) {
     assert(p == dpi2);
 #endif
 
+    //AbstractPolynomial<Rational, SemigroupPlus<int>> Pr({{1,2}, {3,{4,5}}});
+    //Pr += Rational(1,2);
+    //std::cout << Pr << Pr.pow(5) << "\n\n\n";
+
     return EXIT_SUCCESS;
 }

@@ -20,12 +20,14 @@ public:
     /// equality
     bool operator==(const PhiField& S) const { return a == S.a && b == S.b; }
     /// equality with rational (also picks up int)
-    bool operator==(const Rational& R) const { return a == R && b == 0; }
+    bool operator==(const Rational& R) const { return a == R && !b; }
     /// inequality
     template<typename T>
     bool operator!=(const T& x) const { return !(*this == x); }
     /// comparison
     bool operator<(const SurdSum& S) const { return SurdSum(*this) < S; }
+    /// check if nonzero
+    explicit operator bool() const { return a || b; }
 
     /// unary minus
     const PhiField operator-() const { return {-a,-b}; }
@@ -46,7 +48,7 @@ public:
     /// invert this = 1/this
     void invert() {
         auto x = a*2 + b;
-        if(x == 0) { b = Rational(4,5)/b; a = -b/2; }
+        if(!x) { b = Rational(4,5)/b; a = -b/2; }
         else { x = x*x-b*5; *this = {(a+b)*4/x, b*(-4)/x}; }
     }
     /// inverse 1/this

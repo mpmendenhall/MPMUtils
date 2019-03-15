@@ -25,9 +25,9 @@ public:
     /// From factor : power list
     Rational(const fmap_t& m, bool pos = true);
     /// to double
-    double val() const { auto nd = components(); return double(nd.first)/nd.second; }
-    /// check if nonzero; DANGER: unwanted conversion to int!
-    //operator bool() const { return  !isZero(); }
+    explicit operator double() const { auto nd = components(); return double(nd.first)/nd.second; }
+    /// check if nonzero
+    explicit operator bool() const { return  !isZero(); }
 
     /// (signed) numerator, (unsigned) denominator pair
     pair<int,int> components() const;
@@ -56,16 +56,12 @@ public:
 
     /// inplace multiplication
     Rational& operator*=(const Rational& R);
-    /// inplace int multiplication: needed if accidental cast to int possible
-    //Rational& operator*=(int i) { return (*this) *= Rational(i); }
     /// out-of-place multiplication
     template<typename T>
     const Rational operator*(const T& x) const { auto c = *this; return c *= x; }
 
     /// inplace division
     Rational& operator/=(Rational R) { return (*this) *= R.invert(); }
-    /// inplace integer division: needed if accidental cast to int possible
-    //Rational& operator/=(int i) { return (*this) *= Rational(i).invert(); }
     /// out-of-place division
     template<typename T>
     const Rational operator/(T x) const { auto c = *this; return c /= x; }

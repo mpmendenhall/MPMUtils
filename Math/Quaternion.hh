@@ -19,7 +19,7 @@ public:
     Quaternion(const R& a, const R& b, const R& c, const R& d): super{a,b,c,d} { }
 
     /// check if zero
-    operator bool() const { return (*this)[0] || (*this)[1] || (*this)[2] || (*this)[3]; }
+    explicit operator bool() const { return (*this)[0] || (*this)[1] || (*this)[2] || (*this)[3]; }
     /// equality
     bool operator==(const Quaternion& Q) const { return (super&)*this == Q; }
     /// inequality
