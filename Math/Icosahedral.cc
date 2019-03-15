@@ -20,12 +20,11 @@ namespace Icosahedral {
                        ihp/2,   half,    phi/2,
                        half,   -phi/2,   ihp/2 }};
 
+    // with "raw" original enumeration
     genspan_t _Rs({R10,R58});
-
     cayley_t _CT(_Rs);
-
     conjugacy_t _CD(_CT);
-
+    // re-enumeration by conjugacy class
     auto renum = _CD.make_renumeration();
 
     const genspan_t Rs = _Rs.renumerate(renum);
@@ -45,7 +44,12 @@ namespace Icosahedral {
     axis_t axis(const elem_t& M) {
         auto t = M.trace();
         if(t == PhiField{3,0}) return {}; // identity matrix
-        if(t == PhiField{-1,0}) return {{PhiField(1,0), (M(1,0)+M(0,1)+2)/Rational(4), (M(2,0)+M(0,2)+2)/4}};
+        if(t == PhiField{-1,0}) { // 180-degree flips
+            for(auto i: {0,1,2})
+                if(M(i,i) == PhiField{1,0})
+                    return {{ (M(0,0)+1)/2, (M(1,1)+1)/2, (M(2,2)+1)/2 }}; // flip around i,j,k axis
+            return {{ M(0,1)*M(0,2)*4, M(1,0)*M(1,2)*4, M(2,0)*M(2,1)*4 }};
+        }
         return {{M(2,1)-M(1,2), M(0,2)-M(2,0), M(1,0)-M(0,1)}};
     }
 }
