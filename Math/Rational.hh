@@ -36,47 +36,47 @@ public:
     bool operator<(const Rational& R) const;
     /// equality
     bool operator==(const Rational& R) const { return (SGVec_t<>&)(*this) == R && positive == R.positive; }
+    /// optimized check for equality with integer
+    bool operator==(int i) const;
+    /// inequality
+    template<typename T>
+    bool operator!=(const T& x) const { return !(*this == x); }
     /// check if zero
     bool isZero() const { return size() == 1 && !(*this)[0].first; }
     /// check if +/-1
     bool isUnit() const { return !size(); }
     /// check if integral (no negative powers)
     bool isIntegral() const { for(auto& kv: *this) if(kv.second < 0) return false; return true; }
-    /// optimized check for equality with integer
-    bool operator==(int i) const;
-    /// inequality
-    template<typename T>
-    bool operator!=(const T& x) const { return !(*this == x); }
 
     /// unary minus
     const Rational operator-() const { auto r = *this; r.positive = (isZero()? true : !positive); return r; }
-
     /// invert contents
     Rational& invert();
-
-    /// inplace multiplication
-    Rational& operator*=(const Rational& R);
-    /// out-of-place multiplication
-    template<typename T>
-    const Rational operator*(const T& x) const { auto c = *this; return c *= x; }
-
-    /// inplace division
-    Rational& operator/=(Rational R) { return (*this) *= R.invert(); }
-    /// out-of-place division
-    template<typename T>
-    const Rational operator/(T x) const { auto c = *this; return c /= x; }
-    /// raise to integer power
-    const Rational pow(int i) const;
+    /// get inverse
+    const Rational inverse() const { auto R = *this; return R.invert(); }
 
     /// inplace addition
     Rational& operator+=(const Rational& r);
-    /// addition
+    /// out-of-place addition
     const Rational operator+(const Rational& R) const { auto c = *this; return c += R; }
 
     /// inplace subtraction
     Rational& operator-=(const Rational& R) { return *this += -R; }
-    /// subtraction
+    /// out-of-place subtraction
     const Rational operator-(const Rational& R) const { return *this + -R; }
+
+    /// inplace multiplication
+    Rational& operator*=(const Rational& R);
+    /// out-of-place multiplication
+    const Rational operator*(const Rational& x) const { auto c = *this; return c *= x; }
+
+    /// inplace division
+    Rational& operator/=(Rational R) { return (*this) *= R.invert(); }
+    /// out-of-place division
+    const Rational operator/(const Rational& x) const { auto c = *this; return c /= x; }
+
+    /// raise to integer power
+    const Rational pow(int i) const;
 
     bool positive = true; ///< sign
 
@@ -85,8 +85,16 @@ protected:
     Rational(const PrimeSieve::factors_t& f);
 };
 
+/// convenience "opposite order" addition
+inline const Rational operator+(int i, const Rational& R) { return R+i; }
+/// convenience "opposite order" subtraction
+inline const Rational operator-(int i, const Rational& R) { return -R+i; }
+/// convenience "opposite order" multiplication
+inline const Rational operator*(int i, const Rational& R) { return R*i; }
+/// convenience "opposite order" division
+inline const Rational operator/(int i, Rational R) { return R.invert()*i; }
 /// absolute value of rational number
-inline Rational rabs(Rational r) { r.positive = true; return r; }
+inline const Rational rabs(Rational r) { r.positive = true; return r; }
 
 /// output representation for rational fraction
 std::ostream& operator<<(std::ostream& o, const Rational& r);

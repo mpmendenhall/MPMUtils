@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
     if(argc > 1) n = atoi(argv[1]);
 
     if(n) {
-        Stopwatch w; // ~.4 ms
+        Stopwatch w; // ~0.4 ms
 
         typedef CyclicGroup<6> C6;
         CayleyTable<C6> CT_C6;
@@ -33,12 +33,12 @@ int main(int argc, char** argv) {
     }
 
     if(n>1) {
-        Stopwatch w; // ~1.07 s
+        Stopwatch w; // ~0.98 s
         MathieuGroup::M11_conj().display();
     }
 
     if(n>2) {
-        Stopwatch w; // ~2.5 s
+        Stopwatch w; // ~2.4 s
         ConjugacyDecomposition<MathieuGroup::M21_genspan_t> CD_M21(MathieuGroup::M21());
         CD_M21.display();
     }
@@ -51,17 +51,17 @@ int main(int argc, char** argv) {
 
     if(n>4) {
         {
-            Stopwatch w; // ~57 s
+            Stopwatch w; // ~52 s
             MathieuGroup::M11_CT();
         }
 
-        Stopwatch w; // ~66 ms using precalculated Cayley Table
+        Stopwatch w; // ~65 ms using precalculated Cayley Table
         OrdersDecomposition<MathieuGroup::M11_cayley_t> OD_M11CT(MathieuGroup::M11_CT());
         OD_M11CT.display();
     }
 
     if(n>5) {
-        Stopwatch w; // ~886 s
+        Stopwatch w; // ~700 s
         ConjugacyDecomposition<JankoGroup::J1_genspan_t> CD_J1(JankoGroup::J1());
         CD_J1.display();
     }

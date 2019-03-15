@@ -20,10 +20,10 @@ public:
 };
 
 /// Sums of square roots of rational numbers, with field operations
-class SurdSum: protected std::map<PrimeRoot_t, Rational> {
+class SurdSum: public std::map<PrimeRoot_t, Rational> {
 public:
     /// Constructor from rational; defaults to 0. Automatically converts from int.
-    SurdSum(const Rational& R = {}) { if(R) this->emplace(PrimeRoot_t(), R); }
+    SurdSum(const Rational& R = {}) { if(R) emplace(PrimeRoot_t(), R); }
     /// Square-root of rational (or auto from int) --- imaginary allowed!
     static SurdSum sqrt(const Rational& R);
 
@@ -33,10 +33,8 @@ public:
     explicit operator double() const { double s = 0; for(auto& kv: *this) s += double(kv.first)*double(kv.second); return s; }
     /// comparison
     bool operator<(const SurdSum& S) const { return double(*this-S) < 0.0; }
-    /// equality
-    bool operator==(const SurdSum& S) const { return (std::map<PrimeRoot_t, Rational>&)*this == S; }
     /// equality with rational (also picks up int)
-    bool operator==(const Rational& R) const { return (!R && !*this) || (this->size() == 1 && !this->begin()->first.size() && this->begin()->second == R); }
+    bool operator==(const Rational& R) const { return (!R && !*this) || (size() == 1 && !begin()->first.size() && begin()->second == R); }
     /// inequality
     template<typename T>
     bool operator!=(const T& x) const { return !(*this == x); }

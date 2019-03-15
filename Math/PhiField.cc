@@ -2,9 +2,6 @@
 
 #include "PhiField.hh"
 
-//const PhiField PhiField::one{{1},{}};
-//const PhiField PhiField::phi{{},{1}};
-
 std::ostream& operator<<(std::ostream& o, const PhiField& r) {
     if(r.a && r.b) o << "(";
 

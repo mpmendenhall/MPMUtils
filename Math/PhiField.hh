@@ -17,8 +17,6 @@ public:
     /// convert to SurdSum
     operator SurdSum() const { return SurdSum(a + b/2) + SurdSum(b/2)*SurdSum::sqrt(5); }
 
-    /// equality
-    bool operator==(const PhiField& S) const { return a == S.a && b == S.b; }
     /// equality with rational (also picks up int)
     bool operator==(const Rational& R) const { return a == R && !b; }
     /// inequality
@@ -47,9 +45,9 @@ public:
 
     /// invert this = 1/this
     void invert() {
-        auto x = a*2 + b;
-        if(!x) { b = Rational(4,5)/b; a = -b/2; }
-        else { x = x*x-b*5; *this = {(a+b)*4/x, b*(-4)/x}; }
+        auto x = 2*a + b;
+        if(!x) { b = 4/(5*b); a = -b/2; }
+        else { x = x*x-5*b; *this = {4*(a+b)/x, -4*b/x}; }
     }
     /// inverse 1/this
     PhiField inverse() const { auto i = *this; i.invert(); return i; }
