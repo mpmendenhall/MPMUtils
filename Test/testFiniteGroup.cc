@@ -4,20 +4,15 @@
 #include "Polynomial.hh"
 #include "Matrix.hh"
 #include "Rational.hh"
-#include "Icosahedral.hh"
 #include "JankoGroup.hh"
 #include "MathieuGroup.hh"
 #include "PermutationGroup.hh"
 #include "Stopwatch.hh"
 #include <stdlib.h>
-#include <stdio.h>
-
-template<class V>
-void pperm(const V& v) { for(auto i: v) printf(" %i",i); }
 
 int main(int argc, char** argv) {
 
-    int n = 0;
+    int n = 4;
     if(argc > 1) n = atoi(argv[1]);
 
     if(n) {
@@ -81,9 +76,6 @@ int main(int argc, char** argv) {
     //AbstractPolynomial<Rational, SemigroupPlus<int>> Pr({{1,2}, {3,{4,5}}});
     //Pr += Rational(1,2);
     //std::cout << Pr << Pr.pow(5) << "\n\n\n";
-
-    Icosahedral::describe();
-
 
     return EXIT_SUCCESS;
 }

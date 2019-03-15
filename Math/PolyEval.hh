@@ -55,11 +55,7 @@ public:
     void evalMonomial(const M& m, vector<T>& v) {
         v.resize(0);
         v.resize(npts, 1);
-        for(auto& kv: m) {
-            auto it = Xd.find(kv.first);
-            if(it == Xd.end()) throw;
-            it->second.Ps.mul(v, kv.second);
-        }
+        for(auto& kv: m) Xd.at(kv.first).Ps.mul(v, kv.second);
     }
 
     /// Add evaluated monomial to input vector; auto-resize if input vector empty

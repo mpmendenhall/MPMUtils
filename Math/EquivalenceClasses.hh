@@ -4,10 +4,7 @@
 #ifndef EQUIVALENCECLASSES_HH
 #define EQUIVALENCECLASSES_HH
 
-#include <set>
-using std::set;
-#include <map>
-using std::map;
+#include "Renumerate.hh"
 #include <cassert>
 #include <utility>
 using std::pair;
@@ -90,6 +87,12 @@ public:
         static set<T> snull{};
         auto it = egm->find(e);
         return it == egm->end()? snull : getClassNum(it->second);
+    }
+
+    /// apply renumeration
+    void renumerate(const renumeration_t<T>& m) {
+        for(auto& kv: (super&)*this) kv.second = renumerated(kv.second, m);
+        egm = renumerated_key(egm, m);
     }
 
 protected:

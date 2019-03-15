@@ -20,11 +20,18 @@ namespace Icosahedral {
                        ihp/2,   half,    phi/2,
                        half,   -phi/2,   ihp/2 }};
 
-    const genspan_t Rs({R10,R58});
+    genspan_t _Rs({R10,R58});
 
-    const cayley_t CT(Rs);
+    cayley_t _CT(_Rs);
 
-    const conjugacy_t CD(CT);
+    conjugacy_t _CD(_CT);
+
+    auto renum = _CD.make_renumeration();
+
+    const genspan_t Rs = _Rs.renumerate(renum);
+    const cayley_t CT = _CT.renumerate(renum);
+    const conjugacy_t CD = _CD.renumerate(renum);
+    const size_t nID = *CD.M.find(1)->second.CCs.getClassNum(0).begin();
 
     vector<vec_t> points(const vec_t& v) {
         vector<vec_t> vv(Rs.getOrder());
@@ -52,29 +59,25 @@ void Icosahedral::describe() {
     CD.display();
     cout << "\n";
 
-    cout << "The element of order 1 is the identity transformation.\n\n";
+    cout << "The element of order 1 (#" << nID << ") is the identity transformation:\n" << Rs.element(nID) << "\n";
+
+    cout << "The 15 elements of order 2 are flips by pi around axes passing\n";
+    cout << "through the midpoints of opposite icosahedral/dodecahedral edges:\n";
+    auto& r15i = CD.M.find(2)->second.CCs.getClassNum(0);
+    for(auto i: r15i) cout << "\n#" << i << ":\t" << axis(Rs.element(i));
+    cout << "\n\n";
 
     cout << "The 20 elements of order 3 describe rotations of an icosahedral face,\n";
     cout << "or between 3 faces at a dodecahedron vertex, around axes:\n";
     auto& r20i = CD.M.find(3)->second.CCs.getClassNum(0);
-    for(auto i: r20i) cout << "\n" << axis(Rs.element(i));
+    for(auto i: r20i) cout << "\n#" << i << ":\t" << axis(Rs.element(i));
     cout << "\n\n";
 
     cout << "Two sets of 12 elements of order 5 describe rotations by 2pi/3 and 4pi/3\n";
     cout << "of a dodecahedral face or icosahedral vertex, around axes:\n";
     auto& r12i = CD.M.find(5)->second.CCs.getClassNum(0);
-    for(auto i: r12i) cout << "\n" << axis(Rs.element(i));
-    cout << "\n\n\n";
+    for(auto i: r12i) cout << "\n#" << i << ":\t"<< axis(Rs.element(i));
+    cout << "\n\n";
 
-    cout << "The 15 elements of order 2 are flips by pi across axes passing\n";
-    cout << "through the midpoints of opposite icosahedral/dodecahedral edges:\n";
-    auto& r15i = CD.M.find(2)->second.CCs.getClassNum(0);
-    for(auto i: r15i) cout << "\n" << axis(Rs.element(i));
-    cout << "\n";
-
-    // auto& r15j = CD.M.find(5)->second.CCs.getClassNum(1);
-    // for(auto i: r15j) cout << "\n" << axis(Rs.element(i))*PhiField({},{1});
-    // cout << "\n";
-
-    cout << "\n-------------------------------------------------------\n\n";
+    cout << "-------------------------------------------------------\n\n";
 }

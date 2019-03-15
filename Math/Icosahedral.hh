@@ -48,6 +48,9 @@ namespace Icosahedral {
     /// Precalculated decomposition
     extern const conjugacy_t CD;
 
+    /// identity element number
+    extern const size_t nID;
+
     /// dodecahedral face info
     struct f12_t {
         n12_t  i;       ///< enumeration index
