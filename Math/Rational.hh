@@ -93,6 +93,8 @@ inline const Rational operator-(int i, const Rational& R) { return -R+i; }
 inline const Rational operator*(int i, const Rational& R) { return R*i; }
 /// convenience "opposite order" division
 inline const Rational operator/(int i, Rational R) { return R.invert()*i; }
+/// convenience "opposite order" comparison
+inline const Rational operator<(int i, Rational R) { return !(R==i || R < i); }
 /// absolute value of rational number
 inline const Rational rabs(Rational r) { r.positive = true; return r; }
 

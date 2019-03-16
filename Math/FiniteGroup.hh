@@ -194,7 +194,7 @@ public:
 template<typename val_t = size_t>
 class range_iterator: public std::iterator<std::forward_iterator_tag, const val_t> {
 public:
-    /// Constructor from grid dimensions
+    /// Constructor from total size, starting point
     range_iterator(val_t n, val_t i = {}): N(n), c(i) { }
     /// increment
     range_iterator& operator++() { c++; return *this; }

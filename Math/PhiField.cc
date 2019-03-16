@@ -3,20 +3,18 @@
 #include "PhiField.hh"
 
 std::ostream& operator<<(std::ostream& o, const PhiField& r) {
-    if(r.a && r.b) o << "(";
+    if(!r) return o << " 0";
+    //if(r.a < 0 && 0 < r.b) return o << PhiField(0,r.b) << PhiField(r.a,0);
 
-    if(!r) o << "0";
+    if(r.a) o << (0 < r.a? "+" : "") << r.a;
 
-    if(r.a) o << r.a;
-    auto& q = r.b;
-    if(q) {
-        if(r.a) o << " ";
-        auto nd = q.components();
-        if(abs(nd.first) == 1) o << (q.positive? "+" : "-");
+    if(r.b) {
+        auto nd = r.b.components();
+        if(abs(nd.first) == 1) o << (r.b.positive? "+" : "-");
         else o << nd.first;
         o << "φ";
         if(nd.second > 1) o << "/" << nd.second;
     }
-    if(r.a && r.b) o << ")";
+
     return o;
 }

@@ -111,9 +111,9 @@ public:
         constexpr ModularField operator*() const { assert(0 <= i.i && i.i < N); return i; }
 
         /// start stepping through modular range
-        constexpr iterator begin() const { return iterator(); }
+        static constexpr iterator begin() { return iterator(); }
         /// stop stepping through modular range
-        constexpr iterator end() const { return iterator(ModularField(N,true)); }
+        static constexpr iterator end() { return iterator(ModularField(N,true)); }
 
     protected:
         ModularField i; ///< internal index, N at range end
