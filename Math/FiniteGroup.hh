@@ -48,26 +48,18 @@
 #define FINITEGROUP_HH
 
 #include "EquivalenceClasses.hh"
+#include "RangeIt.hh"
 #include <map>
 using std::map;
-#include <array>
-using std::array;
 #include <utility>
 using std::pair;
 #include <vector>
 using std::vector;
 #include <set>
 using std::set;
-#include <list>
-using std::list;
 #include <iostream>
 #include <algorithm>
 #include <cassert>
-#include <numeric>
-
-////////////////////////////////////
-////////////////////////////////////
-////////////////////////////////////
 
 //////////////////////////////////
 // basic (semi)group constructions
@@ -190,26 +182,6 @@ public:
 // iterator helper classes
 //////////////////////////
 
-/// iterator for integers 0...N-1
-template<typename val_t = size_t>
-class range_iterator: public std::iterator<std::forward_iterator_tag, const val_t> {
-public:
-    /// Constructor from total size, starting point
-    range_iterator(val_t n, val_t i = {}): N(n), c(i) { }
-    /// increment
-    range_iterator& operator++() { c++; return *this; }
-    /// comparison
-    bool operator==(const range_iterator& rhs) const { return c == rhs.c; }
-    /// inequality
-    bool operator!=(const range_iterator& rhs) const { return !(*this == rhs); }
-    /// dereference
-    const val_t& operator*() const { return c; }
-
-protected:
-    const val_t N; ///< maximum
-    val_t c;       ///< current value
-};
-
 /// iterator for enumerated semigroup instance
 template<class G>
 class esg_iterator: public std::iterator<std::forward_iterator_tag, const typename G::elem_t> {
@@ -275,9 +247,9 @@ public:
     /// indexed element
     static constexpr elem_t element(size_t i) { return i; }
     /// element iteration start
-    auto begin() const { return range_iterator<elem_t>(order); }
+    auto begin() const { return VRangeIt<elem_t>(order); }
     /// element iteration end
-    auto end() const { return range_iterator<elem_t>(order,order); }
+    auto end() const { return VRangeIt<elem_t>(order,order); }
 
     /// apply renumeration of elements
     CayleyTable& renumerate(const renumeration_t<elem_t>& m) {
@@ -502,36 +474,6 @@ public:
     genspan_t Rs;       ///< generators span
     cayley_t CT{Rs};    ///< Cayley Table
     conjugacy_t CD{CT}; ///< Conjugacy relations
-};
-
-
-///////////////
-// Some Groups.
-///////////////
-
-/// Cyclic group on N elements
-template<size_t N>
-class CyclicGroup {
-public:
-    /// element representation
-    typedef int elem_t;
-
-    /// Get number of elements
-    static constexpr size_t getOrder() { return N; }
-    /// Get identity element
-    static constexpr elem_t identity() { return 0; }
-    /// Get index of element
-    static constexpr size_t idx(elem_t i) { return i; }
-    /// Get enumerated element
-    static constexpr elem_t element(size_t i) { return i; }
-    /// Get element inverse
-    static constexpr elem_t inverse(elem_t a) { return (N-a)%N; }
-    /// Get group element c = ab
-    static constexpr elem_t apply(elem_t a, elem_t b) { return (a+b)%N; }
-    /// element iteration start
-    static constexpr auto begin() { return range_iterator<elem_t>(N); }
-    /// element iteration end
-    static constexpr auto end() { return range_iterator<elem_t>(N,N); }
 };
 
 #endif

@@ -5,6 +5,7 @@
 #define PARTITION_HH
 
 #include <iostream>
+#include <cassert>
 #include <array>
 using std::array;
 
@@ -23,7 +24,7 @@ public:
 
     /// re-order partitioned groups according to specified scheme
     template<typename valarray_t>
-    void reorder(const idx_array_t& o, valarray_t& v) {
+    idx_array_t reorder(const idx_array_t& o, valarray_t& v) const {
         idx_array_t nn;
         valarray_t vv;
 
@@ -33,10 +34,10 @@ public:
             for(idx_t j = 0; j < len(k); j++) vv[jj++] = v[i0(k)+j];
             nn[i] = jj;
         }
-        for(; i<N; ++i) n[i] = n[i-1]; // finish filling bounds array
+        for(; i<N; ++i) nn[i] = nn[i-1]; // finish filling bounds array
 
-        n = nn;
         v = vv;
+        return nn;
     }
 };
 
@@ -48,7 +49,8 @@ public:
     typedef array<val_t,N> val_array_t;
     val_array_t v;  ///< contents
 
-    void reorder(const typename Partition<N,idx_t>::idx_array_t& o) { Partition<N,idx_t>::reorder(o,v); }
+    /// reorder this object's data
+    void reorder(const typename Partition<N,idx_t>::idx_array_t& o) { this->n = Partition<N,idx_t>::reorder(o,v); }
 };
 
 /// output representation for partitions
@@ -57,12 +59,11 @@ std::ostream& operator<<(std::ostream& o, const PartArray<N,val_t,idx_t>& C) {
     size_t i = 0, cn = 0;
     while(i<N) {
         assert(cn < N);
-        o << "(";
+        if(cn) o << "|";
         for(size_t j=0; j<C.len(cn); j++) {
             if(j) o << " ";
             o << C.v[i++];
         }
-        o << ")";
         ++cn;
     }
     return o;

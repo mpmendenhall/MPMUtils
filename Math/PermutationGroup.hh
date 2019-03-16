@@ -92,9 +92,6 @@ public:
     /// calculate element cycles
     cycles_t cycles() const {
 
-        //array<idx_t,N+1> cc;    // cumulative number of cycles
-        //cc[0] = 0;
-
         cycles_t c;     // unsorted cycles
         size_t nc = 0;  // number of cycles found
         auto s = _id(); // as-yet-unassigned elements
@@ -151,7 +148,7 @@ inline Permutation<0> Permutation<0>::element(size_t) { return {}; }
 /// output representation for permutation
 template<size_t N, typename idx_t>
 std::ostream& operator<<(std::ostream& o, const Permutation<N, idx_t>& P) {
-    o << "P_"<<N << "[" << P.idx() << "]";
+    o << "(" << P.cycles() << ")";
     return o;
 }
 

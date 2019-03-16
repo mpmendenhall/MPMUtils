@@ -43,4 +43,24 @@ constexpr array<val_t, N1-N0> RangeArray() {
     return a;
 }
 
+/// Variable-range iteration
+template<typename val_t = size_t>
+class VRangeIt: public std::iterator<std::forward_iterator_tag, const val_t> {
+public:
+    /// Constructor from total size, starting point
+    VRangeIt(val_t n, val_t i = {}): N(n), c(i) { }
+    /// increment
+    VRangeIt& operator++() { ++c; return *this; }
+    /// comparison
+    bool operator==(const VRangeIt& rhs) const { return c == rhs.c; }
+    /// inequality
+    bool operator!=(const VRangeIt& rhs) const { return !(*this == rhs); }
+    /// dereference
+    const val_t& operator*() const { return c; }
+
+protected:
+    const val_t N; ///< maximum
+    val_t c;       ///< current value
+};
+
 #endif

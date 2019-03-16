@@ -1,12 +1,10 @@
 /// \file testFiniteGroup.cc Test of finite group code
 
 #include "FiniteGroup.hh"
-#include "Polynomial.hh"
-#include "Matrix.hh"
-#include "Rational.hh"
 #include "JankoGroup.hh"
 #include "MathieuGroup.hh"
 #include "PermutationGroup.hh"
+#include "CyclicGroup.hh"
 #include "Stopwatch.hh"
 #include <stdlib.h>
 
@@ -26,7 +24,7 @@ int main(int argc, char** argv) {
         typedef SymmetricGroup<4> S4;
         ConjugacyDecomposition<S4> GGD_S4;
         GGD_S4.display();
-        for(auto& P: S4()) std::cout << P.cycles() << "\n";
+        for(auto& P: S4()) std::cout << P << "\n";
 
         typedef SymmetricGroup<5> S5;
         ConjugacyDecomposition<S5> GGD_S5;

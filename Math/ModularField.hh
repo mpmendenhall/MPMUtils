@@ -119,6 +119,34 @@ public:
         ModularField i; ///< internal index, N at range end
     };
 
+    /// reference-based iterator
+    class ref_iterator: public std::iterator<std::forward_iterator_tag, const ModularField> {
+    public:
+        /// Constructor
+        constexpr ref_iterator(ModularField n = {}): i(n) { }
+
+        /// increment
+        ref_iterator& operator++() {
+            assert(i.i < N);
+            ++i.i;
+            return *this;
+        }
+        /// comparison
+        constexpr bool operator==(const ref_iterator& rhs) const { return i == rhs.i; }
+        /// inequality
+        constexpr bool operator!=(const ref_iterator& rhs) const { return i != rhs.i; }
+        /// dereference
+        const ModularField& operator*() const { assert(0 <= i.i && i.i < N); return i; }
+
+        /// start stepping through modular range
+        static constexpr ref_iterator begin() { return ref_iterator(); }
+        /// stop stepping through modular range
+        static constexpr ref_iterator end() { return ref_iterator(ModularField(N,true)); }
+
+    protected:
+        ModularField i; ///< internal index, N at range end
+    };
+
 protected:
     /// Special-purpose constructor without modular bounds
     ModularField(int n, bool): i(n) { }
