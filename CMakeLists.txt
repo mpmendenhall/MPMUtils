@@ -7,14 +7,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 
 ## how to require compile standards:
-#set(CMAKE_C_STANDARD 99)
-#set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 99) # sqlite3.c complains under c90 about 'long long' type
+set(CMAKE_C_STANDARD_REQUIRED ON)
 #set(CMAKE_CXX_STANDARD 14)
 #set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_compile_options("-fPIC" "-Wpedantic" "-Wall")
+add_compile_options("-fPIC" "-Wpedantic" "-Wall" "-ansi" "-pedantic-errors")
 # cmake -DCMAKE_BUILD_TYPE=Release
 string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
+string(APPEND CMAKE_CXX_FLAGS " -ansi -pedantic-errors")
 
 #####################
 # locate dependencies
@@ -140,14 +141,20 @@ LIST(APPEND LINKLIBS -lpthread)
 # git SHA tag
 ################
 
-exec_program( "git" ${PROJECT_SOURCE_DIR}
+exec_program("git" ${PROJECT_SOURCE_DIR}
     ARGS "rev-parse -q HEAD"
     OUTPUT_VARIABLE GIT_SHA )
-exec_program( "git" ${PROJECT_SOURCE_DIR}
+exec_program("git" ${PROJECT_SOURCE_DIR}
     ARGS "describe --tags HEAD"
     OUTPUT_VARIABLE GIT_TAGNAME )
-message("git repository '${GIT_TAGNAME}' (${GIT_SHA})")
-SET_SOURCE_FILES_PROPERTIES(Utility/CodeVersion.cc PROPERTIES COMPILE_FLAGS "-DREPO_VERSION=\"${GIT_SHA}\" -DREPO_TAGNAME=\"${GIT_TAGNAME}\"")
+exec_program("basename" ${PROJECT_SOURCE_DIR}
+    ARGS "`git rev-parse --show-toplevel`"
+    OUTPUT_VARIABLE REPO_NAME)
+message("git repo ${REPO_NAME} '${GIT_TAGNAME}' (${GIT_SHA})")
+SET_SOURCE_FILES_PROPERTIES(
+    Utility/CodeVersion.cc PROPERTIES COMPILE_FLAGS
+    "-DREPO_NAME=\"${REPO_NAME}\" -DREPO_VERSION=\"${GIT_SHA}\" -DREPO_TAGNAME=\"${GIT_TAGNAME}\""
+)
 
 ################
 # build targets

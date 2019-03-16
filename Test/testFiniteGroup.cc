@@ -6,9 +6,11 @@
 #include "PermutationGroup.hh"
 #include "CyclicGroup.hh"
 #include "Stopwatch.hh"
+#include "CodeVersion.hh"
 #include <stdlib.h>
 
 int main(int argc, char** argv) {
+    CodeVersion::display_code_version();
 
     int n = 4;
     if(argc > 1) n = atoi(argv[1]);

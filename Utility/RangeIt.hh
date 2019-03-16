@@ -23,6 +23,8 @@ public:
     bool operator!=(const RangeIt& rhs) const { return !(*this == rhs); }
     /// dereference
     const val_t& operator*() const { return i; }
+    /// dereference and increment for generator use
+    val_t operator()() const { return i++; }
 
     /// range start
     static constexpr RangeIt begin() { return RangeIt(true); }
@@ -38,8 +40,7 @@ protected:
 template<typename val_t, val_t N0, val_t N1>
 constexpr array<val_t, N1-N0> RangeArray() {
     array<val_t, N1-N0> a{};
-    RangeIt<val_t,N0,N1> i;
-    for(auto& c: a) { c = *i; ++i; }
+    std::copy(RangeIt<val_t,N0,N1>::begin(), RangeIt<val_t,N0,N1>::end(), a.begin());
     return a;
 }
 
@@ -57,6 +58,8 @@ public:
     bool operator!=(const VRangeIt& rhs) const { return !(*this == rhs); }
     /// dereference
     const val_t& operator*() const { return c; }
+    /// dereference and increment for generator use
+    val_t operator()() const { return c++; }
 
 protected:
     const val_t N; ///< maximum

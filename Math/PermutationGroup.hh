@@ -6,6 +6,7 @@
 #include "FiniteGroup.hh"
 #include "RangeIt.hh"
 #include "Partition.hh"
+#include <numeric>
 
 /// Compile-time-evaluable factorial function
 constexpr inline size_t factorial(size_t i) { return i > 1? i*factorial(i-1) : 1; }
@@ -23,8 +24,8 @@ public:
     typedef PartArray<N,idx_t,idx_t> cycles_t;
 
     /// Default constructor for identity permutation
-    constexpr Permutation(): super(_id()) { }
-    /// Permutation from array
+    constexpr Permutation() { std::iota(this->begin(), this->end(), 0); }
+    /// Permutation from array, with optional index offset (for cut-and-paste from Fortran-style indices)
     constexpr Permutation(const super& a, int i=0): super(a) { if(i) for(auto& c: *this) c -= i; assert(validate()); }
 
     /// element access
@@ -94,7 +95,7 @@ public:
 
         cycles_t c;     // unsorted cycles
         size_t nc = 0;  // number of cycles found
-        auto s = _id(); // as-yet-unassigned elements
+        auto s = RangeArray<idx_t,0,N>(); // as-yet-unassigned elements
         idx_t u = 0;    // number of elements checked
 
         while(u < N) {
@@ -113,26 +114,19 @@ public:
         }
 
         // cycles sorted to canonical order
-        auto ci = _id();
+        auto ci = RangeArray<idx_t,0,N>();
         std::stable_sort(ci.begin(), ci.begin()+nc, [&](idx_t j, idx_t k) { return c.len(k) < c.len(j); });
         c.reorder(ci);
         return c;
     }
 
-protected:
-    /// build identity permutation
-    static constexpr super _id() { return RangeArray<idx_t,0,N>(); }
-
     /// verify this is valid permutation
     bool validate() const {
-        set<idx_t> i;
-        for(auto c: *this) {
-            if(c < 0 || c >= idx_t(N)) return false;
-            if(!i.insert(c).second) return false;
-        }
-        return i.size() == N;
+        constexpr Permutation P;
+        return std::is_permutation(P.begin(), P.end(), this->begin());
     }
 
+protected:
     /// mutable element access
     idx_t& operator[](size_t i) { return ((super&)*this)[i]; }
 

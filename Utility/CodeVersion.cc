@@ -3,7 +3,7 @@
 #include "CodeVersion.hh"
 #include <unistd.h> // for gethostname
 #include <pwd.h>    // for user name
-#include <stdio.h>
+#include <stdio.h>  // for printf
 
 /// convert literal text to const char* (no #define expansion)
 #define STRINGIFY_VERBATIM(...) #__VA_ARGS__
@@ -13,6 +13,12 @@
 namespace CodeVersion {
 
     const string compile_time = __DATE__ " " __TIME__;
+
+#ifdef REPO_NAME
+    const string repo_name = STRINGIFY(REPO_NAME);
+#else
+    const string repo_name = "Repo";
+#endif
 
 #ifdef REPO_VERSION
     const string repo_version = STRINGIFY(REPO_VERSION);
@@ -29,7 +35,17 @@ namespace CodeVersion {
 #ifdef __GNUC__
     const string compiler = STRINGIFY(gcc __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__);
 #else
-    const string compiler = "not gcc";
+#ifdef __VERSION__
+    const string compiler = STRINGIFY(__VERSION__);
+#else
+    const string compiler = "unknown";
+#endif
+#endif
+
+#ifdef __cplusplus
+    const string cpp_version = STRINGIFY(__cplusplus);
+#else
+    const string cpp_version = "unknown";
 #endif
 
     const char* get_hostname() {
@@ -49,8 +65,8 @@ namespace CodeVersion {
     const string user = get_user();
 
     void display_code_version() {
-        printf("Repository version '%s' (%s), compiled %s with %s\n",
-               repo_tagname.c_str(), repo_version.c_str(), compile_time.c_str(), compiler.c_str());
+        printf("%s '%s' (%s),\n compiled %s with %s (c++ %s) by %s@%s\n",
+               repo_name.c_str(), repo_tagname.c_str(), repo_version.c_str(), compile_time.c_str(),
+               compiler.c_str(), cpp_version.c_str(), user.c_str(), host.c_str());
     }
-
 }
