@@ -16,7 +16,7 @@ using std::vector;
 using std::multimap;
 #include <algorithm>
 #include <cassert>
-#include <exception>
+#include <stdexcept>
 
 /// Cacheing HDF5 table reader
 template<typename T>
@@ -38,8 +38,8 @@ public:
     /// set identifying number for value type
     static void setIdentifier(T& val, int64_t id);
 
-    /// load next "event" of entries with same identifer into vector
-    int64_t loadEvent(vector<T>& v, bool clear = true);
+    /// load next "event" of entries with same identifer into vector; return event identifier loaded
+    int64_t loadEvent(vector<T>& v);
     /// load all data into map by event number
     void loadAll(multimap<int64_t, T>& dat);
     /// list of event numbers in data
@@ -165,41 +165,48 @@ void HDF5_Table_Cache<T>::setFile(hid_t f) {
 template<typename T>
 bool HDF5_Table_Cache<T>::next(T& val) {
     if(!infile_id) return false;
+
     if(cache_idx >= cached.size()) { // cache exhausted, needs new data
-        if(nread==maxread) { // file fully exhausted
-            nread = 0;
+        if(nread == maxread) {  // file fully exhausted.
+            nread = 0;          // Next `next()` call will return to start of file.
             cache_idx = 0;
             cached.clear();
             return false;
         }
+
         hsize_t nToRead = std::min(nchunk, maxread-nread);
         if(!nToRead) return false;
+
         cached.resize(nToRead);
         cache_idx = 0;
         herr_t err = H5TBread_records(infile_id, Tspec.table_name.c_str(), nread, nToRead,
                                       sizeof(T),  Tspec.offsets, Tspec.field_sizes, cached.data());
-        assert(err >= 0); // "non-negative value on success"
-        if(err < 0) return false;
+        if(err < 0) throw std::runtime_error("Unexpected failure reading HDF5 file");
         nread += nToRead;
     }
-    if(cache_idx >= cached.size()) return false;
+
+    assert(cache_idx < cached.size());
     val = cached[cache_idx++];
     return true;
 }
 
 template<typename T>
-int64_t HDF5_Table_Cache<T>::loadEvent(vector<T>& v, bool clear) {
-    if(clear) v.clear();
-    int64_t current_evt = getIdentifier(next_read); // = -1 on the first and last time
-    if(current_evt > 0) v.push_back(next_read);
-    else if(getNRead()) return -1; // file is exhausted
+int64_t HDF5_Table_Cache<T>::loadEvent(vector<T>& v) {
+    v.clear();
+    auto current_evt = getIdentifier(next_read); // = -1 on the first time; -2 at file end
+    if(current_evt == -2) {
+        setIdentifier(next_read, -1); // reset to restart at begin of data
+        return -2;
+    }
+    if(current_evt != -1) v.push_back(next_read);
 
     while(true) {
         if(!next(next_read)) {
-            setIdentifier(next_read, -1);
+            setIdentifier(next_read, -2);
             break;
         }
-        if(current_evt < 0) current_evt = getIdentifier(next_read);
+
+        if(current_evt == -1) current_evt = getIdentifier(next_read);
         else if(getIdentifier(next_read) != current_evt) break;
         v.push_back(next_read);
     }

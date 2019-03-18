@@ -4,6 +4,8 @@
 #ifndef SFINAEFUNCS_HH
 #define SFINAEFUNCS_HH
 
+#include <stdio.h>
+
 template<typename T>
 auto disp_imp(const T& o, int) -> decltype(o.display(), void()) { o.display(); }
 template<typename T>
