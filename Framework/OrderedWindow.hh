@@ -13,6 +13,18 @@ using std::deque;
 #include <utility>
 using std::pair;
 
+/// `for(auto& x: ItRange(start, end))`
+template<class iterator>
+class ItRange: public pair<iterator,const iterator> {
+public:
+    /// Constructor
+    ItRange(const iterator& i0, const iterator& i1): pair<iterator,const iterator>(i0,i1) { }
+    /// range start
+    iterator& begin() { return this->first; }
+    /// range end
+    const iterator& end() const { return this->second; }
+};
+
 /// Flow-through analysis on a ``window'' of ordered objects
 template<class T0, typename ordering_t = double>
 class OrderedWindow: protected deque<T0> {
@@ -21,8 +33,12 @@ public:
     typedef typename std::remove_pointer<T0>::type T;
     /// iterator type
     typedef typename deque<T0>::iterator iterator;
-    /// iterator type
+    /// iterator range
+    typedef ItRange<iterator> itrange_t;
+    /// const_iterator type
     typedef typename deque<T0>::const_iterator const_iterator;
+    /// const_iterator range
+    typedef ItRange<const_iterator> const_itrange_t;
 
     /// get reference, dereferencing if object is pointer
     template<typename U>
@@ -69,17 +85,24 @@ public:
 
     /// get iterator to first item in window with order >= x
     iterator abs_position(ordering_t x) { return std::lower_bound(begin(), end(), x, [](const T0& a, ordering_t t) { return order(a) < t; }); }
+    /// get const_iterator to first item in window with order >= x
+    const_iterator abs_position(double x) const { return std::lower_bound(begin(), end(), x, [](const T0& a, ordering_t t) { return order(a) < t; }); }
 
-    /// get iterator to first item in window with order >= x
-    const iterator abs_position(double x) const { return std::lower_bound(begin(), end(), x, [](const T0& a, ordering_t t) { return order(a) < t; }); }
     /// get iterator to first item in window with order >= xMid + dx
     iterator rel_position(double dx) { return abs_position(xMid()+dx); }
+    /// get const_iterator to first item in window with order >= xMid + dx
+    const_iterator rel_position(double dx) const { return abs_position(xMid()+dx); }
+
     /// get window position range for range offset from mid
-    pair<iterator, iterator> rel_range(double dx0, double dx1) { return {rel_position(dx0), rel_position(dx1)}; }
+    itrange_t rel_range(double dx0, double dx1) { return {rel_position(dx0), rel_position(dx1)}; }
+    /// get (const) window position range for range offset from mid
+    const_itrange_t rel_range(double dx0, double dx1) const { return {rel_position(dx0), rel_position(dx1)}; }
     /// count items in range
-    size_t rel_count(double dx0, double dx1) { return rel_position(dx1).I - rel_position(dx0).I; }
+    size_t rel_count(double dx0, double dx1) const { return rel_position(dx1).I - rel_position(dx0).I; }
+
     /// get window position range for absolute range
-    pair<iterator, iterator> abs_range(double x0, double x1) { return {abs_position(x0), abs_position(x1)}; }
+    itrange_t abs_range(double x0, double x1) { return {abs_position(x0), abs_position(x1)}; }
+
     /// get number of objects in specified time range around mid
     int window_counts(ordering_t dx0, ordering_t dx1) const { auto x = xMid(); return abs_position(x+dx1) - abs_position(x+dx0); }
 
