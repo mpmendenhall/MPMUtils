@@ -26,7 +26,7 @@ SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly) {
         sqlite3_config(SQLITE_CONFIG_LOG, &errorLogCallback, nullptr);
         errlog_configured = true;
     }
-    printf("Opening SQLite3 DB '%s'...\n",dbname.c_str());
+    //printf("Opening SQLite3 DB '%s'...\n",dbname.c_str());
     int err = sqlite3_open_v2(dbname.c_str(), &db,
                               readonly? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE, nullptr);
     if(err) {

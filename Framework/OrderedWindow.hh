@@ -5,6 +5,7 @@
 #define ORDEREDWINDOW_HH
 
 #include "SFINAEFuncs.hh" // for dispObj
+#include "DataSink.hh"
 #include <cassert>
 #include <algorithm> // for std::lower_bound
 #include <type_traits> // for std::remove_pointer
@@ -27,7 +28,7 @@ public:
 
 /// Flow-through analysis on a ``window'' of ordered objects
 template<class T0, typename ordering_t = double>
-class OrderedWindow: protected deque<T0> {
+class OrderedWindow: protected deque<T0>, public DataSink<T0> {
 public:
     /// un-pointered class being ordered
     typedef typename std::remove_pointer<T0>::type T;
@@ -56,7 +57,7 @@ public:
     virtual ~OrderedWindow() { assert(!size()); assert(!imid); }
 
     /// clear remaining objects through window (at end of run, etc.)
-    virtual void clearWindow() { while(size()) nextmid(); }
+    void flush() override { while(size()) nextmid(); }
     /// Flush as if inserting new highest at x
     void flushHi(ordering_t x) { while(size() && order((*this)[imid]) + hwidth <= x) nextmid(); }
     /// Flush until lowest > x (or queue empty)
@@ -107,7 +108,7 @@ public:
     int window_counts(ordering_t dx0, ordering_t dx1) const { auto x = xMid(); return abs_position(x+dx1) - abs_position(x+dx0); }
 
     /// add next newer object; process older as they pass through window.
-    void addItem(const T0& oo) {
+    void push(const T0& oo) override {
         auto o = oo;
         if(verbose >= 4) { printf("Adding new "); display(o); }
         auto x = order(o);

@@ -70,7 +70,7 @@ protected:
 
 /// OrderedWindow of "clustered" objects
 template<class C>
-class ClusteredWindow: public OrderedWindow<C> {
+class ClusteredWindow: public DataSink<typename C::T>, public OrderedWindow<C> {
 public:
     typedef typename C::T T;
 
@@ -78,13 +78,13 @@ public:
     ClusteredWindow(double cdx, double dw): OrderedWindow<C>(dw), cluster_dx(cdx) { currentC.dx = cluster_dx; }
 
     /// clear remaining objects through window
-    void clearWindow() override {
+    void flush() override {
         completeCluster();
-        OrderedWindow<C>::clearWindow();
+        OrderedWindow<C>::flush();
     }
 
     /// add object to newest cluster (or start newer cluster), assuming responsibility for deletion
-    virtual void addSingle(const T& oo) {
+    void push(const T& oo) override {
         auto o = oo;
         processSingle(o);
         if(!currentC.tryAdd(o)) {
@@ -107,7 +107,7 @@ protected:
     /// push currentC into window
     virtual void completeCluster() {
         currentC.close();
-        if(includeCluster(currentC)) this->addItem(currentC);
+        if(currentC.size() && includeCluster(currentC)) this->OrderedWindow<C>::push(currentC);
         currentC.clear();
     }
 };
