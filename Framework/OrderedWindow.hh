@@ -115,7 +115,7 @@ public:
             dispose(o);
         } else {
             flushHi(x);
-            this->push_back(o);
+            deque<T0>::push_back(o);
             processNew(o);
         }
         nProcessed++;

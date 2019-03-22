@@ -15,10 +15,12 @@ class Cluster: public vector<_T> {
 public:
     typedef _T T;
     typedef _ordering_t ordering_t;
-    using vector<T>::size;
-    using vector<T>::back;
-    using vector<T>::begin;
-    using vector<T>::end;
+    typedef vector<T> super;
+    using super::size;
+    using super::back;
+    using super::begin;
+    using super::end;
+    using super::push_back;
 
     /// Constructor
     Cluster(ordering_t w = 0): dx(w) { }
@@ -45,7 +47,7 @@ public:
     virtual void close() { x_median = size()? ordering_t((*this)[size()/2]) : 0; }
 
     /// Clear contents
-    virtual void clear() { vector<T>::clear(); }
+    virtual void clear() { super::clear(); }
 
     /// sort contents by ordering parameter
     void sort() { std::sort(begin(), end(), [this](const T& a, const T& b) { return ordering_t(a) < ordering_t(b); }); }
@@ -64,7 +66,7 @@ public:
 
 protected:
     /// append item to cluster. Override to add more fancy calculations.
-    virtual void append(const T& o) { this->push_back(o); }
+    virtual void append(const T& o) { push_back(o); }
 
     ordering_t x_median = 0;    ///< representative median object position
 };
@@ -109,7 +111,7 @@ protected:
     /// push currentC into window
     virtual void completeCluster() {
         currentC.close();
-        if(currentC.size() && includeCluster(currentC)) this->OrderedWindow<C>::push(currentC);
+        if(currentC.size() && includeCluster(currentC)) OrderedWindow<C>::push(currentC);
         currentC.clear();
     }
 };
