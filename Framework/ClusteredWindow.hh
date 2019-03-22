@@ -10,10 +10,11 @@
 using std::vector;
 
 /// "Cluster" base class
-template<class T0, typename ordering_t = double>
-class Cluster: public vector<T0> {
+template<class _T, typename _ordering_t = double>
+class Cluster: public vector<_T> {
 public:
-    typedef T0 T;
+    typedef _T T;
+    typedef _ordering_t ordering_t;
     using vector<T>::size;
     using vector<T>::back;
     using vector<T>::begin;
@@ -70,12 +71,13 @@ protected:
 
 /// OrderedWindow of "clustered" objects
 template<class C>
-class ClusteredWindow: public DataSink<typename C::T>, public OrderedWindow<C> {
+class ClusteredWindow: public DataSink<typename C::T>, public OrderedWindow<C, typename C::ordering_t> {
 public:
     typedef typename C::T T;
+    typedef typename C::ordering_t ordering_t;
 
     /// Constructor
-    ClusteredWindow(double cdx, double dw): OrderedWindow<C>(dw), cluster_dx(cdx) { currentC.dx = cluster_dx; }
+    ClusteredWindow(ordering_t cdx, ordering_t dw): OrderedWindow<C>(dw), cluster_dx(cdx) { currentC.dx = cluster_dx; }
 
     /// clear remaining objects through window
     void flush() override {
@@ -93,7 +95,7 @@ public:
         }
     }
 
-    double cluster_dx;  ///< time spread for cluster identification
+    ordering_t cluster_dx;  ///< time spread for cluster identification
 
 protected:
 

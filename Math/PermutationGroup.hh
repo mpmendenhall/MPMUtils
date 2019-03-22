@@ -1,4 +1,5 @@
 /// \file PermutationGroup.hh Group of fixed-size permutations
+// Michael P. Mendenhall, 2019
 
 #ifndef PERMUTATIONGROUP_HH
 #define PERMUTATIONGROUP_HH
@@ -22,26 +23,28 @@ public:
     typedef array<idx_t,N> super;
     /// cycles decomposition data
     typedef PartArray<N,idx_t,idx_t> cycles_t;
+    /// partition structure
+    typedef typename cycles_t::partition_t partition_t;
 
     /// Default constructor for identity permutation
-    constexpr Permutation() { std::iota(this->begin(), this->end(), 0); }
+    constexpr Permutation(): super{} { for(idx_t i{}; i<N; i++) (*this)[i] = i; }
     /// Permutation from array, with optional index offset (for cut-and-paste from Fortran-style indices)
     constexpr Permutation(const super& a, int i=0): super(a) { if(i) for(auto& c: *this) c -= i; assert(validate()); }
 
     /// element access
-    idx_t operator[](size_t i) const { return ((super&)*this)[i]; }
+    constexpr idx_t operator[](size_t i) const { return ((super&)*this)[i]; }
     /// swap two elements
-    void swap(size_t i, size_t j) { std::swap((*this)[i], (*this)[j]); }
+    constexpr void swap(size_t i, size_t j) { std::swap((*this)[i], (*this)[j]); }
 
     /// equality comparison
-    bool operator==(const Permutation& P) const { return (super&)*this == (super&)P; }
+    constexpr bool operator==(const Permutation& P) const { return (super&)*this == (super&)P; }
     /// inequality comparison
-    bool operator!=(const Permutation& P) const { return (super&)*this != (super&)P; }
+    constexpr bool operator!=(const Permutation& P) const { return (super&)*this != (super&)P; }
     /// ordering comparison
-    bool operator<(const Permutation& P) const { return (super&)*this < (super&)P; }
+    constexpr bool operator<(const Permutation& P) const { return (super&)*this < (super&)P; }
 
     /// get inverse
-    Permutation inverse() const {
+    constexpr Permutation inverse() const {
         Permutation e;
         idx_t j = 0;
         for(auto i: *this) e[i] = j++;
@@ -57,11 +60,11 @@ public:
         return b;
     }
     /// inplace multiplication
-    Permutation& operator*=(const Permutation& P) { return *this = (*this)*P; }
+    constexpr Permutation& operator*=(const Permutation& P) { return *this = (*this)*P; }
     /// inplace division
-    Permutation& operator/=(const Permutation& P) { return *this *= P.inverse(); }
+    constexpr Permutation& operator/=(const Permutation& P) { return *this *= P.inverse(); }
     /// out-of-place division
-    Permutation operator/(const Permutation& P) const { auto p = *this; return p /= P; }
+    constexpr Permutation operator/(const Permutation& P) const { auto p = *this; return p /= P; }
 
     /// enumeration index for permutation
     static constexpr size_t idx(const Permutation& e) {
@@ -77,7 +80,7 @@ public:
         return Permutation<N-1>::idx(e0) + (j < N? j+1 : 0)*factorial(N-1);
     }
     /// index of permutation object
-    size_t idx() const { return idx(*this); }
+    constexpr size_t idx() const { return idx(*this); }
     /// permutation number i of N!
     static constexpr Permutation element(size_t i) {
         assert(i < factorial(N));
@@ -91,21 +94,21 @@ public:
     }
 
     /// calculate element cycles
-    cycles_t cycles() const {
+    constexpr cycles_t cycles() const {
 
-        cycles_t c;     // unsorted cycles
+        cycles_t c{};   // unsorted cycles
         size_t nc = 0;  // number of cycles found
-        auto s = RangeArray<idx_t,0,N>(); // as-yet-unassigned elements
         idx_t u = 0;    // number of elements checked
+        auto s = RangeArray<idx_t,0,N>(); // as-yet-unassigned elements
 
         while(u < N) {
             auto i0 = s[u];
             if(i0 == N) { ++u; continue; } // element already found
             auto i = i0;
-            c.n[nc] = c.i0(nc);
+            c[nc] = c.i0(nc);
 
             do {
-                c.v[c.n[nc]++] = i;
+                c.v[c[nc]++] = i;
                 assert(s[i] != N);
                 s[i] = N;
             } while((i = (*this)[i]) != i0);
@@ -114,30 +117,56 @@ public:
         }
 
         // cycles sorted to canonical order
-        auto ci = RangeArray<idx_t,0,N>();
-        std::stable_sort(ci.begin(), ci.begin()+nc, [&](idx_t j, idx_t k) { return c.len(k) < c.len(j); });
-        c.reorder(ci);
+        c.sort(nc);
         return c;
     }
 
+    /// calculate partition structure
+    constexpr partition_t partitions() const {
+        array<idx_t,N> cs{};    //< cycle sizes
+        idx_t nc = 0;   // number of cycles found
+        idx_t u = 0;    // number of elements checked
+        auto s = RangeArray<idx_t,0,N>(); // as-yet-unassigned elements
+
+        while(u < N) {
+            auto i0 = s[u];
+            if(i0 == N) { ++u; continue; } // element already found
+            auto i = i0;
+
+            do {
+                ++cs[nc];
+                s[i] = N;
+            } while((i = (*this)[i]) != i0);
+
+            ++nc;
+        }
+
+        std::sort(cs.begin(), cs.begin()+nc, [](idx_t a, idx_t b){ return b<a; });
+        partition_t p;  // partition being constructed
+        u = 0;
+        for(; u<nc; u++) p[u] = p.i0(u)+cs[u];
+        for(; u<N; u++) p[u] = p[u-1];
+        return p;
+    }
+
     /// verify this is valid permutation
-    bool validate() const {
-        constexpr Permutation P;
+    constexpr bool validate() const {
+        Permutation P{};
         return std::is_permutation(P.begin(), P.end(), this->begin());
     }
 
 protected:
     /// mutable element access
-    idx_t& operator[](size_t i) { return ((super&)*this)[i]; }
+    constexpr idx_t& operator[](size_t i) { return ((super&)*this)[i]; }
 
     friend class Permutation<N-1>; // for applying sub-permutation
 };
 /// Null permutation special case, in case not optimized out
 template<>
-inline size_t Permutation<0>::idx(const Permutation&) { return 0; }
+constexpr inline size_t Permutation<0>::idx(const Permutation&) { return 0; }
 /// Null permutation special case, in case not optimized out
 template<>
-inline Permutation<0> Permutation<0>::element(size_t) { return {}; }
+constexpr inline Permutation<0> Permutation<0>::element(size_t) { return {}; }
 
 /// output representation for permutation
 template<size_t N, typename idx_t>
@@ -168,9 +197,9 @@ public:
     static constexpr elem_t apply(elem_t a, elem_t b) { return a*b; }
 
     /// element iteration start
-    static constexpr auto begin() { return esg_siterator<SymmetricGroup<N>>(); }
+    static constexpr auto begin() { return esg_static_iterator<SymmetricGroup<N>>(); }
     /// element iteration end
-    static constexpr auto end() { return esg_siterator<SymmetricGroup<N>>(getOrder()); }
+    static constexpr auto end() { return esg_static_iterator<SymmetricGroup<N>>(getOrder()); }
 };
 
 /// Signed Permutation (combines permute with +/- sign flip)

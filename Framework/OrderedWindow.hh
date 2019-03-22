@@ -5,6 +5,7 @@
 #define ORDEREDWINDOW_HH
 
 #include "SFINAEFuncs.hh" // for dispObj
+#include "deref_if_ptr.hh"
 #include "DataSink.hh"
 #include <cassert>
 #include <algorithm> // for std::lower_bound
@@ -16,10 +17,10 @@ using std::pair;
 
 /// `for(auto& x: ItRange(start, end))`
 template<class iterator>
-class ItRange: public pair<iterator,const iterator> {
+class ItRange: public pair<iterator, const iterator> {
 public:
     /// Constructor
-    ItRange(const iterator& i0, const iterator& i1): pair<iterator,const iterator>(i0,i1) { }
+    ItRange(const iterator& i0, const iterator& i1): pair<iterator, const iterator>(i0,i1) { }
     /// range start
     iterator& begin() { return this->first; }
     /// range end
@@ -27,9 +28,11 @@ public:
 };
 
 /// Flow-through analysis on a ``window'' of ordered objects
-template<class T0, typename ordering_t = double>
+template<class T0, typename _ordering_t = double>
 class OrderedWindow: protected deque<T0>, public DataSink<T0> {
 public:
+    /// ordering type
+    typedef _ordering_t ordering_t;
     /// un-pointered class being ordered
     typedef typename std::remove_pointer<T0>::type T;
     /// iterator type
@@ -41,12 +44,6 @@ public:
     /// const_iterator range
     typedef ItRange<const_iterator> const_itrange_t;
 
-    /// get reference, dereferencing if object is pointer
-    template<typename U>
-    static U& deref_if_ptr(U& obj) { return obj; }
-    /// get reference, dereferencing if object is pointer
-    template<typename U>
-    static U& deref_if_ptr(U* obj) { return *obj; }
     /// get ordering parameter for object
     template<typename U>
     static ordering_t order(U o) { return ordering_t(deref_if_ptr(o)); }
