@@ -3,7 +3,7 @@
 
 #ifndef MULTIWINDOW_HH
 #define MUTLIWINDOW_HH
-
+/*
 #include "OrderedWindow.hh"
 #include "AllocPool.hh"
 #include <vector>
@@ -43,5 +43,5 @@ protected:
     /// processing hook for each object as it passes through middle of window
     void _processMid(void* o) override;
 };
-
+*/
 #endif

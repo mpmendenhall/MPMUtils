@@ -7,10 +7,15 @@
 #include "CyclicGroup.hh"
 #include "Stopwatch.hh"
 #include "CodeVersion.hh"
+#include "DecisionTree.hh"
 #include <stdlib.h>
 
 int main(int argc, char** argv) {
     CodeVersion::display_code_version();
+
+    auto f = [](size_t a, size_t b) { return a > b; };
+    DecisionTree DT(12,12,f);
+    DT.display();
 
     int n = 4;
     if(argc > 1) n = atoi(argv[1]);

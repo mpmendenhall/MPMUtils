@@ -1,4 +1,4 @@
-/// \file KeyTable.cpp
+/// \file KeyTable.cc
 
 #include "KeyTable.hh"
 

@@ -1,7 +1,7 @@
 /// \file MultiWindow.cc
 
 #include "MultiWindow.hh"
-
+/*
 void MultiWindow::addItem(void* o, OrderedWindowBase& W) {
     assert(o);
     auto so = get();
@@ -43,3 +43,4 @@ void MultiWindow::disposeLo() {
     so->W->disposeLo();
     dispose(o);
 }
+*/

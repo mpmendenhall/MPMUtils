@@ -6,6 +6,8 @@
 
 #include <vector>
 using std::vector;
+#include <array>
+using std::array;
 
 /// Tree wrapper class
 template<class T>
@@ -66,6 +68,22 @@ public:
 protected:
     TreeWrap<T>* parent = nullptr;  ///< parent node
     vector<TreeWrap<T>*> children;  ///< child nodes
+};
+
+
+/// N-ary-branching tree wrapper
+template<class T, size_t N>
+class NaryTreeWrap: public T {
+public:
+    /// Constructor inherited from base class
+    using T::T;
+    /// Destructor, manages child nodes
+    virtual ~NaryTreeWrap() { for(auto n: Ns) delete n; }
+
+    array<NaryTreeWrap*,N> Ns;
+
+    /// convenience for adding children
+    void setChild(size_t i, NaryTreeWrap* W) { if(Ns[i] != W) delete Ns[i]; Ns[i] = W; }
 };
 
 #endif
