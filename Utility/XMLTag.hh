@@ -31,8 +31,9 @@ public:
 
     /// Add a tag attribute
     virtual void addAttr(const string& nm, const string& val) { attrs[nm] = val; }
-    /// Add numerical attribute
-    virtual void addAttr(const string& nm, double val) { addAttr(nm, to_str(val)); }
+    /// Add a tag attribute
+    template<typename C>
+    void addAttr(const string& nm, const C& val) { addAttr(nm, to_str(val)); }
     /// Write output
     virtual void write(ostream& o, unsigned int ndeep = 0, const string& indent = "    ");
 
@@ -75,12 +76,17 @@ public:
     virtual XMLTag* makeXML();
     /// Add a tag attribute
     virtual void addAttr(const string& nm, const string& val) { xattrs[nm] = val; }
-    /// Add numerical attribute
-    virtual void addAttr(const string& nm, double val) { addAttr(nm, XMLTag::to_str(val)); }
+    /// Add a tag attribute
+    template<typename C>
+    void addAttr(const string& nm, const C& val) { addAttr(nm, to_str(val)); }
 
     string tagname;                     ///< this item's tag name
 
 protected:
+    /// utility function for converting to string
+    template<typename T>
+    static string to_str(T x) { std::stringstream ss; ss << x; return ss.str(); }
+
     /// add class-specific XML data; subclass me!
     virtual void _makeXML(XMLTag&) { }
 
