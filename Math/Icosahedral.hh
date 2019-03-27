@@ -89,7 +89,7 @@ namespace Icosahedral {
     vector<V> points(const V& v) {
         vector<V> vv(Rs.getOrder());
         auto it = vv.begin();
-        for(auto& M: Rs) *(it++) = M*v;
+        for(auto& M: Rs) *(it++) = Matrix<3, 3, typename std::remove_const< typename std::remove_reference<decltype(v[0])>::type >::type>(M)*v;
         std::sort(vv.begin(), vv.end());
         vv.erase(std::unique(vv.begin(), vv.end()), vv.end());
         return vv;

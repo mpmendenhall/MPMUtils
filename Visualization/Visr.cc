@@ -58,7 +58,11 @@ namespace vsr {
         bgB = b;
         bgA = a;
     }
+
+    bool glutLooping = false;
 }
+
+
 
 #ifdef WITH_OPENGL
 #include <GL/freeglut.h>
@@ -71,11 +75,15 @@ namespace vsr {
     std::vector<GLuint> displaySegs;
 
     void doGlutLoop() {
+        glutLooping = true;
         glutMainLoop();
+        glutLooping = false;
     }
 
     void redrawDisplay() {
-        glCallLists(displaySegs.size(),GL_UNSIGNED_INT,&displaySegs.front());
+        if(!displaySegs.size()) return;
+
+        glCallLists(displaySegs.size(), GL_UNSIGNED_INT, &displaySegs.front());
         glutSwapBuffers();
         glFlush();
         glFinish();
@@ -132,13 +140,14 @@ namespace vsr {
     void _startRecording(std::vector<float>& v) {
         glFlush();
         glFinish();
-        if(!v.size()) {
-            if(displaySegs.size() && glIsList(displaySegs.back()))
-                glDeleteLists(displaySegs.back(),1);
-            else
-                displaySegs.push_back(glGenLists(1));
-        } else
-            displaySegs.push_back(glGenLists(1));
+
+        if(v.size()) { // "newseg" overwrite/append
+            while(displaySegs.size()) {
+                if(glIsList(displaySegs.back())) glDeleteLists(displaySegs.back(), 1);
+                displaySegs.pop_back();
+            }
+        }
+        displaySegs.push_back(glGenLists(1));
         glNewList(displaySegs.back(), GL_COMPILE);
     }
     void startRecording(bool newseg) {
@@ -146,7 +155,7 @@ namespace vsr {
         pthread_mutex_lock(&commandLock);
         if(newseg) commands.clear();
         qcmd c(_startRecording);
-        if(!newseg) c.v.push_back(1);
+        if(newseg) c.v.push_back(1); // mark as addition to previous segment
         addCmd(c);
     }
 
@@ -155,7 +164,6 @@ namespace vsr {
         glutPostRedisplay();
         glFlush();
         glFinish();
-
     }
     void stopRecording() {
         if(!window_open) return;
@@ -397,8 +405,9 @@ namespace vsr {
 
         resetViewTransformation();
         setClearColor(1.0,1.0,1.0,0.0);
+
         startRecording(true);
-        //printf("Drawing initial teapot...\n");
+        printf("Drawing initial teapot...\n");
         clearWindow();
         glColor3f(0.0, 0.0, 1.0);
         glutWireTeapot(0.5);

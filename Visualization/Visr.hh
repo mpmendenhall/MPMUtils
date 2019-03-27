@@ -16,6 +16,8 @@ namespace vsr {
     void initWindow(const std::string& title = "OpenGL Viewer Window", double s = 1.0);
     /// enter main drawing loop
     void doGlutLoop();
+    /// test on whether loop is running
+    extern bool glutLooping;
 
     /// reset view to default
     void resetViewTransformation();

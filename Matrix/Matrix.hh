@@ -128,7 +128,7 @@ public:
     template<typename W>
     operator Matrix<M,N,W>() const {
         Matrix<M,N,W> r;
-        for(size_t i=0; i<nRows*nCols; i++) r[i] = (*this)[i];
+        for(size_t i=0; i<nRows*nCols; i++) r[i] = W((*this)[i]);
         return r;
     }
 
@@ -228,17 +228,12 @@ const Vec<N,T> Matrix<M,N,T>::rMultiply(const Vec<M,T>& v) const {
     return a;
 }
 
-
 template<size_t M, size_t N, typename T>
 const Matrix<M,N,T>& Matrix<M,N,T>::invert() {
     assert(M==N);
     subinvert(0);
     return *this;
 }
-
-
-
-
 
 namespace matrix_element_inversion {
 
@@ -250,6 +245,46 @@ namespace matrix_element_inversion {
     inline void invert_element(double& t) { t = 1.0/t; }
 
 }
+
+template<size_t M>
+struct SqMat {
+    template<typename T>
+    static const Matrix<M-1, M-1, T> minor(const Matrix<M,M,T>& X, size_t i, size_t j) {
+        Matrix<M-1, M-1, T> m;
+        size_t rr = 0;
+        for(size_t r=0; r<M; r++) {
+            if(r==i) continue;
+            size_t cc = 0;
+            for(size_t c=0; c<M; c++) {
+                if(c==j) continue;
+                m(rr,cc) = X(r,c);
+                ++cc;
+            }
+            ++rr;
+        }
+        return m;
+    }
+
+    template<typename T>
+    static const T det(const Matrix<M,M,T>& X) {
+        T d{};
+        bool pos = true;
+        for(size_t r=0; r<M; r++) {
+            auto dm = X(r,0)*SqMat<M-1>::det(minor(X,r,0));
+            if(pos) d += dm;
+            else    d -= dm;
+            pos = !pos;
+        }
+        return d;
+    }
+};
+
+template<>
+struct SqMat<1> {
+    template<typename T>
+    static const T det(const Matrix<1,1,T>& X) { return X(0,0); }
+};
+
 
 template<size_t M, size_t N, typename T>
 void Matrix<M,N,T>::subinvert(size_t n) {

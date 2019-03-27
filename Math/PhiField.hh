@@ -16,6 +16,8 @@ public:
 
     /// convert to SurdSum
     operator SurdSum() const { return SurdSum(a + b/2) + SurdSum(b/2)*SurdSum::sqrt(5); }
+    /// convert to double
+    explicit operator double() const { return double(a) + double(b)*0.5*(1+sqrt(5.)); }
 
     /// equality with rational (also picks up int)
     bool operator==(const Rational& R) const { return a == R && !b; }
