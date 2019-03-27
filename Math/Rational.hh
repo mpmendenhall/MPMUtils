@@ -28,6 +28,10 @@ public:
     explicit operator double() const { auto nd = components(); return double(nd.first)/nd.second; }
     /// check if nonzero
     explicit operator bool() const { return  !isZero(); }
+    /// check if > 0
+    bool posdef() const { return positive && !isZero(); }
+    /// check if < 0
+    bool negdef() const { return !positive && !isZero(); }
 
     /// (signed) numerator, (unsigned) denominator pair
     pair<int,int> components() const;

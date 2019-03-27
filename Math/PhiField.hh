@@ -23,7 +23,9 @@ public:
     template<typename T>
     bool operator!=(const T& x) const { return !(*this == x); }
     /// comparison
-    bool operator<(const SurdSum& S) const { return SurdSum(*this) < S; }
+    bool operator<(const PhiField& P) const;
+    /// comparison with rational (also picks up int)
+    bool operator<(const Rational& R) const;
     /// check if nonzero
     explicit operator bool() const { return a || b; }
 

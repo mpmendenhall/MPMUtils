@@ -8,6 +8,8 @@
 #include "PhiField.hh"
 #include "ModularField.hh"
 #include "FiniteGroup.hh"
+#include "DecisionTree.hh"
+#include "GeomCalcUtils.hh"
 
 /// Information about icosahedral symmetry point group
 namespace Icosahedral {
@@ -19,8 +21,6 @@ namespace Icosahedral {
     typedef MultiplySG<elem_t> groupop_t;
     /// Rotation axis type
     typedef Vec<3,PhiField> axis_t;
-    /// Vector operated on by group
-    typedef Vec<3,SurdSum> vec_t;
 
     /// triangular rotations enumeration
     typedef ModularField<3>  n3_t;
@@ -28,14 +28,17 @@ namespace Icosahedral {
     typedef ModularField<5>  n5_t;
     /// dodecahedral faces / icosahedral vertices enumeration
     typedef ModularField<12> n12_t;
+    /// dodecahedral flips enumeration
+    typedef ModularField<15> n15_t;
     /// icosahedral faces = dodecahedral vertices enumeration
     typedef ModularField<20> n20_t;
     /// icosahedral, dodecahedral edges enumeration
     typedef ModularField<30> n30_t;
 
-    // generators for all icosahedral symmetry rotations
-    extern const elem_t Ra; ///< one generator
-    extern const elem_t Rb; ///< another generator
+    // generators for full icosahedral symmetry
+    extern const elem_t Ra; ///< one rotation generator
+    extern const elem_t Rb; ///< another rotation generator
+    extern const elem_t Rc; ///< inversion generator
 
     /// generators span type
     typedef GeneratorsSemigroup<groupop_t> genspan_t;
@@ -56,15 +59,25 @@ namespace Icosahedral {
     /// dodecahedral face info
     struct f12_t {
         n12_t  i;       ///< enumeration index
-        axis_t c;       ///< central axis
+        elem_t M;       ///< rotation to this face
+        axis_t c;       ///< central axis (pair of dodecahedral faces, icosahedral vertices)
         axis_t vs[5];   ///< vertices, clockwise loop
         elem_t R[5];    ///< ID and successive 2*pi/5 clockwise rotations
     };
     extern const array<f12_t,12> dodFaces;
 
+    /// flip axis info
+    struct f15_t {
+        n15_t  i;       ///< enumeration index
+        elem_t M;       ///< flip element
+        axis_t c;       ///< central axis (pair of edge centers)
+    };
+    extern const array<f15_t,15> flipAxes;
+
     /// icosahedral face info
     struct f20_t {
         n20_t  i;       ///< enumeration index
+        elem_t M;       ///< rotation to this face
         axis_t c;       ///< central axis
         axis_t vs[3];   ///< vertices, clockwise loop
         elem_t R[3];    ///< ID and successive 2*pi/3 clockwise rotations
@@ -72,13 +85,39 @@ namespace Icosahedral {
     extern const array<f20_t,20> icoFaces;
 
     /// apply all 60 rotations to vector, eliminating duplicates
-    vector<vec_t> points(const vec_t& v);
+    template<typename V>
+    vector<V> points(const V& v) {
+        vector<V> vv(Rs.getOrder());
+        auto it = vv.begin();
+        for(auto& M: Rs) *(it++) = M*v;
+        std::sort(vv.begin(), vv.end());
+        vv.erase(std::unique(vv.begin(), vv.end()), vv.end());
+        return vv;
+    }
 
     /// cos theta for rotation
-    inline SurdSum cosTheta(const elem_t& M) { return (M.trace()-1)/2; }
+    inline PhiField cosTheta(const elem_t& M) { return (M.trace()-1)/2; }
 
     /// print description of icosahedral symmetry to stdout
     void describe();
+
+    /// Point identification
+    class Navigator: public DecisionTree {
+    public:
+        /// Constructor
+        Navigator();
+
+        /// Identify fundamental domain in which vector falls
+        template<class V>
+        size_t domain(const V& v) { return decide(v, axpart<V>); }
+
+    protected:
+        /// check direction of vector relative to flip axis
+        template<class V>
+        static bool axpart(const V& v, size_t t) { return dot(v, flipAxes[t].c) < 0; }
+    };
+
+    extern const Navigator Nav;
 }
 
 /*

@@ -18,3 +18,18 @@ std::ostream& operator<<(std::ostream& o, const PhiField& r) {
 
     return o;
 }
+
+bool PhiField::operator<(const PhiField& P) const {
+    auto aa = a-P.a;
+    auto bb = P.b-b;
+    if(!bb) return aa.negdef();
+    auto c = 2*aa/bb-1;
+    return bb.positive? !c.positive || c*c < 5 : c.positive && 5 < c*c;
+}
+
+bool PhiField::operator<(const Rational& R) const {
+    auto aa = a-R;
+    if(!b) return aa.negdef();
+    auto c = -2*aa/b-1;
+    return b.positive? c.positive && 5 < c*c : !c.positive || c*c < 5;
+}

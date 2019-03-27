@@ -2,9 +2,12 @@
 // Michael P. Mendenhall, 2019
 
 #include "Icosahedral.hh"
+#include "CodeVersion.hh"
 #include <stdlib.h>
 
 int main(int, char**) {
+    CodeVersion::display_code_version();
+
     using namespace Icosahedral;
     describe();
 

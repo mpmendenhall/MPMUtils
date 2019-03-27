@@ -36,6 +36,8 @@ public:
     explicit operator bool() const { return  i; }
     /// cast to int
     explicit operator int() const { return i; }
+    /// array indexing
+    operator size_t() const { return i; }
 
     /// comparison
     bool operator<(ModularField Z) const { return i < Z.i; }

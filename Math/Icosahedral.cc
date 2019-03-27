@@ -11,6 +11,8 @@ namespace Icosahedral {
     const PhiField phi{0,1};
     const auto ihp = phi.inverse();
     const PhiField half{{1,2},0};
+    const PhiField one{1,0};
+    const PhiField zero{0,0};
 
     const elem_t Ra{{-phi/2,   ihp/2,    half,
                       ihp/2,   -half,    phi/2,
@@ -20,35 +22,52 @@ namespace Icosahedral {
                       ihp/2,   half,    phi/2,
                       half,   -phi/2,   ihp/2 }};
 
-    const GeneratorsConjugacy<groupop_t> IC({Ra,Rb});
+    const elem_t Rc{{ -one,  zero, zero,
+                       zero, -one, zero,
+                       zero, zero, -one }};
+
+    const GeneratorsConjugacy<groupop_t> IC({Ra,Rb,Rc});
     const genspan_t Rs = IC.Rs;
     const cayley_t CT = IC.CT;
     const conjugacy_t CD = IC.CD;
 
-    vector<vec_t> points(const vec_t& v) {
-        vector<vec_t> vv(Rs.getOrder());
-        auto it = vv.begin();
-        for(auto& M: Rs) *(it++) = Matrix<3,3,SurdSum>(M)*v;
-        std::sort(vv.begin(), vv.end());
-        vv.erase(std::unique(vv.begin(), vv.end()), vv.end());
-        return vv;
+    auto make_flipAxes() {
+        array<f15_t,15> fa;
+        auto& r15i = CD.M.find(2)->second.CCs.getClassNum(1);
+        n15_t n{};
+        for(auto i: r15i) {
+            fa[n].i = n;
+            fa[n].M = Rs.element(i);
+            fa[n].c = R3axis(fa[n].M);
+            ++n;
+        }
+        return fa;
     }
+    const array<f15_t,15> flipAxes = make_flipAxes();
+
+    Navigator::Navigator():
+    DecisionTree(120, 15, [](size_t i, size_t j) { axis_t e{{half, half, half*20}}; return axpart(Rs.element(i) * e, j); }) { }
+
+    const Navigator Nav;
 }
 
 void Icosahedral::describe() {
     cout << "\n---------------- Icosahedral Symmetry ----------------\n\n";
 
-    cout << "Starting from two generator rotation matrices:\n\n" << Ra << "\n" << Rb << "\n";
+    cout << "Starting from two rotation and one inversion generator matrices:\n\n" << Ra << "\n" << Rb << "\n" << Rc << "\n";
     cout << "(where φ = (1+√5)/2 is the `golden ratio')\n";
-    cout << "we build the Icosahedral symmetry point group,\n";
+    cout << "we build the Full Icosahedral symmetry point group,\n";
     CD.display();
     cout << "\n";
 
     cout << "The element of order 1 (#" << nID << ") is the identity transformation:\n" << Rs.element(nID) << "\n";
 
-    cout << "The 15 elements of order 2 are flips by pi around axes passing\n";
-    cout << "through the midpoints of opposite icosahedral/dodecahedral edges:\n";
-    auto& r15i = CD.M.find(2)->second.CCs.getClassNum(0);
+    auto pID = *CD.M.find(2)->second.CCs.getClassNum(0).begin();
+    cout << "The single element of order 2 (#" << pID << ") is the mirror inversion:\n" << Rs.element(pID) << "\n";
+
+    cout << "The 2x15 elements of order 2 are flips by pi (with and without inversion)\n";
+    cout << "around axes through the midpoints of opposite icosahedral/dodecahedral edges:\n";
+    auto& r15i = CD.M.find(2)->second.CCs.getClassNum(1);
     for(auto i: r15i) cout << "\n#" << i << ":\t" << R3axis(Rs.element(i));
     cout << "\n\n";
 
@@ -63,6 +82,13 @@ void Icosahedral::describe() {
     auto& r12i = CD.M.find(5)->second.CCs.getClassNum(0);
     for(auto i: r12i) cout << "\n#" << i << ":\t"<< R3axis(Rs.element(i));
     cout << "\n\n";
+
+    cout << "Elements of orders 6 and 10 combine parity inversion with the order-3 and order-5 rotations.\n\n";
+
+    cout << "A point can be classified into one of 120 fundamental domains\n";
+    cout << "using a decision tree based on direction relative to flip axes:\n";
+    Nav.display();
+    cout << "\n";
 
     cout << "We can associate dodecahedral faces f with vertices v (same association\n";
     cout << "vice-versa for icosahedra) by finding combinations vfvf = I:\n\n";
