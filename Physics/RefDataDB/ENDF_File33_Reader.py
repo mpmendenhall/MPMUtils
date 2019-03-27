@@ -85,7 +85,7 @@ class ENDF_File33_SubSec(ENDF_CONT_Record):
         self.subNI = [ENDF_File33_NI_SSSec(iterlines) for i in range(self.NI)]
 
     def __repr__(self):
-        s = super().__repr__()
+        s = self.printid()
         if self.subNC:
             s += "\n---- NC subsubsections ----"
             for ss in self.subNC: s += '\n' + str(ss)

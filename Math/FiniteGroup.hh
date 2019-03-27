@@ -327,8 +327,16 @@ public:
     /// apply renumeration
     OrdersDecomposition& renumerate(const renumeration_t<>& m) {
         for(auto& kv: by_order) kv.second = renumerated(kv.second, m);
+        for(auto& c: cycles) for(auto& x: c) x = m.at(x);
         cycles = renumerated_permute(cycles,m);
         return *this;
+    }
+
+    /// Get element inverse
+    constexpr size_t inverse_idx(size_t i) const {
+        auto& c = cycles[i];
+        auto n = c.size();
+        return n==1? c[0] : c[n-2];
     }
 };
 

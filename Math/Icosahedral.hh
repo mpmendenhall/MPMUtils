@@ -56,6 +56,9 @@ namespace Icosahedral {
     /// identity element number
     constexpr size_t nID = 0;
 
+    /// Mirror-reflection parity (false: flips; true: no flips) by enumerated generator
+    extern const array<bool,120> parity;
+
     /// dodecahedral face info
     struct f12_t {
         n12_t  i;       ///< enumeration index
@@ -84,12 +87,16 @@ namespace Icosahedral {
     };
     extern const array<f20_t,20> icoFaces;
 
-    /// apply all 60 rotations to vector, eliminating duplicates
+    /// apply all 60 (120) group elements to vector, eliminating duplicates
     template<typename V>
-    vector<V> points(const V& v) {
-        vector<V> vv(Rs.getOrder());
+    vector<V> points(const V& v, bool posparity = false) {
+        vector<V> vv(Rs.getOrder()/(posparity? 2 : 1));
         auto it = vv.begin();
-        for(auto& M: Rs) *(it++) = Matrix<3, 3, typename std::remove_const< typename std::remove_reference<decltype(v[0])>::type >::type>(M)*v;
+        size_t i = 0;
+        for(auto& M: Rs) {
+            if(!parity[i++] && posparity) continue;
+            *(it++) = Matrix<3,3,array_contents_t<V>>(M)*v;
+        }
         std::sort(vv.begin(), vv.end());
         vv.erase(std::unique(vv.begin(), vv.end()), vv.end());
         return vv;
@@ -109,7 +116,14 @@ namespace Icosahedral {
 
         /// Identify fundamental domain in which vector falls
         template<class V>
-        size_t domain(const V& v) { return decide(v, axpart<V>); }
+        size_t domain(const V& v) const { return decide(v, axpart<V>); }
+        /// Map item to fundamental domain; return its original domain
+        template<class V>
+        size_t map_d0(V& v) const {
+            auto dmn = domain(v);
+            v = Matrix<3,3,array_contents_t<V>>(Rs.element(CD.inverse_idx(dmn)))*v;
+            return dmn;
+        }
 
     protected:
         /// check direction of vector relative to flip axis

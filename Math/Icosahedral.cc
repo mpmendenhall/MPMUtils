@@ -31,7 +31,14 @@ namespace Icosahedral {
     const cayley_t CT = IC.CT;
     const conjugacy_t CD = IC.CD;
 
-    auto make_flipAxes() {
+    const array<bool,120> parity = []() {
+        array<bool,120> p;
+        auto it = p.begin();
+        for(auto& e: Rs) *(it++) = SqMat<3>::det(e) > 0;
+        return p;
+    }();
+
+    const array<f15_t,15> flipAxes = [](){
         array<f15_t,15> fa;
         auto& r15i = CD.M.find(2)->second.CCs.getClassNum(1);
         n15_t n{};
@@ -42,12 +49,10 @@ namespace Icosahedral {
             ++n;
         }
         return fa;
-    }
-    const array<f15_t,15> flipAxes = make_flipAxes();
+    }();
 
     Navigator::Navigator():
     DecisionTree(120, 15, [](size_t i, size_t j) { axis_t e{{half, half, half*20}}; return axpart(Rs.element(i) * e, j); }) { }
-
     const Navigator Nav;
 }
 

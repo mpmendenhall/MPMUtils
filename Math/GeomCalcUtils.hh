@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <numeric> // for std::accumulate
 
+/// Get type for contents of fixed array, std::array, std::vector
 template<typename T>
 using array_contents_t = typename std::remove_reference<decltype(std::declval<T&>()[0])>::type;
 
@@ -20,11 +21,11 @@ array_contents_t<V> vmag2(const V& v) {
 }
 
 /// Vector dot product
-template<typename T>
-inline array_contents_t<T> dot(const T& a,  const T& b) {
+template<typename T, typename U>
+inline array_contents_t<T> dot(const T& a,  const U& b) {
     array_contents_t<T> d{};
     auto it = b.begin();
-    for(auto v: a) d += v * *(it++);
+    for(auto v: a) d += v * array_contents_t<T>(*(it++));
     return d;
 }
 

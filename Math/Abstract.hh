@@ -60,7 +60,7 @@ using std::map;
 using std::array;
 using std::pair;
 
-/// Get type for contents of array
+/// Get type for contents of fixed array, std::array, std::vector
 template<typename T>
 using array_contents_t = typename std::remove_reference<decltype(std::declval<T&>()[0])>::type;
 
