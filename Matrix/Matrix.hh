@@ -246,10 +246,20 @@ namespace matrix_element_inversion {
 
 }
 
+// fix conflict with GSL(?) macro
+#ifdef minor
+#undef minor
+#endif
+
+/// Operations on a square matrix
 template<size_t M>
 struct SqMat {
+
+    /// Matrix minor (remove row i, column j)
     template<typename T>
-    static const Matrix<M-1, M-1, T> minor(const Matrix<M,M,T>& X, size_t i, size_t j) {
+    static auto minor(const Matrix<M,M,T>& X, size_t i, size_t j) {
+        static_assert(M, "Asking for minor of 0x0 matrix is impolite!");
+
         Matrix<M-1, M-1, T> m;
         size_t rr = 0;
         for(size_t r=0; r<M; r++) {
@@ -265,6 +275,7 @@ struct SqMat {
         return m;
     }
 
+    /// Determinant
     template<typename T>
     static const T det(const Matrix<M,M,T>& X) {
         T d{};
@@ -279,12 +290,12 @@ struct SqMat {
     }
 };
 
+/// 1x1 matrix special case
 template<>
 struct SqMat<1> {
     template<typename T>
-    static const T det(const Matrix<1,1,T>& X) { return X(0,0); }
+    static const T det(const Matrix<1,1,T>& X) { return X[0]; }
 };
-
 
 template<size_t M, size_t N, typename T>
 void Matrix<M,N,T>::subinvert(size_t n) {

@@ -352,8 +352,6 @@ namespace vsr {
         pthread_mutexattr_settype(&displayLockAttr, PTHREAD_MUTEX_RECURSIVE);
         pthread_mutex_init(&commandLock,&displayLockAttr);
 
-        printf("Initializing OpenGL visualization window...\n");
-
         int a = 1;
         char programname[] = "glviewer";
         char* pnameptr = programname;
@@ -407,13 +405,10 @@ namespace vsr {
         setClearColor(1.0,1.0,1.0,0.0);
 
         startRecording(true);
-        printf("Drawing initial teapot...\n");
         clearWindow();
         glColor3f(0.0, 0.0, 1.0);
         glutWireTeapot(0.5);
         stopRecording();
-
-        printf("Window init done.\n");
     }
 
     void reshapeWindow(int width, int height) {
