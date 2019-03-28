@@ -110,9 +110,9 @@ public:
 
     /// type conversion
     template<typename W>
-    operator Vec<N,W>() const {
+    explicit operator Vec<N,W>() const {
         Vec<N,W> r;
-        for(size_t i=0; i<N; i++) r[i] = (*this)[i];
+        for(size_t i=0; i<N; i++) r[i] = W((*this)[i]);
         return r;
     }
 };

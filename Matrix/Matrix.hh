@@ -34,7 +34,10 @@ using std::vector;
  * or matrices of unusual special types (e.g. a matrix of circulant matrices)
  */
 template<size_t M, size_t N, typename T>
-class Matrix {
+class Matrix: public Vec<M*N,T> {
+protected:
+    /// convenience typedef
+    typedef Vec<M*N,T> super;
 public:
     /// number of rows
     static constexpr size_t nRows = M;
@@ -43,42 +46,20 @@ public:
     /// min(M,N)
     static constexpr size_t nDiag = std::min(M,N);
 
-    /// Default Constructor
-    Matrix() { }
-    /// Constructor from vector
-    Matrix(const array<T,M*N>& v): vv(v) { }
-    /// Ordering comparison
-    bool operator<(const Matrix<M,N,T>& rhs) const { return vv < rhs.vv; }
-    /// Equality comparison
-    bool operator==(const Matrix<M,N,T>& rhs) const { return vv == rhs.vv; }
-    /// Inequality comparison
-    bool operator!=(const Matrix<M,N,T>& rhs) const { return vv != rhs.vv; }
+    /// inherit constructors
+    using super::super;
 
     /// generate a random-filled matrix
-    static Matrix<M,N,T> random();
+    static Matrix random();
     /// generate identity matrix
-    static constexpr Matrix<M,N,T> identity();
+    static constexpr Matrix identity();
     /// generate rotation between two axes
-    static constexpr Matrix<M,N,T> rotation(size_t a1, size_t a2, T th);
+    static constexpr Matrix rotation(size_t a1, size_t a2, T th);
 
     /// const element access
-    const T& operator()(size_t m, size_t n) const { assert(m<M && n<N); return vv[m*N+n]; }
+    const T& operator()(size_t m, size_t n) const { assert(m<M && n<N); return (*this)[m*N+n]; }
     /// mutable element access
-    T& operator()(size_t m, size_t n) { assert(m<M && n<N); return vv[m*N+n]; }
-    /// direct access to data vector
-    const Vec<M*N,T>& getData() const { return vv; }
-    /// iteration through data vector
-    auto begin() { return vv.begin(); }
-    /// iteration through data vector
-    auto end() { return vv.end(); }
-    /// iteration through data vector
-    auto begin() const { return vv.begin(); }
-    /// iteration through data vector
-    auto end() const { return vv.end(); }
-    /// mutable vector element access
-    T& operator[](size_t i) { return vv[i]; }
-    /// const vector element access
-    const T& operator[](size_t i) const { return vv[i]; }
+    T& operator()(size_t m, size_t n) { assert(m<M && n<N); return (*this)[m*N+n]; }
     /// row vector
     Vec<N,T> row(size_t i) const;
     /// column vector
@@ -87,24 +68,24 @@ public:
     /// transposed copy
     Matrix<N,M,T> transposed() const;
     ///unary minus
-    const Matrix<M,N,T> operator-() const;
+    const Matrix operator-() const;
 
     /// inplace multiplication by a constant
-    Matrix<N,M,T>& operator*=(const T& c) { vv *= c; return *this; }
+    Matrix& operator*=(const T& c) { super::operator*=(c); return *this; }
     /// multiplication by a constant
-    const Matrix<M,N,T> operator*(const T& c) const { auto foo = *this; return (foo *= c); }
+    const Matrix operator*(const T& c) const { auto foo = *this; return (foo *= c); }
     /// inplace division by a constant
-    Matrix<N,M,T>& operator/=(const T& c) { vv /= c; return *this; }
+    Matrix& operator/=(const T& c) { super::operator/=(c); return *this; }
     /// division by a constant
-    const Matrix<M,N,T> operator/(const T& c) const { auto foo = *this; return (foo /= c); }
+    const Matrix operator/(const T& c) const { auto foo = *this; return (foo /= c); }
     /// inplace addition of a matrix
-    Matrix<N,M,T>& operator+=(const Matrix<M,N,T>& rhs) { vv += rhs.getData(); return *this; }
+    Matrix& operator+=(const Matrix& rhs) { super::operator+=(rhs); return *this; }
     /// addition of a matrix
-    const Matrix<M,N,T> operator+(const Matrix<M,N,T>& rhs) const { auto foo = *this; return (foo += rhs); }
+    const Matrix operator+(const Matrix& rhs) const { auto foo = *this; return (foo += rhs); }
     /// inplace subtraction of a matrix
-    Matrix<N,M,T>& operator-=(const Matrix<M,N,T>& rhs) { vv -= rhs.getData(); return *this; }
+    Matrix& operator-=(const Matrix& rhs) { super::operator-=(rhs); return *this; }
     /// subtraction of a matrix
-    const Matrix<M,N,T> operator-(const Matrix<M,N,T>& rhs) const { auto foo = *this; return (foo -= rhs); }
+    const Matrix operator-(const Matrix& rhs) const { auto foo = *this; return (foo -= rhs); }
 
     /// matrix multiplication
     template<size_t L>
@@ -113,35 +94,122 @@ public:
     const Vec<M,T> lMultiply(const Vec<N,T>& v) const;
     /// right-multiply a vector
     const Vec<N,T> rMultiply(const Vec<M,T>& v) const;
-    /// vector multiplication
+    /// vector left-multiplication
     const Vec<M,T> operator*(const Vec<N,T>& v) const { return lMultiply(v); }
-    /// rotate between two axes
-    Matrix<M,N,T>& rotate(size_t a1, size_t a2, T th) { *this = rotation(a1,a2,th)*(*this); return *this; }
 
     /// inplace inverse
-    const Matrix<M,N,T>& invert();
+    const Matrix& invert();
 
     /// trace
     const T trace() const { T t = (*this)(0,0); for(size_t i = 1; i<nDiag; ++i) t += (*this)(i,i); return t; }
 
     /// type conversion
     template<typename W>
-    operator Matrix<M,N,W>() const {
+    explicit operator Matrix<M,N,W>() const {
         Matrix<M,N,W> r;
         for(size_t i=0; i<nRows*nCols; i++) r[i] = W((*this)[i]);
         return r;
     }
 
 private:
-    Vec<M*N,T> vv{};
-
     /// step in inversion process
     void subinvert(size_t n);
 };
 
+/// right-multiply vector * matrix
+template<size_t M, size_t N, typename T>
+const Vec<N,T> operator*(const Vec<M,T>& v, const Matrix<M,N,T>& X) { return X.rMultiply(v); }
+
+/// Operations on a square matrix
+template<size_t M>
+struct SqMat {
+
+// fix conflict with GSL(?) macro
+#ifdef minor
+#undef minor
+#endif
+
+    /// Matrix minor (remove row i, column j)
+    template<typename T>
+    static auto minor(const Matrix<M,M,T>& X, size_t i, size_t j) {
+        static_assert(M, "Asking for minor of 0x0 matrix is impolite!");
+
+        Matrix<M-1, M-1, T> m;
+        size_t rr = 0;
+        for(size_t r=0; r<M; r++) {
+            if(r==i) continue;
+            size_t cc = 0;
+            for(size_t c=0; c<M; c++) {
+                if(c==j) continue;
+                m(rr,cc) = X(r,c);
+                ++cc;
+            }
+            ++rr;
+        }
+        return m;
+    }
+
+    /// Determinant
+    template<typename T>
+    static const T det(const Matrix<M,M,T>& X) {
+        T d{};
+        bool pos = true;
+        for(size_t r=0; r<M; r++) {
+            auto dm = X(r,0)*SqMat<M-1>::det(minor(X,r,0));
+            if(pos) d += dm;
+            else    d -= dm;
+            pos = !pos;
+        }
+        return d;
+    }
+};
+
+/// 1x1 matrix special case
+template<>
+struct SqMat<1> {
+    template<typename T>
+    static const T det(const Matrix<1,1,T>& X) { return X[0]; }
+};
+
+/// unnormalized axis of 3D rotation
+template<typename T>
+Vec<3,T> R3axis(const Matrix<3,3,T>& M) {
+    auto t = M.trace();
+
+    if(t == 3) return {}; // M is identity matrix; return null axis
+
+    if(t == -1) { // special case: rotations by pi
+        for(auto i: {0,1,2}) {
+            if(M(i,i) == 1) // special case: rotation around a coordinate axis
+                return {{ (M(0,0)+1)/2, (M(1,1)+1)/2, (M(2,2)+1)/2 }};
+        }
+        return {{ M(0,1)*M(0,2)*4, M(1,0)*M(1,2)*4, M(2,0)*M(2,1)*4 }};
+    }
+
+    return {{M(2,1)-M(1,2), M(0,2)-M(2,0), M(1,0)-M(0,1)}};
+}
+
+/// string output representation for matrix
+template<size_t M, size_t N, typename T>
+ostream& operator<<(ostream& o, const Matrix<M,N,T>& A) {
+    for(size_t r=0; r<M; r++) {
+        o << "| ";
+        for(size_t c=0; c<N; c++)
+            o << A(r,c) << " ";
+        o << "|\n";
+    }
+    return o;
+}
+
+
+/////////////////////////////////////
+/////////////////////////////////////
+/////////////////////////////////////
+
+
 template<size_t M, size_t N, typename T>
 Matrix<M,N,T> Matrix<M,N,T>::random() {
-    Matrix<M,N,T> foo;
+    Matrix foo;
     for(size_t i=0; i<M*N; i++)
         foo[i] = 0.1+T(rand())/T(RAND_MAX);
     return foo;
@@ -149,7 +217,7 @@ Matrix<M,N,T> Matrix<M,N,T>::random() {
 
 template<size_t M, size_t N, typename T>
 constexpr Matrix<M,N,T> Matrix<M,N,T>::identity() {
-    Matrix<M,N,T> foo;
+    Matrix foo;
     for(size_t i=0; i < std::min(M,N); i++)
         foo(i,i) = T(1);
     return foo;
@@ -158,7 +226,7 @@ constexpr Matrix<M,N,T> Matrix<M,N,T>::identity() {
 template<size_t M, size_t N, typename T>
 constexpr Matrix<M,N,T> Matrix<M,N,T>::rotation(size_t a1, size_t a2, T th) {
     assert(a1 < std::min(M,N) && a2 < std::min(M,N) && a1 != a2);
-    Matrix<M,N,T> foo = Matrix<M,N,T>::identity();
+    Matrix foo = Matrix::identity();
     foo(a1,a1) = foo(a2,a2) = cos(th);
     foo(a2,a1) = sin(th);
     foo(a1,a2) = -foo(a2,a1);
@@ -186,14 +254,6 @@ Vec<M,T> Matrix<M,N,T>::col(size_t i) const {
     Vec<M,T> v;
     for(size_t j=0; j<M; j++) v[i] = (*this)(j,i);
     return v;
-}
-
-template<size_t M, size_t N, typename T>
-const Matrix<M,N,T> Matrix<M,N,T>::operator-() const {
-    Matrix<M,N,T> foo;
-    for(size_t i=0; i<M*N; i++)
-        foo[i] = -(*this)[i];
-    return foo;
 }
 
 template<size_t M, size_t N, typename T>
@@ -246,57 +306,6 @@ namespace matrix_element_inversion {
 
 }
 
-// fix conflict with GSL(?) macro
-#ifdef minor
-#undef minor
-#endif
-
-/// Operations on a square matrix
-template<size_t M>
-struct SqMat {
-
-    /// Matrix minor (remove row i, column j)
-    template<typename T>
-    static auto minor(const Matrix<M,M,T>& X, size_t i, size_t j) {
-        static_assert(M, "Asking for minor of 0x0 matrix is impolite!");
-
-        Matrix<M-1, M-1, T> m;
-        size_t rr = 0;
-        for(size_t r=0; r<M; r++) {
-            if(r==i) continue;
-            size_t cc = 0;
-            for(size_t c=0; c<M; c++) {
-                if(c==j) continue;
-                m(rr,cc) = X(r,c);
-                ++cc;
-            }
-            ++rr;
-        }
-        return m;
-    }
-
-    /// Determinant
-    template<typename T>
-    static const T det(const Matrix<M,M,T>& X) {
-        T d{};
-        bool pos = true;
-        for(size_t r=0; r<M; r++) {
-            auto dm = X(r,0)*SqMat<M-1>::det(minor(X,r,0));
-            if(pos) d += dm;
-            else    d -= dm;
-            pos = !pos;
-        }
-        return d;
-    }
-};
-
-/// 1x1 matrix special case
-template<>
-struct SqMat<1> {
-    template<typename T>
-    static const T det(const Matrix<1,1,T>& X) { return X[0]; }
-};
-
 template<size_t M, size_t N, typename T>
 void Matrix<M,N,T>::subinvert(size_t n) {
 
@@ -346,36 +355,6 @@ void Matrix<M,N,T>::subinvert(size_t n) {
             (*this)(n,c) -= (*this)(r,c) * subvec[r-n-1];
     }
 
-}
-
-/// unnormalized axis of 3D rotation
-template<typename T>
-Vec<3,T> R3axis(const Matrix<3,3,T>& M) {
-    auto t = M.trace();
-
-    if(t == 3) return {}; // M is identity matrix; return null axis
-
-    if(t == -1) { // special case: rotations by pi
-        for(auto i: {0,1,2}) {
-            if(M(i,i) == 1) // special case: rotation around a coordinate axis
-                return {{ (M(0,0)+1)/2, (M(1,1)+1)/2, (M(2,2)+1)/2 }};
-        }
-        return {{ M(0,1)*M(0,2)*4, M(1,0)*M(1,2)*4, M(2,0)*M(2,1)*4 }};
-    }
-
-    return {{M(2,1)-M(1,2), M(0,2)-M(2,0), M(1,0)-M(0,1)}};
-}
-
-/// string output representation for matrix
-template<size_t M, size_t N, typename T>
-ostream& operator<<(ostream& o, const Matrix<M,N,T>& A) {
-    for(size_t r=0; r<M; r++) {
-        o << "| ";
-        for(size_t c=0; c<N; c++)
-            o << A(r,c) << " ";
-        o << "|\n";
-    }
-    return o;
 }
 
 #endif
