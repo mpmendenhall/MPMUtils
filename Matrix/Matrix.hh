@@ -31,7 +31,7 @@ using std::vector;
 /// A templatized, fixed size, statically allocated matrix class, stored in rows order.
 /**
  * Not particularly optimized or clever, but convenient for smallish matrices
- * or matrices of unusual special types (e.g. a matrix of circulant matrices)
+ * or matrices of symbolic special types (e.g. a matrix of circulant matrices)
  */
 template<size_t M, size_t N, typename T>
 class Matrix: public Vec<M*N,T> {
@@ -46,7 +46,7 @@ public:
     /// min(M,N)
     static constexpr size_t nDiag = std::min(M,N);
 
-    /// inherit constructors
+    /// inherit constructors from Vec
     using super::super;
 
     /// generate a random-filled matrix
@@ -103,6 +103,29 @@ public:
     /// trace
     const T trace() const { T t = (*this)(0,0); for(size_t i = 1; i<nDiag; ++i) t += (*this)(i,i); return t; }
 
+// fix conflict with GSL(?) macro
+#ifdef minor
+#undef minor
+#endif
+
+    /// Matrix minor (remove row i, column j)
+    const Matrix<M-1,N-1,T> minor(size_t i, size_t j) const {
+        static_assert(M && N, "Asking for minor of 0-element matrix is impolite!");
+
+        Matrix<M-1, N-1, T> m;
+        size_t rr = 0;
+        for(size_t r=0; r<M; r++) {
+            if(r==i) continue;
+            size_t cc = 0;
+            for(size_t c=0; c<N; c++) {
+                if(c==j) continue;
+                m(rr,cc++) = (*this)(r,c);
+            }
+            ++rr;
+        }
+        return m;
+    }
+
     /// type conversion
     template<typename W>
     explicit operator Matrix<M,N,W>() const {
@@ -120,56 +143,22 @@ private:
 template<size_t M, size_t N, typename T>
 const Vec<N,T> operator*(const Vec<M,T>& v, const Matrix<M,N,T>& X) { return X.rMultiply(v); }
 
-/// Operations on a square matrix
-template<size_t M>
-struct SqMat {
-
-// fix conflict with GSL(?) macro
-#ifdef minor
-#undef minor
-#endif
-
-    /// Matrix minor (remove row i, column j)
-    template<typename T>
-    static auto minor(const Matrix<M,M,T>& X, size_t i, size_t j) {
-        static_assert(M, "Asking for minor of 0x0 matrix is impolite!");
-
-        Matrix<M-1, M-1, T> m;
-        size_t rr = 0;
-        for(size_t r=0; r<M; r++) {
-            if(r==i) continue;
-            size_t cc = 0;
-            for(size_t c=0; c<M; c++) {
-                if(c==j) continue;
-                m(rr,cc) = X(r,c);
-                ++cc;
-            }
-            ++rr;
-        }
-        return m;
+/// Determinant
+template<size_t M, typename T>
+const T det(const Matrix<M,M,T>& X) {
+    T d = X(0,0)*det(X.minor(0,0));
+    bool pos = false;
+    for(size_t r=1; r<M; r++) {
+        auto dm = X(r,0)*det(X.minor(r,0));
+        if(pos) d += dm;
+        else    d -= dm;
+        pos = !pos;
     }
-
-    /// Determinant
-    template<typename T>
-    static const T det(const Matrix<M,M,T>& X) {
-        T d{};
-        bool pos = true;
-        for(size_t r=0; r<M; r++) {
-            auto dm = X(r,0)*SqMat<M-1>::det(minor(X,r,0));
-            if(pos) d += dm;
-            else    d -= dm;
-            pos = !pos;
-        }
-        return d;
-    }
-};
-
-/// 1x1 matrix special case
-template<>
-struct SqMat<1> {
-    template<typename T>
-    static const T det(const Matrix<1,1,T>& X) { return X[0]; }
-};
+    return d;
+}
+/// Special case: determinant of 1x1 matrix
+template<typename T>
+const T det(const Matrix<1,1,T>& X) { return X[0]; }
 
 /// unnormalized axis of 3D rotation
 template<typename T>
@@ -210,26 +199,14 @@ ostream& operator<<(ostream& o, const Matrix<M,N,T>& A) {
 template<size_t M, size_t N, typename T>
 Matrix<M,N,T> Matrix<M,N,T>::random() {
     Matrix foo;
-    for(size_t i=0; i<M*N; i++)
-        foo[i] = 0.1+T(rand())/T(RAND_MAX);
+    for(auto& x: foo) x = 0.1+T(rand())/T(RAND_MAX);
     return foo;
 }
 
 template<size_t M, size_t N, typename T>
 constexpr Matrix<M,N,T> Matrix<M,N,T>::identity() {
-    Matrix foo;
-    for(size_t i=0; i < std::min(M,N); i++)
-        foo(i,i) = T(1);
-    return foo;
-}
-
-template<size_t M, size_t N, typename T>
-constexpr Matrix<M,N,T> Matrix<M,N,T>::rotation(size_t a1, size_t a2, T th) {
-    assert(a1 < std::min(M,N) && a2 < std::min(M,N) && a1 != a2);
-    Matrix foo = Matrix::identity();
-    foo(a1,a1) = foo(a2,a2) = cos(th);
-    foo(a2,a1) = sin(th);
-    foo(a1,a2) = -foo(a2,a1);
+    Matrix foo{};
+    for(size_t i=0; i < nDiag; i++) foo(i,i) = T(1);
     return foo;
 }
 
@@ -252,7 +229,7 @@ Vec<N,T> Matrix<M,N,T>::row(size_t i) const {
 template<size_t M, size_t N, typename T>
 Vec<M,T> Matrix<M,N,T>::col(size_t i) const {
     Vec<M,T> v;
-    for(size_t j=0; j<M; j++) v[i] = (*this)(j,i);
+    for(size_t j=0; j<M; j++) v[j] = (*this)(j,i);
     return v;
 }
 
@@ -272,7 +249,7 @@ const Matrix<M,L,T> Matrix<M,N,T>::operator*(const Matrix<N,L,T>& B) const {
 
 template<size_t M, size_t N, typename T>
 const Vec<M,T> Matrix<M,N,T>::lMultiply(const Vec<N,T>& v) const {
-    Vec<M,T> a;
+    Vec<M,T> a{};
     for(size_t r=0; r<M; r++) {
         for(size_t c=0; c<N; c++) a[r] += (*this)(r,c)*v[c];
     }
@@ -281,7 +258,7 @@ const Vec<M,T> Matrix<M,N,T>::lMultiply(const Vec<N,T>& v) const {
 
 template<size_t M, size_t N, typename T>
 const Vec<N,T> Matrix<M,N,T>::rMultiply(const Vec<M,T>& v) const {
-    Vec<N,T> a;
+    Vec<N,T> a{};
     for(size_t r=0; r<M; r++) {
         for(size_t c=0; c<N; c++) a[c] += v[r]*(*this)(r,c);
     }

@@ -45,9 +45,9 @@ int main(int, char**) {
 
         for(auto& v: points(v0)) {
             auto dmn = Nav.domain(v);
-            auto det = SqMat<3>::det(Rs.element(dmn));
+            auto dt = det(Rs.element(dmn));
 
-            if(det > 0) vsr::setColor(1,0,0);
+            if(dt > 0) vsr::setColor(1,0,0);
             else vsr::setColor(0,0,1);
 
             //rgb cl(hsv(2*/120., 1, 1));

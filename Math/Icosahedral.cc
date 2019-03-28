@@ -34,7 +34,7 @@ namespace Icosahedral {
     const array<bool,120> parity = []() {
         array<bool,120> p;
         auto it = p.begin();
-        for(auto& e: Rs) *(it++) = SqMat<3>::det(e) > 0;
+        for(auto& e: Rs) *(it++) = det(e) > 0;
         return p;
     }();
 

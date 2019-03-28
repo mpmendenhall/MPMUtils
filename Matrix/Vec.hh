@@ -39,10 +39,10 @@ public:
     /// parent class
     typedef array<T,N> super;
 
-    /// Default constructor for zero-filled vector
-    Vec(): array<T,N>{} { }
-    /// Constructor from std::array
-    Vec(const array<T,N>& a): array<T,N>(a) { }
+    /// inherit array constructors
+    using super::super;
+    /// Constructor from array
+    Vec(const super& a): super(a) { }
     /// Construct a basis vector with 1 in the n^th spot
     static Vec basis(size_t n) { Vec v; v[n] = 1; return v; }
 
