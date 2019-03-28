@@ -8,6 +8,7 @@
 #include "ObjectFactory.hh"
 #include "KeyTable.hh"
 #include <unistd.h>
+#include <stdexcept>
 
 class JobComm;
 
@@ -71,29 +72,39 @@ public:
     static MultiJobControl* JC; ///< singleton instance for job control type
     int verbose = 0;            ///< debugging verbosity level
 
+    /// check if state data available (and make available if possible) for hash
+    virtual bool checkState(size_t h);
+    /// clear state data for hash
+    virtual void clearState(size_t h);
+
+    /// push state data for identifier hash
     template<class T>
-    void pushState(const string& n, const T& d) {
-        auto& p = stateData[n];
-        if(p.alive) delete (T*)p.alive;
-        p.alive = (void*)(new T(d));
-        if(!persistent) p.dead = KeyData(d);
+    void pushState(size_t h, const T& d) {
+        stateData.emplace(h,d);
+        persistState(h);
     }
+
+    /// load state data for identifier hash
     template<class T>
-    void getState(const string& n, T& d) {
-        auto it = stateData.find(n);
-        assert(it != stateData.end());
-        assert(bool(it->second.alive) == persistent);
-        if(it->second.alive) d = *(T*)it->second.alive;
-        else it->second.dead.Get(d);
+    void getState(size_t h, T& d) {
+        if(!checkState(h)) throw std::range_error("State data unavailable");
+        stateData.at(h).Get(d);
     }
+
+    string stateDir = "";   ///< non-empty to specify directory for state data storage
 
 protected:
 
     int ntasks = 0;         ///< total number of job slots available
     int rank = 0;           ///< identifier for this job process
     int parentRank = 0;     ///< ``parent'' job number to return results
-    bool persistent = true; ///< whether child processes are persistent or hne-shot
+    bool persistent = true; ///< whether child processes are persistent or one-shot
     bool runLocal = true;   ///< whether to run one portion of job locally on controller
+
+    /// name for state data file
+    virtual string sdataFile(size_t h) const;
+    /// persistently save state data for hash
+    virtual void persistState(size_t h);
 
     /// Check if a job is running or completed
     virtual bool _isRunning(int) = 0;
@@ -106,12 +117,9 @@ protected:
     vector<int> checkJobs();
 
     map<int,JobSpec> jobs;          ///< active jobs by worker ID
-
-    struct sData {
-        void* alive = nullptr;      ///< functioning object
-        KeyData dead;               ///< serialized data
-    };
-    map<string, sData> stateData;   ///< saved state information
+    map<size_t, KeyData> stateData; ///< memory-resident saved state information by hash
+    map<size_t, size_t> lastReq;    ///< when each piece of stored data was last requested
+    size_t nReq = 0;                ///< number of times stored data has been requested
 };
 
 #endif

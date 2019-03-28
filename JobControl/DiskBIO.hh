@@ -41,6 +41,10 @@ public:
     void closeIn() { if(fIn >= 0) close(fIn); fIn = -1; }
     /// close input file
     void closeOut() { if(fOut >= 0) close(fOut); fOut = -1; }
+    /// check if input open
+    bool inIsOpen() const { return fIn != -1; }
+    /// check if output open
+    bool outIsOpen() const { return fOut != -1; }
 
     /// blocking data send
     void _send(void* vptr, int size) override { if(fOut >= 0 && size != write(fOut, vptr, size)) exit(1); }

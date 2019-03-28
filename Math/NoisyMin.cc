@@ -10,7 +10,7 @@ NoisyMin::NoisyMin(size_t n): N(n),
 NTERMS(Quadratic::nterms(N)), x0(N) {
     gsl_matrix_set_identity(dS);
 
-    int i=0;
+    int i = 0;
     std::stringstream ss;
     for(auto& s: vnames) {
         ss << i++;
@@ -47,12 +47,12 @@ void NoisyMin::initMinStep() {
 }
 
 NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
-    vec_t r(N);
-    do { // TODO more elegant algorithm!
-        QRNG.Next(r.data());
-        QRNGn++;
-        for(auto& x: r) x = 2*x-1;
-    } while(vmag2(r) > 1.);
+    assert(Ntot <= N);
+    if(Ntot < N) addPart(N-Ntot, Quadratic::nterms(N-Ntot));
+
+    vec_t r = next();
+    for(auto& x: r) x = 2*x-1;
+    // TODO spherize subgroups
 
     std::copy(r.begin(), r.end(), v1->data);
     std::copy(x0.begin(), x0.end(), v2->data);
@@ -346,6 +346,7 @@ void NoisyMin::updateRange() {
 }
 
 void NoisyMin::display() {
+    PointSelector::display();
     printf("NoisyMin fitter of %zu parameters wth %zu datapoints\n", N, fvals.size());
     for(size_t i=0; i<N; i++) {
         vec_t v(N);
@@ -369,6 +370,7 @@ std::istream& operator>>(std::istream& i, NoisyMin::evalpt& p) {
 
 std::ostream& operator<< (std::ostream &o, const NoisyMin& NM) {
     o << NM.N << '\n';
+    o << (const PointSelector&)NM;
     o << NM.dS << NM.U_dx << NM.S_dx << NM.U_q << NM.S_q << NM.SR0 << NM.SRm;
     o << NM.h << '\t' << NM.verbose << '\t' << NM.nSigmaStat << '\t' << NM.k0 << '\t' << NM.dk2 << '\t' << NM.minStep << '\n';
 
@@ -388,6 +390,7 @@ std::istream& operator>> (std::istream &i, NoisyMin& NM) {
     size_t n = 0;
     i >> n;
     NM = NoisyMin(n);
+    i >> (PointSelector&)NM;
     i >> NM.dS >> NM.U_dx >> NM.S_dx >> NM.U_q >> NM.S_q >> NM.SR0 >> NM.SRm;
     i >> NM.h >> NM.verbose >> NM.nSigmaStat >> NM.k0 >> NM.dk2 >> NM.minStep;
 

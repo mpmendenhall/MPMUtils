@@ -12,38 +12,9 @@ void DiskIOJobControl::init(int argc, char **argv) {
 
     persistent = !rank;
     runLocal = false;
-
-    if(rank) {
-
-        std::stringstream fn;
-        fn << data_bpath << "/SavedState_" << rank << ".dat";
-        std::ifstream i(fn.str());
-        if(i.good()) {
-            if(verbose > 2) printf("Loading saved state from '%s'\n", fn.str().c_str());
-            IOStreamBIO b(&i, nullptr);
-            size_t s = b.receive<size_t>();
-            while(s--) {
-                auto k = b.receive<string>();
-                b.receive(stateData[k].dead);
-            }
-        } else if(verbose > 2) printf("No saved state available at '%s'\n", fn.str().c_str());
-
-    } else runSysCmd("rm -f "+data_bpath+"/SavedState_*.dat");
 }
 
 void DiskIOJobControl::finish() {
-    std::stringstream fn;
-    fn << data_bpath << "/SavedState_" << rank << ".dat";
-
-    if(stateData.size()) {
-        FDBinaryIO b("",fn.str());
-        b.send<size_t>(stateData.size());
-        for(auto& kv: stateData) {
-            b.send(kv.first);
-            b.send(kv.second.dead);
-        }
-    } else runSysCmd("rm -f "+fn.str());
-
     if(!rank) runSysCmd("rm -f " + data_bpath + "/CommBuffer_0_to_*.dat");
 }
 

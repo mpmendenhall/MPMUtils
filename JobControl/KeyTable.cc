@@ -5,12 +5,14 @@
 template<>
 KeyData::KeyData(const vector<double>& v): TMessage(kMESS_DOUBLE) {
     whut();
+    std::memset(fBufCur,0,fBufMax-fBufCur);
     send(v);
     SetReadMode();
 }
 
 KeyData& KeyData::operator=(const KeyData& d) {
-    Expand(d.BufferSize());
+    Expand(d.BufferSize(), false);
+    std::memset(Buffer(), 0, BufferSize());
     std::copy(d.Buffer(), d.Buffer()+d.BufferSize(), Buffer());
     SetReadMode();
     return *this;
@@ -20,6 +22,7 @@ KeyData::KeyData(size_t n, const void* p): TMessage(kMESS_BINARY, sizeof(UInt_t)
     whut();
     WriteUInt(n);
     if(p) memcpy(fBufCur, p, n);
+    std::memset(fBufCur,0,fBufMax-fBufCur);
     SetReadMode();
 }
 

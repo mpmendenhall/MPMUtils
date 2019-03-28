@@ -10,6 +10,12 @@
 #include <map>
 using std::map;
 
+#if BOOST_VERSION < 106900
+#include <boost/functional/hash.hpp>
+#else
+#include <boost/container_hash/hash.hpp>
+#endif
+
 template<typename T>
 struct _false: std::false_type { };
 
@@ -38,7 +44,7 @@ public:
 
     /// Constructor, writing generic non-ROOT object
     template<typename T, typename std::enable_if<!std::is_base_of<TObject, T>::value>::type* = nullptr>
-    KeyData(const T& x): TMessage(kMESS_BINARY) { whut(); send(x); SetReadMode(); }
+    KeyData(const T& x): TMessage(kMESS_BINARY,0) { whut(); std::memset(fBufCur,0,fBufMax-fBufCur); send(x); SetReadMode(); }
     /// Constructor, writing ROOT object
     template<typename T, typename std::enable_if<std::is_base_of<TObject, T>::value>::type* = nullptr>
     KeyData(const T& o): TMessage(kMESS_OBJECT) { Reset(); WriteObject(&o); SetReadMode(); }
@@ -104,6 +110,15 @@ protected:
 template<>
 KeyData::KeyData(const vector<double>& v);
 
+template<>
+struct std::hash<KeyData> {
+    size_t operator()(const KeyData& d) const noexcept {
+        size_t n = d.BufferSize();
+        const char* p = d.Buffer();
+        return boost::hash_range(p, p+n);
+    }
+};
+
 /// string key : polymorphic value table
 class KeyTable: public map<string, KeyData*> {
 public:
@@ -123,6 +138,8 @@ public:
     /// Set from KeyData (taking ownership; delete entry if 'nullptr'); return 'true' if previous key deleted
     bool _Set(const string& k, KeyData* v);
 
+    /// bool stored as int stored as double...
+    bool Set(const string& k, bool value) { return Set(k, int(value)); }
     /// All numeric types converted to double by default
     template<typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr>
     bool Set(const string& k, const T& value) { return _Set(k, new KeyData(double(value))); }
@@ -142,7 +159,9 @@ public:
     template<typename T>
     T* GetPtr(const string& k) const { auto v = FindKey(k); return v? v->GetPtr<T>() : nullptr; }
 
-    /// All numeric types converted to double by default; use, e.g., Get<int>() for non-doubles
+    /// Get boolean stored as int
+    void Get(const string& k, bool& b, bool warn = false) { int i = b; Get(k, i, warn); b = i; }
+    /// All numeric types converted to double by default; use, e.g., GetT<int>() for non-doubles
     template<typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr>
     void Get(const string& k, T& x, bool warn = false) {  auto v = FindKey(k,warn); if(v) { double y = x; v->Get(y); x = y; } }
     /// Get non-numeric if available
@@ -151,10 +170,10 @@ public:
 
     /// Get generic if available (no autoconversion to double)
     template<typename T>
-    T Get(const string& k, bool warn = false) const { T t; auto v = FindKey(k,warn); if(v) v->Get(t); return t; }
+    T GetT(const string& k, bool warn = false) const { T t; auto v = FindKey(k,warn); if(v) v->Get(t); return t; }
 
-    /// Get boolean with default
-    bool GetBool(const string& k, bool dflt = false) { Get(k,dflt,false); return dflt; }
+    /// Get boolean (stored as int stored as double) with default
+    bool GetBool(const string& k, bool dflt = false) { int i = dflt; Get(k,i,false); return i; }
 };
 
 /// Send KeyData buffered object

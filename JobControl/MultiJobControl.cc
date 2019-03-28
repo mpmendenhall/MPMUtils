@@ -2,6 +2,7 @@
 // Michael P. Mendenhall, LLNL 2019
 
 #include "MultiJobControl.hh"
+#include "DiskBIO.hh"
 #include <algorithm>
 
 MultiJobControl* MultiJobControl::JC = nullptr;
@@ -47,7 +48,7 @@ void MultiJobControl::runWorker() {
         auto W = it == workers.end()? nullptr : it->second;
         if(!W) {
             if(verbose > 3) printf("Instantiating worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
-            it->second = W = dynamic_cast<JobWorker*>(ObjectFactory::construct(JS.wclass));
+            workers[JS.wclass] = W = dynamic_cast<JobWorker*>(ObjectFactory::construct(JS.wclass));
             if(!W) exit(44);
         } else if(verbose > 4) printf("Already have worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
         W->run(JS, *this);
@@ -109,4 +110,49 @@ void MultiJobControl::waitFor(const vector<int>& v) {
         //checkJobs();
         usleep(verbose > 4? 1000000 : 10000);
     }
+}
+
+string MultiJobControl::sdataFile(size_t h) const {
+    if(!stateDir.size()) return "";
+    std::stringstream fn;
+    fn << stateDir << "/SavedState_" << h << ".dat";
+    return fn.str();
+}
+
+bool MultiJobControl::checkState(size_t h) {
+    lastReq[h] = nReq++;
+    if(stateData.count(h)) return true;
+    if(!stateDir.size()) return false;
+
+    auto f = sdataFile(h);
+    FDBinaryIO b(f, "");
+    if(!b.inIsOpen()) return false;
+    if(verbose > 3) printf("Loading persisted data from '%s'\n", f.c_str());
+    b.receive(stateData[h]);
+    return true;
+}
+
+void MultiJobControl::clearState(size_t h) {
+    stateData.erase(h);
+    lastReq.erase(h);
+    if(stateDir.size()) runSysCmd("rm -f " + sdataFile(h));
+}
+
+void MultiJobControl::persistState(size_t h) {
+    if(stateData.size() > 200) {
+        vector<size_t> vold;
+        for(auto& kv: stateData) if(lastReq[kv.first] < nReq-100) vold.push_back(kv.first);
+        for(auto hh: vold) if(hh != h) stateData.erase(h);
+    }
+
+    if(!stateDir.size()) return;
+    runSysCmd("mkdir -p " + stateDir);
+
+    auto f = sdataFile(h);
+    if(verbose > 3) printf("Persisting state data to '%s'\n", f.c_str());
+    {
+        FDBinaryIO b("", f+"_tmp");
+        b.send(stateData.at(h));
+    }
+    runSysCmd("mv " + f+"_tmp" + " " + f);
 }

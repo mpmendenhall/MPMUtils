@@ -3,13 +3,10 @@
 #ifndef NOISYMIN_HH
 #define NOISYMIN_HH
 
+#include "PointSelector.hh"
 #include "LinalgHelpers.hh"
 #include "Quadratic.hh"
 #include "LinMin.hh"
-#include <Math/QuasiRandom.h>
-#include <iostream>
-#include <vector>
-using std::vector;
 #include <string>
 
 /// Minimizer for N-dimensional ``noisy'' function evaluation
@@ -20,12 +17,15 @@ using std::vector;
         - add points using addSample(f) on evaluated function
         - call fitMinSingular() for an update step
 */
-class NoisyMin {
+class NoisyMin: protected PointSelector {
 protected:
     size_t N;                       ///< Number of dimensions being minimized over
     size_t NTERMS;                  ///< Number of terms in quadratic surface fit
 public:
     typedef vector<double> vec_t;   ///< convenience shorthand
+
+    using PointSelector::addPart;
+    using PointSelector::nCycle;
 
     /// evaluated datapoint for fit
     struct evalpt {
@@ -133,7 +133,7 @@ NoisyMin::evalpt& NoisyMin::addSample(F& f) {
     return p;
 }
 
-/// output evalpt to text line
+/// serialize to output
 std::ostream& operator<<(std::ostream& o, const NoisyMin::evalpt& p);
 /// deserialize (requires correct dimension to already be set)
 std::istream& operator>>(std::istream& i, NoisyMin::evalpt& p);

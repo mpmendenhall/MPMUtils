@@ -22,6 +22,7 @@ public:
     /// clear input buffer from current source
     void clearIn() override;
 
+
     string data_bpath = "./";   ///< base path to data exchange directory
 
 protected:
