@@ -215,10 +215,6 @@ public:
 
     /// Set from KeyData (taking ownership; delete entry if 'nullptr'); return 'true' if previous key deleted
     bool _Set(const string& k, KeyData* v);
-
-    /// bool stored as int...
-    bool Set(const string& k, bool value) { return Set(k, int(value)); }
-
     /// Set generic value for key
     template<typename T>
     bool Set(const string& k, const T& value) { return _Set(k, new KeyData(value)); }
@@ -243,9 +239,9 @@ public:
     /// Get generic type out-of-place (required to exist)
     template<typename T>
     T Get(const string& k) const { T t{}; auto v = FindKey(k,true); if(v) v->Get(t); else assert(false); return t; }
-
-    /// Get boolean (stored as int stored as double) with default
-    bool GetBool(const string& k, bool dflt = false) const { int i = dflt; Get(k,i,false); return i; }
+    /// Get value with default
+    template<typename T>
+    T GetDefault(const string& k, T dflt) const { Get(k,dflt,false); return dflt; }
 };
 
 /// Send KeyData buffered object
