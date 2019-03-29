@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include <stdexcept>
 
 /// Binary write to iostream objects
 class IOStreamBWrite: virtual public BinaryWriter {
@@ -53,7 +54,10 @@ public:
 
 protected:
     /// blocking data send
-    void _send(void* vptr, int size) override { if(fOut >= 0 && size != write(fOut, vptr, size)) exit(1); }
+    void _send(void* vptr, int size) override {
+        if(fOut >= 0 && size != write(fOut, vptr, size))
+            throw std::runtime_error("Can't write file!");
+    }
     /// flush output
     void flush() override { if(fOut >= 0) fsync(fOut); }
 
@@ -80,7 +84,10 @@ public:
 
 protected:
     /// blocking data receive
-    void _receive(void* vptr, int size) override { if(fIn >= 0 && size != read(fIn, vptr, size)) exit(1); }
+    void _receive(void* vptr, int size) override {
+        if(fIn < 0) throw std::runtime_error("No input file open!");
+        if(size != read(fIn, vptr, size)) throw std::runtime_error("Requested read failed!");
+    }
 
     int fIn = -1;    ///< input file descriptor
 };

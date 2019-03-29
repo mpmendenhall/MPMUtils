@@ -1,6 +1,7 @@
 /// \file KeyTable.cc
 
 #include "KeyTable.hh"
+#include <cstdint>
 
 KeyData& KeyData::operator=(const KeyData& d) {
     wsize = d.wSize();
@@ -11,22 +12,42 @@ KeyData& KeyData::operator=(const KeyData& d) {
     return *this;
 }
 
-KeyData::KeyData(size_t n, const void* p): TMessage(kMESS_BINARY, sizeof(UInt_t) + n) {
-    whut();
-    WriteUInt(n);
-    assert(p);
-    memcpy(fBufCur, p, n);
-    fBufCur += n;
-    wsize = fBufCur - Buffer();
-    std::memset(fBufCur, 0, fBufMax-fBufCur);
+KeyData::KeyData(size_t n, const void* p): TMessage(kMESS_BINARY, p? sizeof(UInt_t) + n : n) {
+    if(p) {
+        whut();
+        WriteUInt(n);
+        memcpy(fBufCur, p, n);
+        fBufCur += n;
+        wsize = fBufCur - Buffer();
+        std::memset(fBufCur, 0, fBufMax-fBufCur);
+    } else {
+        std::memset(Buffer(), 0, BufferSize());
+        wsize = n;
+    }
+
     SetReadMode();
 }
 
 void KeyData::accumulate(const KeyData& kd) {
     auto w = What();
     if(w != kd.What()) throw std::domain_error("Incompatible accumulation types!");
-    if(w == kMESS_INTS) accumulateV<int>(kd);
-    else if(w == kMESS_DOUBLES) accumulateV<double>(kd);
+
+    if(w < kMESS_BINARY) throw std::domain_error("Non-accumulable type!");
+
+    if(w < kMESS_ARRAY) w -= kMESS_BINARY;
+    else w -= kMESS_ARRAY;
+
+    /* */if(w == typeID<  int8_t>()) accumulate<int8_t>(kd);
+    else if(w == typeID< int16_t>()) accumulate<int16_t>(kd);
+    else if(w == typeID< int32_t>()) accumulate<int32_t>(kd);
+    else if(w == typeID< int64_t>()) accumulate<int64_t>(kd);
+    else if(w == typeID< uint8_t>()) accumulate<uint8_t>(kd);
+    else if(w == typeID<uint16_t>()) accumulate<uint16_t>(kd);
+    else if(w == typeID<uint32_t>()) accumulate<uint32_t>(kd);
+    else if(w == typeID<uint64_t>()) accumulate<uint64_t>(kd);
+    else if(w == typeID<   float>()) accumulate<float>(kd);
+    else if(w == typeID<  double>()) accumulate<double>(kd);
+    else if(w == typeID<long double>()) accumulate<long double>(kd);
     else throw std::domain_error("Non-accumulable type!");
 }
 
@@ -73,23 +94,26 @@ bool KeyTable::_Set(const string& s, KeyData* v) {
 template<>
 void BinaryWriter::send<KeyData>(const KeyData& M) {
     start_wtx();
-    send<UInt_t>(M.wSize());
-    append_write(M.Buffer(), M.wSize());
+    auto ds = M.wSize()-2*sizeof(UInt_t);
+    send<UInt_t>(ds);
+    send<UInt_t>(M.What());
+    append_write(M.data(), ds);
     end_wtx();
 }
 
 template<>
 KeyData* BinaryReader::receive<KeyData*>() {
     UInt_t s = receive<UInt_t>();
-    auto buf = new char[s];
-    _receive((void*)buf, s);
-    return new KeyData(buf, s);
+    UInt_t w = receive<UInt_t>();
+    auto d = new KeyData(w, s);
+    _receive((void*)d->data(), s);
+    return d;
 }
 
 template<>
 void BinaryReader::receive(KeyData& d) {
     UInt_t s = receive<UInt_t>();
-    auto buf = new char[s];
-    _receive((void*)buf, s);
-    d = KeyData(buf, s);
+    Int_t w = receive<UInt_t>();
+    d = KeyData(w,s);
+    _receive((void*)d.data(), s);
 }

@@ -128,7 +128,7 @@ bool MultiJobControl::checkState(size_t h) {
     FDBinaryReader b(f);
     if(!b.inIsOpen()) return false;
     if(verbose > 3) printf("Loading persisted data from '%s'\n", f.c_str());
-    b.receive(stateData[h]);
+    stateData.emplace(h, b.receive<KeyData>());
     return true;
 }
 

@@ -50,17 +50,35 @@ NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
     assert(Ntot <= N);
     if(Ntot < N) addPart(N-Ntot, Quadratic::nterms(N-Ntot));
 
-    vec_t r = next();
-    for(auto& x: r) x = 2*x-1;
+    vec_t p0 = next();
+    for(auto& x: p0) x = 2*x-1;
     // TODO spherize subgroups
 
-    std::copy(r.begin(), r.end(), v1->data);
-    std::copy(x0.begin(), x0.end(), v2->data);
-    // v2 = x0 + dS * r
-    gsl_blas_dgemv(CblasNoTrans, nsigma, dS, v1, 1., v2);
-
+    // update by partition groups, not quite correct:
+    // |AB|x -> |A|x,     x
+    // |CD|y          |CD|y
     vec_t x(N);
-    for(size_t i=0; i<N; i++) x[i] = v2(i);
+    auto rit = p0.begin();
+    auto xit = x0.begin();
+    size_t j = 0;
+    for(auto& p: parts) {
+        gsl_vector_wrapper vp0(p.N+j);
+        std::copy(rit, rit+p.N+j, vp0->data);
+
+        gsl_vector_wrapper vx0(p.N);
+        std::copy(xit, xit+p.N,   vx0->data);
+        xit += p.N;
+
+        gsl_matrix_wrapper dSi(p.N, j + p.N);
+        for(size_t r = 0; r < p.N; r++)
+            for(size_t c = 0; c < j+p.N; c++)
+                dSi(r,c) = dS(j+r, c);
+
+        // vx0 = vx0 + nsigma * dS * vp0
+        gsl_blas_dgemv(CblasNoTrans, nsigma, dSi, vp0, 1., vx0);
+        for(size_t i=0; i<p.N; i++) x.at(j++) = vx0(i);
+    }
+
     return x;
 }
 
