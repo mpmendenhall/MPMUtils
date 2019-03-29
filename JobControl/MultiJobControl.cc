@@ -125,7 +125,7 @@ bool MultiJobControl::checkState(size_t h) {
     if(!stateDir.size()) return false;
 
     auto f = sdataFile(h);
-    FDBinaryIO b(f, "");
+    FDBinaryReader b(f);
     if(!b.inIsOpen()) return false;
     if(verbose > 3) printf("Loading persisted data from '%s'\n", f.c_str());
     b.receive(stateData[h]);
@@ -151,7 +151,7 @@ void MultiJobControl::persistState(size_t h) {
     auto f = sdataFile(h);
     if(verbose > 3) printf("Persisting state data to '%s'\n", f.c_str());
     {
-        FDBinaryIO b("", f+"_tmp");
+        FDBinaryWriter b(f+"_tmp");
         b.send(stateData.at(h));
     }
     runSysCmd("mv " + f+"_tmp" + " " + f);

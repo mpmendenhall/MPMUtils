@@ -13,6 +13,8 @@ using std::string;
 using std::vector;
 #include <map>
 using std::map;
+#include <cstring> // for std::memcpy
+#include <cassert>
 
 // workaround for older gcc without std::is_trivially_copyable
 #if __GNUG__ && __GNUC__ < 5
@@ -21,13 +23,11 @@ using std::map;
 #define IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
 #endif
 
-/// Base binary I/O class with serializer/deserializer functions
-class BinaryIO {
+/// Base binary class receiving input with serializer functions
+class BinaryWriter {
 public:
     /// clear output
     virtual void clearOut() { }
-    /// clear input
-    virtual void clearIn() { }
 
     // optional: use to group writes together into a single transfer
     /// start buffered write transaction
@@ -38,23 +38,20 @@ public:
     /// Dereference pointers by default
     template<typename T>
     void send(const T* p) { assert(p); send(*p); }
+
+    /// data block send
+    void send(const void* vptr, int size) {
+         start_wtx();
+         append_write((char*)vptr, size);
+         end_wtx();
+    }
+
     /// generic data send
     template<typename T, typename std::enable_if<!std::is_pointer<T>::value>::type* = nullptr>
     void send(const T& v) {
         static_assert(IS_TRIVIALLY_COPYABLE(T), "Object needs custom send method");
-        start_wtx();
-        append_write((char*)&v, sizeof(T));
-        end_wtx();
+        send(&v, sizeof(T));
     }
-    /// generic data receive
-    template<typename T>
-    void receive(T& v) {
-        static_assert(IS_TRIVIALLY_COPYABLE(T), "Object needs custom receive method");
-        _receive((void*)&v, sizeof(v));
-    }
-    /// out-of-place generic data receive
-    template<typename T>
-    T receive() { T v; receive(v); return v; }
 
     /// tuple data send
     template<typename... T>
@@ -63,9 +60,6 @@ public:
         for(auto& c: t) send(c);
         end_wtx();
     }
-    /// tuple data receive
-    template<typename... T>
-    void receive(std::tuple<T...>& t) { for(auto& c: t) receive(c); }
 
     /// vector data send
     template<typename T>
@@ -74,12 +68,6 @@ public:
         send<int>(v.size()*sizeof(T));
         for(auto& x: v) send(x);
         end_wtx();
-    }
-    /// vector data receive
-    template<typename T>
-    void receive(vector<T>& v) {
-        v.resize(receive<int>()/sizeof(T));
-        for(auto& x: v) receive(x);
     }
 
     /// map data send
@@ -93,6 +81,49 @@ public:
         }
         end_wtx();
     }
+
+protected:
+
+    /// blocking data send
+    virtual void _send(void* vptr, int size) = 0;
+    /// flush output
+    virtual void flush() { }
+
+    /// append data block to write buffer
+    void append_write(const char* dat, size_t n);
+
+    int dataDest = 0;       ///< destination for data send
+    size_t wtxdepth = 0;    ///< write transaction depth counter
+    vector<char> wbuff;     ///< deferred write buffer
+};
+
+/// Base binary reader class with deserializer functions
+class BinaryReader {
+public:
+    /// clear input
+    virtual void clearIn() { }
+
+    /// generic data receive
+    template<typename T>
+    void receive(T& v) {
+        static_assert(IS_TRIVIALLY_COPYABLE(T), "Object needs custom receive method");
+        _receive((void*)&v, sizeof(v));
+    }
+    /// out-of-place generic data receive
+    template<typename T>
+    T receive() { T v; receive(v); return v; }
+
+    /// tuple data receive
+    template<typename... T>
+    void receive(std::tuple<T...>& t) { for(auto& c: t) receive(c); }
+
+    /// vector data receive
+    template<typename T>
+    void receive(vector<T>& v) {
+        v.resize(receive<int>()/sizeof(T));
+        for(auto& x: v) receive(x);
+    }
+
     /// map data receive
     template<typename K, typename V>
     void receive(map<K,V>& mp) {
@@ -106,32 +137,56 @@ public:
 
 protected:
 
-    /// blocking data send
-    virtual void _send(void* vptr, int size) = 0;
     /// blocking data receive
     virtual void _receive(void* vptr, int size) = 0;
-    /// flush output
-    virtual void flush() { }
-
-    /// append data block to write buffer
-    void append_write(const char* dat, size_t n);
 
     int dataSrc = 0;        ///< source for data receive
-    int dataDest = 0;       ///< destination for data send
-    size_t wtxdepth = 0;    ///< write transaction depth counter
-    vector<char> wbuff;     ///< deferred write buffer
     vector<char> rbuff;     ///< read buffer
     size_t rpt = 0;         ///< position in read buffer
 };
 
+
+/// Base combined binary I/O class
+class BinaryIO: public BinaryReader, public BinaryWriter { };
+
 /// string data send
 template<>
-void BinaryIO::send<string>(const string& s);
+void BinaryWriter::send<string>(const string& s);
 /// Receive string
 template<>
-void BinaryIO::receive<string>(string& s);
+void BinaryReader::receive<string>(string& s);
 /// treat const char* as string
 template<>
-inline void BinaryIO::send(const char* x) { assert(x); send(string(x)); }
+inline void BinaryWriter::send(const char* x) { assert(x); send(string(x)); }
+
+/// Memory buffer BinaryReader
+class MemBReader: public BinaryReader {
+public:
+    /// Constructor to non-owned buffer
+    MemBReader(const void* p, size_t n): dR(p), pR(p), eR((const char*)p + n) { }
+
+protected:
+    /// blocking data receive
+    void _receive(void* vptr, int size) override { assert((const char*)pR + size <= eR); std::memcpy(vptr,pR,size); (const char*&)pR += size; }
+
+    const void* dR; ///< read data buffer
+    const void* pR; ///< read position
+    const void* eR; ///< end of read data buffer
+};
+
+/// Memory buffer BinaryWriter
+class MemBWriter: public BinaryWriter {
+public:
+    /// Constructor to non-owned buffer
+    MemBWriter(void* p, size_t n): dW(p), pW(p), eW((char*)p + n) { }
+
+protected:
+    /// blocking data send
+    void _send(void* vptr, int size) override { assert((char*)pW + size <= eW); std::memcpy(pW,vptr,size); (char*&)pW += size; }
+
+    void* dW;   ///< write data buffer
+    void* pW;   ///< write position
+    void* eW;   ///< end of write data buffer
+};
 
 #endif

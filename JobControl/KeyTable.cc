@@ -2,18 +2,11 @@
 
 #include "KeyTable.hh"
 
-template<>
-KeyData::KeyData(const vector<double>& v): TMessage(kMESS_DOUBLE) {
-    whut();
-    std::memset(fBufCur,0,fBufMax-fBufCur);
-    send(v);
-    SetReadMode();
-}
-
 KeyData& KeyData::operator=(const KeyData& d) {
-    Expand(d.BufferSize(), false);
-    std::memset(Buffer(), 0, BufferSize());
-    std::copy(d.Buffer(), d.Buffer()+d.BufferSize(), Buffer());
+    wsize = d.wSize();
+    Expand(wsize, false);
+    std::copy(d.Buffer(), d.Buffer()+wsize, Buffer());
+    std::memset(Buffer()+wsize, 0, BufferSize()-wsize);
     SetReadMode();
     return *this;
 }
@@ -21,9 +14,20 @@ KeyData& KeyData::operator=(const KeyData& d) {
 KeyData::KeyData(size_t n, const void* p): TMessage(kMESS_BINARY, sizeof(UInt_t) + n) {
     whut();
     WriteUInt(n);
-    if(p) memcpy(fBufCur, p, n);
-    std::memset(fBufCur,0,fBufMax-fBufCur);
+    assert(p);
+    memcpy(fBufCur, p, n);
+    fBufCur += n;
+    wsize = fBufCur - Buffer();
+    std::memset(fBufCur, 0, fBufMax-fBufCur);
     SetReadMode();
+}
+
+void KeyData::accumulate(const KeyData& kd) {
+    auto w = What();
+    if(w != kd.What()) throw std::domain_error("Incompatible accumulation types!");
+    if(w == kMESS_INTS) accumulateV<int>(kd);
+    else if(w == kMESS_DOUBLES) accumulateV<double>(kd);
+    else throw std::domain_error("Non-accumulable type!");
 }
 
 /////////////////////////////////////////////////////////
@@ -67,15 +71,15 @@ bool KeyTable::_Set(const string& s, KeyData* v) {
 /////////////////////////////////////////////////////////
 
 template<>
-void BinaryIO::send<KeyData>(const KeyData& M) {
+void BinaryWriter::send<KeyData>(const KeyData& M) {
     start_wtx();
-    send<UInt_t>(M.BufferSize());
-    append_write(M.Buffer(), M.BufferSize());
+    send<UInt_t>(M.wSize());
+    append_write(M.Buffer(), M.wSize());
     end_wtx();
 }
 
 template<>
-KeyData* BinaryIO::receive<KeyData*>() {
+KeyData* BinaryReader::receive<KeyData*>() {
     UInt_t s = receive<UInt_t>();
     auto buf = new char[s];
     _receive((void*)buf, s);
@@ -83,11 +87,9 @@ KeyData* BinaryIO::receive<KeyData*>() {
 }
 
 template<>
-void BinaryIO::receive(KeyData& d) {
+void BinaryReader::receive(KeyData& d) {
     UInt_t s = receive<UInt_t>();
     auto buf = new char[s];
     _receive((void*)buf, s);
     d = KeyData(buf, s);
 }
-
-

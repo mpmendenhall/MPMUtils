@@ -16,7 +16,7 @@ void KTAccumJobComm::endJob(BinaryIO& B) {
             if(tp == kMESS_OBJECT) {
                 objs.back() = cd->GetROOT<TH1>();
                 if(objs.back()) objs.back()->Reset();
-            } else if(tp == KeyData::kMESS_DOUBLE) cd->clear<double>();
+            } else cd->clearV();
         }
     }
 
@@ -29,14 +29,12 @@ void KTAccumJobComm::endJob(BinaryIO& B) {
         auto tp = cd->What();
         if(tp != kd->What()) exit(24);
 
-
-        if(tp == KeyData::kMESS_DOUBLE) cd->accumulate<double>(*kd);
         else if(tp == kMESS_OBJECT) {
             auto h = kd->GetROOT<TH1>();
             if(!h || !objs[i]) exit(25);
             objs[i]->Add(h);
             delete h;
-        }
+        } else cd->accumulate(*kd);
         delete kd;
     }
 }

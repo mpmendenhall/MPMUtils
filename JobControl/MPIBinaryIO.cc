@@ -3,7 +3,7 @@
 
 #ifdef WITH_MPI
 #include "MPIBinaryIO.hh"
-#include <string.h> // for std::memcpy
+#include <cstring> // for std::memcpy
 #include <iostream> // for std::cout
 
 void MPIBinaryIO::_send(void* vptr, int size) {
@@ -29,7 +29,7 @@ void MPIBinaryIO::_receive(void* vptr, int size) {
         exit(88);
     }
 
-    memcpy(vptr, rbuff.data()+rpt, size);
+    std::memcpy(vptr, rbuff.data()+rpt, size);
     rpt += size;
 }
 

@@ -38,7 +38,7 @@ PointSelector::vec_t PointSelector::next() {
 }
 
 template<>
-void BinaryIO::send<PointSelector::axpart>(const PointSelector::axpart& p) {
+void BinaryWriter::send<PointSelector::axpart>(const PointSelector::axpart& p) {
     send(p.N);
     send(p.npts);
     send(p.Nsub);
@@ -46,7 +46,7 @@ void BinaryIO::send<PointSelector::axpart>(const PointSelector::axpart& p) {
 }
 
 template<>
-void BinaryIO::receive<PointSelector::axpart>(PointSelector::axpart& p) {
+void BinaryReader::receive<PointSelector::axpart>(PointSelector::axpart& p) {
     receive(p.N);
     receive(p.npts);
     receive(p.Nsub);
@@ -56,7 +56,7 @@ void BinaryIO::receive<PointSelector::axpart>(PointSelector::axpart& p) {
 }
 
 std::ostream& operator<<(std::ostream& o, const PointSelector& p) {
-    IOStreamBIO b(nullptr, &o);
+    IOStreamBWrite b(o);
     b.start_wtx();
     b.send(p.subgroup);
     b.send(p.parts);
@@ -68,7 +68,7 @@ std::ostream& operator<<(std::ostream& o, const PointSelector& p) {
 }
 
 std::istream& operator>> (std::istream &i, PointSelector& p) {
-    IOStreamBIO b(&i, nullptr);
+    IOStreamBRead b(i);
     b.receive(p.subgroup);
     b.receive(p.parts);
     b.receive(p.Ntot);

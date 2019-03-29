@@ -36,8 +36,8 @@ void DiskIOJobControl::clearIn() {
 void DiskIOJobControl::_send(void* vptr, int size) {
     std::stringstream fn;
     fn << data_bpath << "/CommBuffer_" << rank << "_to_" << dataDest << ".dat";
-    FDBinaryIO b("", fn.str());
-    b._send((char*)vptr, size);
+    FDBinaryWriter b(fn.str());
+    b.send(vptr, size);
 }
 
 void DiskIOJobControl::_receive(void* vptr, int size) {
