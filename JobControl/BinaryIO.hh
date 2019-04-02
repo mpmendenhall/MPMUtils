@@ -26,7 +26,7 @@ using std::map;
 /// Base binary class receiving input with serializer functions
 class BinaryWriter {
 public:
-    /// clear output
+    /// clear output, e.g. delete buffers
     virtual void clearOut() { }
 
     // optional: use to group writes together into a single transfer
@@ -159,6 +159,9 @@ void BinaryReader::receive<string>(string& s);
 template<>
 inline void BinaryWriter::send(const char* x) { assert(x); send(string(x)); }
 
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
 /// Memory buffer BinaryReader
 class MemBReader: public BinaryReader {
 public:
@@ -188,5 +191,8 @@ protected:
     void* pW;   ///< write position
     void* eW;   ///< end of write data buffer
 };
+
+/// Memory buffer I/O
+class MemBIO: public MemBReader, public MemBWriter { };
 
 #endif

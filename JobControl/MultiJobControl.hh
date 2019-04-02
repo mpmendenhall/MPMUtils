@@ -59,7 +59,7 @@ public:
     void waitComplete();
 
     /// start-of-process initialization
-    virtual void init(int argc, char **argv) = 0;
+    virtual void init(int argc, char** argv) = 0;
     /// end-of-run completion
     virtual void finish() = 0;
     /// recommended number of parallel tasks
@@ -120,6 +120,20 @@ protected:
     map<size_t, KeyData> stateData; ///< memory-resident saved state information by hash
     map<size_t, size_t> lastReq;    ///< when each piece of stored data was last requested
     size_t nReq = 0;                ///< number of times stored data has been requested
+};
+
+
+/// Run single job locally
+class LocalJobControl: public MultiJobControl {
+public:
+    /// Constructor
+    LocalJobControl() { ntasks = 1; }
+
+protected:
+    /// Check if a job is running or completed
+    bool _isRunning(int) override { return false; }
+    /// Allocate an available worker; possibly blocking if necessary
+    int _allocWorker() override { return 0; }
 };
 
 #endif

@@ -15,6 +15,12 @@ int runSysCmd(const string& cmd) {
     return ret;
 }
 
+void FDBinaryWriter::_send(void* vptr, int size) {
+    assert(vptr && fOut >= 0 && size != -1);
+    if(fOut >= 0 && size != write(fOut, vptr, size))
+        throw std::runtime_error("Can't write file!");
+}
+
 void FDBinaryReader::openIn(const string& s) {
     if(fIn >= 0) close(fIn);
     fIn = s.size()? open(s.c_str(), O_RDONLY) : -1;
@@ -23,5 +29,10 @@ void FDBinaryReader::openIn(const string& s) {
 void FDBinaryWriter::openOut(const string& s) {
     if(fOut >= 0) close(fOut);
     fOut = s.size()? open(s.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR) : -1;
-    if(s.size() && fOut < 0) exit(99);
+    if(s.size() && fOut < 0) throw std::runtime_error("Failure opening output file!");
+}
+
+void FDBinaryWriter::closeOut() {
+    if(fOut >= 0 && close(fOut)) throw std::runtime_error("Failure closing output file!");
+    fOut = -1;
 }

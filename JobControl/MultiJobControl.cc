@@ -30,6 +30,9 @@ void JobWorker::run(JobSpec JS, BinaryIO&) {
     MultiJobControl::JC->signalDone();
 }
 
+////////////////////////////
+////////////////////////////
+
 void MultiJobControl::runWorker() {
     map<size_t, JobWorker*> workers;
 
@@ -139,20 +142,22 @@ void MultiJobControl::clearState(size_t h) {
 }
 
 void MultiJobControl::persistState(size_t h) {
-    if(stateData.size() > 200) {
+    auto it = stateData.find(h);
+    if(stateDir.size() && it != stateData.end()) {
+        auto f = sdataFile(h);
+        runSysCmd("mkdir -p " + stateDir);
+        if(verbose > 3) printf("Persisting state data to '%s'\n", f.c_str());
+        {
+            FDBinaryWriter b(f+"_tmp");
+            b.send(it->second);
+        }
+        runSysCmd("mv " + f+"_tmp" + " " + f);
+    }
+
+    // purge excessive storage
+    if(stateData.size() > 1000) {
         vector<size_t> vold;
-        for(auto& kv: stateData) if(lastReq[kv.first] < nReq-100) vold.push_back(kv.first);
+        for(auto& kv: stateData) if(lastReq[kv.first] < nReq-500) vold.push_back(kv.first);
         for(auto hh: vold) if(hh != h) stateData.erase(h);
     }
-
-    if(!stateDir.size()) return;
-    runSysCmd("mkdir -p " + stateDir);
-
-    auto f = sdataFile(h);
-    if(verbose > 3) printf("Persisting state data to '%s'\n", f.c_str());
-    {
-        FDBinaryWriter b(f+"_tmp");
-        b.send(stateData.at(h));
-    }
-    runSysCmd("mv " + f+"_tmp" + " " + f);
 }

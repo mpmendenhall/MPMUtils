@@ -48,18 +48,15 @@ public:
     /// open output file
     void openOut(const string& s);
     /// close input file
-    void closeOut() { if(fOut >= 0) close(fOut); fOut = -1; }
+    void closeOut();
     /// check if output open
     bool outIsOpen() const { return fOut != -1; }
 
 protected:
     /// blocking data send
-    void _send(void* vptr, int size) override {
-        if(fOut >= 0 && size != write(fOut, vptr, size))
-            throw std::runtime_error("Can't write file!");
-    }
+    void _send(void* vptr, int size) override;
     /// flush output
-    void flush() override { if(fOut >= 0) fsync(fOut); }
+    void flush() override { if(fOut >= 0 && fsync(fOut)) throw("Failed to fsync output file!"); }
 
     int fOut = -1;   ///< output file descriptor
 };
@@ -92,6 +89,7 @@ protected:
     int fIn = -1;    ///< input file descriptor
 };
 
+/// Utility to run command-line command, returning exit code
 int runSysCmd(const string& cmd);
 
 #endif

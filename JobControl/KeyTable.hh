@@ -33,7 +33,7 @@ public:
 
     /// identifiers for data types --- compose with kMESS_BINARY / kMESS_ARRAY
     template<typename T>
-    static constexpr contents_t typeID(int i = 0) {
+    static contents_t typeID(int i = 0) {
         i += std::min(sizeof(T), size_t(999));
         if(std::is_arithmetic<T>::value) {
             i += 1000;
@@ -43,41 +43,41 @@ public:
         return contents_t(i);
     }
 
-    /// Default Constructor
-    KeyData(): TMessage(kMESS_ANY, 0) { wsize = 2*sizeof(UInt_t); SetReadMode(); }
-    /// Constructor, taking ownership of allocated buffer
-    KeyData(void* buf, Int_t len): TMessage(buf, len) { SetReadMode(); wsize = len; }
-    /// Constructor, copied from binary blob (or nullptr for empty buffer)
-    KeyData(size_t n, const void* p);
+    /// Default constructor
+    KeyData(): TMessage(kMESS_ANY, 0) { std::memset(Buffer()+wsize, 0, BufferSize()-wsize); }
     /// Constructor, with 'what' and data size
-    KeyData(int what, size_t n): TMessage(what,n) { wsize = 2*sizeof(UInt_t)+n; SetReadMode(); }
-
+    KeyData(int what, size_t n);
     /// Copy Constructor
     KeyData(const KeyData& d): TMessage(d.What(), d.wSize()-2*sizeof(UInt_t)) { *this = d; }
+    /// Constructor for string
+    KeyData(const string& s): TMessage(typeID<unsigned char>(kMESS_ARRAY), 0) { setData(s); }
     /// Copy operator
     KeyData& operator=(const KeyData& d);
 
-    /// Constructor, writing generic non-ROOT object
+    /// Constructor from TObject-derived classes
+    template<typename T, typename std::enable_if<std::is_base_of<TObject, T>::value>::type* = nullptr>
+    KeyData(const T& o): TMessage(kMESS_OBJECT) {
+        Reset();
+        WriteObject(&o);
+        wsize = fBufCur - Buffer();
+        std::memset(fBufCur, 0, fBufMax-fBufCur);
+        SetReadMode();
+    }
+
+    /// Constructor, writing generic (non-TObject) object
     template<typename T, typename std::enable_if<!std::is_base_of<TObject, T>::value>::type* = nullptr>
     KeyData(const T& x): TMessage(typeID<T>(kMESS_BINARY),0) { setData(x); }
 
     /// Array types, with flags for numerical
     template<typename T>
     KeyData(const vector<T>& v): TMessage(typeID<T>(kMESS_ARRAY), 0) { setData(v); }
-    /// Constructor for string
-    KeyData(const string& s): TMessage(typeID<unsigned char>(kMESS_ARRAY), 0) { setData(s); }
 
-    /// Constructor, writing ROOT object
-    template<typename T, typename std::enable_if<std::is_base_of<TObject, T>::value>::type* = nullptr>
-    KeyData(const T& o): TMessage(kMESS_OBJECT) { Reset(); WriteObject(&o); wsize = fBufCur - Buffer(); SetReadMode(); }
-
-    /// TObject-derived class value extraction (new object not memory managed by or referring to this)
+    /// TObject-derived class value extraction (caller responsible for memory management of returned object)
     template<class C>
     C* GetROOT() {
         if(whut() != kMESS_OBJECT) throw std::runtime_error("Incorrect data type for ROOT object");
-        C* o = (C*)ReadObjectAny(C::Class());
-        if(o) o = (C*)o->Clone((o->GetName() + string("_b")).c_str());
-        return  o;
+        Reset();
+        return (C*)ReadObjectAny(C::Class());
     }
 
     /// Get data contents after headers
@@ -106,8 +106,11 @@ public:
             else if(w == typeID<   float>()) x = T(*(float*)data());
             else if(w == typeID<  double>()) x = T(*(double*)data());
             else if(w == typeID<long double>()) x = T(*(long double*)data());
-            else throw std::domain_error("Unidentified numeric type!");
-
+            else {
+                std::stringstream ss;
+                ss << "Unidentified numeric type " << w + kMESS_BINARY;
+                throw std::domain_error(ss.str());
+            }
         }
     }
 
@@ -138,7 +141,7 @@ public:
     }
 
     /// contents sum operation, automatic for built-in arithmetic types and arrays thereof
-    void accumulate(const KeyData& kd);
+    KeyData& operator+=(const KeyData& kd);
 
     /// Contents sum operation, automatically detecting array-of-contents
     template<typename T>
@@ -160,13 +163,16 @@ public:
     template<typename T = char>
     void clearV(const T c = {}) {
         auto n = vSize<T>();
-        auto p0 = (T*)fBufCur;
+        auto p0 = GetArrayPtr<T>();
         for(UInt_t i=0; i<n; i++) *(p0++) = c;
     }
 
+    /// debugging display
+    void display() const { printf("KeyData[%zu/%i] type %i\n", wsize, BufferSize(), What()); }
     /// debugging binary display
     void bdisplay() const {
-        printf("KD[%zu]\t", wsize);
+        display();
+        printf("\t->");
         for(size_t i = 0; i < std::min(wsize,size_t(50)); i++) printf(" %2x", ((const unsigned char*)Buffer())[i]);
         printf("\n");
     }
@@ -175,28 +181,35 @@ public:
     UInt_t _What() const { return *(UInt_t*)(Buffer()+sizeof(UInt_t)); }
 
 protected:
+    /// Constructor, taking ownership of allocated buffer
+    KeyData(void* buf, Int_t len): TMessage(buf, len) { SetReadMode(); wsize = len; }
+
     /// check type and set read point to beginning of contents
     UInt_t whut() { SetBufferOffset(sizeof(UInt_t)); UInt_t t = 0; ReadUInt(t); return t; }
-    /// set contents; zero out extra space
+
+    /// initialize to serialized contents; zero out extra space
     template<typename T>
     void setData(const T&x) { whut(); send(x); std::memset(fBufCur, 0, fBufMax-fBufCur); SetReadMode(); }
+
     /// append data to current write point
     void _send(void* vptr, int size) override { WriteBuf(vptr, size); wsize = fBufCur - Buffer(); }
     /// pull data from current readpoint
     void _receive(void* vptr, int size) override { ReadBuf(vptr, size); }
-    /// last _send data write size
-    size_t wsize = 0;
+    /// last _send data write size; includes first 2 bytes.
+    size_t wsize = 2*sizeof(UInt_t);
 };
 
-/// Hash function for KeyData binary contents
-template<>
-struct std::hash<KeyData> {
-    size_t operator()(const KeyData& d) const noexcept {
-        size_t n = d.wSize()-sizeof(UInt_t);
-        const char* p = d.Buffer()+sizeof(UInt_t);
-        return boost::hash_range(p, p+n);
-    }
-};
+namespace std {
+    /// Hash function for KeyData binary contents
+    template<>
+    struct hash<KeyData> {
+        size_t operator()(const KeyData& d) const noexcept {
+            size_t n = d.wSize()-sizeof(UInt_t);
+            const char* p = d.Buffer()+sizeof(UInt_t);
+            return boost::hash_range(p, p+n);
+        }
+    };
+}
 
 /// string key : polymorphic value table
 class KeyTable: public map<string, KeyData*> {
@@ -218,30 +231,31 @@ public:
     /// Set generic value for key
     template<typename T>
     bool Set(const string& k, const T& value) { return _Set(k, new KeyData(value)); }
+    /// Remove value for key (return whether present)
+    bool Unset(const string& k);
 
     /// Get value for key, or nullptr if undefined
     KeyData* FindKey(const string& k, bool warn = false) const;
-    /// Remove value for key (return whether present)
-    bool Unset(const string& k);
+
+    /// Get generic type
+    template<typename T>
+    void Get(const string& k, T& x, bool warn = false) const { auto v = FindKey(k,warn); if(v) v->Get(x); }
+
+    /// Get generic type out-of-place (required to exist)
+    template<typename T>
+    T Get(const string& k) const { T t{}; auto v = FindKey(k,true); if(v) v->Get(t); else assert(false); return t; }
+
+    /// Get value with default
+    template<typename T>
+    T GetDefault(const string& k, T dflt) const { Get(k,dflt,false); return dflt; }
 
     /// Get TObject-derived class, or nullptr if key undefined or incorrect type
     template<class C>
     C* GetROOT(const string& k) const { auto v = FindKey(k, true); return v? v->GetROOT<C>() : nullptr; }
+
     /// Get modifiable pointer to array contents
     template<typename T>
     T* GetArrayPtr(const string& k) const { auto v = FindKey(k); return v? v->GetArrayPtr<T>() : nullptr; }
-
-    /// Get boolean stored as int
-    void Get(const string& k, bool& b, bool warn = false) { int i = b; Get(k, i, warn); b = i; }
-    /// Get generic type
-    template<typename T>
-    void Get(const string& k, T& x, bool warn = false) const { auto v = FindKey(k,warn); if(v) v->Get(x); }
-    /// Get generic type out-of-place (required to exist)
-    template<typename T>
-    T Get(const string& k) const { T t{}; auto v = FindKey(k,true); if(v) v->Get(t); else assert(false); return t; }
-    /// Get value with default
-    template<typename T>
-    T GetDefault(const string& k, T dflt) const { Get(k,dflt,false); return dflt; }
 };
 
 /// Send KeyData buffered object

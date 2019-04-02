@@ -20,10 +20,10 @@ using std::array;
 template<int N>
 struct weightedpt {
     /// Constructor
-    weightedpt(double* xx = nullptr, double ww=1): w(ww) { if(xx) std::copy(xx, xx+N, x.data()); }
+    weightedpt(double* xx = nullptr, double ww = 1): w(ww) { if(xx) std::copy(xx, xx+N, x.data()); else std::fill(x.begin(), x.end(), 0); }
 
-    array<double,N> x{};///< coordinate
-    double w = 1;       ///< weight
+    array<double,N> x;  ///< coordinate
+    double w;           ///< weight
 };
 
 /// PCA calculation

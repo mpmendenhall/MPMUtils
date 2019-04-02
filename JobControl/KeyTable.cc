@@ -3,32 +3,25 @@
 #include "KeyTable.hh"
 #include <cstdint>
 
+KeyData::KeyData(int what, size_t n): TMessage(what, n) {
+    wsize = 2*sizeof(UInt_t)+n;
+    std::memset(Buffer()+2*sizeof(UInt_t), 0, BufferSize()-2*sizeof(UInt_t));
+    SetReadMode();
+}
+
 KeyData& KeyData::operator=(const KeyData& d) {
+    if(&d == this) return *this;  // self-copy???
+
     wsize = d.wSize();
     Expand(wsize, false);
     std::copy(d.Buffer(), d.Buffer()+wsize, Buffer());
     std::memset(Buffer()+wsize, 0, BufferSize()-wsize);
+    SetWhat(d.What());
     SetReadMode();
     return *this;
 }
 
-KeyData::KeyData(size_t n, const void* p): TMessage(kMESS_BINARY, p? sizeof(UInt_t) + n : n) {
-    if(p) {
-        whut();
-        WriteUInt(n);
-        memcpy(fBufCur, p, n);
-        fBufCur += n;
-        wsize = fBufCur - Buffer();
-        std::memset(fBufCur, 0, fBufMax-fBufCur);
-    } else {
-        std::memset(Buffer(), 0, BufferSize());
-        wsize = n;
-    }
-
-    SetReadMode();
-}
-
-void KeyData::accumulate(const KeyData& kd) {
+KeyData& KeyData::operator+=(const KeyData& kd) {
     auto w = What();
     if(w != kd.What()) throw std::domain_error("Incompatible accumulation types!");
 
@@ -49,6 +42,8 @@ void KeyData::accumulate(const KeyData& kd) {
     else if(w == typeID<  double>()) accumulate<double>(kd);
     else if(w == typeID<long double>()) accumulate<long double>(kd);
     else throw std::domain_error("Non-accumulable type!");
+
+    return *this;
 }
 
 /////////////////////////////////////////////////////////
@@ -78,13 +73,16 @@ const KeyTable& KeyTable::operator=(const KeyTable& k) {
 }
 
 bool KeyTable::_Set(const string& s, KeyData* v) {
+    assert(v);
+
     auto it = find(s);
     if(it != end()) {
         delete it->second;
-        if(v) it->second = v;
-        else erase(it);
+        it->second = v;
         return true;
-    } else if(v) (*this)[s] = v;
+    }
+
+    (*this)[s] = v;
     return false;
 }
 

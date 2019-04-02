@@ -34,7 +34,7 @@ void KTAccumJobComm::endJob(BinaryIO& B) {
             if(!h || !objs[i]) exit(25);
             objs[i]->Add(h);
             delete h;
-        } else cd->accumulate(*kd);
+        } else *cd += *kd;
         delete kd;
     }
 }
@@ -71,8 +71,9 @@ void KTAccumJob::run(JobSpec J, BinaryIO& B) {
 void KTAccumJob::returnCombined(BinaryIO& B) {
     for(auto& kv: kt) {
         if(kv.first.substr(0,7) != "Combine") continue;
-        auto kd = kt.FindKey(kv.second->Get<string>());
-        if(!kd) exit(11);
+        auto c = kv.second->Get<string>();
+        auto kd = kt.FindKey(c);
+        if(!kd) throw std::runtime_error(("Missing key for combining '"+c+"'").c_str());
         B.send(*kd);
     }
 }
