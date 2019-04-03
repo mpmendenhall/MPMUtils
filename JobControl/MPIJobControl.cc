@@ -1,29 +1,12 @@
 /// \file MPIJobControl.cc
 // Michael P. Mendenhall, LLNL 2019
 
+#ifdef WITH_MPI
+#include <mpi.h>
 #include "MPIJobControl.hh"
 #include <iostream> // for std::cout
 
-#ifdef WITH_MPI
-
-void MPIJobControl::init(int argc, char **argv) {
-    MPIBinaryIO::init(argc, argv);
-
-    rank = mpirank;
-    ntasks = mpisize - 1;
-    parentRank = 0; //ntasks? 0 : (rank/coresPerNode)*coresPerNode;
-    //if(rank > 1 && parentRank == 0) parentRank = 1;
-
-    if(verbose) {
-        std::cout << "Rank " << rank << " task of " << ntasks << " available on " << hostname;
-        std::cout << " (" << coresPerNode << " cores) starting run.\n";
-        std::cout << "\tParent: " << parentRank << "; children: <";
-        for(auto r: availableRanks) std::cout << " " << r;
-        std::cout << " >\n";
-    }
-}
-
-void MPIJobControl::finish() {
+MPIJobControl::~MPIJobControl() {
     // Send ending message to close worker process
     JobSpec JS0;
     for(auto r: availableRanks) {
@@ -31,14 +14,7 @@ void MPIJobControl::finish() {
         send(JS0);
     }
 
-    if(verbose > 1) printf(availableRanks.size()? "Controller [%i] closing.\n" : "Worker [%i] closing.\n", rank);
-    MPI_Finalize();
-}
-
-void MPIJobControl::signalDone() {
-    // send with tag '1' to signal done
-    int i = 1;
-    MPI_Send(&i, 1, MPI_INT, dataDest, 1, MPI_COMM_WORLD);
+    if(verbose > 1) printf(availableRanks.size()? "Controller [%i] closing.\n" : "Worker [%i] closing.\n", mpirank);
 }
 
 bool MPIJobControl::_isRunning(int wid) {
@@ -61,6 +37,15 @@ int MPIJobControl::_allocWorker() {
     int wid = *availableRanks.begin();
     availableRanks.erase(wid);
     return wid;
+}
+
+///////////////////////
+///////////////////////
+
+void MPIJobWorker::signalDone() {
+    // send with tag '1' to signal done
+    int i = 1;
+    MPI_Send(&i, 1, MPI_INT, dataDest, 1, MPI_COMM_WORLD);
 }
 
 #endif

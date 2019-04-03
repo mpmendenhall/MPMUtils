@@ -14,7 +14,7 @@ public:
     /// Destructor
     virtual ~KTAccumJobComm() { for(auto p: objs) delete p; }
 
-    KeyTable kt;            ///< associated KeyTable
+    KeyTable kt;    ///< associated KeyTable
 
     /// start-of-job communication (send instruction details)
     void startJob(BinaryIO& B) override { B.send(kt); }

@@ -8,6 +8,7 @@ mpirun -np $SLURM_CPUS_ON_NODE bin/testJobControl
 #include "MPIJobControl.hh" // put first to avoid std::string namespace conflicts
 #include "ThreadsJobControl.hh"
 #include "KTAccumJob.hh"
+#include "CodeVersion.hh"
 #include <TH1F.h>
 
 /// Test job class interfacing with KeyData
@@ -28,42 +29,62 @@ REGISTER_FACTORYOBJECT(MyAccumJob)
 
 /// main() for executable
 int main(int argc, char **argv) {
+    CodeVersion::display_code_version();
 
-    //MultiJobControl::JC = new ThreadsJobControl();
-    MultiJobControl::JC = new MPIJobControl();
+    MPIBinaryIO::init(argc,argv);
+    MPIBinaryIO::display();
+
+    if(MPIBinaryIO::mpisize <= 1) {
+
+        auto JCW = new LocalJobControl();
+        MultiJobControl::JC = JCW;
+        LocalJobControl::JW = JCW;
+
+    } else if(!MPIBinaryIO::mpirank) {
+
+        MultiJobControl::JC = new MPIJobControl();
+
+    } else {
+
+        MultiJobWorker::JW = new MPIJobWorker();
+        JobWorker::stateDir = "./SavedState/";
+        MultiJobWorker::JW->runWorkerJobs();
+
+        delete MultiJobWorker::JW;
+        MPIBinaryIO::uninit();
+        return EXIT_SUCCESS;
+    }
 
     MultiJobControl::JC->verbose = 5;
-    MultiJobControl::JC->init(argc, argv);
 
-    if(MultiJobControl::JC->isController()) {
+    KTAccumJobComm KTC;
+    auto foo = new TH1F("foo","bar",20,0,10);
+    KTC.kt.Set("v", *foo);
+    KTC.kt.Set("Combine","v");
+    KTC.kt.Set("NSamples", 1000);
 
-        KTAccumJobComm KTC;
-        auto foo = new TH1F("foo","bar",20,0,10);
-        KTC.kt.Set("v", *foo);
-        KTC.kt.Set("Combine","v");
-        KTC.kt.Set("NSamples", 1000);
+    KTC.launchAccumulate(typehash<MyAccumJob>());
+    for(int i=0; i<10; i++) {
+        JobSpec JS;
+        JS.uid = i;
+        JS.wclass = typehash<JobWorker>();
+        MultiJobControl::JC->submitJob(JS);
+    }
+    printf("\n\nAll submitted!\n\n");
 
-        KTC.launchAccumulate(typehash<MyAccumJob>());
-        for(int i=0; i<10; i++) {
-            JobSpec JS;
-            JS.uid = i;
-            JS.wclass = typehash<JobWorker>();
-            MultiJobControl::JC->submitJob(JS);
-        }
-        printf("\n\nAll submitted!\n\n");
+    MultiJobControl::JC->waitComplete();
 
-        MultiJobControl::JC->waitComplete();
+    printf("\n\nAll done!\n");
 
-        printf("\n\nAll done!\n");
+    KTC.gather();
+    auto f = KTC.kt.GetROOT<TH1>("v");
+    assert(f);
+    for(int i=1; i<=f->GetNbinsX(); i++) printf("\t%i\t%g\n", i, f->GetBinContent(i));
 
-        KTC.gather();
-        auto f = KTC.kt.GetROOT<TH1>("v");
-        assert(f);
-        for(int i=1; i<=f->GetNbinsX(); i++) printf("\t%i\t%g\n", i, f->GetBinContent(i));
-
-    } else MultiJobControl::JC->runWorker();
-
-    MultiJobControl::JC->finish();
+    delete MultiJobControl::JC;
+    MPIBinaryIO::uninit();
 
     return EXIT_SUCCESS;
+
+
 }

@@ -1,32 +1,33 @@
 /// \file MPIBinaryIO.hh Binary I/O over MPI channel
 
-#ifdef WITH_MPI
 #ifndef MPIBINARYIO_HH
 #define MPIBINARYIO_HH
 
-#include <mpi.h>
 #include "BinaryIO.hh"
 #include <set>
 using std::set;
 
-/// Binary I/O over MPI
+/// Binary I/O over MPI, with static MPI instance info
 class MPIBinaryIO: virtual public BinaryIO {
 public:
     /// initialize with MPI information
-    void init(int argc, char **argv);
+    static void init(int argc, char **argv);
+    /// close out MPI
+    static void uninit();
+    /// display MPI info to stdout
+    static void display();
+
+    static int mpisize;                             ///< number of MPI ranks available
+    static int mpirank;                             ///< this job's number
+    static char* hostname;                          ///< hostname for this machine
+    static int coresPerNode;                        ///< number of cores on this MPI node
+    static set<int> availableRanks;                 ///< communication ranks available
 
 protected:
     /// blocking data send
     void _send(void* vptr, int size) override;
     /// blocking data receive
     void _receive(void* vptr, int size) override;
-
-    int mpisize = 0;                        ///< number of MPI ranks available
-    int mpirank = 0;                        ///< this job's number
-    char hostname[MPI_MAX_PROCESSOR_NAME];  ///< hostname for this machine
-    int coresPerNode = 0;                   ///< number of cores on this MPI node
-    set<int> availableRanks;                ///< communication ranks available
 };
 
-#endif
 #endif

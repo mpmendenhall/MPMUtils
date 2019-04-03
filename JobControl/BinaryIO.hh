@@ -15,6 +15,8 @@ using std::vector;
 using std::map;
 #include <cstring> // for std::memcpy
 #include <cassert>
+#include <deque>
+using std::deque;
 
 // workaround for older gcc without std::is_trivially_copyable
 #if __GNUG__ && __GNUC__ < 5
@@ -26,6 +28,8 @@ using std::map;
 /// Base binary class receiving input with serializer functions
 class BinaryWriter {
 public:
+    /// Destructor
+    virtual ~BinaryWriter() { }
     /// clear output, e.g. delete buffers
     virtual void clearOut() { }
 
@@ -92,7 +96,7 @@ protected:
     /// append data block to write buffer
     void append_write(const char* dat, size_t n);
 
-    int dataDest = 0;       ///< destination for data send
+    int dataDest = 0;       ///< destination identifier for data send
     size_t wtxdepth = 0;    ///< write transaction depth counter
     vector<char> wbuff;     ///< deferred write buffer
 };
@@ -100,6 +104,8 @@ protected:
 /// Base binary reader class with deserializer functions
 class BinaryReader {
 public:
+    /// Destructor
+    virtual ~BinaryReader() { }
     /// clear input
     virtual void clearIn() { }
 
@@ -140,11 +146,10 @@ protected:
     /// blocking data receive
     virtual void _receive(void* vptr, int size) = 0;
 
-    int dataSrc = 0;        ///< source for data receive
+    int dataSrc = 0;        ///< source identifier for data receive
     vector<char> rbuff;     ///< read buffer
     size_t rpt = 0;         ///< position in read buffer
 };
-
 
 /// Base combined binary I/O class
 class BinaryIO: public BinaryReader, public BinaryWriter { };
@@ -194,5 +199,18 @@ protected:
 
 /// Memory buffer I/O
 class MemBIO: public MemBReader, public MemBWriter { };
+
+/// I/O to a deque buffer; virtual to allow mix-in with BinaryIO inheritance
+class DequeBIO: virtual public BinaryIO, protected deque<char> {
+protected:
+    /// blocking data send
+    void _send(void* vptr, int s) override { auto v = (char*)vptr; while(s--) push_back(*(v++)); }
+    /// blocking data receive
+    void _receive(void* vptr, int s) override {
+        if((int)size() < s) throw std::domain_error("Insufficient buffered data!");
+        auto v = (char*)vptr;
+        while(s--) { *(v++) = front(); pop_front(); }
+    }
+};
 
 #endif

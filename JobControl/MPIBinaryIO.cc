@@ -2,9 +2,30 @@
 // Michael P. Mendenhall, LLNL 2019
 
 #ifdef WITH_MPI
+#include <mpi.h>
+#endif
+
 #include "MPIBinaryIO.hh"
 #include <cstring> // for std::memcpy
 #include <iostream> // for std::cout
+#include <stdexcept>
+
+void MPIBinaryIO::display() {
+    std::cout << "Rank " << mpirank << " task of " << mpisize << " available on " << hostname;
+    std::cout << " (" << coresPerNode << " cores) starting run.\n";
+    std::cout << " children: <";
+    for(auto r: availableRanks) std::cout << " " << r;
+    std::cout << " >\n";
+}
+
+int MPIBinaryIO::mpisize = 0;
+int MPIBinaryIO::mpirank = 0;
+int MPIBinaryIO::coresPerNode = 0;
+set<int> MPIBinaryIO::availableRanks;
+
+#ifdef WITH_MPI
+
+char* MPIBinaryIO::hostname = new char[MPI_MAX_PROCESSOR_NAME];
 
 void MPIBinaryIO::_send(void* vptr, int size) {
     if(!size) return;
@@ -24,14 +45,13 @@ void MPIBinaryIO::_receive(void* vptr, int size) {
         rpt = 0;
     }
 
-    if(rpt + size > rbuff.size()) {
-        printf("*** Error: unexpected MPI data boundary!");
-        exit(88);
-    }
+    if(rpt + size > rbuff.size()) throw std::runtime_error("unexpected MPI data boundary!");
 
     std::memcpy(vptr, rbuff.data()+rpt, size);
     rpt += size;
 }
+
+void MPIBinaryIO::uninit() { MPI_Finalize(); }
 
 void MPIBinaryIO::init(int argc, char **argv) {
     int status = MPI_Init(&argc, &argv);
@@ -69,5 +89,17 @@ void MPIBinaryIO::init(int argc, char **argv) {
         }
     }
 }
+
+#else
+
+char* MPIBinaryIO::hostname = "not_an_MPI_host";
+
+void MPIBinaryIO::_send(void* vptr, int size) { throw std::exception("Not compiled with MPI!"); }
+
+void MPIBinaryIO::_receive(void* vptr, int size) { throw std::exception("Not compiled with MPI!"); }
+
+void MPIBinaryIO::init(int, char **) { }
+
+void MPIBinaryIO::uninit() { }
 
 #endif

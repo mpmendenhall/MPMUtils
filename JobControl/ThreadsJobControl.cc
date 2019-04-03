@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <thread>
 
+/*
 static vector<int> stillRunning;
 
 void ThreadsJobControl::init(int argc, char **argv) {
@@ -85,3 +86,4 @@ int ThreadsJobControl::_allocWorker() {
 
     exit(1); // should have a slot available???
 }
+*/

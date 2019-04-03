@@ -22,16 +22,15 @@ void KTAccumJobComm::endJob(BinaryIO& B) {
 
     for(size_t i=0; i<combos.size(); i++) {
         auto cd = kt.FindKey(combos[i]);
-        if(!cd) exit(22);
         auto kd = B.receive<KeyData*>();
-        if(!kd) exit(23);
+        assert(kd);
 
         auto tp = cd->What();
-        if(tp != kd->What()) exit(24);
+        assert(tp == kd->What());
 
-        else if(tp == kMESS_OBJECT) {
+        if(tp == kMESS_OBJECT) {
             auto h = kd->GetROOT<TH1>();
-            if(!h || !objs[i]) exit(25);
+            assert(h && objs[i]);
             objs[i]->Add(h);
             delete h;
         } else *cd += *kd;
@@ -64,7 +63,7 @@ void KTAccumJob::run(JobSpec J, BinaryIO& B) {
     JS = J;
     B.receive(kt);
     runAccum();
-    MultiJobControl::JC->signalDone();
+    MultiJobWorker::JW->signalDone();
     returnCombined(B);
 }
 

@@ -5,8 +5,6 @@
 #include "DiskBIO.hh"
 #include <algorithm>
 
-MultiJobControl* MultiJobControl::JC = nullptr;
-
 void JobSpec::display() const {
     printf("JobSpec [Job %i: %zu -- %zu] for class '%s' on worker [%i]\n", uid, N0, N1, ObjectFactory::nameOf(wclass).c_str(), wid);
 }
@@ -22,46 +20,71 @@ void JobComm::splitJobs(vector<JobSpec>& vJS, size_t nSplit, size_t nItms, size_
     }
 }
 
+///////////////////////////////////
+///////////////////////////////////
+
 REGISTER_FACTORYOBJECT(JobWorker)
+
+string JobWorker::stateDir = "";
 
 void JobWorker::run(JobSpec JS, BinaryIO&) {
     printf("JobWorker does nothing for ");
     JS.display();
-    MultiJobControl::JC->signalDone();
+    MultiJobWorker::JW->signalDone();
 }
 
-////////////////////////////
-////////////////////////////
+string JobWorker::sdataFile(const string& h) const {
+    if(!stateDir.size()) return "";
+    std::stringstream fn;
+    fn << stateDir << "/SavedState_" << h << ".dat";
+    return fn.str();
+}
 
-void MultiJobControl::runWorker() {
-    map<size_t, JobWorker*> workers;
+bool JobWorker::checkState(const string& h) {
+    lastReq[h] = nReq++;
+    if(stateData.count(h)) return true;
+    if(!stateDir.size()) return false;
 
-    do {
-        dataDest = dataSrc = parentRank;
-        auto JS = receive<JobSpec>();
+    auto f = sdataFile(h);
+    FDBinaryReader b(f);
+    if(!b.inIsOpen()) return false;
+    //if(verbose > 3) printf("Loading persisted data from '%s'\n", f.c_str());
+    stateData.emplace(h, b.receive<KeyData>());
+    return true;
+}
 
-        // null worker type indicates end of run
-        if(!JS.wclass) {
-            if(verbose > 2) printf("Break command received by [%i]\n", rank);
-            break;
+void JobWorker::clearState(const string& h) {
+    stateData.erase(h);
+    lastReq.erase(h);
+    if(stateDir.size()) runSysCmd("rm -f " + sdataFile(h));
+}
+
+void JobWorker::persistState(const string& h) {
+    auto it = stateData.find(h);
+    if(stateDir.size() && it != stateData.end()) {
+        auto f = sdataFile(h);
+        runSysCmd("mkdir -p " + stateDir);
+        //if(verbose > 3) printf("Persisting state data to '%s'\n", f.c_str());
+        {
+            FDBinaryWriter b(f+"_tmp");
+            b.send(it->second);
         }
+        runSysCmd("mv " + f+"_tmp" + " " + f);
+    }
 
-        // load and run appropriate worker
-        auto it = workers.find(JS.wclass);
-        auto W = it == workers.end()? nullptr : it->second;
-        if(!W) {
-            if(verbose > 3) printf("Instantiating worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
-            workers[JS.wclass] = W = dynamic_cast<JobWorker*>(ObjectFactory::construct(JS.wclass));
-            if(!W) exit(44);
-        } else if(verbose > 4) printf("Already have worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
-        W->run(JS, *this);
-
-    } while(persistent);
-    if(verbose > 2 && !persistent) printf("\nrunWorker completed on [%i]\n\n", rank);
-
-    // cleanup
-    for(auto& kv: workers) delete kv.second;
+    // purge excessive storage
+    if(stateData.size() > 1000) {
+        vector<string> vold;
+        for(auto& kv: stateData) if(lastReq[kv.first] < nReq-500) vold.push_back(kv.first);
+        for(auto hh: vold) if(hh != h) stateData.erase(h);
+    }
 }
+
+
+////////////////////////////
+////////////////////////////
+
+MultiJobControl* MultiJobControl::JC = nullptr;
 
 int MultiJobControl::submitJob(JobSpec& JS) {
     dataSrc = dataDest = JS.wid = _allocWorker();
@@ -115,49 +138,48 @@ void MultiJobControl::waitFor(const vector<int>& v) {
     }
 }
 
-string MultiJobControl::sdataFile(size_t h) const {
-    if(!stateDir.size()) return "";
-    std::stringstream fn;
-    fn << stateDir << "/SavedState_" << h << ".dat";
-    return fn.str();
+
+////////////////////////////////
+////////////////////////////////
+
+MultiJobWorker* MultiJobWorker::JW = nullptr;
+
+void MultiJobWorker::runJob(JobSpec& JS) {
+    auto it = workers.find(JS.wclass);
+    auto W = it == workers.end()? nullptr : it->second;
+    if(!W) {
+        if(verbose > 3) printf("Instantiating worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
+        workers[JS.wclass] = W = dynamic_cast<JobWorker*>(ObjectFactory::construct(JS.wclass));
+        if(!W) throw std::runtime_error("Unable to construct requested worker class!");
+    } else if(verbose > 4) printf("Already have worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
+
+    W->run(JS, *this);
 }
 
-bool MultiJobControl::checkState(size_t h) {
-    lastReq[h] = nReq++;
-    if(stateData.count(h)) return true;
-    if(!stateDir.size()) return false;
+void MultiJobWorker::runWorkerJobs() {
+    do {
+        auto JS = receive<JobSpec>();
 
-    auto f = sdataFile(h);
-    FDBinaryReader b(f);
-    if(!b.inIsOpen()) return false;
-    if(verbose > 3) printf("Loading persisted data from '%s'\n", f.c_str());
-    stateData.emplace(h, b.receive<KeyData>());
-    return true;
-}
-
-void MultiJobControl::clearState(size_t h) {
-    stateData.erase(h);
-    lastReq.erase(h);
-    if(stateDir.size()) runSysCmd("rm -f " + sdataFile(h));
-}
-
-void MultiJobControl::persistState(size_t h) {
-    auto it = stateData.find(h);
-    if(stateDir.size() && it != stateData.end()) {
-        auto f = sdataFile(h);
-        runSysCmd("mkdir -p " + stateDir);
-        if(verbose > 3) printf("Persisting state data to '%s'\n", f.c_str());
-        {
-            FDBinaryWriter b(f+"_tmp");
-            b.send(it->second);
+        // null worker type indicates end of run
+        if(!JS.wclass) {
+            if(verbose > 2) printf("Break command received by [%i]\n", JS.wid);
+            break;
         }
-        runSysCmd("mv " + f+"_tmp" + " " + f);
-    }
 
-    // purge excessive storage
-    if(stateData.size() > 1000) {
-        vector<size_t> vold;
-        for(auto& kv: stateData) if(lastReq[kv.first] < nReq-500) vold.push_back(kv.first);
-        for(auto hh: vold) if(hh != h) stateData.erase(h);
-    }
+        runJob(JS);
+
+    } while(persistent);
+
+    if(verbose > 2 && !persistent) printf("\nrunWorker completed.\n\n");
+}
+
+///////////////////////////////////////
+
+int LocalJobControl::submitJob(JobSpec& JS) {
+    JS.wid = _allocWorker();
+    if(MultiJobControl::verbose > 4) { printf("Running local "); JS.display(); }
+    if(JS.C) JS.C->startJob(*this);
+    runJob(JS);
+    if(JS.C) JS.C->endJob(*this);
+    return JS.wid;
 }

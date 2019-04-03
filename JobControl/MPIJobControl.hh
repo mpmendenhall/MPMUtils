@@ -11,13 +11,10 @@
 /// Distribute and collect jobs over MPI
 class MPIJobControl: public MPIBinaryIO, public MultiJobControl {
 public:
-    /// initialize with MPI information
-    void init(int argc, char **argv) override;
-    /// end-of-run completion
-    void finish() override;
-
-    /// signal that job is done; ready for close-out comms
-    void signalDone() override;
+    /// Constructor
+    MPIJobControl() { ntasks = mpisize - 1; }
+    /// Destructor (signals to close remote jobs)
+    ~MPIJobControl();
 
 protected:
 
@@ -25,6 +22,13 @@ protected:
     bool _isRunning(int) override;
     /// Allocate an available thread, blocking if necessary
     int _allocWorker() override;
+};
+
+/// Distribute and collect jobs over MPI
+class MPIJobWorker: public MPIBinaryIO, public MultiJobWorker {
+public:
+    /// signal that job is done; ready for close-out comms
+    void signalDone() override;
 };
 
 #endif

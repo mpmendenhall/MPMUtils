@@ -4,17 +4,14 @@
 #include "DiskIOJobControl.hh"
 #include <sstream>
 
-
+/*
 void DiskIOJobControl::init(int argc, char **argv) {
     rank = 0;
     for(int i=1; i<argc-1; i++) if(argv[i][0]=='-' && argv[i][1]=='N') rank = atoi(argv[i+1]);
     if(verbose > 2) printf("Initializing DiskIOJobControl[%i] for '%s'\n", rank, argv[0]);
-
-    persistent = !rank;
-    runLocal = false;
 }
 
-void DiskIOJobControl::finish() {
+DiskIOJobControl::~DiskIOJobControl() {
     if(!rank) runSysCmd("rm -f " + data_bpath + "/CommBuffer_0_to_*.dat");
 }
 
@@ -66,3 +63,4 @@ void DiskIOJobControl::_receive(void* vptr, int size) {
     p += size;
     fin.close();
 }
+*/

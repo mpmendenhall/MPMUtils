@@ -5,6 +5,7 @@
 
 #include "DiskIOJobControl.hh"
 
+/*
 /// Distribute jobs as separate processes
 class ThreadsJobControl: public DiskIOJobControl {
 public:
@@ -20,5 +21,6 @@ protected:
     string exec_name;               ///< executable name
     map<int, pthread_t> cthreads;   ///< child threads
 };
+*/
 
 #endif
