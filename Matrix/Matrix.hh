@@ -143,23 +143,6 @@ private:
 template<size_t M, size_t N, typename T>
 const Vec<N,T> operator*(const Vec<M,T>& v, const Matrix<M,N,T>& X) { return X.rMultiply(v); }
 
-/// Determinant
-template<size_t M, typename T>
-const T det(const Matrix<M,M,T>& X) {
-    T d = X(0,0)*det(X.minor(0,0));
-    bool pos = false;
-    for(size_t r=1; r<M; r++) {
-        auto dm = X(r,0)*det(X.minor(r,0));
-        if(pos) d += dm;
-        else    d -= dm;
-        pos = !pos;
-    }
-    return d;
-}
-/// Special case: determinant of 1x1 matrix
-template<typename T>
-const T det(const Matrix<1,1,T>& X) { return X[0]; }
-
 /// unnormalized axis of 3D rotation
 template<typename T>
 Vec<3,T> R3axis(const Matrix<3,3,T>& M) {
@@ -265,9 +248,148 @@ const Vec<N,T> Matrix<M,N,T>::rMultiply(const Vec<M,T>& v) const {
     return a;
 }
 
+///////////////////////////
+// Square matrix operations
+///////////////////////////
+
+
+/// unit/identity value for type
+template<typename T>
+T unit() { return 1; }
+
+/// Compare magnitudes |a| < |b| --- override for fancier types
+template<typename T>
+bool abs_lt(const T& a, const T& b) { return (a<0? -a:a) < (b<0? -b:b); }
+
+/// LUP decomposition of A -> PA = LU, where L=1 on diagonal
+template<size_t N, typename T>
+class LUPDecomp: protected Matrix<N,N,T> {
+public:
+    /// parent class
+    typedef Matrix<N,N,T> super;
+
+    /// Default constructor
+    LUPDecomp() { }
+
+    /// Constructor, from matrix to decompose
+    LUPDecomp(const super& A): super(A) {
+        // initial unit permutation
+        size_t i = 0;
+        for(auto& x: P) x = i++;
+
+        for(i=0; i<N; ++i) {
+            // determine maximum-magnitude row in current column
+            T mm{};
+            auto imax = i;
+            for(size_t k = i; k < N; k++) if(abs_lt(mm,(*this)(k,i))) { mm = (*this)(k,i); imax = k; }
+            if(!i) cMin = mm;
+            else if(abs_lt(mm, cMin)) cMin = mm;
+            // singular?
+            if(!mm) { nP = -1; return; }
+
+            // pivoting as needed
+            if(imax != i) {
+                std::swap(P[i], P[imax]);
+                for(size_t j=0; j<N; j++) std::swap((*this)(i,j), (*this)(imax,j));
+                ++nP;
+            }
+
+            for(size_t j = i+1; j<N; ++j) {
+                (*this)(j,i) /= (*this)(i,i);
+                for(size_t k = i+1; k<N; k++) (*this)(j,k) -= (*this)(j,i) * (*this)(i,k);
+            }
+        }
+    }
+
+    /// Solve A*x = b for x
+    template<typename V>
+    V solve(const V& b) const {
+        if(isSingular()) throw std::runtime_error("Matrix is singular!");
+
+        V x{};
+        for(size_t i = 0; i < N; ++i) {
+            x[i] = b[P[i]];
+            for(size_t k = 0; k < i; ++k) x[i] -= (*this)(i,k) * x[k];
+        }
+
+        for (int i = N-1; i >= 0; --i) {
+            for(size_t k = i + 1; k < N; ++k) x[i] -= (*this)(i,k) * x[k];
+            x[i] /= (*this)(i,i);
+        }
+        return x;
+    }
+
+    /// Check if matrix is (near-)singular, according to initial construction tolerance
+    bool isSingular() const { return nP < 0; }
+
+    /// Determinant of A
+    T det() const {
+        if(isSingular()) return T{};
+        auto d = (*this)(0,0);
+        for(size_t i=1; i<N; i++) d *= (*this)(i,i);
+        return nP%2? -d : d;
+    }
+
+    /// Fill Ai with inverse of A
+    void inverse(super& Ai) const {
+        if(isSingular()) throw std::runtime_error("Matrix is singular!");
+
+        for(size_t j = 0; j < N; ++j) {
+            for(size_t i = 0; i < N; ++i) {
+                Ai(i,j) = (P[i]==(int)j)? unit<T>() : T{};
+                for(size_t k = 0; k < i; ++k) Ai(i,j) -= (*this)(i,k) * Ai(k,j);
+            }
+
+            for(int i = N - 1; i >= 0; --i) {
+                for(size_t k = i + 1; k < N; ++k) Ai(i,j) -= (*this)(i,k) * Ai(k,j);
+                Ai(i,j) /= (*this)(i,i);
+            }
+        }
+    }
+
+    /// extract L
+   super L() const {
+        auto _L =  super::identity();
+        for(size_t i=0; i<N; ++i)
+            for(size_t j=0; j<i; ++j)
+                _L(i,j) = (*this)(i,j);
+        return _L;
+    }
+
+    /// extract U
+    super U() const {
+        super _U{};
+        for(size_t i=0; i<N; ++i)
+            for(size_t j=i; j<N; ++j)
+                _U(i,j) = (*this)(i,j);
+        return _U;
+    }
+
+protected:
+    array<int,N> P;     ///< pivots permutation
+    int nP = 0;         ///< number of permutation swaps
+    T cMin{};           ///< smallest row-division value encountered
+};
+
+/// Determinant
+template<size_t M, typename T>
+const T det(const Matrix<M,M,T>& X) {
+    T d = X(0,0)*det(X.minor(0,0));
+    bool pos = false;
+    for(size_t r=1; r<M; r++) {
+        auto dm = X(r,0)*det(X.minor(r,0));
+        if(pos) d += dm;
+        else    d -= dm;
+        pos = !pos;
+    }
+    return d;
+}
+/// Special case: determinant of 1x1 matrix
+template<typename T>
+const T det(const Matrix<1,1,T>& X) { return X[0]; }
+
 template<size_t M, size_t N, typename T>
 const Matrix<M,N,T>& Matrix<M,N,T>::invert() {
-    assert(M==N);
     subinvert(0);
     return *this;
 }
@@ -302,8 +424,7 @@ void Matrix<M,N,T>::subinvert(size_t n) {
         //m0 = -m0*firstcell;
     }
 
-    if(n==M-1)
-        return;
+    if(n == M-1) return;
 
     //invert the submatrix
     subinvert(n+1);
@@ -331,7 +452,6 @@ void Matrix<M,N,T>::subinvert(size_t n) {
         for(size_t r=n+2; r<M; r++)
             (*this)(n,c) -= (*this)(r,c) * subvec[r-n-1];
     }
-
 }
 
 #endif

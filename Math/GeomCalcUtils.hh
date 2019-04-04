@@ -7,25 +7,51 @@
 #include <cmath>
 #include <type_traits>
 #include <numeric> // for std::accumulate
+#include <cmath>   // for sqrt
 
 /// Get type for contents of fixed array, std::array, std::vector
 template<typename T>
 using array_contents_t = typename std::remove_reference<decltype(std::declval<T&>()[0])>::type;
 
-/// generic vector magnitude^2
-template<typename V>
-array_contents_t<V> vmag2(const V& v) {
-    typedef array_contents_t<V> T;
-    T m2{};
-    return std::accumulate(v.begin(), v.end(), m2, [](T a, T b) { return a + b*b; });
-}
-
-/// Vector dot product
+/// Vector dot product; for mixed vector types, convert to contents of first
 template<typename T, typename U>
 inline array_contents_t<T> dot(const T& a,  const U& b) {
     array_contents_t<T> d{};
     auto it = b.begin();
     for(auto v: a) d += v * array_contents_t<T>(*(it++));
+    return d;
+}
+
+/// arithmetic types mag^2
+template<typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr>
+inline T mag2(const T& x) { return x*x; }
+
+/// vector magnitude^2
+template<typename V, typename std::enable_if<!std::is_arithmetic<V>::value>::type* = nullptr>
+inline array_contents_t<V> mag2(const V& v) {
+    typedef array_contents_t<V> T;
+    return std::accumulate(v.begin(), v.end(), T{}, [](const T& a, const T& b) { return a + b*b; });
+}
+
+/// vector magnitude
+template<typename T>
+inline array_contents_t<T> mag(const T& v) { return sqrt(mag2(v)); }
+
+/// Vector sum a+b
+template<typename T>
+T vsum(const T& a, const T& b) {
+    T d = a;
+    auto itb = b.begin();
+    for(auto& x: d) x += *(itb++);
+    return d;
+}
+
+/// Vector sum a + k*b
+template<typename T, typename U>
+T vsum(const T& a, const U& k, const T& b) {
+    T d = a;
+    auto itb = b.begin();
+    for(auto& x: d) x += (*(itb++))*k;
     return d;
 }
 
@@ -46,6 +72,7 @@ inline void cross(const T& a, const T& b, T& c) {
     c[1] = a[2]*b[0] - a[0]*b[2];
     c[2] = a[0]*b[1] - a[1]*b[0];
 }
+
 /// vector triple product
 template<typename T>
 inline array_contents_t<T> triple_prod(const T& a,  const T& b, const T& c) {
@@ -53,13 +80,9 @@ inline array_contents_t<T> triple_prod(const T& a,  const T& b, const T& c) {
     return a[0]*b[1]*c[2] + a[2]*b[0]*c[1] + a[1]*b[2]*c[0] - a[2]*b[1]*c[0] - a[1]*b[0]*c[2] - a[0]*b[2]*c[1];
 }
 
-/// 3-vector magnitude^2
-template<typename T>
-inline array_contents_t<T> mag2(const T& v) { return dot(v,v); }
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////
 
-/// vector magnitude
-template<typename T>
-inline array_contents_t<T> mag(const T& v) { return sqrt(mag2(v)); }
 /// normalize to unit vector; return original length
 template<typename T>
 inline array_contents_t<T> makeunit(T& v) {
@@ -99,7 +122,7 @@ inline array_contents_t<T> triangle_area2(const T& b0,  const T& b1, const T& h)
     auto d2 = dot(d,d);
     auto v2 = dot(v,v);
     auto x =  dot(d,v);
-    return 0.25*(v2*d2-x*x);
+    return (v2*d2-x*x)/4;
 }
 
 /// cosine of angle abc
@@ -165,18 +188,19 @@ void closest_approach_points(const T& p1, const T& d1,
                              array_contents_t<T>& c1, array_contents_t<T>& c2) {
     auto d0  = vdiff(p2,p1);
     auto a01 = dot(d0,d1);
-    auto a02 = dot(d0,d2);
     auto a11 = dot(d1,d1); // =1 for normalized directions
     auto a12 = dot(d1,d2);
     auto a12a12 = a12*a12;
     auto a22 = dot(d2,d2); // =1 for normalized directions
 
-    auto dd = a11*a22 - a12a12;
-    if(dd < 1e-6*a12a12) { // parallel lines special case
-        c1 = c2 = 0;
+    if(a12a12 == a11*a22) { // parallel lines special case
+        c1 = a01/a11;
+        c2 = {};
         return;
     }
 
+    auto a02 = dot(d0,d2);
+    auto dd = a11*a22 - a12a12;
     c1 = (a22*a01 - a12*a02)/dd;
     c2 = (a12*a01 - a11*a02)/dd;
 }
@@ -196,17 +220,20 @@ void closest_approach_points_normalized(
     const T& p2, const T& d2,
     array_contents_t<T>& c1, array_contents_t<T>& c2) {
 
-    auto d0 = vdiff(p2,p1[0]);
+    auto d0  = vdiff(p2,p1);
     auto a01 = dot(d0,d1);
-    auto a02 = dot(d0,d2);
     auto a12 = dot(d1,d2);
-    auto a12a12 = a12*a12;
 
-    auto dd = 1 - a12a12;
-    if(dd < 1e-6*a12a12) { // parallel lines special case
-        c1 = c2 = 0;
+    // parallel lines special case
+    if(a12 == 1) {
+        c1 = a01;
+        c2 = {};
         return;
     }
+
+    auto a02 = dot(d0,d2);
+    auto a12a12 = a12*a12;
+    auto dd = 1 - a12a12;
 
     c1 = (a01 - a12*a02)/dd;
     c2 = (a12*a01 - a02)/dd;
@@ -223,18 +250,11 @@ void closest_approach_points_normalized(
  * @return distance^2 between first and second point
  */
 template<typename T>
-T line_points_distance2(const T& p1, const T& d1,
-                        const T& p2, const T& d2,
-                        array_contents_t<T> c1, array_contents_t<T> c2) {
-    array_contents_t<T> s2{};
-    size_t i = 0;
-    for(auto x: p1) {
-        T l = (x+c1*d1[i]) - (p2[i]+c2*d2[i]);
-        s2 += l*l;
-        ++i;
-    }
-    return s2;
-}
+inline array_contents_t<T> line_points_distance2(
+    const T& p1, const T& d1,
+    const T& p2, const T& d2,
+    const array_contents_t<T>& c1,
+    const array_contents_t<T>& c2) { return mag2(vdiff(vsum(p1,c1,d1), vsum(p2,c2,d2))); }
 
 /// Calculate tangential and radial unit vectors frame relative to specified unit direction and z axis
 /**
@@ -277,6 +297,20 @@ void ortho_frame(const T& vu, const T& v0, T& v1, T& v2) {
     cross(v0,vu,v1);
     makeunit(v1);
     cross(v0,v1,v2);
+}
+
+/// Return c minimizing |U - c V|^2
+template<typename T>
+inline array_contents_t<T> closest_approach(const T& u, const T& v) { return dot(u,v)/mag2(v); }
+
+/// Solve |U - c V|^2 = k^2, in form c = a +- sqrt(b^2); returns a, k2 -> b^2
+template<typename T>
+array_contents_t<T> circle_ixn(const T& u, const T& v, array_contents_t<T>& k2) {
+    auto uv = dot(u,v);
+    auto vv = mag2(v);
+    auto c = uv/vv;
+    k2 = c*c + (k2 - dot(u,u))/vv;
+    return c;
 }
 
 #endif

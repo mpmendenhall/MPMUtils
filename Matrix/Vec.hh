@@ -24,10 +24,10 @@
 #define VEC_HH
 
 #include <stdlib.h>
-#include <math.h>
 #include <iostream>
 #include <array>
 #include <algorithm>
+#include "GeomCalcUtils.hh"
 
 using std::ostream;
 using std::array;
@@ -47,11 +47,12 @@ public:
     static Vec basis(size_t n) { Vec v; v[n] = 1; return v; }
 
     /// dot product with another vector
-    T dot(const Vec& v) const { T s = (*this)[0]*v[0]; for(size_t i=1; i<N; i++) s+=(*this)[i]*v[i]; return s; }
+    template<typename U>
+    T dot(const U& v) const { return dot(*this,v); }
     /// square magnitude \f$ v \cdot v \f$
-    T mag2() const { return dot(*this); }
+    T mag2() const { return mag2(*this); }
     /// magnitude \f$ \sqrt{v\cdot v} \f$
-    T mag() const { return sqrt(mag2()); }
+    T mag() const { return mag(*this); }
     /// sum of vector elements
     T sum() const { T s = (*this)[0]; for(size_t i=1; i<N; i++) s += (*this)[i]; return s; }
     /// product of vector elements
@@ -63,8 +64,6 @@ public:
     Vec paraProj(const Vec& v) const { return v*(dot(v)/v.mag2()); }
     /// project out component orthogonal to another vector
     Vec orthoProj(const Vec& v) const { return (*this)-paraProj(v); }
-    /// angle with another vector
-    T angle(const Vec v) const { return acos(dot(v)/sqrt(mag2()*v.mag2())); }
 
     /// unary minus operator
     const Vec operator-() const { auto v = *this; for(size_t i=0; i<N; i++) v[i] = -v[i]; return v; }
@@ -101,13 +100,6 @@ public:
     /// elementwise division operator
     const Vec operator/(const Vec& other) const { auto result = *this; return (result /= other); }
 
-    /// write in binray form to a file
-    void writeBinary(ostream& o) const { o.write((char*)this->data(),N*sizeof(T)); }
-    /// read a Vec from a file
-    static Vec readBinary(std::istream& s) { Vec v; v.loadBinaryData(s); return v; }
-    /// read in binary form from a file
-    Vec& loadBinaryData(std::istream& s) { s.read((char*)this->data(),N*sizeof(T)); return *this; }
-
     /// type conversion
     template<typename W>
     explicit operator Vec<N,W>() const {
@@ -129,44 +121,24 @@ ostream& operator<<(ostream& o, const Vec<N,T>& v) {
     return o;
 }
 
-/// cross product of 2-vectors
-template<typename T>
-T cross( const Vec<2,T>& v1, const Vec<2,T>& v2 ) { return v1[0]*v2[1]-v1[1]*v2[0]; }
-
-/// cross product of 3-vectors
-template<typename T>
-Vec<3,T> cross( const Vec<3,T>& a, const Vec<3,T>& b ) {
-    return Vec<3,T>(a[1]*b[2]-b[1]*a[2], a[2]*b[0]-b[2]*a[0], a[0]*b[1]-b[0]*a[1]);
-}
+// cross product of 2-vectors
+//template<typename T>
+//T cross( const Vec<2,T>& v1, const Vec<2,T>& v2 ) { return v1[0]*v2[1]-v1[1]*v2[0]; }
 
 /// rotation of a 2-vector 90 degrees counterclockwise
 template<typename T>
-Vec<2,T> rhOrtho( const Vec<2,T>& v ) {
-    return Vec<2,T>(-v[1],v[0]);
-}
+inline Vec<2,T> rhOrtho( const Vec<2,T>& v ) { return {-v[1],v[0]}; }
 
 /// rotation of a 2-vector by given angle
 template<typename T>
-Vec<2,T> rotated(const Vec<2,T>& v, T a ) {
-    return Vec<2,T>( v[0]*cos(a)-v[1]*sin(a), v[1]*cos(a)+v[0]*sin(a) );
-}
+inline Vec<2,T> rotated(const Vec<2,T>& v, T a ) { return {v[0]*cos(a)-v[1]*sin(a), v[1]*cos(a)+v[0]*sin(a)}; }
 
 /// orthonormal 2-vector 90 degrees counterclockwise of given 2-vector
 template<typename T>
-Vec<2,T> rhOrthoNorm( const Vec<2,T>& v ) {
-    return Vec<2,T>(-v[1],v[0]).normalized();
-}
-
-/// atan2() angle of a 2-vector
-template<typename T>
-T angle( const Vec<2,T>& v ) {
-    return atan2(v[1],v[0]);
-}
+inline Vec<2,T> rhOrthoNorm( const Vec<2,T>& v ) { return Vec<2,T>(-v[1],v[0]).normalized(); }
 
 /// vec2 from polar form specification
 template<typename T>
-Vec<2,T> polarVec(T r, T th) {
-    return Vec<2,T>(r*cos(th),r*sin(th));
-}
+inline Vec<2,T> polarVec(T r, T th) { return {r*cos(th), r*sin(th)}; }
 
 #endif
