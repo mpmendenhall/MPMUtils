@@ -265,6 +265,8 @@ bool abs_lt(const T& a, const T& b) { return (a<0? -a:a) < (b<0? -b:b); }
 template<size_t N, typename T>
 class LUPDecomp: protected Matrix<N,N,T> {
 public:
+    static_assert(N, "Please avoid zero-dimensional matrices.");
+
     /// parent class
     typedef Matrix<N,N,T> super;
 
@@ -323,7 +325,7 @@ public:
     bool isSingular() const { return nP < 0; }
 
     /// Determinant of A
-    T det() const {
+    const T det() const {
         if(isSingular()) return T{};
         auto d = (*this)(0,0);
         for(size_t i=1; i<N; i++) d *= (*this)(i,i);
@@ -374,84 +376,16 @@ protected:
 /// Determinant
 template<size_t M, typename T>
 const T det(const Matrix<M,M,T>& X) {
-    T d = X(0,0)*det(X.minor(0,0));
-    bool pos = false;
-    for(size_t r=1; r<M; r++) {
-        auto dm = X(r,0)*det(X.minor(r,0));
-        if(pos) d += dm;
-        else    d -= dm;
-        pos = !pos;
-    }
-    return d;
+    LUPDecomp<M,T> LU(X);
+    return LU.det();
 }
-/// Special case: determinant of 1x1 matrix
-template<typename T>
-const T det(const Matrix<1,1,T>& X) { return X[0]; }
 
 template<size_t M, size_t N, typename T>
 const Matrix<M,N,T>& Matrix<M,N,T>::invert() {
-    subinvert(0);
+    static_assert(M==N, "Inverse for square matrix only!");
+    LUPDecomp<N,T> LU(*this);
+    LU.inverse(*this);
     return *this;
-}
-
-namespace matrix_element_inversion {
-
-    template<typename T>
-    inline void invert_element(T& t) { t.invert(); }
-    template<>
-    inline void invert_element(float& t) { t = 1.0/t; }
-    template<>
-    inline void invert_element(double& t) { t = 1.0/t; }
-
-}
-
-template<size_t M, size_t N, typename T>
-void Matrix<M,N,T>::subinvert(size_t n) {
-
-    // invert the first cell
-    T& firstcell = (*this)(n,n);
-    matrix_element_inversion::invert_element(firstcell);
-    for(size_t i=n+1; i<M; i++)
-        (*this)(n,i) *= firstcell;
-    //(*this)(n,i) = firstcell*(*this)(n,i);
-
-    // use to clear first column
-    for(size_t r=n+1; r<M; r++) {
-        T& m0 = (*this)(r,n);
-        for(size_t c=n+1; c<M; c++)
-            (*this)(r,c) -= (*this)(n,c)*m0;
-        m0 *= -firstcell;
-        //m0 = -m0*firstcell;
-    }
-
-    if(n == M-1) return;
-
-    //invert the submatrix
-    subinvert(n+1);
-
-    // temporary space allocation
-    vector<T> subvec = vector<T>(M-n-1);
-
-    // first column gets multiplied by inverting submatrix
-    for(size_t r=n+1; r<M; r++)
-        subvec[r-n-1] = (*this)(r,n);
-    for(size_t r=n+1; r<M; r++) {
-        (*this)(r,n) = (*this)(r,n+1)*subvec[0];
-        for(size_t c=n+2; c<M; c++)
-            (*this)(r,n) += (*this)(r,c)*subvec[c-n-1];
-    }
-
-    //finish off by cleaning first row
-    for(size_t c=n+1; c<M; c++)
-        subvec[c-n-1] = (*this)(n,c);
-    for(size_t c=n; c<M; c++) {
-        if(c>n)
-            (*this)(n,c) = -(*this)(n+1,c) * subvec[0];
-        else
-            (*this)(n,c) -= (*this)(n+1,c) * subvec[0];
-        for(size_t r=n+2; r<M; r++)
-            (*this)(n,c) -= (*this)(r,c) * subvec[r-n-1];
-    }
 }
 
 #endif
