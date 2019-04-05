@@ -133,10 +133,6 @@ public:
         for(size_t i=0; i<nRows*nCols; i++) r[i] = W((*this)[i]);
         return r;
     }
-
-private:
-    /// step in inversion process
-    void subinvert(size_t n);
 };
 
 /// right-multiply vector * matrix

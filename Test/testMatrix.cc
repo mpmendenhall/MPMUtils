@@ -31,7 +31,6 @@ void crude_invert(Matrix<M,M,T>& X, size_t n = 0) {
         for(size_t c=n+1; c<M; c++)
             X(r,c) -= X(n,c)*m0;
         m0 *= -firstcell;
-        //m0 = -m0*firstcell;
     }
 
     if(n == M-1) return;

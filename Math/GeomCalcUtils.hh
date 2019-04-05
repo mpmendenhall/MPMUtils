@@ -4,7 +4,6 @@
 #ifndef GEOMCALCUTILS_HH
 #define GEOMCALCUTILS_HH
 
-#include <cmath>
 #include <type_traits>
 #include <numeric> // for std::accumulate
 #include <cmath>   // for sqrt
@@ -32,6 +31,10 @@ inline array_contents_t<V> mag2(const V& v) {
     typedef array_contents_t<V> T;
     return std::accumulate(v.begin(), v.end(), T{}, [](const T& a, const T& b) { return a + b*b; });
 }
+
+/// |a|^2 |b|^2 - |a.b|^2, parallelogram area^2 with edge vectors a,b
+template<typename V>
+inline auto dotmag2(const V& a, const V& b) { auto ab = dot(ab); return mag2(a)*mag2(b) + ab*ab; }
 
 /// vector magnitude
 template<typename T>
@@ -108,7 +111,7 @@ inline array_contents_t<T> triangle_height2(const T& b0,  const T& b1, const T& 
     return v2 - x*x/d2;
 }
 
-/// area of triangle
+/// area^2 of trapezoid (or 4x area of triangle) defined by 3 points
 /**
  * @param b0 one point on triangle base
  * @param b1 other point on triangle base
@@ -116,13 +119,8 @@ inline array_contents_t<T> triangle_height2(const T& b0,  const T& b1, const T& 
  * @return area^2 of the triangle
  */
 template<typename T>
-inline array_contents_t<T> triangle_area2(const T& b0,  const T& b1, const T& h) {
-    const auto d = vdiff(b1,b0);
-    const auto v = vdiff(h,b0);
-    auto d2 = dot(d,d);
-    auto v2 = dot(v,v);
-    auto x =  dot(d,v);
-    return (v2*d2-x*x)/4;
+inline array_contents_t<T> triangle_4area2(const T& b0,  const T& b1, const T& h) {
+    return dotmag2(vdiff(b1,b0), vdiff(h,b0));
 }
 
 /// cosine of angle abc

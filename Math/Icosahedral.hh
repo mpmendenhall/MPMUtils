@@ -141,4 +141,9 @@ namespace Icosahedral {
  * icosohedral (+dodecahedron): isomorphic to A5
  */
 
+/*
+ * - unnormalized barycentric coordinates + operator
+ * Barycentric: combination of points invariant under generators
+ * series of points closed into loop under operation
+*/
 #endif
