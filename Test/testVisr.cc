@@ -19,12 +19,14 @@ int main(int, char**) {
 
     pthread_t thread;
     pthread_create(&thread, NULL, &visthread, nullptr );
+    vsr::pause(); // shows teapot on start
 
     using namespace Icosahedral;
     vsr::vec3 v1{0.7,0,0};
     vsr::vec3 v2{0.6,0.1,0.1};
 
-    vsr::startRecording();
+    vsr::startRecording(true);
+    vsr::clearWindow();
     vsr::setColor(0.7,0,0.7,1.0);
     for(auto& e: points(v1)) vsr::ball(e, 0.02);
     vsr::setColor(1,0,0,1);

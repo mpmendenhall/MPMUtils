@@ -32,7 +32,7 @@ namespace vsr {
     /// screendump to .tga-format file
     void screendump(const char* fname = "screendump.tga");
 
-    /// clear window to blank screen
+    /// clear window to blank screen --- automatic on startRecording(true)
     void clearWindow();
     /// set background clear color
     void setClearColor(float r, float g, float b, float a=0);
@@ -80,7 +80,7 @@ public:
 
 
     /// visualize "top level"
-    void visualize() const { vsr::startRecording(true); vsr::clearWindow(); _visualize(); vsr::stopRecording(); }
+    void visualize() const { vsr::startRecording(true); _visualize(); vsr::stopRecording(); }
 
     /// visualize without clearing screen
     virtual void _visualize() const = 0;

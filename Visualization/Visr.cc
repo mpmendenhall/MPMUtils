@@ -71,7 +71,6 @@ bool Visualizable::vis_on = true;
 
 namespace vsr {
 
-    GLuint displayList;
     std::vector<GLuint> displaySegs;
 
     void doGlutLoop() {
@@ -83,7 +82,7 @@ namespace vsr {
     void redrawDisplay() {
         if(!displaySegs.size()) return;
 
-        glCallLists(displaySegs.size(), GL_UNSIGNED_INT, &displaySegs.front());
+        glCallLists(displaySegs.size(), GL_UNSIGNED_INT, displaySegs.data());
         glutSwapBuffers();
         glFlush();
         glFinish();
@@ -141,19 +140,21 @@ namespace vsr {
         glFlush();
         glFinish();
 
-        if(v.size()) { // "newseg" overwrite/append
-            while(displaySegs.size()) {
-                if(glIsList(displaySegs.back())) glDeleteLists(displaySegs.back(), 1);
-                displaySegs.pop_back();
-            }
+        while(v.size() && displaySegs.size()) {
+            if(glIsList(displaySegs.back()))
+                glDeleteLists(displaySegs.back(), 1);   // delete this one old display list
+            displaySegs.pop_back();
         }
-        displaySegs.push_back(glGenLists(1));
-        glNewList(displaySegs.back(), GL_COMPILE);
+
+        if(!displaySegs.size()) {
+            displaySegs.push_back(glGenLists(1));       // one new display list name
+            glNewList(displaySegs.back(), GL_COMPILE);  // compile but do not immediately execute
+            _clearWindow(v);                            // always start clear
+        }
     }
     void startRecording(bool newseg) {
         if(!window_open) return;
         pthread_mutex_lock(&commandLock);
-        if(newseg) commands.clear();
         qcmd c(_startRecording);
         if(newseg) c.v.push_back(1); // mark as addition to previous segment
         addCmd(c);
@@ -405,9 +406,10 @@ namespace vsr {
         setClearColor(1.0,1.0,1.0,0.0);
 
         startRecording(true);
-        clearWindow();
-        glColor3f(0.0, 0.0, 1.0);
-        glutWireTeapot(0.5);
+        setWireframe(true);
+        setColor(0.7, 0, 1, 0.5);
+        teapot(0.5);
+        setWireframe(false);
         stopRecording();
     }
 
@@ -430,15 +432,19 @@ namespace vsr {
 
     void redrawIfUnlocked() {
         if(kill_flag) exit(0);
+
+        // cancel redraw if commands being updated
         if(pthread_mutex_trylock(&commandLock)) return;
+
+        // process any new commands
         while(commands.size()) {
             auto f = commands.front().fcn;
             if(f) f(commands.front().v);
             commands.pop_front();
         }
+
         redrawDisplay();
         pthread_mutex_unlock(&commandLock);
-        usleep(10000);
     }
 
     void keypress(unsigned char key, int x, int y) {

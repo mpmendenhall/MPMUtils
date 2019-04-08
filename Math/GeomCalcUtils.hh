@@ -16,8 +16,8 @@ using array_contents_t = typename std::remove_reference<decltype(std::declval<T&
 template<typename T, typename U>
 inline array_contents_t<T> dot(const T& a,  const U& b) {
     array_contents_t<T> d{};
-    auto it = b.begin();
-    for(auto v: a) d += v * array_contents_t<T>(*(it++));
+    size_t i = 0;
+    for(auto v: a) d += v * array_contents_t<T>(b[i++]);
     return d;
 }
 
@@ -262,7 +262,7 @@ inline array_contents_t<T> line_points_distance2(
  */
 template<typename T>
 void local_polar_frame(const T& va, T& vt, T& vr) {
-    static_assert(std::tuple_size<T>::value == 3, "Only defined for 3-vector");
+    //static_assert(std::tuple_size<T>::value == 3, "Only defined for 3-vector");
 
     auto d = sqrt(va[0]*va[0] + va[1]*va[1]);
     vt[2] = 0;
