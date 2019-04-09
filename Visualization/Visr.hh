@@ -9,7 +9,7 @@
 #include <array>
 
 namespace vsr {
-
+    /// coordinate type
     typedef std::array<double,3> vec3;
 
     /// initialize visualization window
@@ -55,8 +55,8 @@ namespace vsr {
     /// draw teapot
     void teapot(double s = 1.0);
 
-    /// start a polygon/series-of-lines
-    void startLines();
+    /// start a polygon/series-of-lines, optionally closing to first point
+    void startLines(bool close = false);
     /// next vertex in line series
     void vertex(vec3 v);
     /// end series of lines
@@ -68,25 +68,21 @@ namespace vsr {
     bool get_pause();
     /// set the kill flag to end visualization thread
     void set_kill();
+
+    /// convenience base class for visualizable objects
+    class Visualizable {
+    public:
+        /// destructor
+        virtual ~Visualizable() {}
+
+        /// visualize "top level"
+        void visualize() const { vsr::startRecording(true); _visualize(); vsr::stopRecording(); }
+
+        /// visualize without clearing screen
+        virtual void _visualize() const = 0;
+
+        static bool vis_on;
+    };
 }
-
-/// virtual base class for visualizable objects
-class Visualizable {
-public:
-    /// constructor
-    Visualizable() {}
-    /// destructor
-    virtual ~Visualizable() {}
-
-
-    /// visualize "top level"
-    void visualize() const { vsr::startRecording(true); _visualize(); vsr::stopRecording(); }
-
-    /// visualize without clearing screen
-    virtual void _visualize() const = 0;
-
-    static bool vis_on;
-};
-
 
 #endif

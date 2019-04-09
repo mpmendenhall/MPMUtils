@@ -151,12 +151,18 @@ namespace Icosahedral {
     struct bcoord_t: public Vec<3,T> {
         size_t n = 0;   ///< operator index to map point from fundamental domain to proper location
 
+        using Vec<3,T>::Vec;
+
         /// position in fundamental domain
         Vec<3,T> v0() const { return Vec<3,T>(Navigator::v12.c) * (*this)[0] + Vec<3,T>(Navigator::v15.c) * (*this)[1] + Vec<3,T>(Navigator::v20.c) * (*this)[2]; }
         /// position
         Vec<3,T> v() const { return Matrix<3,3,T>(Rs.element(n))*v0(); }
     };
 }
+
+// TODO
+// operators to move into each face
+// operators to walk to adjacent faces
 
 /*
  * Polyhedral groups:

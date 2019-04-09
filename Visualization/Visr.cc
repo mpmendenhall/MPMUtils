@@ -67,10 +67,9 @@ namespace vsr {
 #ifdef WITH_OPENGL
 #include <GL/freeglut.h>
 
-bool Visualizable::vis_on = true;
-
 namespace vsr {
 
+    bool Visualizable::vis_on = true;
     std::vector<GLuint> displaySegs;
 
     void doGlutLoop() {
@@ -209,18 +208,20 @@ namespace vsr {
         addCmd(c);
     }
 
-    void _startLines(std::vector<float>&) {
-        glBegin(GL_LINE_STRIP);
+    void _startLines(std::vector<float>& v) {
+        glBegin(v.size()? GL_LINE_LOOP : GL_LINE_STRIP);
     }
-    void startLines() {
-        addCmd(qcmd(_startLines));
+    void startLines(bool close) {
+        qcmd c(_startLines);
+        if(close) c.v.push_back(0);
+        addCmd(c);
     }
     void _vertex(std::vector<float>& v) {
         glVertex3f(v[0],v[1],v[2]);
     }
     void vertex(vec3 v) {
         qcmd c(_vertex);
-        appendv(c.v,v*scale);
+        appendv(c.v, v*scale);
         addCmd(c);
     }
 
@@ -228,6 +229,7 @@ namespace vsr {
         glEnd();
     }
     void endLines() {
+
         addCmd(qcmd(_endLines));
     }
 
@@ -507,10 +509,9 @@ namespace vsr {
 
 #else
 
-bool Visualizable::vis_on = false;
-
 namespace vsr {
 
+    bool Visualizable::vis_on = false;
     void initWindow(const std::string&, double) { }
     void clearWindow() {}
     void resetViewTransformation() {}
@@ -528,7 +529,7 @@ namespace vsr {
     void teapot(double) { }
     void screendump(const char*) { }
 
-    void startLines() {}
+    void startLines(bool) {}
     void vertex(vec3) {}
     void endLines() {}
 

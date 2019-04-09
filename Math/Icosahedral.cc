@@ -56,7 +56,7 @@ namespace Icosahedral {
         return df;
     }
 
-    const array<f12_t,12> dodFaces = facels<f12_t>(0);
+    const array<f12_t,12> dodFaces = facels<f12_t>(1);
     const array<f15_t,15> flipAxes = facels<f15_t>(1);
     const array<f20_t,20> icoFaces = facels<f20_t>(0);
 
