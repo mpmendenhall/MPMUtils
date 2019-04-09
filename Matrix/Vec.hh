@@ -48,11 +48,11 @@ public:
 
     /// dot product with another vector
     template<typename U>
-    T dot(const U& v) const { return dot(*this,v); }
+    T dot(const U& v) const { return ::dot(*this,v); }
     /// square magnitude \f$ v \cdot v \f$
-    T mag2() const { return mag2(*this); }
+    T mag2() const { return ::mag2(*this); }
     /// magnitude \f$ \sqrt{v\cdot v} \f$
-    T mag() const { return mag(*this); }
+    T mag() const { return ::mag(*this); }
     /// sum of vector elements
     T sum() const { T s = (*this)[0]; for(size_t i=1; i<N; i++) s += (*this)[i]; return s; }
     /// product of vector elements

@@ -56,35 +56,43 @@ namespace Icosahedral {
     /// identity element number
     constexpr size_t nID = 0;
 
+    /// indexed element
+    struct indexel_t {
+        /// null constructor
+        indexel_t(): i{}, o{} { }
+        /// constructor from index
+        indexel_t(size_t ii);
+
+        size_t i;   ///< element index
+        elem_t o;   ///< element representation
+    };
+
     /// Mirror-reflection parity (false: flips; true: no flips) by enumerated generator
     extern const array<bool,120> parity;
 
-    /// dodecahedral face info
-    struct f12_t {
-        n12_t  i;       ///< enumeration index
-        elem_t M;       ///< rotation to this face
-        axis_t c;       ///< central axis (pair of dodecahedral faces, icosahedral vertices)
-        axis_t vs[5];   ///< vertices, clockwise loop
-        elem_t R[5];    ///< ID and successive 2*pi/5 clockwise rotations
+    /// Information on related operators defining a face/edge
+    template<size_t O, size_t C>
+    struct faceinfo_t {
+        /// operator order
+        static constexpr size_t order = O;
+        /// operator conjugacy multiplicity
+        static constexpr size_t multiplicity = C;
+
+        axis_t    c;        ///< central axis (fixed point of R[...])
+        indexel_t R[O];     ///< ID and successive face rotations: stabilizer subgroup w.r.t. c
+        //axis_t    vs[O];    ///< vertices, clockwise loop
     };
+
+    /// dodecahedral face info
+    typedef faceinfo_t<5,12> f12_t;
     extern const array<f12_t,12> dodFaces;
 
     /// flip axis info
-    struct f15_t {
-        n15_t  i;       ///< enumeration index
-        elem_t M;       ///< flip element
-        axis_t c;       ///< central axis (pair of edge centers)
-    };
+    typedef faceinfo_t<2,15> f15_t;
     extern const array<f15_t,15> flipAxes;
 
     /// icosahedral face info
-    struct f20_t {
-        n20_t  i;       ///< enumeration index
-        elem_t M;       ///< rotation to this face
-        axis_t c;       ///< central axis
-        axis_t vs[3];   ///< vertices, clockwise loop
-        elem_t R[3];    ///< ID and successive 2*pi/3 clockwise rotations
-    };
+    typedef faceinfo_t<3,20> f20_t;
     extern const array<f20_t,20> icoFaces;
 
     /// apply all 60 (120) group elements to vector, eliminating duplicates
@@ -114,10 +122,10 @@ namespace Icosahedral {
         /// Constructor
         Navigator();
 
-        /// Identify fundamental domain in which vector falls
+        /// Identify domain in which vector falls
         template<class V>
         size_t domain(const V& v) const { return decide(v, axpart<V>); }
-        /// Map item to fundamental domain; return its original domain
+        /// Map item to fundamental domain; return operator number to map v back to its starting position
         template<class V>
         size_t map_d0(V& v) const {
             auto dmn = domain(v);
@@ -125,13 +133,29 @@ namespace Icosahedral {
             return dmn;
         }
 
+        // three corners of fundamental domain
+        static const f12_t v12; ///< dodecahedral face corner of fundamental domain
+        static const f15_t v15; ///< flip edge corner of fundamental domain
+        static const f20_t v20; ///< icosahedral face corner of fundamental domain
+
     protected:
         /// check direction of vector relative to flip axis
         template<class V>
         static bool axpart(const V& v, size_t t) { return dot(v, flipAxes[t].c) < 0; }
     };
-
+    /// Pre-constructed Navigator
     extern const Navigator Nav;
+
+    /// (unnormalized) barycentric coordinate in a domain, w0*v12 + w1*v15 + w2*v20
+    template<typename T>
+    struct bcoord_t: public Vec<3,T> {
+        size_t n = 0;   ///< operator index to map point from fundamental domain to proper location
+
+        /// position in fundamental domain
+        Vec<3,T> v0() const { return Vec<3,T>(Navigator::v12.c) * (*this)[0] + Vec<3,T>(Navigator::v15.c) * (*this)[1] + Vec<3,T>(Navigator::v20.c) * (*this)[2]; }
+        /// position
+        Vec<3,T> v() const { return Matrix<3,3,T>(Rs.element(n))*v0(); }
+    };
 }
 
 /*
@@ -141,9 +165,4 @@ namespace Icosahedral {
  * icosohedral (+dodecahedron): isomorphic to A5
  */
 
-/*
- * - unnormalized barycentric coordinates + operator
- * Barycentric: combination of points invariant under generators
- * series of points closed into loop under operation
-*/
 #endif

@@ -38,22 +38,44 @@ namespace Icosahedral {
         return p;
     }();
 
-    const array<f15_t,15> flipAxes = [](){
-        array<f15_t,15> fa;
-        auto& r15i = CD.M.find(2)->second.CCs.getClassNum(1);
-        n15_t n{};
-        for(auto i: r15i) {
-            fa[n].i = n;
-            fa[n].M = Rs.element(i);
-            fa[n].c = R3axis(fa[n].M);
+    indexel_t::indexel_t(size_t ii): i(ii), o(Rs.element(i)) { }
+
+    template<typename T>
+    array<T, T::multiplicity> facels(size_t cnum) {
+        array<T,T::multiplicity> df;
+        auto& rfi = CD.M.find(T::order)->second.CCs.getClassNum(cnum);
+        if(rfi.size() != T::multiplicity) throw nullptr;
+
+        size_t n = 0;
+        for(auto i: rfi) {
+            df[n].c = R3axis(Rs.element(i));
+            df[n].R[0] = indexel_t(nID);
+            for(size_t j=1; j<T::order; ++j) df[n].R[j] = indexel_t(CT.apply(i, df[n].R[j-1].i));
             ++n;
         }
-        return fa;
-    }();
+        return df;
+    }
+
+    const array<f12_t,12> dodFaces = facels<f12_t>(0);
+    const array<f15_t,15> flipAxes = facels<f15_t>(1);
+    const array<f20_t,20> icoFaces = facels<f20_t>(0);
 
     Navigator::Navigator():
     DecisionTree(120, 15, [](size_t i, size_t j) { axis_t e{{half, half, half*20}}; return axpart(Rs.element(i) * e, j); }) { }
     const Navigator Nav;
+
+    template<typename F>
+    const F& selectFundamental(const array<F,F::multiplicity>& a) {
+        for(auto& f: a) {
+            axis_t c = f.c;
+            Nav.map_d0(c);
+            if(f.c == c) return f;
+        }
+        throw nullptr;
+    }
+    const f12_t Navigator::v12 = selectFundamental(dodFaces);
+    const f15_t Navigator::v15 = selectFundamental(flipAxes);
+    const f20_t Navigator::v20 = selectFundamental(icoFaces);
 }
 
 void Icosahedral::describe() {
@@ -90,9 +112,16 @@ void Icosahedral::describe() {
 
     cout << "Elements of orders 6 and 10 combine parity inversion with the order-3 and order-5 rotations.\n\n";
 
-    cout << "A point can be classified into one of 120 fundamental domains\n";
+    cout << "A point can be classified into one of 120 domains covering the sphere\n";
     cout << "using a decision tree based on direction relative to flip axes:\n";
     Nav.display();
+    cout << "\n";
+
+    cout << "We can choose one (arbitrary) representative ``fundamental domain,''\n";
+    cout << "into which any point can be mapped, bounded by the triangle:\n";
+    cout << Navigator::v12.c << " (dodecahedral face center)\n";
+    cout << Navigator::v15.c << " (edge center)\n";
+    cout << Navigator::v20.c << " (icosahedral face center)\n";
     cout << "\n";
 
     cout << "We can associate dodecahedral faces f with vertices v (same association\n";

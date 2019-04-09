@@ -19,6 +19,8 @@ public:
     /// convert to double
     explicit operator double() const { return double(a) + double(b)*0.5*(1+sqrt(5.)); }
 
+    /// equality with PhiField
+    bool operator==(const PhiField& P) const { return a == P.a && b == P.b; }
     /// equality with rational (also picks up int)
     bool operator==(const Rational& R) const { return a == R && !b; }
     /// comparison
