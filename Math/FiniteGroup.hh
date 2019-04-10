@@ -3,10 +3,19 @@
 
 /*
  * Simple group G: only normal subgroups are {e} and G
- * Normal subgroup N of G: gN = Ng for all g in G ("invariant under conjugation", gNg^-1 = N)
- * Non-simple: can be divided G/H, where S is a subgroup
- * Center of a group Z(G) = elements that commute with all elements in G is a normal subgroup.
+ * Non-simple: can be divided G/S, where S is a subgroup
+ *
+ * Center of a group Z(G) = elements that commute with all elements in G
+ *      - is a normal subgroup.
+ *
  * Centralizer of g in G: set of elements that commute with g
+ *
+ * Conjugacy classes: equivalence relation, a ~ b if there exists g s.t. g a g^-1 = b
+ * a ~ b => a^k ~ b^k
+ * "Class number of G" = number of distinct classes
+ * Conjugate elements have same order.
+ * Every element a in center Z(G) is its own class {a}
+ *  => identity in any G, every element in Abelian G is its own class
  *
  * Direct products GxH: G, H are normal in GxH
  * Conjugacy classes, centers are Cartesian products of those for G,H
@@ -14,10 +23,11 @@
  *
  * Solvable group: can be constructed from Abelian groups with extensions
  * Every group of odd order is solvable => "every finite simple group has even order unless it is cyclic of prime order."
+ *
  */
 
 /////////////////////////
-// <Semigroup> interface:
+// <Semigroup> interface: defines closure under operator
 //
 // typedef <element> elem_t;                // type for Semigroup element
 // elem_t apply(elem_t a, elem_t b) const;  // apply semigroup operator to get c = ab
@@ -26,11 +36,13 @@
 // <Enumerated Semigroup> interface:
 // <Semigroup> plus:
 //
+// typedef size_t enum_t;               // enumeration type
+//
 // size_t getOrder() const;             // number of elements
 // <iterator> begin() const;            // for iterating elements
 // <iterator> end() const;              // for iterating elements
-// size_t idx(elem_t) const;            // enumeration index for element
-// elem_t element(size_t i) const;      // get enumerated element
+// enum_t idx(elem_t) const;            // enumeration index for element
+// elem_t element(enum_t i) const;      // get enumerated element
 
 ///////////////////////////////////
 // <[Enumerated] Monoid> interface:
@@ -47,8 +59,8 @@
 #ifndef FINITEGROUP_HH
 #define FINITEGROUP_HH
 
-#include "EquivalenceClasses.hh"
 #include "RangeIt.hh"
+#include "Renumerate.hh"
 #include <map>
 using std::map;
 #include <utility>
@@ -73,6 +85,14 @@ public:
     typedef T elem_t;
     /// apply a*b
     static constexpr elem_t apply(const elem_t& a, const elem_t& b) { return a*b; }
+};
+
+/// <Group> wrapper to use '*' as operation
+template<class T>
+class MultiplyG: public MultiplySG<T> {
+public:
+    /// inverse
+    static constexpr T inverse(const T& e) { return e.inverse(); }
 };
 
 /// chain semigroup operations a, {b,c,...} -> ...*c*b*a
@@ -119,43 +139,67 @@ constexpr map<typename G::elem_t, vector<int>> spanM(const V& gs, const G& GG = 
 }
 
 /// Construct <Enumerated Semigroup> from iterable list of finite-order generators in <Semigroup> G
-template<class G>
-class GeneratorsSemigroup: public G {
+template<class SG_t>
+class GeneratorsSemigroup: public SG_t {
 public:
+    /// enumeration type
+    typedef size_t enum_t;
     /// Underlying element type
-    typedef typename G::elem_t elem_t;
+    typedef typename SG_t::elem_t elem_t;
 
     /// Constructor, from operator and generators
-    constexpr GeneratorsSemigroup(const vector<elem_t>& gs, const G& GG = {}): G(GG), elems(span(gs,GG)) { }
+    constexpr GeneratorsSemigroup(const vector<elem_t>& gs, const SG_t& G = {}): SG_t(G), elems(span(gs,G)) { find_id(G); }
     /// Constructor, catchall for alternative generator enumerations
     template<class V>
-    constexpr GeneratorsSemigroup(const V& gs, const G& GG = {}): G(GG), elems(span<V>(gs,GG)) { }
+    constexpr GeneratorsSemigroup(const V& gs, const SG_t& G = {}): SG_t(G), elems(span<V>(gs, G)) { find_id(G); }
 
     /// number of elements in group
     size_t getOrder() const { return elems.size(); }
-    /// element index
-    size_t idx(const elem_t& e) const { return std::lower_bound(elems.begin(), elems.end(), e) - elems.begin(); }
+    /// element index --- BROKEN AFTER RENUMERATION!
+    enum_t idx(const elem_t& e) const { assert(!is_renumerated); return std::lower_bound(elems.begin(), elems.end(), e) - elems.begin(); }
     /// indexed element
-    const elem_t& element(size_t i) const { return elems[i]; }
+    const elem_t& element(enum_t i) const { return elems[i]; }
+    /// identity element
+    const elem_t& identity() const { return element(iID); }
+    /// identity element index
+    enum_t identity_idx() const { return iID; }
     /// iteration range begin
     auto begin() const { return elems.begin(); }
     /// iteration range end
     auto end() const { return elems.end(); }
 
+
     /// Span of generators in G
     template<class V>
-    static vector<elem_t> span(const V& gs, const G& GG = {}) {
-        auto M = spanM<G>(gs,GG);
+    static vector<elem_t> span(const V& gs, const SG_t& G = {}) {
+        auto M = spanM<SG_t>(gs, G);
         vector<elem_t> v;
         for(auto& kv: M) v.push_back(kv.first);
         return v;
     }
 
     /// apply renumeration
-    GeneratorsSemigroup& renumerate(const renumeration_t<>& m) { elems = renumerated_permute(elems,m); return *this; }
+    GeneratorsSemigroup& renumerate(const renumeration_t<enum_t>& m) {
+        elems = renumerated_permute(elems,m);
+        iID = m.at(iID);
+        is_renumerated = true;
+        return *this;
+    }
 
 protected:
-    vector<elem_t> elems; ///< enumeration of elements
+    /// find identity element
+    void find_id(const SG_t& G) {
+        iID = 0;
+        for(auto& e: elems) {
+            if(e==G.apply(e,e)) break;
+            ++iID;
+        }
+    }
+
+    bool is_renumerated = false;    ///< whether already renumerated
+    enum_t iID = -1;                ///< identity element index
+    vector<elem_t> elems;           ///< enumeration of elements
+
 };
 
 /// Cartesian direct product group (G1,G2)
@@ -176,7 +220,6 @@ public:
     /// Get group element c = ab
     static constexpr elem_t apply(elem_t a, elem_t b) { return {G1::apply(a.first,b.first), G2::apply(a.second,b.second)}; }
 };
-
 
 //////////////////////////
 // iterator helper classes
@@ -223,65 +266,7 @@ protected:
     typename G::elem_t e{}; ///< current element
 };
 
-///////////////////////////////
-// group analysis/decomposition
-///////////////////////////////
-
-/// Construct <Enumerated Semigroup> Cayley Table isomorphism of input <Enumerated Semigroup> G for faster group operations
-template<class G>
-class CayleyTable {
-public:
-    /// Enumerated element type
-    typedef size_t elem_t;
-
-    /// Constructor, from underlying <Enumerated Semigroup>
-    CayleyTable(const G& GG = {}, bool pb = false): order(GG.getOrder()), CT(buildCT(GG,pb)) { }
-
-    /// pre-calculated group operator
-    elem_t apply(elem_t a, elem_t b) const { auto it = CT.find({a,b}); assert(it != CT.end()); return it->second; }
-    /// get group order
-    size_t getOrder() const { return order; }
-
-    /// return (trivial!) element index
-    static constexpr size_t idx(elem_t i) { return i; }
-    /// indexed element
-    static constexpr elem_t element(size_t i) { return i; }
-    /// element iteration start
-    auto begin() const { return VRangeIt<elem_t>(order); }
-    /// element iteration end
-    auto end() const { return VRangeIt<elem_t>(order,order); }
-
-    /// apply renumeration of elements
-    CayleyTable& renumerate(const renumeration_t<elem_t>& m) {
-        map<pair<elem_t,elem_t>, elem_t> M;
-        for(auto& kv: CT) M.emplace(pair<elem_t,elem_t>(m.at(kv.first.first), m.at(kv.first.second)), m.at(kv.second));
-        CT = M;
-        return *this;
-    }
-
-protected:
-    const size_t order;                     ///< number of elements
-    map<pair<elem_t,elem_t>, elem_t> CT;    ///< Cayley Table ab -> c
-
-    /// build Cayley Table from all element pairs
-    decltype(CT) buildCT(const G& GG, bool pb) {
-        map<pair<elem_t,elem_t>, elem_t> m;
-        elem_t i = 0;
-        for(auto& e1: GG) {
-            if(pb && !(i%(GG.getOrder()/100))) std::cout << "*" << std::flush;
-            elem_t j = 0;
-            for(auto& e2: GG) {
-                auto k = GG.idx(GG.apply(e1,e2));
-                assert(k < GG.getOrder());
-                m[{i,j++}] = k;
-            }
-            ++i;
-        }
-        if(pb) std::cout << std::endl;
-        return m;
-    }
-};
-
+/*
 /// Check for non-empty set (or ordered list) intersection
 template<class S>
 bool intersects(const S& s1, const S& s2) {
@@ -294,194 +279,6 @@ bool intersects(const S& s1, const S& s2) {
     }
     return false;
 }
-
-/// Analysis of <Enumerated Semigroup> into element orders
-template<class G>
-class OrdersDecomposition {
-public:
-    /// Constructor from <Enumerated Semigroup>
-    OrdersDecomposition(const G& g = {}) {
-        cycles.resize(g.getOrder());
-        size_t i = 0;
-        for(auto& e: g) {
-            auto& v = cycles[i++];
-            auto f = e;
-            do {
-                v.push_back(g.idx(f));
-                f = g.apply(e, f);
-            } while(f != e);
-        }
-
-        for(i = 0; i < cycles.size(); i++) by_order[cycles[i].size()].insert(i);
-    }
-
-    /// Display info
-    void display(std::ostream& o = std::cout) {
-        o << "Group with " << cycles.size() << " elements:\n";
-        for(auto& kv: by_order) o << "\t" << kv.second.size() << " elements of order " << kv.first << "\n";
-    }
-
-    map<size_t,set<size_t>> by_order;       ///< elements (by index) grouped by order
-    vector<vector<size_t>> cycles;          ///< cyclic groups generated by each element
-
-    /// apply renumeration
-    OrdersDecomposition& renumerate(const renumeration_t<>& m) {
-        for(auto& kv: by_order) kv.second = renumerated(kv.second, m);
-        for(auto& c: cycles) for(auto& x: c) x = m.at(x);
-        cycles = renumerated_permute(cycles,m);
-        return *this;
-    }
-
-    /// Get element inverse
-    constexpr size_t inverse_idx(size_t i) const {
-        auto& c = cycles[i];
-        auto n = c.size();
-        return n==1? c[0] : c[n-2];
-    }
-};
-
-/// Analysis of <Enumerated Semigroup> into element orders and conjugacy classes
-template<class G>
-class ConjugacyDecomposition: public OrdersDecomposition<G> {
-public:
-    /// Constructor from <Enumerated Semigroup>
-    ConjugacyDecomposition(const G& g = {}): OrdersDecomposition<G>(g) {
-        for(auto& x: g) vscramble.push_back(x);
-        std::random_shuffle(vscramble.begin(), vscramble.end());
-
-        for(auto& os: this->by_order) {
-            for(auto i: os.second) assign_CC(os.first, i, g);
-
-            if(g.getOrder() > 1000) {
-                std::cout << "Order " << os.first << ": ";
-                for(auto& cc: M[os.first].CCs) std::cout << "(" << cc.second.size() << ") ";
-                std::cout << std::endl;
-            }
-
-            repr_cosets.erase(os.first);
-        }
-
-        vscramble.clear();
-    }
-
-    /// Display info
-    void display(std::ostream& o = std::cout) const {
-        o << "Group with " << this->cycles.size() << " elements in conjugacy classes:\n";
-        for(auto& kv: M)
-            for(auto& ec: kv.second.CCs)
-                o << "\t" << ec.second.size() << " elements\t[order " << kv.first << "]\n";
-    }
-
-    /// ``nicer'' re-enumeration scheme
-    renumeration_t<> make_renumeration() const {
-        renumeration_t<> m;
-        size_t i = 0;
-        for(auto& kv: M)
-            for(auto& ec: kv.second.CCs)
-                for(auto& e: ec.second)
-                    m[e] = i++;
-        return m;
-    }
-
-    /// apply renumeration
-    ConjugacyDecomposition& renumerate(const renumeration_t<>& m) {
-        OrdersDecomposition<G>::renumerate(m);
-        for(auto& kv: M) kv.second.CCs.renumerate(m);
-        return *this;
-    }
-
-    /// information on elements of a particular order
-    struct oinfo {
-        /// Conjugacy class decomposition for elements of this order
-        EquivalenceClasses<size_t> CCs;
-        /// powerup structure {order, conjclass} for each conjugacy class of this order
-        vector<vector<pair<size_t,size_t>>> powerup;
-    };
-    map<size_t, oinfo> M;   ///< information by order
-
-protected:
-    vector<typename G::elem_t> vscramble;           ///< scrambled search order
-    map<size_t,vector<vector<size_t>>> repr_cosets; ///< representative cosets for each class --- cleared after construction
-
-    /// determine conj. class number to which element idx=i of order o belongs
-    size_t assign_CC(size_t o, size_t i, const G& g) {
-        auto& oi = M[o]; // already-identified conjugacy info for this order
-
-        // already categorized?
-        auto p = oi.CCs(i);
-        if(p.first) return p.second;
-
-        // check if element fits into any existing conjugacy class
-        auto e = g.element(i);
-        if(oi.CCs.size()) {
-            size_t j = 0;
-            for(auto& x: vscramble) {
-                auto ixe = g.idx(g.apply(x, e));
-                for(auto& CC: oi.CCs) {
-                    if(ixe != repr_cosets[o][CC.first][j]) continue;
-
-                    auto& pu = oi.powerup[CC.first];
-                    if(pu.size()) {
-                        // bulk assign all powers of this element if powerup structure already determined
-                        size_t k = 0;
-                        for(auto ii: this->cycles[i]) {
-                            auto oc = pu[k++];
-                            M[oc.first].CCs.addTo(ii, oc.second);
-                        }
-                    } else oi.CCs.addTo(i, CC.first); // only add this element
-
-                    return CC.first;
-                }
-                j++;
-            }
-        }
-
-        // start new conjugacy class
-        auto n = oi.CCs.add(i,i);
-
-        // build representative coset for class
-        auto& vcs = repr_cosets[o];
-        vcs.emplace_back();
-        auto& cs = vcs.back();
-        for(auto& x: vscramble) cs.push_back(g.idx(g.apply(e, x)));
-
-        // build powerup structure
-        assert(n == oi.powerup.size());
-        oi.powerup.emplace_back();
-        vector<pair<size_t,size_t>> pu(1, {o,n});
-        for(auto ii: this->cycles[i]) {
-            if(ii == i) continue;
-            auto oo = this->cycles[ii].size();
-            pu.emplace_back(oo, assign_CC(oo,ii,g));
-        }
-        oi.powerup[n] = pu;
-
-        return n;
-    }
-};
-
-/// Bundle of calculations resulting in conjugacy-enumerated elements
-template<class G>
-class GeneratorsConjugacy {
-public:
-    /// generators span type
-    typedef GeneratorsSemigroup<G> genspan_t;
-    /// Cayley Table type
-    typedef CayleyTable<genspan_t> cayley_t;
-    /// Conjugacy classes decomposition type
-    typedef ConjugacyDecomposition<cayley_t> conjugacy_t;
-
-    /// Constructor
-    GeneratorsConjugacy(const vector<typename G::elem_t>& gs, const G& GG = {}): Rs(gs,GG) {
-        auto renum = CD.make_renumeration();
-        Rs.renumerate(renum);
-        CT.renumerate(renum);
-        CD.renumerate(renum);
-    }
-
-    genspan_t Rs;       ///< generators span
-    cayley_t CT{Rs};    ///< Cayley Table
-    conjugacy_t CD{CT}; ///< Conjugacy relations
-};
+*/
 
 #endif

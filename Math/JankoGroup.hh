@@ -23,7 +23,7 @@ namespace JankoGroup {
     extern const J1_prepr_t pZ; ///< another permutation generator
 
     /// matrix generators span type
-    typedef GeneratorsSemigroup<MultiplySG<J1_mrepr_t>> J1_mgenspan_t;
+    typedef GeneratorsSemigroup<MultiplyG<J1_mrepr_t>> J1_mgenspan_t;
     /// permutation generators span type
     typedef GeneratorsSemigroup<SymmetricGroup<266>> J1_pgenspan_t;
 

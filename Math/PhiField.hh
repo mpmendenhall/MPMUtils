@@ -10,7 +10,7 @@
 class PhiField {
 public:
     /// Default 0 constructor
-    PhiField(): a({}), b({}) { }
+    PhiField(): a{}, b{} { }
     /// Constructor
     PhiField(Rational aa, Rational bb): a(aa), b(bb) { }
 

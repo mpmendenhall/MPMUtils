@@ -36,6 +36,14 @@ inline array_contents_t<V> mag2(const V& v) {
 template<typename V>
 inline auto dotmag2(const V& a, const V& b) { auto ab = dot(ab); return mag2(a)*mag2(b) + ab*ab; }
 
+/// `distance^2' between vector directions in [0,2], no sqrt; casts to type of a
+template<typename U, typename V>
+inline auto direction_d2(const U& a, const V& b) {
+    auto ab = dot(a,b);
+    auto aabb = mag2(a) * decltype(ab)(mag2(b));
+    return (ab > 0? aabb - ab*ab : aabb + ab*ab)/aabb;
+}
+
 /// vector magnitude
 template<typename T>
 inline array_contents_t<T> mag(const T& v) { return sqrt(mag2(v)); }

@@ -92,13 +92,13 @@ size_t DecisionTree::rpart(it_t iz, it_t i0, it_t i1, const vector<size_t>& vt, 
             if(dN <= 1) break;
         }
     }
-    assert(bdN < N);    // are we able to subdivide the elements?
+    assert(bdN < size_t(N));    // are we able to subdivide the elements?
     // re-calculate partition if we did not end on ``perfect'' result
     if(bdN > 1) ix = std::partition(i0, i1, [&](size_t i) { return f(i,t0); });
 
     auto sn = ix - iz;  // absolute splitting point
     assert(sn);
-    assert(dcs[sn].t == -1);
+    assert(dcs[sn].t == size_t(-1));
     dcs[sn].t = t0;
 
     // create sub-nodes

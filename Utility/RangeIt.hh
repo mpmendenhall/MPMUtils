@@ -7,6 +7,7 @@
 #include <iterator>
 #include <array>
 using std::array;
+#include <cassert>
 
 /// iterator for values N0, ... , N1
 template<typename val_t, val_t N0, val_t N1>

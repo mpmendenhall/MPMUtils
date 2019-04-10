@@ -23,6 +23,14 @@ set<T> renumerated(const set<T>& S, const renumeration_t<T>& m) {
     return SS;
 }
 
+/// apply renumeration to renumeration
+template<typename T>
+renumeration_t<T> renum_renum(const renumeration_t<T>& a, const renumeration_t<T>& m) {
+    renumeration_t<T> MM;
+    for(auto& kv: a) MM.emplace(m.at(kv.first), m.at(kv.second));
+    return MM;
+}
+
 /// apply renumeration to generic iterable
 template<typename T, typename V>
 V renumerated(const V& v, const renumeration_t<T>& m) {

@@ -99,6 +99,8 @@ public:
 
     /// inplace inverse
     const Matrix& invert();
+    /// out-of-place inverse
+    Matrix inverse() const { auto i = *this; return i.invert(); };
 
     /// trace
     const T trace() const { T t = (*this)(0,0); for(size_t i = 1; i<nDiag; ++i) t += (*this)(i,i); return t; }
@@ -174,6 +176,9 @@ ostream& operator<<(ostream& o, const Matrix<M,N,T>& A) {
 /////////////////////////////////////
 /////////////////////////////////////
 
+/// unit/identity value for type
+template<typename T>
+inline T unit() { return 1; }
 
 template<size_t M, size_t N, typename T>
 Matrix<M,N,T> Matrix<M,N,T>::random() {
@@ -185,7 +190,7 @@ Matrix<M,N,T> Matrix<M,N,T>::random() {
 template<size_t M, size_t N, typename T>
 constexpr Matrix<M,N,T> Matrix<M,N,T>::identity() {
     Matrix foo{};
-    for(size_t i=0; i < nDiag; i++) foo(i,i) = T(1);
+    for(size_t i=0; i < nDiag; i++) foo(i,i) = unit<T>();
     return foo;
 }
 
@@ -247,11 +252,6 @@ const Vec<N,T> Matrix<M,N,T>::rMultiply(const Vec<M,T>& v) const {
 ///////////////////////////
 // Square matrix operations
 ///////////////////////////
-
-
-/// unit/identity value for type
-template<typename T>
-T unit() { return 1; }
 
 /// Compare magnitudes |a| < |b| --- override for fancier types
 template<typename T>
@@ -346,7 +346,7 @@ public:
     }
 
     /// extract L
-   super L() const {
+    super L() const {
         auto _L =  super::identity();
         for(size_t i=0; i<N; ++i)
             for(size_t j=0; j<i; ++j)

@@ -7,61 +7,54 @@
 #include "Matrix.hh"
 #include "PhiField.hh"
 #include "ModularField.hh"
-#include "FiniteGroup.hh"
+#include "ConjugacyDecomposition.hh"
+#include "QuotientGroup.hh"
 #include "DecisionTree.hh"
 #include "GeomCalcUtils.hh"
 
-/// Information about icosahedral symmetry point group
+/// unit value for PhiField --- needed for matrix inverse
+template<>
+inline PhiField unit<PhiField>() { return PhiField::one(); }
+
+/// Information about full icosahedral symmetry point group (Schoenflies I_h, Coxeter [5,3])
 namespace Icosahedral {
     using std::array;
 
     /// Symmetry group element
     typedef Matrix<3,3,PhiField> elem_t;
     /// Group operation (matrix multiplication)
-    typedef MultiplySG<elem_t> groupop_t;
+    typedef MultiplyG<elem_t> groupop_t;
     /// Rotation axis type
     typedef Vec<3,PhiField> axis_t;
 
-    /// triangular rotations enumeration
-    typedef ModularField<3>  n3_t;
-    /// pentagon rotations enumeration
-    typedef ModularField<5>  n5_t;
-    /// dodecahedral faces / icosahedral vertices enumeration
-    typedef ModularField<12> n12_t;
-    /// dodecahedral flips enumeration
-    typedef ModularField<15> n15_t;
-    /// icosahedral faces = dodecahedral vertices enumeration
-    typedef ModularField<20> n20_t;
-    /// icosahedral, dodecahedral edges enumeration
-    typedef ModularField<30> n30_t;
-
-    // generators for full icosahedral symmetry
+    // matrix representation generators for full icosahedral symmetry
     extern const elem_t Ra; ///< one rotation generator
     extern const elem_t Rb; ///< another rotation generator
     extern const elem_t Rc; ///< inversion generator
 
-    /// generators span type
+    /// matrix generators span type
     typedef GeneratorsSemigroup<groupop_t> genspan_t;
-    /// All 60 rotation matrices in icosahedral point group
+    /// arbitrary enumeration of 120 rotation matrices representing icosahedral point group
     extern const genspan_t Rs;
-    /// Cayley Table type for icosahedral rotations
+    /// Cayley Table type for icosahedral group
     typedef CayleyTable<genspan_t> cayley_t;
-    /// Precalculated Cayley Table
+    /// Precalculated Cayley Table (abstract representation of group structure)
     extern const cayley_t CT;
     /// Conjugacy classes decomposition type
     typedef ConjugacyDecomposition<cayley_t> conjugacy_t;
     /// Precalculated decomposition
     extern const conjugacy_t CD;
 
+    /// Quotient groups (using Cayley Table)
+    typedef QuotientGroup<cayley_t> quotient_t;
+
     /// identity element number
     constexpr size_t nID = 0;
 
-    /// indexed element
+    /// enumerated element
     struct indexel_t {
-        /// null constructor
-        indexel_t(): i{}, o{} { }
         /// constructor from index
-        indexel_t(size_t ii);
+        indexel_t(size_t ii = nID);
 
         size_t i;   ///< element index
         elem_t o;   ///< element representation
@@ -74,11 +67,12 @@ namespace Icosahedral {
     template<size_t O, size_t C>
     struct faceinfo_t {
         /// operator order
-        static constexpr size_t order = O;
+        static constexpr size_t order() { return O; }
         /// operator conjugacy multiplicity
-        static constexpr size_t multiplicity = C;
+        static constexpr size_t multiplicity() { return C; }
 
         axis_t    c;        ///< central axis (fixed point of R[...])
+        indexel_t g;        ///< (arbitrary) element moving fundamental domain to this face
         indexel_t R[O];     ///< ID and successive face rotations: stabilizer subgroup w.r.t. c
         //axis_t    vs[O];    ///< vertices, clockwise loop
     };
@@ -116,15 +110,16 @@ namespace Icosahedral {
     /// print description of icosahedral symmetry to stdout
     void describe();
 
-    /// Point identification
+    /// Point classification into 120 domains (corresponding to enumerated group elements), cut by 15 dividing hemispheres
     class Navigator: public DecisionTree {
     public:
         /// Constructor
         Navigator();
 
-        /// Identify domain in which vector falls
+        /// Identify domain in which vector falls (operator index from fundamental domain to v's domain)
         template<class V>
         size_t domain(const V& v) const { return decide(v, axpart<V>); }
+
         /// Map item to fundamental domain; return operator number to map v back to its starting position
         template<class V>
         size_t map_d0(V& v) const {
@@ -133,10 +128,10 @@ namespace Icosahedral {
             return dmn;
         }
 
-        // three corners of fundamental domain
-        static const f12_t v12; ///< dodecahedral face corner of fundamental domain
-        static const f15_t v15; ///< flip edge corner of fundamental domain
-        static const f20_t v20; ///< icosahedral face corner of fundamental domain
+        // three corners of fundamental domain, named by size of orbit under G
+        static const f12_t v12; ///< corner of fundamental domain centered on dodecahedral face
+        static const f15_t v15; ///< corner of fundamental domain centered on flip edge
+        static const f20_t v20; ///< corner of fundamental domain centered on icosahedral face
 
     protected:
         /// check direction of vector relative to flip axis
@@ -145,6 +140,23 @@ namespace Icosahedral {
     };
     /// Pre-constructed Navigator
     extern const Navigator Nav;
+
+    /// Icosahedral Voronoi nearest-direction finder, from list of points in fundamental domain
+    template<typename V>
+    class NNFinder: public vector<V> {
+    public:
+        /// inherit constructors
+        using vector<V>::vector;
+
+        /// find {domain, nearest point index} for u -> u mapped to fundamental domain
+        template<typename U>
+        std::pair<size_t, size_t> map_NN(U& u) {
+            assert(this->size());
+            auto dmn = Nav.map_d0(u);
+            return {dmn, std::min_element(this->begin(), this->end(),
+                    [&u](const V& x) { return direction_d2(u, x); })-this->begin()};
+        }
+    };
 
     /// (unnormalized) barycentric coordinate in a domain, w0*v12 + w1*v15 + w2*v20
     template<typename T>

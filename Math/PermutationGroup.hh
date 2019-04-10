@@ -19,6 +19,8 @@ typedef uint16_t default_permute_idx_t;
 template<size_t N, typename idx_t = default_permute_idx_t>
 class Permutation: protected array<idx_t,N> {
 public:
+    /// enumeration type for permutations
+    typedef size_t enum_t;
     /// parent class
     typedef array<idx_t,N> super;
     /// cycles decomposition data
@@ -67,7 +69,7 @@ public:
     constexpr Permutation operator/(const Permutation& P) const { auto p = *this; return p /= P; }
 
     /// enumeration index for permutation
-    static constexpr size_t idx(const Permutation& e) {
+    static constexpr enum_t idx(const Permutation& e) {
         if(N<2) return 0;
 
         array<idx_t, N-1> e0{};
@@ -80,7 +82,7 @@ public:
         return Permutation<N-1>::idx(e0) + (j < N? j+1 : 0)*factorial(N-1);
     }
     /// index of permutation object
-    constexpr size_t idx() const { return idx(*this); }
+    constexpr enum_t idx() const { return idx(*this); }
     /// permutation number i of N!
     static constexpr Permutation element(size_t i) {
         assert(i < factorial(N));

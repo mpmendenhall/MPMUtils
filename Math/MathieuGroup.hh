@@ -4,7 +4,7 @@
 #ifndef MATHIEUGROUP_HH
 #define MATHIEUGROUP_HH
 
-#include "FiniteGroup.hh"
+#include "ConjugacyDecomposition.hh"
 #include "Matrix.hh"
 #include "ModularField.hh"
 #include "PermutationGroup.hh"
@@ -23,7 +23,7 @@ namespace MathieuGroup {
     extern const M11_repr_t M11b;   ///< another permutation generator
 
     /// generators span type
-    typedef GeneratorsSemigroup<MultiplySG<M11_repr_t>> M11_genspan_t;
+    typedef GeneratorsSemigroup<MultiplyG<M11_repr_t>> M11_genspan_t;
 
     /// fully enumerated group (static object produced when function first called)
     const M11_genspan_t& M11();

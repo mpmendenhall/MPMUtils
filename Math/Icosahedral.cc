@@ -41,16 +41,16 @@ namespace Icosahedral {
     indexel_t::indexel_t(size_t ii): i(ii), o(Rs.element(i)) { }
 
     template<typename T>
-    array<T, T::multiplicity> facels(size_t cnum) {
-        array<T,T::multiplicity> df;
-        auto& rfi = CD.M.find(T::order)->second.CCs.getClassNum(cnum);
-        if(rfi.size() != T::multiplicity) throw nullptr;
+    array<T, T::multiplicity()> facels(size_t cnum) {
+        array<T,T::multiplicity()> df;
+        auto& rfi = CD.M.find(T::order())->second.CCs.getClassNum(cnum);
+        if(rfi.size() != T::multiplicity()) throw nullptr;
 
         size_t n = 0;
         for(auto i: rfi) {
             df[n].c = R3axis(Rs.element(i));
             df[n].R[0] = indexel_t(nID);
-            for(size_t j=1; j<T::order; ++j) df[n].R[j] = indexel_t(CT.apply(i, df[n].R[j-1].i));
+            for(size_t j=1; j<T::order(); ++j) df[n].R[j] = indexel_t(CT.apply(i, df[n].R[j-1].i));
             ++n;
         }
         return df;
@@ -60,12 +60,15 @@ namespace Icosahedral {
     const array<f15_t,15> flipAxes = facels<f15_t>(1);
     const array<f20_t,20> icoFaces = facels<f20_t>(0);
 
+    /// arbitrary point selecting representative ``fundamental'' domain
+    const axis_t fd_p0{{half, half, half*20}};
+
     Navigator::Navigator():
-    DecisionTree(120, 15, [](size_t i, size_t j) { axis_t e{{half, half, half*20}}; return axpart(Rs.element(i) * e, j); }) { }
+    DecisionTree(120, 15, [](size_t i, size_t j){ return axpart(Rs.element(i) * fd_p0, j); }) { }
     const Navigator Nav;
 
     template<typename F>
-    const F& selectFundamental(const array<F,F::multiplicity>& a) {
+    const F& selectFundamental(const array<F,F::multiplicity()>& a) {
         for(auto& f: a) {
             axis_t c = f.c;
             Nav.map_d0(c);
