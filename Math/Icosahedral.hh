@@ -16,7 +16,8 @@
 template<>
 inline PhiField unit<PhiField>() { return PhiField::one(); }
 
-/// Information about full icosahedral symmetry point group (Schoenflies I_h, Coxeter [5,3])
+/// Information about full icosahedral symmetry point group
+/// Schoenflies I_h = I x C_2 (= A_5 x Z_2), Coxeter [5,3]
 namespace Icosahedral {
     using std::array;
 

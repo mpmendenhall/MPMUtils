@@ -1,4 +1,5 @@
 /// \file QuotientGroup.hh Quotient group constructions
+// Michael P. Mendenhall, 2019
 
 /*
  * ---- Cosets. ----
@@ -12,10 +13,15 @@
  *
  * Abelian G: all subgroups are normal
  *
+ * The kernel  ker f = {g in G: f(g) = identity in H}
+ * of any group homomorphism f: G -> H is a normal subgroup of G.
+ *
  * Quotient group G/N, N normal subgroup of G: "equivalence relation preserving group structure"
  * group operation (aN)*(bN) = abN
  * Equivalence classes = cosets of N (left cosets == right cosets since N normal)
  * Equivalence class of identity is N
+ *
+ * Set of subgroups form a `complete lattice': every subset has a supremum and infimum
 */
 
 #ifndef QUOTIENTGROUP_HH
@@ -43,6 +49,30 @@ protected:
     const SG_t& SG; ///< underlying semigroup
     const EQ_t& Eq; ///< equivalence relation
 };
+
+/// Left (right) coset gS (Sg) in group G
+template<class G_t, class S_t>
+vector<typename G_t::elem_t>
+coset(typename G_t::elem_t g,
+      const S_t& S,
+      const G_t& G,
+      bool left = true) {
+
+    vector<typename G_t::elem_t> v;
+    for(auto& h: S) v.push_back(left? G.apply(g,h) : G.apply(h,g));
+    std::sort(v.begin(), v.end());
+    v.erase(std::unique(v.begin(),v.end()),v.end());
+    return v;
+}
+
+/// Check whether subset is normal in group (gN = Ng for all g in G)
+template<class G_t, class SG_t>
+bool isNormal(const SG_t& N, const G_t& G) {
+    for(auto& g: G)
+        if(coset(g,N,G,false) != coset(g,N,G,true))
+            return false;
+    return true;
+}
 
 /// Construct left cosets equivalence classes from group G, subgroup elements set H
 template<class EQ_t, class G_t, class SG_t>

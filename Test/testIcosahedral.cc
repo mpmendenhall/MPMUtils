@@ -14,9 +14,11 @@ int main(int, char**) {
     //return EXIT_SUCCESS;
 
     set<cayley_t::elem_t> S;
-    //S = {0,1};
-    for(auto& e: dodFaces[0].R) S.insert(e.i);
+    S = {0,1};
+    //for(auto& e: dodFaces[0].R) S.insert(e.i);
     quotient_t Q(CT, S);
+
+    std::cout << "Subgroup is " << (isNormal(S,CT)? "" : "*not* ") << "normal in G.\n";
 
     std::cout << "\n" << Q.order() << " Equivalence classes:\n";
     size_t i = 0;
