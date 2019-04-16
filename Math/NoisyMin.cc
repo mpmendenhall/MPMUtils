@@ -3,7 +3,6 @@
 #include "NoisyMin.hh"
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_eigen.h>
-#include "GeomCalcUtils.hh"
 #include <sstream>
 
 NoisyMin::NoisyMin(size_t n): N(n),

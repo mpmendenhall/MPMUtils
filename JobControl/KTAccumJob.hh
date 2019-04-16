@@ -24,8 +24,11 @@ public:
     /// collect accumulated objects back into kt
     void gather();
 
+    /// get correct worker class ID
+    virtual size_t workerType() const = 0;
+
     /// launch accumulation jobs
-    void launchAccumulate(size_t wid, int uid = 0);
+    void launchAccumulate(int uid = 0);
 
 protected:
     vector<string> combos;  ///< accumulation object names

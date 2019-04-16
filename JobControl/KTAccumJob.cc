@@ -47,11 +47,11 @@ void KTAccumJobComm::gather() {
     objs.clear();
 }
 
-void KTAccumJobComm::launchAccumulate(size_t wid, int uid) {
+void KTAccumJobComm::launchAccumulate(int uid) {
     vector<JobSpec> vJS;
     int nsamp = MultiJobControl::JC->nChunk();
     kt.Get("NSamples", nsamp);
-    splitJobs(vJS, MultiJobControl::JC->nChunk(), nsamp, wid, uid);
+    splitJobs(vJS, MultiJobControl::JC->nChunk(), nsamp, workerType(), uid);
     for(auto& j: vJS) MultiJobControl::JC->submitJob(j);
 }
 
