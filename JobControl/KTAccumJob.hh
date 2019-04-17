@@ -1,8 +1,8 @@
 /// \file KTAccumJob.hh KeyTable-based accumulate protocol communicator
 // Michael P. Mendenhall, LLNL 2019
 
-#ifndef KTAccumJobComm_HH
-#define KTAccumJobComm_HH
+#ifndef KTACCUMJOB_HH
+#define KTACCUMJOB_HH
 
 #include "MultiJobControl.hh"
 #include "KeyTable.hh"

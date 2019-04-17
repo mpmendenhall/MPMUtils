@@ -5,7 +5,7 @@ export SLURM_CPUS_ON_NODE=4
 mpirun -np $SLURM_CPUS_ON_NODE bin/testJobControl
 */
 
-#include "MPIJobControl.hh" // put first to avoid std::string namespace conflicts
+#include "MPIJobControl.hh"
 #include "ThreadsJobControl.hh"
 #include "KTAccumJob.hh"
 #include "CodeVersion.hh"
@@ -26,6 +26,14 @@ protected:
 };
 
 REGISTER_FACTORYOBJECT(MyAccumJob)
+
+/// Local-side specification
+class MyJobComm: public KTAccumJobComm {
+public:
+    /// get correct worker class ID
+    size_t workerType() const override { return typehash<MyAccumJob>(); }
+};
+
 
 /// main() for executable
 int main(int argc, char **argv) {
@@ -57,13 +65,13 @@ int main(int argc, char **argv) {
 
     MultiJobControl::JC->verbose = 5;
 
-    KTAccumJobComm KTC;
+    MyJobComm KTC;
     auto foo = new TH1F("foo","bar",20,0,10);
     KTC.kt.Set("v", *foo);
     KTC.kt.Set("Combine","v");
     KTC.kt.Set("NSamples", 1000);
 
-    KTC.launchAccumulate(typehash<MyAccumJob>());
+    KTC.launchAccumulate();
     for(int i=0; i<10; i++) {
         JobSpec JS;
         JS.uid = i;

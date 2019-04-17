@@ -30,7 +30,6 @@ public:
     /// END TRANSACTION command
     int endTransaction() { return (--txdepth)? SQLITE_OK : exec("END TRANSACTION"); }
 
-protected:
     /// set up query for use
     int setQuery(const char* qry, sqlite3_stmt*& stmt);
     /// load a cached statement
@@ -47,6 +46,7 @@ protected:
     /// bind a vector<double> as a blob to a statement parameter
     int bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v);
 
+protected:
     int txdepth = 0;                        ///< depth of transaction calls
     sqlite3* db = nullptr;                  ///< database connection
     map<string, sqlite3_stmt*> statements;  ///< prepared statements awaiting deletion
