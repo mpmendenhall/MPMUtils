@@ -8,13 +8,15 @@ for f0 in **/*; do :
 if [[ ! -f $f0 ]]; then
 continue; fi
 
+p=`dirname "$f0"`
 f=`basename "$f0"`
 ext="${f##*.}"
 
 if [ "$f" == "Makefile" ] || [ "$f" == "CMakeLists.txt" ] || [ "$f" == "__pycache__" ] || [ "$ext" == "pyc" ] \
 || [ "$f" == "HDF5_StructInfo.hh" ] || [ "$f" == "HDF5_StructInfo.cc" ] || [ "$f" == "LinkDef.h" ]; then
 continue; fi
-for d1 in $1/*; do :
+
+for d1 in $1/* $1/$p/; do :
 if [ -e "$d1/$f" ]; then
     echo "--------------------------------------------------------" $f
     if ! diff $f0 $d1/$f; then
