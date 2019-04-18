@@ -1,57 +1,13 @@
 /// \file DynamicPluginSaver.hh System for dynamically loading analyzer plugins by config file
-/*
- * DynamicPluginSaver.hh, part of the MPMUtils package.
- * Copyright (c) 2016 Michael P. Mendenhall
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
+// Michael P. Mendenhall, LLNL 2019
 
 #ifndef DYNAMICPLUGINSAVER_HH
 #define DYNAMICPLUGINSAVER_HH
 
 #include "PluginSaver.hh"
+#include "ObjectFactory.hh"
 #include "libconfig.h++"
 using namespace libconfig;
-
-/// Template for PluginBuilder using config file
-template <class Plug, class Base>
-class ConfigPluginBuilder: public PluginBuilder {
-public:
-    /// Constructor
-    ConfigPluginBuilder(const Setting& c): cfg(c) { }
-    /// Plugin construction... assumes proper constructor for Plug
-    void makePlugin(SegmentSaver* pnt) override {
-        assert(pnt);
-        auto PBase = dynamic_cast<Base*>(pnt);
-        assert(PBase);
-        auto t0 = steady_clock::now();
-        thePlugin = std::make_shared<Plug>(PBase, cfg);
-        thePlugin->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
-        cfg.lookupValue("order", thePlugin->order);
-    }
-protected:
-    const Setting& cfg;     ///< configuration info to pass to plugin
-};
-
-/// Base class for registering a plugin to global table
-class PluginRegistrar {
-public:
-    /// generate appropriate builder class
-    virtual shared_ptr<PluginBuilder> makeBuilder(Setting& c) const = 0;
-};
 
 class DynamicPluginSaver: public PluginSaver {
 public:
@@ -64,20 +20,32 @@ public:
     /// Configure, loading from input file
     void Reconfigure();
 
-    /// global map of available plugins
-    static map<string, PluginRegistrar*>& builderTable();
-
 protected:
     TObjString* configstr;  ///< configuration file string
+
+    /// add named builder
+    void addBuilder(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown);
+};
+
+// Dynamic plugin builder requirements: return SegmentSaver*; constructor args (SegmentSaver&, const Setting&)
+
+/// Base class for constructing configuration-based plugins, with parent-class recast
+template <class Plug, class Base>
+class ConfigPluginBuilder: public _KnownObjFactory<SegmentSaver, Plug, SegmentSaver&, const Setting&> {
+public:
+    using _KnownObjFactory<SegmentSaver, Plug, SegmentSaver&, const Setting&>::_KnownObjFactory;
+
+    /// Re-casting plugin construction
+    SegmentSaver* bconstruct(SegmentSaver& pnt, const Setting& S) const override {
+        auto t0 = steady_clock::now();
+        auto P = new Plug(dynamic_cast<Base&>(pnt), S);
+        P->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
+        S.lookupValue("order", P->order);
+        return P;
+    }
 };
 
 /// Compile-time registration of dynamically-loadable plugins
-#define REGISTER_PLUGIN(NAME,BASE) \
-class _##NAME##_Registrar: public PluginRegistrar { \
-public: \
-    _##NAME##_Registrar() { DynamicPluginSaver::builderTable().emplace(#NAME,this); } \
-    shared_ptr<PluginBuilder> makeBuilder(Setting& c) const override { return std::make_shared<ConfigPluginBuilder<NAME,BASE>>(c); } \
-}; \
-static _##NAME##_Registrar the_##NAME##_Registrar;
+#define REGISTER_PLUGIN(NAME,BASE) static ConfigPluginBuilder<NAME,BASE> the_##BASE##_##NAME##_PluginBuilder(#NAME);
 
 #endif

@@ -5,11 +5,6 @@
 #include "StringManip.hh"
 #include <cassert>
 
-map<string, PluginRegistrar*>& DynamicPluginSaver::builderTable() {
-    static map<string, PluginRegistrar*> BT;
-    return BT;
-}
-
 DynamicPluginSaver::DynamicPluginSaver(OutputManager* pnt, const string& nm, const string& inflName):
 PluginSaver(pnt, nm, inflName) {
     configstr = registerAttrString("configstr", "");
@@ -26,6 +21,34 @@ void DynamicPluginSaver::Reconfigure() {
     } else printf("No configuration found in loaded file!\n");
 }
 
+void DynamicPluginSaver::addBuilder(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown) {
+    auto o = ObjectFactory<SegmentSaver>::construct(pname, cfg);
+    if(!o) {
+        if(skipUnknown) {
+            printf("Skipping unknown plugin type '%s'!\n", pname.c_str());
+            return;
+        }
+        fprintf(stderr,"Unknown plugin type '%s' configured! I die!\n", pname.c_str());
+        throw std::runtime_error("Unknown plugin type");
+    }
+
+    throw nullptr; // TODO
+    /*
+    auto oo = dynamic_cast<PluginBuilder*>(o);
+    if(!oo) {
+        delete o;
+        throw std::runtime_error("Incorrect object inheritance!");
+    }
+
+    string rename = pname;
+    if(copynum >= 0) rename += "_"+to_str(copynum);
+    string rn0 = rename;
+    cfg.lookupValue("rename",rename);
+    myBuilders.emplace(rename, oo);
+    if(rn0 == rename) ++copynum;
+    */
+}
+
 void DynamicPluginSaver::Configure(const Setting& cfg, bool skipUnknown) {
     // save copy of config to output
     auto srcfl = cfg.getSourceFile();
@@ -37,34 +60,9 @@ void DynamicPluginSaver::Configure(const Setting& cfg, bool skipUnknown) {
         auto nplugs = plugs.getLength();
         for(int i=0; i<nplugs; i++) {
             string pname = plugs[i].getName();
-            auto it = builderTable().find(pname);
-            if(it == builderTable().end()) {
-                if(skipUnknown) {
-                    printf("Skipping unknown plugin type '%s'!\n", pname.c_str());
-                    continue;
-                }
-                fprintf(stderr,"Unknown plugin type '%s' configured! I die!\n", pname.c_str());
-                printf("Available plugins:\n");
-                for(auto kv: builderTable()) printf("\t%s\n", kv.first.c_str());
-                printf("--------------------\n");
-                throw;
-            }
-
-            if(plugs[i].isList()) {
-                int copynum = -1;
-                for(auto& c: plugs[i]) {
-                    string rename = pname;
-                    if(copynum >= 0) rename += "_"+to_str(copynum);
-                    string rn0 = rename;
-                    c.lookupValue("rename",rename);
-                    myBuilders[rename] = it->second->makeBuilder(c);
-                    if(rn0 == rename) copynum++;
-                }
-            } else {
-                string rename = pname;
-                plugs[i].lookupValue("rename",rename);
-                myBuilders[rename] = it->second->makeBuilder(plugs[i]);
-            }
+            int copynum = -1;
+            if(plugs[i].isList()) for(auto& c: plugs[i]) addBuilder(pname, copynum, c, skipUnknown);
+            else addBuilder(pname, copynum, plugs[i], skipUnknown);
         }
     }
     buildPlugins();

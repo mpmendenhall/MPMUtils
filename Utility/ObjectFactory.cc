@@ -9,7 +9,8 @@ T& singleton() {
     return s;
 }
 
-map<size_t, ObjectFactory*>& ObjectFactory::byIdx() { return singleton<map<size_t, ObjectFactory*>>(); }
-map<string, size_t>& ObjectFactory::classIndices() { return singleton<map<string, size_t>>(); }
+map<size_t, _ObjectFactory*>& _Factories::byIdx() { return singleton<map<size_t, _ObjectFactory*>>(); }
+map<string, size_t>& _Factories::classIndices() { return singleton<map<string, size_t>>(); }
 
-REGISTER_FACTORYOBJECT(FactoryObject)
+REGISTER_FACTORYOBJECT(_ObjectFactory,void)
+

@@ -9,6 +9,7 @@
 #define PLUGINSAVER_HH
 
 #include "SegmentSaver.hh"
+#include "ObjectFactory.hh"
 #include <cassert>
 #include <chrono>
 using std::chrono::steady_clock;
@@ -17,40 +18,8 @@ using std::shared_ptr;
 using std::make_shared;
 #include "StringManip.hh"
 
-/// Base class for optionally constructing SegmentSaver plugins "on demand"
-class PluginBuilder {
-public:
-    /// Destructor
-    virtual ~PluginBuilder() { }
-
-    /// instantiate plugin SegmentSaver
-    virtual void makePlugin(SegmentSaver* pnt) = 0;
-
-    int copynum = -1;                               ///< clone number for "identical" plugins
-    shared_ptr<SegmentSaver> thePlugin = nullptr;   ///< instantiated plugin
-};
-
-/// Simple templatized PluginBuilder, checking for correct parent type
-template <class Base, class Plug>
-class RecastPluginBuilder: public PluginBuilder {
-public:
-    /// Constructor
-    RecastPluginBuilder() { }
-    /// Re-casting plugin construction
-    void makePlugin(SegmentSaver* pnt) override {
-        auto PBase = dynamic_cast<Base*>(pnt);
-        assert(PBase);
-        thePlugin = _makePlugin(PBase);
-        if(copynum >= 0 && thePlugin) thePlugin->rename(thePlugin->name+"_"+to_str(copynum));
-    }
-    /// Create appropriate plugin type
-    virtual shared_ptr<SegmentSaver> _makePlugin(Base* PBase) {
-        auto t0 = steady_clock::now();
-        auto p = std::make_shared<Plug>(PBase);
-        p->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
-        return p;
-    }
-};
+/// Base class for constructing SegmentSaver plugins "on demand"
+typedef _ArgsBaseFactory<SegmentSaver, SegmentSaver*> PluginBuilder;
 
 /// A SegmentSaver that manages several (optional) plugin SegmentSavers sharing the same file
 class PluginSaver: public SegmentSaver {

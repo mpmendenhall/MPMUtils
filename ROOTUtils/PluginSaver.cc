@@ -24,19 +24,16 @@ void PluginSaver::buildPlugins() {
                 printf("Plugin '%s' missing from input file; skipped.\n", pnm.c_str());
                 continue;
             }
-            PB->second->makePlugin(this);
-            if(PB->second->thePlugin) myPlugins.push_back(PB->second->thePlugin.get());
+            throw nullptr; // TODO
+            //myPlugins.push_back(PB->second->construct(this));
         }
     } else {
         /// construct all plugins
         vector<string> pnames;
         for(auto& kv: myBuilders) {
-            assert(kv.second);
-            kv.second->makePlugin(this);
-            if(kv.second->thePlugin) {
-                pnames.push_back(kv.first);
-                myPlugins.push_back(kv.second->thePlugin.get());
-            } else assert(false);
+            pnames.push_back(kv.first);
+            throw nullptr; // TODO
+            //myPlugins.push_back(kv.second->construct(this));
         }
         assert(filePlugins);
         string pstr = join(pnames,",");
@@ -60,9 +57,10 @@ map<string,float> PluginSaver::compareKolmogorov(const SegmentSaver& S) const {
 }
 
 shared_ptr<SegmentSaver> PluginSaver::getPlugin(const string& nm) const {
-    auto PB = myBuilders.find(nm);
-    if(PB == myBuilders.end()) return nullptr;
-    return PB->second->thePlugin;
+    throw nullptr; // TODO
+    //auto PB = myBuilders.find(nm);
+    //if(PB == myBuilders.end()) return nullptr;
+    //return PB->second->thePlugin;
 }
 
 void PluginSaver::setPrintSuffix(const string& sfx) {
