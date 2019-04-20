@@ -1,9 +1,5 @@
 /// \file PluginSaver.hh
-// This file was produced under the employ of the United States Government,
-// and is consequently in the PUBLIC DOMAIN, free from all provisions of
-// US Copyright Law (per USC Title 17, Section 105).
-//
-// -- Michael P. Mendenhall, 2015
+// -- Michael P. Mendenhall, 2019
 
 #ifndef PLUGINSAVER_HH
 #define PLUGINSAVER_HH
@@ -17,18 +13,20 @@ using std::chrono::steady_clock;
 using std::shared_ptr;
 using std::make_shared;
 #include "StringManip.hh"
-
-/// Base class for constructing SegmentSaver plugins "on demand"
-typedef _ArgsBaseFactory<SegmentSaver, SegmentSaver*> PluginBuilder;
+#include "ObjectFactory.hh"
+#include "libconfig.h++"
+using namespace libconfig;
 
 /// A SegmentSaver that manages several (optional) plugin SegmentSavers sharing the same file
 class PluginSaver: public SegmentSaver {
 public:
     /// Constructor, optionally with input filename
     PluginSaver(OutputManager* pnt, const string& nm = "PluginSaver", const string& inflName = "");
+    /// Destructor
+    ~PluginSaver() { for(auto p: myPlugins) delete p; }
 
     /// get plugin by name
-    shared_ptr<SegmentSaver> getPlugin(const string& nm) const;
+    SegmentSaver* getPlugin(const string& nm) const;
 
     /// set printCanvas suffix (filetype)
     void setPrintSuffix(const string& sfx) override;
@@ -70,13 +68,46 @@ public:
     /// clear (delete) items
     void clearItems() override;
 
-protected:
-    /// build plugins appropriate for input file; call in subclass after setting up myBuilders
-    virtual void buildPlugins();
+    /// Configure from libconfig object, dynamically loading plugins
+    virtual void Configure(const Setting& cfg, bool skipUnknown = false);
+    /// Configure from named .cfg file
+    void LoadConfig(const string& fname);
+    /// Configure, loading from input file
+    void Reconfigure();
 
-    map<string, shared_ptr<PluginBuilder>> myBuilders;  ///< available named plugins list
-    vector<SegmentSaver*> myPlugins;                    ///< plugins in run order
-    TObjString* filePlugins;                            ///< list of plugin names from file
+protected:
+    /// load and configure plugin by class name
+    void buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown);
+
+    map<string, SegmentSaver*> byName;      ///< available named plugins list
+    vector<SegmentSaver*> myPlugins;        ///< plugins in run order
+    TObjString* configstr;                  ///< configuration file contents
 };
+
+// Dynamic plugin builder requirements: return SegmentSaver*; constructor args (SegmentSaver&, const Setting&)
+size_t pluginID(const string& cname) { return factoryID<SegmentSaver, SegmentSaver&, const Setting&>(cname,"CPB"); }
+
+/// Base class for constructing configuration-based plugins, with parent-class recast
+template <class Plug, class Base>
+class ConfigPluginBuilder: public _ArgsBaseFactory<SegmentSaver, Plug, SegmentSaver&, const Setting&> {
+public:
+    /// Constructor, registering to list
+    ConfigPluginBuilder(const string& cname): _ArgsBaseFactory<SegmentSaver, Plug, SegmentSaver&, const Setting&>(cname) {
+        FactoriesIndex::index().emplace(pluginID(cname), this);
+    }
+
+    /// Re-casting plugin construction
+    SegmentSaver* bconstruct(SegmentSaver& pnt, const Setting& S) const override {
+        auto t0 = steady_clock::now();
+        auto P = new Plug(dynamic_cast<Base&>(pnt), S);
+        P->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
+        S.lookupValue("order", P->order);
+        return P;
+    }
+};
+
+/// Compile-time registration of dynamically-loadable plugins
+#define REGISTER_PLUGIN(NAME,BASE) static ConfigPluginBuilder<NAME,BASE> the_##BASE##_##NAME##_PluginBuilder(#NAME);
+
 
 #endif

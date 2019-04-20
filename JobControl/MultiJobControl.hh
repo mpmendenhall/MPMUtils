@@ -58,9 +58,12 @@ public:
 
 
 
-/// Base class for a worker job (with state storage utilities); subclass and REGISTER_FACTORYOBJECT(myClass) in your code
-class JobWorker: public FactoryObject {
+/// Base class for a worker job (with state storage utilities); subclass and REGISTER_FACTORYOBJECT(myClass, JobWorker) in your code
+class JobWorker {
 public:
+    /// polymorphic destructor
+    virtual ~JobWorker() { }
+
     /// run specified job, talking to JobComm::startJob and endJob through B
     virtual void run(JobSpec J, BinaryIO& B);
 

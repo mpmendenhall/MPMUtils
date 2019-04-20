@@ -1,45 +1,67 @@
 /// \file PluginSaver.cc
-// This file was produced under the employ of the United States Government,
-// and is consequently in the PUBLIC DOMAIN, free from all provisions of
-// US Copyright Law (per USC Title 17, Section 105).
-//
-// -- Michael P. Mendenhall, 2015
+// -- Michael P. Mendenhall, 2019
 
 #include "PluginSaver.hh"
+#include "libconfig_readerr.hh"
 #include "StringManip.hh"
 #include <cassert>
 
-PluginSaver::PluginSaver(OutputManager* pnt, const string& nm, const string& inflName): SegmentSaver(pnt, nm, inflName) {
-    filePlugins = registerAttrString("filePlugins", "");
-    assert(filePlugins);
+PluginSaver::PluginSaver(OutputManager* pnt, const string& nm, const string& inflName):
+SegmentSaver(pnt, nm, inflName) {
+    configstr = registerAttrString("configstr", "");
 }
 
-void PluginSaver::buildPlugins() {
-    if(fIn) {
-        /// try to load all plugins named in input file
-        printf("Loading plugins '%s'\n", filePlugins->String().Data());
-        for(auto& pnm: split(filePlugins->String().Data(), ",")) {
-            auto PB = myBuilders.find(pnm);
-            if(PB==myBuilders.end()) {
-                printf("Plugin '%s' missing from input file; skipped.\n", pnm.c_str());
-                continue;
-            }
-            throw nullptr; // TODO
-            //myPlugins.push_back(PB->second->construct(this));
+void PluginSaver::LoadConfig(const string& fname) {
+    Config cfg;
+    readConfigFile(cfg, fname);
+    Configure(cfg.getRoot(), false);
+}
+
+void PluginSaver::Reconfigure() {
+    Config cfg;
+    cfg.setAutoConvert(true);
+    cfg.readString(configstr->String().Data());
+    Configure(cfg.getRoot(), true);
+}
+
+void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown) {
+    auto i = pluginID(pname);
+    if(!FactoriesIndex::has(i)) {
+        if(skipUnknown) {
+            printf("Skipping unknown plugin type '%s'!\n", pname.c_str());
+            return;
         }
-    } else {
-        /// construct all plugins
-        vector<string> pnames;
-        for(auto& kv: myBuilders) {
-            pnames.push_back(kv.first);
-            throw nullptr; // TODO
-            //myPlugins.push_back(kv.second->construct(this));
-        }
-        assert(filePlugins);
-        string pstr = join(pnames,",");
-        printf("Set up plugins '%s'\n", pstr.c_str());
-        filePlugins->SetString(pstr.c_str());
+        fprintf(stderr,"Unknown plugin type '%s' configured! I die!\n", pname.c_str());
+        throw std::runtime_error("Unknown plugin type");
     }
+
+    auto o = BaseFactory<SegmentSaver>::construct(i, *this, cfg);
+    string rename = pname;
+    if(copynum >= 0) rename += "_"+to_str(copynum);
+    string rn0 = rename;
+    cfg.lookupValue("rename",rename);
+    o->rename(rename);
+    byName[rename] = o;
+    if(rn0 == rename) ++copynum;
+}
+
+void PluginSaver::Configure(const Setting& cfg, bool skipUnknown) {
+    // save copy of config to output
+    auto srcfl = cfg.getSourceFile();
+    if(srcfl) configstr->SetString(loadFileString(srcfl).c_str());
+
+    // configure plugins
+    if(cfg.exists("plugins")) {
+        auto& plugs = cfg["plugins"];
+        auto nplugs = plugs.getLength();
+        for(int i=0; i<nplugs; i++) {
+            string pname = plugs[i].getName();
+            int copynum = -1;
+            if(plugs[i].isList()) for(auto& c: plugs[i]) buildPlugin(pname, copynum, c, skipUnknown);
+            else buildPlugin(pname, copynum, plugs[i], skipUnknown);
+        }
+    }
+
     std::sort(myPlugins.begin(), myPlugins.end(),
               [](SegmentSaver* a, SegmentSaver* b) { return a->order < b->order; });
 }
@@ -56,11 +78,9 @@ map<string,float> PluginSaver::compareKolmogorov(const SegmentSaver& S) const {
     return m;
 }
 
-shared_ptr<SegmentSaver> PluginSaver::getPlugin(const string& nm) const {
-    throw nullptr; // TODO
-    //auto PB = myBuilders.find(nm);
-    //if(PB == myBuilders.end()) return nullptr;
-    //return PB->second->thePlugin;
+SegmentSaver* PluginSaver::getPlugin(const string& nm) const {
+    auto it = byName.find(nm);
+    return it == byName.end()? nullptr : it->second;
 }
 
 void PluginSaver::setPrintSuffix(const string& sfx) {
@@ -130,9 +150,7 @@ void PluginSaver::startData() {
     }
 }
 
-void PluginSaver::processEvent() {
-    for(auto P: myPlugins) P->processEvent();
-}
+void PluginSaver::processEvent() { for(auto P: myPlugins) P->processEvent(); }
 
 void PluginSaver::finishData(bool f) {
     for(auto P: myPlugins) {
@@ -152,7 +170,7 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
         vector<SegmentSaver*> vPi;
         for(auto PS: vP) {
             if(!PS) vPi.push_back(nullptr);
-            else vPi.push_back(PS->getPlugin(P->name).get());
+            else vPi.push_back(PS->getPlugin(P->name));
         }
         P->defaultCanvas.cd();
         P->compare(vPi);
@@ -194,8 +212,12 @@ double PluginSaver::displayTimeUse() const {
 
 TDirectory* PluginSaver::writeItems(TDirectory* d) {
     d = SegmentSaver::writeItems(d);
-    if(myBuilders.size()) printf("Writing plugins '%s'\n", filePlugins->String().Data());
-    for(auto P: myPlugins) P->writeItems(d);
+    printf("Writing plugins: ");
+    for(auto& kv: byName) {
+        printf(" %s", kv.first.c_str());
+        kv.second->writeItems(d);
+    }
+    printf("\n");
     return d;
 }
 

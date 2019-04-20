@@ -6,7 +6,7 @@
 #include <algorithm>
 
 void JobSpec::display() const {
-    printf("JobSpec [Job %i: %zu -- %zu] for class '%s' on worker [%i]\n", uid, N0, N1, ObjectFactory::nameOf(wclass).c_str(), wid);
+    printf("JobSpec [Job %i: %zu -- %zu] for class '%s' on worker [%i]\n", uid, N0, N1, FactoriesIndex::index().at(wclass)->classname.c_str(), wid);
 }
 
 void JobComm::splitJobs(vector<JobSpec>& vJS, size_t nSplit, size_t nItms, size_t wclass, int uid) {
@@ -23,7 +23,7 @@ void JobComm::splitJobs(vector<JobSpec>& vJS, size_t nSplit, size_t nItms, size_
 ///////////////////////////////////
 ///////////////////////////////////
 
-REGISTER_FACTORYOBJECT(JobWorker)
+REGISTER_FACTORYOBJECT(JobWorker, JobWorker)
 
 string JobWorker::stateDir = "";
 
@@ -148,10 +148,10 @@ void MultiJobWorker::runJob(JobSpec& JS) {
     auto it = workers.find(JS.wclass);
     auto W = it == workers.end()? nullptr : it->second;
     if(!W) {
-        if(verbose > 3) printf("Instantiating worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
-        workers[JS.wclass] = W = dynamic_cast<JobWorker*>(ObjectFactory::construct(JS.wclass));
+        if(verbose > 3) printf("Instantiating worker class '%s'.\n", FactoriesIndex::index().at(JS.wclass)->classname.c_str());
+        workers[JS.wclass] = W = BaseFactory<JobWorker>::construct(JS.wclass);
         if(!W) throw std::runtime_error("Unable to construct requested worker class!");
-    } else if(verbose > 4) printf("Already have worker class '%s'.\n", ObjectFactory::nameOf(JS.wclass).c_str());
+    } else if(verbose > 4) printf("Already have worker class '%s'.\n", FactoriesIndex::index().at(JS.wclass)->classname.c_str());
 
     W->run(JS, *this);
 }

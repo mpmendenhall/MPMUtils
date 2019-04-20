@@ -13,6 +13,7 @@ mpirun -np $SLURM_CPUS_ON_NODE bin/testJobControl
 
 /// Test job class interfacing with KeyData
 class MyAccumJob: public KTAccumJob {
+
 protected:
     /// operate on kt data to produce accumulables
     void runAccum() override {
@@ -25,13 +26,13 @@ protected:
     }
 };
 
-REGISTER_FACTORYOBJECT(MyAccumJob)
+REGISTER_FACTORYOBJECT(MyAccumJob, JobWorker)
 
 /// Local-side specification
 class MyJobComm: public KTAccumJobComm {
 public:
     /// get correct worker class ID
-    size_t workerType() const override { return typehash<MyAccumJob>(); }
+    size_t workerType() const override { return factoryID<JobWorker>("MyAccumJob"); }
 };
 
 
@@ -75,7 +76,7 @@ int main(int argc, char **argv) {
     for(int i=0; i<10; i++) {
         JobSpec JS;
         JS.uid = i;
-        JS.wclass = typehash<JobWorker>();
+        JS.wclass = factoryID<JobWorker>("JobWorker");
         MultiJobControl::JC->submitJob(JS);
     }
     printf("\n\nAll submitted!\n\n");
@@ -93,6 +94,4 @@ int main(int argc, char **argv) {
     MPIBinaryIO::uninit();
 
     return EXIT_SUCCESS;
-
-
 }
