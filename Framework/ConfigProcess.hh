@@ -7,7 +7,7 @@
 #include "libconfig_readerr.hh"
 #include "TreeWrap.hh"
 #include "DataFrame.hh"
-#include "ModuleRegistrar.hh"
+#include "ObjectFactory.hh"
 using std::pair;
 
 /// Convenience class for analysis run options DataFrame entry

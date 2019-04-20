@@ -5,14 +5,20 @@
 #include <chrono>
 using std::chrono::steady_clock;
 
-REGISTER_MODULE(ConfigProcess,ConfigProcess)
+REGISTER_FACTORYOBJECT(ConfigProcess,ConfigProcess)
 
 ConfigProcess* ConfigProcess::construct(const Setting& S) {
     string n = "ConfigProcess";
     S.lookupValue("class", n);
-    auto m = ModuleRegistrar<ConfigProcess>::construct(n);
-    if(m) m->configure(S);
-    else printf("Unknown module class '%s'!\n", n.c_str());
+
+    auto i = factoryID<ConfigProcess>(n);
+    if(!FactoriesIndex::has(i)) {
+        printf("Unknown module class '%s'!\n", n.c_str());
+        return nullptr;
+    }
+
+    auto m = BaseFactory<ConfigProcess>::construct(i);
+    m->configure(S);
     return m;
 }
 

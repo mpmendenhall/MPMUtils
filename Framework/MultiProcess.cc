@@ -3,7 +3,7 @@
 #include "MultiProcess.hh"
 #include <cassert>
 
-REGISTER_MODULE(MultiProcess,ConfigProcess)
+REGISTER_FACTORYOBJECT(MultiProcess,ConfigProcess)
 
 void MultiProcess::postconfig(const Setting& S) {
     int nthreads = 1;
