@@ -13,7 +13,6 @@ using std::chrono::steady_clock;
 using std::shared_ptr;
 using std::make_shared;
 #include "StringManip.hh"
-#include "ObjectFactory.hh"
 #include "libconfig.h++"
 using namespace libconfig;
 
@@ -85,14 +84,14 @@ protected:
 };
 
 // Dynamic plugin builder requirements: return SegmentSaver*; constructor args (SegmentSaver&, const Setting&)
-size_t pluginID(const string& cname) { return factoryID<SegmentSaver, SegmentSaver&, const Setting&>(cname,"CPB"); }
+inline size_t pluginID(const string& cname) { return factoryID<SegmentSaver, SegmentSaver&, const Setting&>(cname,"CPB"); }
 
 /// Base class for constructing configuration-based plugins, with parent-class recast
 template <class Plug, class Base>
-class ConfigPluginBuilder: public _ArgsBaseFactory<SegmentSaver, Plug, SegmentSaver&, const Setting&> {
+class ConfigPluginBuilder: public _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const Setting&> {
 public:
     /// Constructor, registering to list
-    ConfigPluginBuilder(const string& cname): _ArgsBaseFactory<SegmentSaver, Plug, SegmentSaver&, const Setting&>(cname) {
+    ConfigPluginBuilder(const string& cname): _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const Setting&>(cname) {
         FactoriesIndex::index().emplace(pluginID(cname), this);
     }
 
