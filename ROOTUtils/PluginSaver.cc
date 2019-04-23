@@ -35,13 +35,14 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& 
         throw std::runtime_error("Unknown plugin type");
     }
 
-    auto o = BaseFactory<SegmentSaver>::construct(i, *this, cfg);
+    auto o = BaseFactory<SegmentSaver>::construct(i, (SegmentSaver&)*this, cfg);
     string rename = pname;
     if(copynum >= 0) rename += "_"+to_str(copynum);
     string rn0 = rename;
     cfg.lookupValue("rename",rename);
     o->rename(rename);
     byName[rename] = o;
+    myPlugins.push_back(o);
     if(rn0 == rename) ++copynum;
 }
 
