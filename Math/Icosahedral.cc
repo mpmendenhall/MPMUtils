@@ -74,7 +74,7 @@ namespace Icosahedral {
             Nav.map_d0(c);
             if(f.c == c) return f;
         }
-        throw nullptr;
+        throw std::logic_error("No supplied point in fundamental domain!");
     }
     const f12_t Navigator::v12 = selectFundamental(dodFaces);
     const f15_t Navigator::v15 = selectFundamental(flipAxes);

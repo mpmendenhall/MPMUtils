@@ -16,14 +16,25 @@ if [ "$f" == "Makefile" ] || [ "$f" == "CMakeLists.txt" ] || [ "$f" == "__pycach
 || [ "$f" == "HDF5_StructInfo.hh" ] || [ "$f" == "HDF5_StructInfo.cc" ] || [ "$f" == "LinkDef.h" ]; then
 continue; fi
 
-for d1 in $1/* $1/$p/; do :
-if [ -e "$d1/$f" ]; then
+showdiff() {
     echo "--------------------------------------------------------" $f
-    if ! diff $f0 $d1/$f; then
-    echo "cp" $f0 $d1/$f
-    echo "cp" $d1/$f $f0
+    if ! diff $f0 $1; then
+    echo "cp" $f0 $1
+    echo "cp" $1 $f0
     fi
-fi; done; done
+}
+
+if [ -e "$1/$p/$f" ]; then
+    showdiff $1/$p/$f
+else
+    for d1 in $1/* $1/$p/; do :
+    if [ -e "$d1/$f" ]; then
+        showdiff $d1/$f; fi
+    done
+fi
+
+
+done
 
 echo "< : here; > : $1"
 
