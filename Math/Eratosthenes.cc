@@ -9,17 +9,17 @@ PrimeSieve& theSieve() {
     return PS;
 }
 
-PrimeSieve::factors_t PrimeSieve::factor(int_t i) {
+PrimeSieve::factors_t PrimeSieve::factor(uint_t i) {
     std::lock_guard<std::mutex> LG(sieveLock);
     return _factor(i);
 }
 
-void PrimeSieve::addXF(int_t i, const factors_t& v) {
+void PrimeSieve::addXF(uint_t i, const factors_t& v) {
     xf[i] = v;
     if(xf.size() > max_xf) xf.erase(std::prev(xf.end()));
 }
 
-PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
+PrimeSieve::factors_t PrimeSieve::_factor(uint_t i) {
     // easy if previously checked
     if(i < factors.size()) return factors[i];
     auto it = xf.find(i);
@@ -27,24 +27,25 @@ PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
 
     req_max = std::max(i, req_max);
 
+    size_t pn = 0;
     for(auto p: primes) {
-        if(!(i%p)) {
+        if(pdivs[pn++].divides(i)) {
+            assert(!(i%p));
             auto v = _factor(i/p);
-            v.push_back(p);
-            std::sort(v.begin(), v.end());
+            v.insert(std::lower_bound(v.begin(),v.end(),p),p);
             addXF(i,v);
             assert(i == prod(v));
             return v;
-        }
+        } else assert(i%p);
     }
 
     // expand table as needed up to sqrt(i)
     while(i > factor_max) {
         auto d = checkNext();
-        if(d && !(i%d)) { // d is a prime && factor of i?
+        if(d && pdivs.back().divides(i)) { // d is a prime && factor of i?
+            assert(!(i%d));
             auto v = _factor(i/d);
-            v.push_back(d);
-            std::sort(v.begin(), v.end());
+            v.insert(std::lower_bound(v.begin(),v.end(),d),d);
             addXF(i,v);
             assert(i == prod(v));
             return v;
@@ -57,8 +58,8 @@ PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
     return v;
 }
 
-PrimeSieve::int_t PrimeSieve::checkNext() {
-    const int_t i = factors.size();
+PrimeSieve::uint_t PrimeSieve::checkNext() {
+    const uint_t i = factors.size();
     factor_max += 2*factors.size()-1;
     assert(factor_max == i*i);
 
@@ -66,30 +67,36 @@ PrimeSieve::int_t PrimeSieve::checkNext() {
     auto it = xf.find(i);
     if(it != xf.end()) {
         bool isPrime = it->second.size() < 2;
-        if(isPrime) primes.push_back(i);
+        if(isPrime) {
+            primes.push_back(i);
+            pdivs.emplace_back(i);
+        }
         factors.push_back(it->second);
         xf.erase(it);
         return isPrime? i : 0;
     }
 
+    size_t pn = 0;
     for(auto p: primes) {
-        if(!(i%p)) {
+        if(pdivs[pn++].divides(i)) {
+            assert(!(i%p));
             factors.push_back(factors[i/p]);
-            factors.back().push_back(p);
-            std::sort(factors.back().begin(), factors.back().end());
+            auto& v = factors.back();
+            v.insert(std::lower_bound(v.begin(), v.end(), p), p);
             return 0;
-        }
+        } else assert(i%p);
     }
 
     primes.push_back(i);
+    pdivs.emplace_back(i);
     factors.push_back({i});
     return i;
 }
 
-PrimeSieve::int_t PrimeSieve::prod(const factors_t& f) {
-    int_t i = 1;
+PrimeSieve::uint_t PrimeSieve::prod(const factors_t& f) {
+    uint_t i = 1;
     for(auto& p: f) {
-        assert(i < std::numeric_limits<int_t>::max()/p);
+        assert(i < std::numeric_limits<uint_t>::max()/p);
         i *= p;
     }
     return i;

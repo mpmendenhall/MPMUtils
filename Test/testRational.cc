@@ -8,6 +8,7 @@
 #include "ModularField.hh"
 #include "Abstract.hh"
 #include "Quaternion.hh"
+#include "Stopwatch.hh"
 #include <stdio.h>
 #include <iostream>
 #include <cassert>
@@ -29,6 +30,39 @@ void summary(const PrimeSieve& S) {
 int main(int, char**) {
     CodeVersion::display_code_version();
 
+    auto& PS = theSieve();
+    summary(PS);
+    {
+        Stopwatch w;
+        for(PrimeSieve::int_t i=0; i<=1000000; i++) {
+            auto v = PS.factor(i);
+            assert(i == PS.prod(v));
+            if(rand() > 1e-5*RAND_MAX) continue;
+            printf("%lli =", PS.prod(v));
+            for(auto f: v) printf("\t%lli", f);
+            printf("\n");
+            summary(PS);
+        }
+    }
+    summary(PS);
+
+    auto& primes = PS.getPrimes();
+    auto& pdivs  = PS.getPDivs();
+    {
+        Stopwatch w;
+        size_t nd = 0;
+        for(PrimeSieve::int_t i=0; i<=1000000; i++)
+            for(auto p: primes) nd += !(i%p);
+        printf("%zu divided (%% check)\n", nd);
+    }
+    {
+        Stopwatch w;
+        size_t nd = 0;
+        for(PrimeSieve::int_t i=0; i<=1000000; i++)
+            for(auto& np: pdivs) nd += np.divides(i);
+        printf("%zu divided (fast check)\n", nd);
+    }
+
     Rational a;
     for(int i=1; i<=20; i++) {
         Rational b(i%2? 1 : -1, i);
@@ -39,18 +73,6 @@ int main(int, char**) {
     PolynomialV_t<Rational> Pr(1,0);
     Pr += {1,2};
     cout << Pr << Pr.pow(5) << "\n";
-
-    auto& PS = theSieve();
-    summary(PS);
-    for(PrimeSieve::int_t i=0; i<=100000; i++) {
-        auto v = PS.factor(i);
-        assert(i == PS.prod(v));
-        if(rand() > 1e-5*RAND_MAX) continue;
-        printf("%lli =", PS.prod(v));
-        for(auto f: v) printf("\t%lli", f);
-        printf("\n");
-        summary(PS);
-    }
 
     auto r3 = SurdSum::sqrt(3);
     r3 /= 8;
