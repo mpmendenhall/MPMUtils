@@ -6,7 +6,7 @@
 
 #include "SurdField.hh"
 
-/// field of a+b*phi, phi = (1+sqrt(5))/2
+/// field of a+b*phi, phi = (1+sqrt(5))/2 : 1/phi = phi - 1, phi^2 = 1 + phi
 class PhiField {
 public:
     /// Default 0 constructor
@@ -63,7 +63,7 @@ public:
     void invert() {
         auto x = 2*a + b;
         if(!x) { b = 4/(5*b); a = -b/2; }
-        else { x = x*x-5*b; *this = {4*(a+b)/x, -4*b/x}; }
+        else { x = x*x-5*b*b; *this = {4*(a+b)/x, -4*b/x}; }
     }
     /// inverse 1/this
     PhiField inverse() const { auto i = *this; i.invert(); return i; }

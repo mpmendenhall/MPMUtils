@@ -72,7 +72,9 @@ bool Rational::operator==(int_t i) const {
         auto e = kv.second;
         if(e < 0) return false;
         while(e-- > 0) {
+#ifndef NDEBUG
             if(!(j < int_t_max/kv.first)) throw std::range_error("Integer comparison overflow");
+#endif
             j *= kv.first;
         }
     }
@@ -86,12 +88,16 @@ pair<Rational::int_t, Rational::int_t> Rational::components() const {
     for(auto& kv: *this) {
         auto e = kv.second;
         while(e > 0) {
+#ifndef NDEBUG
             if(!(n.first < int_t_max/kv.first)) throw std::range_error("Numerator overflow");
+#endif
             n.first *= kv.first;
             --e;
         }
         while(e < 0) {
+#ifndef NDEBUG
             if(!(n.second < int_t_max/kv.first)) throw std::range_error("Denominator overflow");
+#endif
             n.second *= kv.first;
             ++e;
         }
@@ -112,7 +118,9 @@ Rational& Rational::operator+=(const Rational& r) {
     auto c2 = this->components();
     assert(c1.second == 1 && c2.second == 1);
 
-    if(std::abs(c1.first) > int_t_max - std::abs(c2.first)) throw std::range_error("Potential sum overflow!");
+#ifndef NDEBUG
+    if((c1.first > 0) == (c2.first >0) && std::abs(c1.first) > int_t_max - std::abs(c2.first)) throw std::range_error("Sum overflow!");
+#endif
     c1.first += c2.first;
 
     (super&)(*this) = cf;
@@ -135,14 +143,8 @@ const Rational Rational::pow(int i) const {
 
 bool Rational::operator<(const Rational& R) const {
     if(R.isZero()) return !positive;
-
     auto u = ((*this)/R).components();
     return R.positive? u.first < u.second : u.first > u.second;
-
-    //auto a = components();
-    //auto b = R.components();
-    //if(!(std::abs(a.first) < int_t_max/b.second && std::abs(b.first) < int_t_max/a.second)) throw std::range_error("Rational comparison overflow");
-    //return a.first * b.second < a.second * b.first;
 }
 
 std::ostream& operator<<(std::ostream& o, const Rational& r) {
