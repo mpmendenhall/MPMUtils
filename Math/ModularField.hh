@@ -11,7 +11,7 @@ using std::pair;
 #include <cstdint>
 
 /// Euclid's algorithm for relatively prime numbers, returning c,d: c*p = d*q + 1
-constexpr inline pair<int,int> EuclidRelPrime(int p, int q) {
+inline pair<int,int> EuclidRelPrime(int p, int q) {
     if(abs(p)==1) return {p,0};
     if(abs(q)==1) return {0,-q};
     auto qr = std::div(p,q);

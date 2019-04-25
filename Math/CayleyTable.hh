@@ -47,9 +47,9 @@ public:
     /// identity element index
     enum_t identity_idx() const { return iID; }
     /// element iteration start
-    auto begin() const { return VRangeIt<elem_t>(order); }
+    VRangeIt<elem_t> begin() const { return VRangeIt<elem_t>(order); }
     /// element iteration end
-    auto end() const { return VRangeIt<elem_t>(order,order); }
+    VRangeIt<elem_t> end() const { return VRangeIt<elem_t>(order,order); }
 
     /// apply renumeration of elements
     void renumerate(const renumeration_t<elem_t>& m) {

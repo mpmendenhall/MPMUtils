@@ -7,21 +7,28 @@
 #include "Eratosthenes.hh"
 #include <stdexcept>
 
+typedef int64_t _Rational_int_t;
+
 /// Rational numbers as sorted list of prime factors; implements operations for field
 //  empty set = 1; special case 0 represented by + 0^1
-class Rational: protected SGVec_t<> {
+class Rational: protected SGVec_t<_Rational_int_t, int> {
 public:
+    /// integer values
+    typedef _Rational_int_t int_t;
+    /// parent type
+    typedef SGVec_t<int_t,int> super;
+
     /// for iterating through contents
-    using SGVec_t<>::begin;
+    using super::begin;
     /// for iterating through contents
-    using SGVec_t<>::end;
+    using super::end;
     /// for map-style construction
     typedef map<gen_t, num_t> fmap_t;
 
     /// Default constructor to 0
     Rational() { emplace_back(0,1); }
     /// Constructor from numerator, denominator
-    Rational(int n, int d = 1);
+    Rational(int_t n, int_t d = 1);
     /// From factor : power list
     Rational(const fmap_t& m, bool pos = true);
     /// to double
@@ -34,14 +41,14 @@ public:
     bool negdef() const { return !positive && !isZero(); }
 
     /// (signed) numerator, (unsigned) denominator pair
-    pair<int,int> components() const;
+    pair<int_t,int_t> components() const;
 
     /// comparison
     bool operator<(const Rational& R) const;
     /// equality
-    bool operator==(const Rational& R) const { return (SGVec_t<>&)(*this) == R && positive == R.positive; }
+    bool operator==(const Rational& R) const { return (super&)(*this) == R && positive == R.positive; }
     /// optimized check for equality with integer
-    bool operator==(int i) const;
+    bool operator==(int_t i) const;
     /// inequality
     template<typename T>
     bool operator!=(const T& x) const { return !(*this == x); }
@@ -90,15 +97,15 @@ protected:
 };
 
 /// convenience "opposite order" addition
-inline const Rational operator+(int i, const Rational& R) { return R+i; }
+inline const Rational operator+(Rational::int_t i, const Rational& R) { return R+i; }
 /// convenience "opposite order" subtraction
-inline const Rational operator-(int i, const Rational& R) { return -R+i; }
+inline const Rational operator-(Rational::int_t i, const Rational& R) { return -R+i; }
 /// convenience "opposite order" multiplication
-inline const Rational operator*(int i, const Rational& R) { return R*i; }
+inline const Rational operator*(Rational::int_t i, const Rational& R) { return R*i; }
 /// convenience "opposite order" division
-inline const Rational operator/(int i, Rational R) { return R.invert()*i; }
+inline const Rational operator/(Rational::int_t i, Rational R) { return R.invert()*i; }
 /// convenience "opposite order" comparison
-inline const Rational operator<(int i, Rational R) { return !(R==i || R < i); }
+inline const Rational operator<(Rational::int_t i, Rational R) { return !(R==i || R < i); }
 /// absolute value of rational number
 inline const Rational rabs(Rational r) { r.positive = true; return r; }
 

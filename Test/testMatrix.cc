@@ -96,7 +96,11 @@ void mtest(bool do_crude = false) {
             Mat_t MM = I;
             for(auto& c: MM) c += (rand()%15)-7;
             LU_t Lx(MM);
-            Lx.inverse(MM);
+            if(!Lx.isSingular()) {
+                auto MM0 = MM;
+                Lx.inverse(MM);
+                assert(MM0*MM == I);
+            }
         }
     }
 
@@ -112,7 +116,8 @@ void mtest(bool do_crude = false) {
         }
     }
 
-    std::cout << det(M) << "\n\n";
+    auto d = det(M);
+    std::cout << "Det = " << d << "\n\n";
 
     if(!do_crude) return;
 
@@ -133,9 +138,9 @@ void mtest(bool do_crude = false) {
 int main(int, char**) {
     CodeVersion::display_code_version();
 
-    mtest<float,  11>(true);
-    mtest<double, 11>(true);
-    mtest<Rational, 7>();
+    //mtest<float,  11>(true);
+    //mtest<double, 11>(true);
+    mtest<Rational, 6>();
 
     return EXIT_SUCCESS;
 }

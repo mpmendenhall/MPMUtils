@@ -16,13 +16,13 @@
 void summary(const PrimeSieve& S) {
     auto& ps = S.getPrimes();
     auto& xf = S.getXf();
-    printf("%zu primes (out of %i) and %zu extra factorizations:", ps.size(), S.maxchecked(), xf.size());
+    printf("%zu primes (out of %lli) and %zu extra factorizations:", ps.size(), S.maxchecked(), xf.size());
     //for(auto p: ps) printf("\t%i", p);
     printf("\n");
 
     if(xf.size() > 10) return;
     printf("Xs:");
-    for(auto& kv: xf) printf("\t%i", kv.first);
+    for(auto& kv: xf) printf("\t%lli", kv.first);
     printf("\n");
 }
 
@@ -46,8 +46,8 @@ int main(int, char**) {
         auto v = PS.factor(i);
         assert(i == PS.prod(v));
         if(rand() > 1e-5*RAND_MAX) continue;
-        printf("%i =", PS.prod(v));
-        for(auto f: v) printf("\t%i", f);
+        printf("%lli =", PS.prod(v));
+        for(auto f: v) printf("\t%lli", f);
         printf("\n");
         summary(PS);
     }

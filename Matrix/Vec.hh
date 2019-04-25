@@ -41,6 +41,8 @@ public:
 
     /// inherit array constructors
     using super::super;
+    /// Default constructor (explicitly needed by older compilers)
+    Vec(): super() { }
     /// Constructor from array
     Vec(const super& a): super(a) { }
     /// Construct a basis vector with 1 in the n^th spot

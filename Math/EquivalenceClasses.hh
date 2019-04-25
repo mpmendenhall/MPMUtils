@@ -45,10 +45,8 @@ public:
 
     /// number of equivalence classes
     using super::size;
-    /// start scan through classes
-    auto begin() const { return super::begin(); }
-    /// end scan through classes
-    auto end() const { return super::end(); }
+    using super::begin;
+    using super::end;
     /// return equivalence class identifier for element
     eqidx_t classidx(const elem_t& e) const { return egm.at(e); }
     /// check if element already categorized

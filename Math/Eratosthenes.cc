@@ -2,16 +2,11 @@
 
 #include "Eratosthenes.hh"
 #include <algorithm>
+#include <cassert>
 
 PrimeSieve& theSieve() {
     static PrimeSieve PS;
     return PS;
-}
-
-PrimeSieve::PrimeSieve(size_t i0):
-factors({{0}, {}}), factor_max(1) {
-    while(factors.size()<i0)
-        checkNext();
 }
 
 PrimeSieve::factors_t PrimeSieve::factor(int_t i) {
@@ -30,6 +25,19 @@ PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
     auto it = xf.find(i);
     if(it != xf.end()) return it->second;
 
+    req_max = std::max(i, req_max);
+
+    for(auto p: primes) {
+        if(!(i%p)) {
+            auto v = _factor(i/p);
+            v.push_back(p);
+            std::sort(v.begin(), v.end());
+            addXF(i,v);
+            assert(i == prod(v));
+            return v;
+        }
+    }
+
     // expand table as needed up to sqrt(i)
     while(i > factor_max) {
         auto d = checkNext();
@@ -38,28 +46,13 @@ PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
             v.push_back(d);
             std::sort(v.begin(), v.end());
             addXF(i,v);
+            assert(i == prod(v));
             return v;
         }
     }
 
-    // search next prime factor
-    size_t f = 0;
-    for(auto p: primes) {
-        if(!(i%p)) break;
-        f++;
-    }
-
-    if(f == primes.size()) { // i is prime!
-        factors_t v;
-        v.push_back(i);
-        addXF(i,v);
-        return v;
-    }
-
-    auto d = primes[f]; // the divisor of i
-    auto v = _factor(i/d);
-    v.push_back(d);
-    std::sort(v.begin(), v.end());
+    // i must be prime if no prime factors <= sqrt(i)
+    factors_t v = {i};
     addXF(i,v);
     return v;
 }
@@ -67,6 +60,7 @@ PrimeSieve::factors_t PrimeSieve::_factor(int_t i) {
 PrimeSieve::int_t PrimeSieve::checkNext() {
     const int_t i = factors.size();
     factor_max += 2*factors.size()-1;
+    assert(factor_max == i*i);
 
     // previously-identified factorization?
     auto it = xf.find(i);
@@ -78,28 +72,30 @@ PrimeSieve::int_t PrimeSieve::checkNext() {
         return isPrime? i : 0;
     }
 
-    int_t f = 0;
     for(auto p: primes) {
-        if(!(i%p)) break;
-        f++;
-    }
-    bool isPrime = f == primes.size();
-
-    if(isPrime) {
-        primes.push_back(i);
-        factors.push_back({i});
-    } else {
-        auto d = primes[f]; // divisor of i
-        factors.push_back(factors[i/d]);
-        factors.back().push_back(d);
-        std::sort(factors.back().begin(), factors.back().end());
+        if(!(i%p)) {
+            factors.push_back(factors[i/p]);
+            factors.back().push_back(p);
+            std::sort(factors.back().begin(), factors.back().end());
+            return 0;
+        }
     }
 
-    return isPrime? i : 0;
+    primes.push_back(i);
+    factors.push_back({i});
+    return i;
 }
 
 PrimeSieve::int_t PrimeSieve::prod(const factors_t& f) {
     int_t i = 1;
-    for(auto& p: f) i *= p;
+    for(auto& p: f) {
+        assert(i < std::numeric_limits<int_t>::max()/p);
+        i *= p;
+    }
     return i;
+}
+
+void PrimeSieve::display() const {
+    printf("PrimeSieve with %zu + %zu factorizations using %zu primes\n",
+            factors.size(), xf.size(), primes.size());
 }

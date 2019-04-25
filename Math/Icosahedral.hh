@@ -72,9 +72,9 @@ namespace Icosahedral {
         /// operator conjugacy multiplicity
         static constexpr size_t multiplicity() { return C; }
 
-        axis_t    c;        ///< central axis (fixed point of R[...])
-        indexel_t g;        ///< (arbitrary) element moving fundamental domain to this face
-        indexel_t R[O];     ///< ID and successive face rotations: stabilizer subgroup w.r.t. c
+        axis_t    c{};        ///< central axis (fixed point of R[...])
+        indexel_t g{};        ///< (arbitrary) element moving fundamental domain to this face
+        indexel_t R[O];       ///< ID and successive face rotations: stabilizer subgroup w.r.t. c
         //axis_t    vs[O];    ///< vertices, clockwise loop
     };
 

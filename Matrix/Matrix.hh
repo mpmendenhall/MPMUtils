@@ -44,7 +44,7 @@ public:
     /// number of columns
     static constexpr size_t nCols = N;
     /// min(M,N)
-    static constexpr size_t nDiag = std::min(M,N);
+    static constexpr size_t nDiag = M<N? M : N; //std::min(M,N);
 
     /// inherit constructors from Vec
     using super::super;
