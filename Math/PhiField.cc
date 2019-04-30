@@ -11,7 +11,7 @@ std::ostream& operator<<(std::ostream& o, const PhiField& r) {
     if(r.b) {
         auto nd = r.b.components();
         if(abs(nd.first) == 1) o << (r.b.positive? "+" : "-");
-        else o << nd.first;
+        else o << (r.b.positive? "+":"") << nd.first;
         o << "φ";
         if(nd.second > 1) o << "/" << nd.second;
     }

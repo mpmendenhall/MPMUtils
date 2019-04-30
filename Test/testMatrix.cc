@@ -3,8 +3,24 @@
 #include "CodeVersion.hh"
 #include "Rational.hh"
 #include "Matrix.hh"
+#include "PhiField.hh"
 #include "Stopwatch.hh"
 
+template<typename T>
+T randval() { return (rand()%15)-7; }
+
+template<>
+inline PhiField unit<PhiField>() { return PhiField::one(); }
+
+template<>
+PhiField randval<PhiField>() { return PhiField(randval<int>(), randval<int>()); }
+
+template<typename T, size_t N>
+Matrix<N,N,T> randmat() {
+    auto MM =  Matrix<N,N,T>::identity();
+    for(auto& c: MM) c += randval<T>();
+    return MM;
+}
 
 namespace matrix_element_inversion {
 
@@ -72,29 +88,23 @@ void mtest(bool do_crude = false) {
     std::cout << "--------------------------------------------\n";
 
     Mat_t I = Mat_t::identity();
-    Mat_t M = I;
-    for(auto& c: M) c += (rand()%11)-5;
 
-    LU_t L;
-    {
-        Stopwatch w;
-        for(int i=0; i<5000; i++) {
-            Mat_t MM = I;
-            for(auto& c: MM) c += (rand()%15)-7;
-            L = LU_t(MM);
-        }
-    }
-    L = LU_t(M);
+    Mat_t M = randmat<T,N>();
+    LU_t L(M);
     Mat_t Mi;
     L.inverse(Mi);
-    std::cout << M << "\n" << L.L() << "\n" << L.U() << "\n";
+    std::cout << M << "\n" << L.L() << "\n" << L.U() << "\n" << M*Mi << "\n";
+    {
+        Stopwatch w;
+        for(int i=0; i<5000; i++) L = LU_t(randmat<T,N>());
+    }
+
 
     {
 
         Stopwatch w;
         for(int i=0; i<5000; i++) {
-            Mat_t MM = I;
-            for(auto& c: MM) c += (rand()%15)-7;
+            Mat_t MM = randmat<T,N>();
             LU_t Lx(MM);
             if(!Lx.isSingular()) {
                 auto MM0 = MM;
@@ -109,10 +119,8 @@ void mtest(bool do_crude = false) {
     {
         Stopwatch w;
         for(int i=0; i<5000; i++) {
-            Mat_t MM = I;
-            for(auto& c: MM) c += (rand()%15)-7;
-            LU_t Lx(MM);
-            Lx.det();
+            auto LL = LU_t(randmat<T,N>());
+            LL.det();
         }
     }
 
@@ -140,7 +148,8 @@ int main(int, char**) {
 
     //mtest<float,  11>(true);
     //mtest<double, 11>(true);
-    mtest<Rational, 6>();
+    //mtest<Rational, 3>();
+    mtest<PhiField, 3>();
 
     return EXIT_SUCCESS;
 }

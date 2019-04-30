@@ -22,6 +22,7 @@
 #ifndef PRIMESIEVE_HH
 #define PRIMESIEVE_HH
 
+#include "DivisorCheck.hh"
 #include <vector>
 using std::vector;
 #include <map>
@@ -34,41 +35,46 @@ public:
     /// Constructor
     PrimeSieve(): factors({{0}, {}}) { }
 
+    /// signed integer divisor math
+    typedef long long int int_t;
     /// Unfactored integer type handled
-    typedef unsigned long long int int_t;
+    typedef std::make_unsigned_t<int_t> uint_t;
 
     /// factorization (sorted); empty vector for 1, {0} for 0
-    typedef vector<int_t> factors_t;
+    typedef vector<uint_t> factors_t;
 
     /// get factorization (thread-safe)
-    factors_t factor(int_t i);
+    factors_t factor(uint_t i);
     /// get factorization (not thread-safe)
-    factors_t _factor(int_t i);
+    factors_t _factor(uint_t i);
 
     /// check factors of next item in table; return i if prime, else 0 (not thread-safe)
-    int_t checkNext();
+    uint_t checkNext();
 
     /// factors product
-    static int_t prod(const factors_t& f);
+    static uint_t prod(const factors_t& f);
     /// get primes list
-    const vector<int_t>& getPrimes() const { return primes; }
+    const vector<uint_t>& getPrimes() const { return primes; }
+    /// get prime division checks
+    const vector<DivisorCheck<int_t>> getPDivs() const { return pdivs; }
     /// get extra primes
-    const map<int_t, factors_t>& getXf() const { return xf; }
+    const map<uint_t, factors_t>& getXf() const { return xf; }
     /// get maximum checked number
-    int_t maxchecked() const { return factors.size()-1; }
+    uint_t maxchecked() const { return factors.size()-1; }
     /// print status info to stdout
     void display() const;
 
 protected:
     /// add cached factorization
-    void addXF(int_t i, const factors_t& v);
+    void addXF(uint_t i, const factors_t& v);
 
     std::mutex sieveLock;       ///< lock on updating sieve
-    vector<int_t> primes;       ///< primes list
+    vector<uint_t> primes;      ///< primes list
+    vector<DivisorCheck<int_t>> pdivs;  ///< divisor check for each prime
     vector<factors_t> factors;  ///< factorization table
-    int_t factor_max = 1;       ///< current largest factorable number
-    int_t req_max = 1;          ///< largest requested number to factor
-    map<int_t, factors_t> xf;   ///< spot factors for larger numbers outside table range
+    uint_t factor_max = 1;      ///< current largest factorable number
+    uint_t req_max = 1;         ///< largest requested number to factor
+    map<uint_t, factors_t> xf;  ///< spot factors for larger numbers outside table range
     size_t max_xf = 100000;     ///< maximum number of extra factors to cache
 };
 
