@@ -6,6 +6,7 @@
 #include <array>
 using std::array;
 #include <cmath>
+#include <limits> // for std::numeric_limits
 #include <stdio.h>
 
 /// Precalculated fast divisor calculation
