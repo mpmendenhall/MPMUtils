@@ -25,8 +25,6 @@ PrimeSieve::factors_t PrimeSieve::_factor(uint_t i) {
     auto it = xf.find(i);
     if(it != xf.end()) return it->second;
 
-    req_max = std::max(i, req_max);
-
     size_t pn = 0;
     for(auto p: primes) {
         if(pdivs[pn++].divides(i)) {

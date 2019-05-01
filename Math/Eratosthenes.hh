@@ -73,7 +73,6 @@ protected:
     vector<DivisorCheck<int_t>> pdivs;  ///< divisor check for each prime
     vector<factors_t> factors;  ///< factorization table
     uint_t factor_max = 1;      ///< current largest factorable number
-    uint_t req_max = 1;         ///< largest requested number to factor
     map<uint_t, factors_t> xf;  ///< spot factors for larger numbers outside table range
     size_t max_xf = 100000;     ///< maximum number of extra factors to cache
 };
