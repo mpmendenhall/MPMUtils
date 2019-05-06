@@ -41,6 +41,8 @@ public:
     void update(uint64_t i);
     /// increment status by n items
     void increment(int64_t n = 1) { update(c+n); }
+    /// prefix operator++
+    void operator++() { increment(); }
 
 protected:
 

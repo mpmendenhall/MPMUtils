@@ -71,6 +71,8 @@ string SVGGradientAxis::gradient_remap(const PlaneEquation<2,float>& P) const {
     double gy = dAxisUnits(P.P[2])*P.P[2];
     double th = atan2(gy,gx)*180./M_PI;     // rotation angle [degrees]
     double mg2 = gx*gx + gy*gy;             // magnitude of gradient
+    if(!mg2) return "";
+
     string txstr = "translate("+to_str(P.x0[0])+","+to_str(P.x0[1])+") ";
     txstr += "rotate("+to_str(th)+") ";
     txstr += "scale("+to_str(1./sqrt(mg2))+") ";
