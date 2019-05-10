@@ -1,14 +1,12 @@
 /// \file HDF5_Table_Cache.hh Template utility class for memory-cache buffered HDF5 tables IO
-// This file was produced under the employ of the United States Government,
-// and is consequently in the PUBLIC DOMAIN, free from all provisions of
-// US Copyright Law (per USC Title 17, Section 105).
-//
-// -- Michael P. Mendenhall, 2015
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef HDF5_TABLE_CACHE_HH
 #define HDF5_TABLE_CACHE_HH
 
 #include "HDF5_StructInfo.hh"
+#include "DataSource.hh"
+#include "DataSink.hh"
 
 #include <vector>
 using std::vector;
@@ -20,13 +18,16 @@ using std::multimap;
 
 /// Cacheing HDF5 table reader
 template<typename T>
-class HDF5_Table_Cache {
+class HDF5_Table_Cache: virtual public DataSource<T> {
 public:
     /// Constructor, from name of table and struct offsets/sizes
     HDF5_Table_Cache(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(0), hsize_t nc = 1024): Tspec(ts), nchunk(nc)  { }
 
     /// get next table row; return whether successful or failed (end-of-file)
-    bool next(T& val);
+    bool next(T& val) override;
+    /// Re-start at beginning of stream
+    void reset() override { setFile(_infile_id); }
+
     /// (re)set read file
     void setFile(hid_t f);
     /// get number of rows read
@@ -48,7 +49,7 @@ public:
     HDF5_Table_Spec Tspec;      ///< configuration for table to read
 
 protected:
-    hid_t infile_id = 0;        ///< file to read from
+    hid_t _infile_id = 0;       ///< file to read from
     T next_read;                ///< next item read in for event list reads
 
     vector<T> cached;           ///< cached read data
@@ -61,7 +62,7 @@ protected:
 
 /// Cacheing HDF5 table writer
 template<typename T>
-class HDF5_Table_Writer {
+class HDF5_Table_Writer: virtual public DataSink<T> {
 public:
     /// Constructor, from name of table and struct offsets/sizes
     HDF5_Table_Writer(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(0), hsize_t nc = 1024, int cmp = 9): Tspec(ts), nchunk(nc), compress(cmp) { }
@@ -69,22 +70,22 @@ public:
     ~HDF5_Table_Writer() { flush(); }
 
     /// write table row
-    void write(const T& val);
+    void push(const T& val) override;
     /// write table rows
-    void write(const vector<T>& vals);
+    void push(const vector<T>& vals);
     /// get number of rows written
     hsize_t getNWrite() const { return nwrite; }
     /// (re)set output file
     void setFile(hid_t f);
     /// create table in output file
-    void initTable() { makeTable(Tspec, outfile_id, nchunk, compress); }
+    void initTable() { makeTable(Tspec, _outfile_id, nchunk, compress); }
     /// flush to disk
-    void flush();
+    void flush() override;
 
     HDF5_Table_Spec Tspec;      ///< configuration for table to read
 
 protected:
-    hid_t outfile_id = 0;       ///< file to read from
+    hid_t _outfile_id = 0;      ///< file to write to
     hsize_t nwrite = 0;         ///< number of rows written
 
     vector<T> cached;           ///< cached output data
@@ -113,14 +114,14 @@ public:
 ///////////////////////////////////////////////
 
 template<typename T>
-void HDF5_Table_Writer<T>::write(const vector<T>& vals) {
+void HDF5_Table_Writer<T>::push(const vector<T>& vals) {
     cached.insert(cached.end(), vals.begin(), vals.end());
     if(cached.size() >= nchunk) flush();
     nwrite += vals.size();
 }
 
 template<typename T>
-void HDF5_Table_Writer<T>::write(const T& val) {
+void HDF5_Table_Writer<T>::push(const T& val) {
     cached.push_back(val);
     if(cached.size() >= nchunk) flush();
     nwrite++;
@@ -129,13 +130,13 @@ void HDF5_Table_Writer<T>::write(const T& val) {
 template<typename T>
 void HDF5_Table_Writer<T>::setFile(hid_t f) {
     flush();
-    outfile_id = f;
+    _outfile_id = f;
 }
 
 template<typename T>
 void HDF5_Table_Writer<T>::flush() {
-    if(outfile_id && cached.size()) {
-        herr_t err = H5TBappend_records(outfile_id,  Tspec.table_name.c_str(), cached.size(),
+    if(_outfile_id && cached.size()) {
+        herr_t err = H5TBappend_records(_outfile_id,  Tspec.table_name.c_str(), cached.size(),
                                         sizeof(T),  Tspec.offsets, Tspec.field_sizes, cached.data());
         if(err < 0) throw std::exception();
     }
@@ -147,16 +148,16 @@ void HDF5_Table_Writer<T>::flush() {
 
 template<typename T>
 void HDF5_Table_Cache<T>::setFile(hid_t f) {
-    infile_id = f;
+    _infile_id = f;
     cached.clear();
     cache_idx = nread = maxread = 0;
     if(f) {
-        if(H5Lexists(infile_id,  Tspec.table_name.c_str(), H5P_DEFAULT)) {
-            herr_t err = H5TBget_table_info(infile_id,  Tspec.table_name.c_str(), &nfields, &maxread);
+        if(H5Lexists(_infile_id,  Tspec.table_name.c_str(), H5P_DEFAULT)) {
+            herr_t err = H5TBget_table_info(_infile_id,  Tspec.table_name.c_str(), &nfields, &maxread);
             if(err < 0) throw std::exception();
         } else {
             printf("Warning: table '%s' not present in file.\n", Tspec.table_name.c_str());
-            infile_id = 0;
+            _infile_id = 0;
         }
     }
     setIdentifier(next_read, -1);
@@ -164,7 +165,7 @@ void HDF5_Table_Cache<T>::setFile(hid_t f) {
 
 template<typename T>
 bool HDF5_Table_Cache<T>::next(T& val) {
-    if(!infile_id) return false;
+    if(!_infile_id) return false;
 
     if(cache_idx >= cached.size()) { // cache exhausted, needs new data
         if(nread == maxread) {  // file fully exhausted.
@@ -179,7 +180,7 @@ bool HDF5_Table_Cache<T>::next(T& val) {
 
         cached.resize(nToRead);
         cache_idx = 0;
-        herr_t err = H5TBread_records(infile_id, Tspec.table_name.c_str(), nread, nToRead,
+        herr_t err = H5TBread_records(_infile_id, Tspec.table_name.c_str(), nread, nToRead,
                                       sizeof(T),  Tspec.offsets, Tspec.field_sizes, cached.data());
         if(err < 0) throw std::runtime_error("Unexpected failure reading HDF5 file");
         nread += nToRead;
@@ -239,7 +240,7 @@ bool HDF5_Table_Transfer<T>::transferID(int64_t id, int64_t newID) {
     while((current_id = tableIn.getIdentifier(row)) <= id) {
         if(current_id == id) {
             if(newID >= 0) tableIn.setIdentifier(row, newID);
-            tableOut.write(row);
+            tableOut.push(row);
         }
         if(!tableIn.next(row)) return false;
     }
