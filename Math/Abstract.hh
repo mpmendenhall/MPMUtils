@@ -349,7 +349,7 @@ public:
                 if(kv.second) this->insert(kv);
             } else {
                 it->second += kv.second;
-                if(it->second) this->erase(it);
+                if(!it->second) this->erase(it);
             }
         }
         return *this;

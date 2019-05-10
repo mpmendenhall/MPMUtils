@@ -9,6 +9,8 @@
 #include "Abstract.hh"
 #include "Quaternion.hh"
 #include "Stopwatch.hh"
+#include "ProgressBar.hh"
+
 #include <stdio.h>
 #include <iostream>
 #include <cassert>
@@ -34,9 +36,13 @@ int main(int, char**) {
     summary(PS);
     {
         Stopwatch w;
-        for(PrimeSieve::int_t i=0; i<=1000000; i++) {
+        ProgressBar PB(1000000);
+        PrimeSieve::int_t i=0;
+        while(!++PB) {
             auto v = PS.factor(i);
-            assert(i == PS.prod(v));
+            if(i != PrimeSieve::int_t(PS.prod(v))) throw std::runtime_error("Factoring fail!");
+            ++i;
+
             if(rand() > 1e-5*RAND_MAX) continue;
             printf("%lli =", PS.prod(v));
             for(auto f: v) printf("\t%lli", f);
@@ -48,20 +54,28 @@ int main(int, char**) {
 
     auto& primes = PS.getPrimes();
     auto& pdivs  = PS.getPDivs();
+    size_t nd0 = 0, nd1 = 0;
     {
         Stopwatch w;
-        size_t nd = 0;
-        for(PrimeSieve::int_t i=0; i<=1000000; i++)
-            for(auto p: primes) nd += !(i%p);
-        printf("%zu divided (%% check)\n", nd);
+        ProgressBar PB(1000000);
+        PrimeSieve::int_t i=0;
+        while(!++PB) {
+            for(auto p: primes) nd0 += !(i%p);
+            ++i;
+        }
+        printf("%zu divided (%% check)\n", nd0);
     }
     {
         Stopwatch w;
-        size_t nd = 0;
-        for(PrimeSieve::int_t i=0; i<=1000000; i++)
-            for(auto& np: pdivs) nd += np.divides(i);
-        printf("%zu divided (fast check)\n", nd);
+        ProgressBar PB(1000000);
+        PrimeSieve::int_t i=0;
+        while(!++PB) {
+            for(auto& np: pdivs) nd1 += np.divides(i);
+            ++i;
+        }
+        printf("%zu divided (fast check)\n", nd1);
     }
+    if(nd0 != nd1) throw std::runtime_error("Fast divisor check fail!");
 
     Rational a;
     for(int i=1; i<=20; i++) {

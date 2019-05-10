@@ -65,7 +65,8 @@ void MPIBinaryIO::init(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &mpisize);
     int length = 0;
     MPI_Get_processor_name(hostname, &length);
-    coresPerNode = atol(getenv("SLURM_CPUS_ON_NODE"));
+    auto scpn = getenv("SLURM_CPUS_ON_NODE");
+    coresPerNode = scpn? atol(scpn) : 1;
 
     if(mpisize <= coresPerNode) { // local single-level distribution
 

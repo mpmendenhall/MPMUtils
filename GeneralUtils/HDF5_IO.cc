@@ -5,6 +5,7 @@
 #include "PathUtils.hh"
 #include <cassert>
 #include <climits>
+#include <stdexcept>
 
 void HDF5_InputFile::openInput(const string& filename) {
     if(infile_id) {
@@ -59,7 +60,7 @@ string HDF5_InputFile::getAttribute(const string& table, const string& attrname,
 
     vector<char> sdata(type_size);
     err = H5LTget_attribute_string(infile_id, table.c_str(), attrname.c_str(),  &sdata[0]);
-    assert(err >= 0);
+    if(err < 0) throw std::runtime_error("H5LTget_attribute_string error");
     s = string(&sdata[0]);
 
     return s;
@@ -78,18 +79,18 @@ hsize_t HDF5_InputFile::getTableEntries(const string& table, hsize_t* nfields) {
     if(!infile_id) return 0;
     hsize_t nf, nrecords;
     herr_t err = H5TBget_table_info(infile_id, table.c_str(), nfields? nfields : &nf, &nrecords);
-    assert(err >= 0);
+    if(err < 0) throw std::runtime_error("H5TBget_table_info error");
     return nrecords;
 }
 
 void HDF5_OutputFile::writeAttribute(const string& table, const string& attrname, double value) {
     assert(outfile_id);
     herr_t err = H5LTset_attribute_double(outfile_id, table.c_str(), attrname.c_str(), &value, 1);
-    assert(err >= 0);
+    if(err < 0) throw std::runtime_error("H5LTset_attribute_double error");
 }
 
 void HDF5_OutputFile::writeAttribute(const string& table, const string& attrname, const string& value) {
     assert(outfile_id);
     herr_t err = H5LTset_attribute_string(outfile_id, table.c_str(), attrname.c_str(), value.c_str());
-    assert(err >= 0);
+    if(err < 0) throw std::runtime_error("H5LTset_attribute_string error");
 }

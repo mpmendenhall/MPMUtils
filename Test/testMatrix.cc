@@ -5,15 +5,16 @@
 #include "Matrix.hh"
 #include "PhiField.hh"
 #include "Stopwatch.hh"
+#include "ProgressBar.hh"
 
-template<typename T>
-T randval() { return (rand()%15)-7; }
+template<typename T, size_t i = 7>
+T randval() { return (rand()%(2*i+1))-i; }
 
 template<>
 inline PhiField unit<PhiField>() { return PhiField::one(); }
 
 template<>
-PhiField randval<PhiField>() { return PhiField(randval<int>(), randval<int>()); }
+PhiField randval<PhiField>() { return PhiField(randval<int,3>(), randval<int,3>()); }
 
 template<typename T, size_t N>
 Matrix<N,N,T> randmat() {
@@ -81,7 +82,7 @@ void crude_invert(Matrix<M,M,T>& X, size_t n = 0) {
 
 
 template<typename T, size_t N>
-void mtest(bool do_crude = false) {
+void mtest(bool xact = false, bool do_crude = false, size_t nTrial = 5000) {
     typedef Matrix<N,N,T> Mat_t;
     typedef LUPDecomp<N,T> LU_t;
 
@@ -95,21 +96,24 @@ void mtest(bool do_crude = false) {
     L.inverse(Mi);
     std::cout << M << "\n" << L.L() << "\n" << L.U() << "\n" << M*Mi << "\n";
     {
+        printf("\n\nLUP decomposition test\n");
         Stopwatch w;
-        for(int i=0; i<5000; i++) L = LU_t(randmat<T,N>());
+        ProgressBar PB(5*nTrial);
+        while(!++PB) L = LU_t(randmat<T,N>());
     }
 
 
     {
-
+        printf("\n\nInversion test\n");
         Stopwatch w;
-        for(int i=0; i<5000; i++) {
+        ProgressBar PB(nTrial);
+        while(!++PB) {
             Mat_t MM = randmat<T,N>();
             LU_t Lx(MM);
             if(!Lx.isSingular()) {
                 auto MM0 = MM;
                 Lx.inverse(MM);
-                assert(MM0*MM == I);
+                if(xact && !(MM0*MM == I)) throw std::runtime_error("Inversion fail!");
             }
         }
     }
@@ -117,8 +121,10 @@ void mtest(bool do_crude = false) {
     std::cout << M*Mi << "\n";
 
     {
+        printf("\n\nDeterminant test\n");
         Stopwatch w;
-        for(int i=0; i<5000; i++) {
+        ProgressBar PB(5*nTrial);
+        while(!++PB) {
             auto LL = LU_t(randmat<T,N>());
             LL.det();
         }
@@ -130,10 +136,11 @@ void mtest(bool do_crude = false) {
     if(!do_crude) return;
 
     {
+        printf("\n\nNon-LUP inversion test\n");
         Stopwatch w;
-        for(int i=0; i<5000; i++) {
-            Mat_t MM = I;
-            for(auto& c: MM) c += (rand()%15)-7;
+        ProgressBar PB(nTrial);
+        while(!++PB) {
+            Mat_t MM = randmat<T,N>();
             crude_invert(MM);
         }
     }
@@ -146,10 +153,10 @@ void mtest(bool do_crude = false) {
 int main(int, char**) {
     CodeVersion::display_code_version();
 
-    //mtest<float,  11>(true);
-    //mtest<double, 11>(true);
-    //mtest<Rational, 3>();
-    mtest<PhiField, 3>();
+    mtest<float,  11>(false, false, 100000);
+    mtest<double, 11>(false, false, 100000);
+    mtest<Rational, 6>(true);
+    mtest<PhiField, 3>(true);
 
     return EXIT_SUCCESS;
 }

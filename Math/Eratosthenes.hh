@@ -74,7 +74,7 @@ protected:
     vector<factors_t> factors;  ///< factorization table
     uint_t factor_max = 1;      ///< current largest factorable number
     map<uint_t, factors_t> xf;  ///< spot factors for larger numbers outside table range
-    size_t max_xf = 100000;     ///< maximum number of extra factors to cache
+    size_t max_xf = 1000000;    ///< maximum number of extra factors to cache
 };
 
 /// global singleton access

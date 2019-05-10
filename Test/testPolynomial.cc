@@ -7,6 +7,7 @@
 #include "NGrid.hh"
 #include "BBox.hh"
 #include "TestOperators.hh"
+#include "LegendrePolynomials.hh"
 #include <stdlib.h>
 #include <chrono>
 #include "Abstract.hh"
@@ -146,6 +147,9 @@ int main(int, char**) {
     double dmax =  0;
     for(size_t i=0; i<vp.size(); i++) dmax = std::max(dmax, fabs((vp[i]-vp2[i])/vp[i]));
     printf("dmax %g\n", dmax);
+
+    LegendrePolynomials LP;
+    for(int i=0; i<10; i++) cout << "P_" << i << "(x) = " << LP.Legendre_P(i) << "\n";
 
 #if false
     // calculus test

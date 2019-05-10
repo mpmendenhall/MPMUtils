@@ -1,7 +1,7 @@
 /// \file ProgressBar.cc
 /*
  * ProgressBar.cc, part of the MPMUtils package
- * Copyright (c) 2007-2016 Michael P. Mendenhall
+ * Copyright (c) 2007-2019 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,25 +20,33 @@
  */
 
 #include "ProgressBar.hh"
+#include <limits> // for std::numeric_limits
+#include <stdexcept> // for std::domain_error
 
-ProgressBar::ProgressBar(uint64_t nt, unsigned int ns, bool v, const std::string& label):
-ntotal(nt), nsteps(ns), c(0), s(0), verbose(v) {
+ProgressBar::ProgressBar(uint64_t nt, unsigned int ns, bool v):
+ntotal(nt), nsteps(ns), nstp_ntot(nt*ns), c_nstp(0), s_ntot(0), verbose(v) {
+
+    if(std::numeric_limits<uint64_t>::max()/nsteps < ntotal)
+        throw std::domain_error("Overflow in progress bar counts!");
+
     if(!verbose) return;
-    printf("%s+",label.c_str());
+
+    printf("+");
     for(unsigned int i=0; i<nsteps; i++) printf("-");
     printf("\n|");
     fflush(stdout);
 }
 
-void ProgressBar::update(uint64_t i) {
-    if(i<=c) return;
-    c = i;
-    unsigned int smax = ntotal? (uint64_t(nsteps)*c)/ntotal : nsteps;
-    if(verbose) {
-        while(smax > s) {
-            ++s;
+void ProgressBar::_update(uint64_t cn) {
+    if(cn <= c_nstp) return;
+
+    c_nstp = cn;
+
+    if(verbose && ntotal) {
+        while(c_nstp > s_ntot) {
+            s_ntot += ntotal;
             printf("*");
             fflush(stdout);
         }
-    } else s = smax;
+    } else s_ntot = c_nstp;
 }

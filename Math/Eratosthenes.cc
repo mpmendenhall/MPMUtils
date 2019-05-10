@@ -94,7 +94,7 @@ PrimeSieve::uint_t PrimeSieve::checkNext() {
 PrimeSieve::uint_t PrimeSieve::prod(const factors_t& f) {
     uint_t i = 1;
     for(auto& p: f) {
-        assert(i < std::numeric_limits<uint_t>::max()/p);
+        assert(!p || i < std::numeric_limits<uint_t>::max()/p);
         i *= p;
     }
     return i;

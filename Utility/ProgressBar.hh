@@ -1,7 +1,7 @@
 /// \file ProgressBar.hh text-based progress bar
 /*
  * ProgressBar.hh, part of the MPMUtils package
- * Copyright (c) 2007-2014 Michael P. Mendenhall
+ * Copyright (c) 2007-2019 Michael P. Mendenhall
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,39 +19,40 @@
  *
  */
 
-/// \file ProgressBar.hh Text output progress bar
 #ifndef PROGRESSBAR_HH
-/// Make sure this header is only loaded once
 #define PROGRESSBAR_HH
 
 #include <stdio.h>
-#include <string>
+#include <cstdint> // for uint64_t
 
-/// class for printing a progress bar to stdout
+/// Print a progress bar to stdout
 class ProgressBar {
 public:
-
-    /// constructor, given total number of items and number of output steps
-    ProgressBar(uint64_t nt, unsigned int ns = 20, bool v=true, const std::string& label="");
-
-    /// destructor
-    ~ProgressBar() { if(verbose) printf("* Done.\n"); }
+    /// Constructor, given total number of items and number of output steps
+    ProgressBar(uint64_t nt, unsigned int ns = 20, bool v=true);
+    /// Destructor
+    ~ProgressBar() { if(verbose) printf("  Done.\n"); }
 
     /// update status at i items completed
-    void update(uint64_t i);
+    void update(uint64_t i) { _update(i*nsteps); }
     /// increment status by n items
-    void increment(int64_t n = 1) { update(c+n); }
-    /// prefix operator++
-    void operator++() { increment(); }
+    void increment(int64_t n = 1) { _update(c_nstp + n*nsteps); }
+    /// prefix operator++ to increment
+    ProgressBar& operator++() { increment(); return *this; }
+    /// check if completed
+    operator bool() const { return c_nstp == nstp_ntot; }
+
+    const uint64_t ntotal;  ///< total number of items to completion
+    const uint64_t nsteps;  ///< number of steps to mark
 
 protected:
+    /// update c_nstp
+    void _update(uint64_t cn);
 
-    const uint64_t ntotal;      ///< total number of items to completion
-    const unsigned int nsteps;  ///< number of steps to mark
-
-    uint64_t c;                 ///< number of items completed
-    unsigned int s;             ///< steps displayed
-    const bool verbose;         ///< whether to display the progress bar
+    const uint64_t nstp_ntot;   ///< nsteps*ntotal
+    uint64_t c_nstp;        ///< (number of items completed)*nsteps
+    uint64_t s_ntot;        ///< (number of steps displayed)*ntotal
+    const bool verbose;     ///< whether to display the progress bar
 };
 
 #endif
