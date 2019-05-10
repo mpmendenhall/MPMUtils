@@ -6,14 +6,9 @@
 
 #include "SegmentSaver.hh"
 #include "ObjectFactory.hh"
-#include <cassert>
 #include <chrono>
 using std::chrono::steady_clock;
-#include <memory>
-using std::shared_ptr;
-using std::make_shared;
-#include "StringManip.hh"
-#include "libconfig.h++"
+#include <libconfig.h++>
 using namespace libconfig;
 
 /// A SegmentSaver that manages several (optional) plugin SegmentSavers sharing the same file
@@ -107,6 +102,5 @@ public:
 
 /// Compile-time registration of dynamically-loadable plugins
 #define REGISTER_PLUGIN(NAME,BASE) static ConfigPluginBuilder<NAME,BASE> the_##BASE##_##NAME##_PluginBuilder(#NAME);
-
 
 #endif

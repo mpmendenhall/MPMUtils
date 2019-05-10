@@ -30,7 +30,7 @@
 #include <TFile.h>
 #include <map>
 #include <string>
-#include <cassert>
+#include <stdexcept>
 
 using std::map;
 using std::string;
@@ -97,7 +97,7 @@ public:
     // ----- Subclass me! ----- //
 
     /// create a new instance of this object(nm,inflname) (cloning self settings) for given directory
-    virtual SegmentSaver* makeAnalyzer(const string&, const string&) { assert(false); return nullptr; }
+    virtual SegmentSaver* makeAnalyzer(const string&, const string&) { throw std::runtime_error("Unimplemented!"); }
 
     /// optional setup at start of data loading
     virtual void startData() { }

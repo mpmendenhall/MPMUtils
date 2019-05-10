@@ -70,8 +70,9 @@ public:
     string printsfx = ".pdf";           ///< printCanvas default suffix
 
     static bool squelchAllPrinting;     ///< whether to cancel all printCanvas output
+
 protected:
-    static TFile* rootOut;                  ///< output file
+    static TFile* rootOut;              ///< output file
 };
 
 #endif

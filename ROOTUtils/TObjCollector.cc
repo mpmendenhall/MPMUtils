@@ -6,11 +6,10 @@
 // -- Michael P. Mendenhall, 2015
 
 #include "TObjCollector.hh"
-#include <cassert>
+#include <stdexcept>
 
 TDirectory* TObjCollector::writeItems(TDirectory* d) {
     if(!d) d = gDirectory;
-    assert(d);
     d->cd();
     for(auto i: namedItems) i->Write();
     for(auto const& kv: anonItems) kv.second->Write(kv.first.c_str());
@@ -37,7 +36,7 @@ TObject* TObjCollector::addDeletable(TObject* o) {
 }
 
 TObject* TObjCollector::addWithName(TObject* o, const string& name) {
-    assert(!anonItems.count(name));
+    if(anonItems.count(name)) throw std::runtime_error("Duplicate name registered!");
     anonItems[name] = o;
     return o;
 }
