@@ -1,24 +1,5 @@
 /// \file "Polynomial.hh" Algebraic polynomial manipulation
-/*
- * Polynomial.hh, part of the MPMUtils package.
- * Copyright (c) 2007-2018 Michael P. Mendenhall
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
-
+// Michael P. Mendenhall, 2019
 
 #ifndef POLYNOMIAL_HH
 #define POLYNOMIAL_HH
@@ -34,8 +15,8 @@ public:
     typedef M monomial_t;
     typedef R coeff_t;
 
-    /// default empty polynomial constructor
-    Polynomial() { }
+    /// inherit constructors
+    using AbstractPolynomial<R,M>::AbstractPolynomial;
     /// constructor from a monomial term
     Polynomial(const M& m, const coeff_t& c = 0) { (*this)[m] = c; }
 
@@ -165,5 +146,9 @@ Polynomial_t<N-1, T> reduce(const Polynomial_t<N,T>& p, int i, T c = 1) {
     for(auto& m: p) pp += reduce(m,i,c);
     return pp;
 }
+
+/// helper for monovariate polynomial
+template<typename T>
+using MonovariatePolynomial = Polynomial<SemigroupPlus<int>, T>;
 
 #endif

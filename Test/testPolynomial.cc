@@ -7,11 +7,17 @@
 #include "NGrid.hh"
 #include "BBox.hh"
 #include "TestOperators.hh"
-#include "LegendrePolynomials.hh"
-#include <stdlib.h>
-#include <chrono>
+
 #include "Abstract.hh"
-using std::chrono::steady_clock;
+
+#include "LegendrePolynomials.hh"
+#include "HermitePolynomials.hh"
+#include "ChebyshevPolynomials.hh"
+#include "LaguerrePolynomials.hh"
+
+#include "Stopwatch.hh"
+
+#include <stdlib.h>
 using std::cout;
 
 //typedef float precision_t;
@@ -127,29 +133,38 @@ int main(int, char**) {
 
     cout << "evaluating " << p << "\n";
 
-    auto t0 = steady_clock::now();
-
-    for(int i=0; i<ntrials; i++) addSimple(p, vp2, vc);
-
-    auto t1 = steady_clock::now();
-
-    for(int i=0; i<ntrials; i++) {
-        PE.setX(vc);
-        PE.addPolynomial(p, vp);
+    {
+        Stopwatch w;
+        for(int i=0; i<ntrials; i++) addSimple(p, vp2, vc);
     }
-
-    auto t2 = steady_clock::now();
-
-    printf("dt1 = %g; dt2 = %g\n",
-           std::chrono::duration<double>(t1-t0).count(),
-           std::chrono::duration<double>(t2-t1).count());
+    {
+        Stopwatch w;
+        for(int i=0; i<ntrials; i++) {
+            PE.setX(vc);
+            PE.addPolynomial(p, vp);
+        }
+    }
 
     double dmax =  0;
     for(size_t i=0; i<vp.size(); i++) dmax = std::max(dmax, fabs((vp[i]-vp2[i])/vp[i]));
     printf("dmax %g\n", dmax);
 
-    LegendrePolynomials LP;
-    for(int i=0; i<10; i++) cout << "P_" << i << "(x) = " << LP.Legendre_P(i) << "\n";
+    LegendrePolynomials PP;
+    LaguerrePolynomials LP;
+    HermitePolynomials HP;
+    Chebyshev_T ChT;
+    Chebyshev_U ChU;
+    {
+        Stopwatch w;
+        for(int i=0; i<=10; i++) {
+            cout << "P_" << i << "(x) = " << PP(i) << "\n";
+            cout << "L_" << i << "(x) = " << LP(i) << "\n";
+            cout << "H_" << i << "(x) = " << HP(i) << "\n";
+            cout << "T_" << i << "(x) = " << ChT(i) << "\n";
+            cout << "U_" << i << "(x) = " << ChU(i) << "\n";
+            cout << "\n";
+        }
+    }
 
 #if false
     // calculus test
