@@ -79,6 +79,11 @@ public:
 
     /// access map of factories by index = typehash<factory type>
     static map<size_t, _ObjectFactory*>& index();
+
+    /// show debugging list of registered classes
+    static void display() {
+        for(auto& kv: index()) printf("%zu:\t%s\n", kv.first, kv.second->classname.c_str());
+    }
 };
 
 /// identifier index by class name (+ custom-class factory specialization name)
@@ -119,7 +124,7 @@ public:
     /// construct named-class object with arguments; nullptr if unavailable
     template<typename... Args>
     static base* construct(const string& classname, Args&&... a) {
-        auto it = index().find(classID(classname));
+        auto it = index().find(classID<Args...>(classname));
         return it == index().end()? nullptr : dynamic_cast<_ArgsBaseFactory<B, Args...>&>(*it->second).bconstruct(std::forward<Args>(a)...);
     }
 };
