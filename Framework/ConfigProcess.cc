@@ -11,13 +11,11 @@ ConfigProcess* ConfigProcess::construct(const Setting& S) {
     string n = "ConfigProcess";
     S.lookupValue("class", n);
 
-    auto i = factoryID<ConfigProcess>(n);
-    if(!FactoriesIndex::has(i)) {
+    auto m = BaseFactory<ConfigProcess>::construct(n);
+    if(!m) {
         printf("Unknown module class '%s'!\n", n.c_str());
         return nullptr;
     }
-
-    auto m = BaseFactory<ConfigProcess>::construct(i);
     m->configure(S);
     return m;
 }

@@ -25,14 +25,16 @@ void PluginSaver::Reconfigure() {
 }
 
 void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown) {
-    auto i = pluginID(pname);
-    if(!FactoriesIndex::has(i)) {
+    auto i = FactoriesIndex::hash(pname);
+    auto& m = FactoriesIndex::indexFor<SegmentSaver, SegmentSaver&, const Setting&>();
+    auto it = m.find(i);
+    if(it == m.end()) {
         if(skipUnknown) {
             printf("Skipping unknown plugin type '%s'!\n", pname.c_str());
             return;
         }
         fprintf(stderr,"Unknown plugin type '%s' configured! I die!\n", pname.c_str());
-        throw std::runtime_error("Unknown plugin type");
+        throw std::runtime_error("Unknown plugin type " + pname);
     }
 
     auto o = BaseFactory<SegmentSaver>::construct(i, (SegmentSaver&)*this, cfg);

@@ -9,4 +9,4 @@ T& singleton() {
     return s;
 }
 
-map<size_t, _ObjectFactory*>& FactoriesIndex::index() { return singleton<map<size_t, _ObjectFactory*>>(); }
+map<size_t, map<size_t, _ObjectFactory&>>& FactoriesIndex::index() { return singleton<map<size_t, map<size_t, _ObjectFactory&>>>(); }

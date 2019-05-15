@@ -32,7 +32,7 @@ REGISTER_FACTORYOBJECT(MyAccumJob, JobWorker)
 class MyJobComm: public KTAccumJobComm {
 public:
     /// get correct worker class ID
-    size_t workerType() const override { return factoryID<JobWorker>("MyAccumJob"); }
+    size_t workerType() const override { return FactoriesIndex::hash("MyAccumJob"); }
 };
 
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
     for(int i=0; i<10; i++) {
         JobSpec JS;
         JS.uid = i;
-        JS.wclass = factoryID<JobWorker>("JobWorker");
+        JS.wclass = FactoriesIndex::hash("JobWorker");
         MultiJobControl::JC->submitJob(JS);
     }
     printf("\n\nAll submitted!\n\n");

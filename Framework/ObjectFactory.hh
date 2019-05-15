@@ -10,6 +10,9 @@ using std::map;
 using std::string;
 #include <typeinfo>
 #include <sstream>
+#include <vector>
+using std::vector;
+#include <algorithm>
 
 /*
  * _ObjectFactory: base polymorphic pointer for storing factories
@@ -46,8 +49,6 @@ class _ArgsFactory: public _ObjectFactory {
 public:
     /// inherit constructor
     using _ObjectFactory::_ObjectFactory;
-    /// Produce an object (of unspecified type) from arguments
-    virtual void* vconstruct(Args&&... a) const = 0;
 };
 
 /// Factory base for particular arguments structure and base class
@@ -59,36 +60,39 @@ public:
     /// inherit constructor
     using _ArgsFactory<Args...>::_ArgsFactory;
     /// Produce an object from arguments
-    virtual B* bconstruct(Args&&... a) const  = 0;
-    /// Construct an object with forwarded args
-    void* vconstruct(Args&&... a) const override { return (void*)bconstruct(std::forward<Args>(a)...); }
+    virtual base* construct(Args&&... a) const  = 0;
 };
 
 /// (static class) collection of factories, indexed by string name and unique identifier
 class FactoriesIndex {
 public:
-    /// construct object with arguments --- fails on unregistered index
-    template<typename... Args>
-    static void* construct(size_t i, Args&&... a) {
-        auto& f = dynamic_cast<_ArgsFactory<Args...>&>(*index().at(i));
-        return f.vconstruct(std::forward<Args>(a)...);
+    /// access map of factories by index = typehash<base, args> -> namehash : factory
+    static map<size_t, map<size_t, _ObjectFactory&>>& index();
+
+    /// index for particular construction
+    template<typename... BArgs>
+    static map<size_t, _ObjectFactory&>& indexFor() { return index()[typehash<BArgs...>()]; }
+
+    /// sorted names for particular construction
+    template<typename... BArgs>
+    static vector<string> namesFor() {
+        vector<string> v;
+        for(auto& kv: indexFor<BArgs...>()) v.push_back(kv.second.classname);
+        std::sort(v.begin(), v.end());
+        return v;
     }
 
-    /// check if index available
-    static bool has(size_t i) { return index().count(i); }
-
-    /// access map of factories by index = typehash<factory type>
-    static map<size_t, _ObjectFactory*>& index();
+    /// hash string
+    static size_t hash(const string& s) { return std::hash<string>{}(s); }
 
     /// show debugging list of registered classes
     static void display() {
-        for(auto& kv: index()) printf("%zu:\t%s\n", kv.first, kv.second->classname.c_str());
+        for(auto& kv: index()) {
+            printf("--- %zu ---\n", kv.first);
+            for(auto& kv2: kv.second) printf("%zu:\t%s\n", kv2.first, kv2.second.classname.c_str());
+        }
     }
 };
-
-/// identifier index by class name (+ custom-class factory specialization name)
-template<typename... BArgs>
-size_t factoryID(const string& cname, const string& fname = "_default") { return std::hash<string>{}(cname+fname) ^ typehash<BArgs...>(); }
 
 /// Concrete factory for a particular object type constructed with arguments
 template<class B, class C, typename... Args>
@@ -96,11 +100,10 @@ class ObjectFactory: public _ArgsBaseFactory<B, Args...> {
 public:
     /// Constructor, registering to list
     ObjectFactory(const string& cname): _ArgsBaseFactory<B, Args...>(cname) {
-        auto i = factoryID<B, Args...>(cname);
-        FactoriesIndex::index().emplace(i, this);
+        FactoriesIndex::indexFor<B, Args...>().emplace(FactoriesIndex::hash(cname), *this);
     }
     /// Produce an object from arguments
-    B* bconstruct(Args&&... a) const override { return new C(std::forward<Args>(a)...); }
+    B* construct(Args&&... a) const override { return new C(std::forward<Args>(a)...); }
 };
 
 /// Static factory for non-void object base types
@@ -113,19 +116,15 @@ public:
     /// construct indexed class with arguments --- fails on unregistered index
     template<typename... Args>
     static base* construct(size_t i, Args&&... a) {
-        auto& f = dynamic_cast<_ArgsBaseFactory<B, Args...>&>(*index().at(i));
-        return f.bconstruct(std::forward<Args>(a)...);
+        return dynamic_cast<_ArgsBaseFactory<B, Args...>&>(indexFor<B, Args...>().at(i)).construct(std::forward<Args>(a)...);
     }
-
-    /// get index for named class
-    template<typename... Args>
-    static size_t classID(const string& cname) { return factoryID<B, Args...>(cname); }
 
     /// construct named-class object with arguments; nullptr if unavailable
     template<typename... Args>
     static base* construct(const string& classname, Args&&... a) {
-        auto it = index().find(classID<Args...>(classname));
-        return it == index().end()? nullptr : dynamic_cast<_ArgsBaseFactory<B, Args...>&>(*it->second).bconstruct(std::forward<Args>(a)...);
+        auto& m = indexFor<B, Args...>();
+        auto it = m.find(hash(classname));
+        return it == m.end()? nullptr : dynamic_cast<_ArgsBaseFactory<B, Args...>&>(it->second).construct(std::forward<Args>(a)...);
     }
 };
 
