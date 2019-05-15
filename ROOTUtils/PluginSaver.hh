@@ -84,11 +84,11 @@ class ConfigPluginBuilder: public _ArgsBaseFactory<SegmentSaver, SegmentSaver&, 
 public:
     /// Constructor, registering to list
     ConfigPluginBuilder(const string& cname): _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const Setting&>(cname) {
-        FactoriesIndex::indexFor<SegmentSaver, SegmentSaver&, const Setting&>().emplace(FactoriesIndex::hash(cname), this);
+        FactoriesIndex::indexFor<SegmentSaver, SegmentSaver&, const Setting&>().emplace(FactoriesIndex::hash(cname), *this);
     }
 
     /// Re-casting plugin construction
-    SegmentSaver* bconstruct(SegmentSaver& pnt, const Setting& S) const override {
+    SegmentSaver* construct(SegmentSaver& pnt, const Setting& S) const override {
         auto t0 = steady_clock::now();
         auto P = new Plug(dynamic_cast<Base&>(pnt), S);
         P->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
