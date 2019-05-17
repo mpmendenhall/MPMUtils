@@ -31,44 +31,53 @@ namespace Icosahedral {
     const cayley_t CT = IC.CT;
     const conjugacy_t CD = IC.CD;
 
-    const array<bool,120> parity = []() {
-        array<bool,120> p;
-        auto it = p.begin();
+    s_parity::s_parity() {
+        auto it = begin();
         for(auto& e: Rs) *(it++) = det(e) > 0;
-        return p;
-    }();
+    }
+    const s_parity parity;
 
     indexel_t::indexel_t(size_t ii): i(ii), o(Rs.element(i)) { }
 
     template<typename T>
-    array<T, T::multiplicity()> facels(size_t cnum) {
-        array<T,T::multiplicity()> df;
+    faceset_t<T>::faceset_t(size_t cnum) {
+        // generators conjugacy group: rotation element around each face
         auto& rfi = CD.M.find(T::order())->second.CCs.getClassNum(cnum);
-        if(rfi.size() != T::multiplicity()) throw nullptr;
+        if(rfi.size() != T::order()) abort();
+        printf("Calculating %zu faces...\n", T::order());
 
-        size_t n = 0;
-        for(auto i: rfi) {
-            df[n].c = R3axis(Rs.element(i));
-            df[n].R[0] = indexel_t(nID);
-            for(size_t j=1; j<T::order(); ++j) df[n].R[j] = indexel_t(CT.apply(i, df[n].R[j-1].i));
+        size_t n = 0;       // face number
+        for(auto i: rfi) {  // rotation around face n
+            auto& f = this->at(n);
+            f.c = R3axis(Rs.element(i)); // face center axis
+            f.g[0] = indexel_t(Nav.domain(f.c));    // from fundamental domain to one domain in face
+            f.R[0] = indexel_t(nID);                // ID element
+
+            for(size_t j=1; j<T::order(); ++j) { // successive rotations
+                f.R[j] = indexel_t(CT.apply(i, f.R[j-1].i));
+                f.g[j] = indexel_t(CT.apply(i, f.g[j-1].i));
+            }
+
+            size_t j = 0;
+            for(auto& e: f.g) elenum[e.i] = T::order()*n + (j++);
+
             ++n;
         }
-        return df;
     }
 
-    const array<f12_t,12> dodFaces = facels<f12_t>(1);
-    const array<f15_t,15> flipAxes = facels<f15_t>(1);
-    const array<f20_t,20> icoFaces = facels<f20_t>(0);
+    const faceset_t<f12_t> dodFaces(1);
+    const faceset_t<f15_t> flipAxes(1);
+    const faceset_t<f20_t> icoFaces(0);
 
     /// arbitrary point selecting representative ``fundamental'' domain
     const axis_t fd_p0{{half, half, half*20}};
 
     Navigator::Navigator():
-    DecisionTree(120, 15, [](size_t i, size_t j){ return axpart(Rs.element(i) * fd_p0, j); }) { }
+    DecisionTree(n_elements, 15, [](size_t i, size_t j){ return axpart(Rs.element(i) * fd_p0, j); }) { }
     const Navigator Nav;
 
     template<typename F>
-    const F& selectFundamental(const array<F,F::multiplicity()>& a) {
+    const F& selectFundamental(const faceset_t<F>& a) {
         for(auto& f: a) {
             axis_t c = f.c;
             Nav.map_d0(c);

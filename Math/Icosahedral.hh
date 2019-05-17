@@ -27,6 +27,8 @@ namespace Icosahedral {
     typedef MultiplyG<elem_t> groupop_t;
     /// Rotation axis type
     typedef Vec<3,PhiField> axis_t;
+    /// Number of icosahedral symmetry elements
+    constexpr size_t n_elements = 120;
 
     // matrix representation generators for full icosahedral symmetry
     extern const elem_t Ra; ///< one rotation generator
@@ -62,33 +64,42 @@ namespace Icosahedral {
     };
 
     /// Mirror-reflection parity (false: flips; true: no flips) by enumerated generator
-    extern const array<bool,120> parity;
+    extern const struct s_parity: public array<bool,n_elements> { s_parity(); } parity;
 
     /// Information on related operators defining a face/edge
     template<size_t O, size_t C>
     struct faceinfo_t {
-        /// operator order
+        /// operator order (edges per face)
         static constexpr size_t order() { return O; }
-        /// operator conjugacy multiplicity
+        /// operator conjugacy multiplicity (number of faces)
         static constexpr size_t multiplicity() { return C; }
 
         axis_t    c{};        ///< central axis (fixed point of R[...])
-        indexel_t g{};        ///< (arbitrary) element moving fundamental domain to this face
         indexel_t R[O];       ///< ID and successive face rotations: stabilizer subgroup w.r.t. c
-        //axis_t    vs[O];    ///< vertices, clockwise loop
+        indexel_t g[O];       ///< elements moving fundamental domain to each domain of this face, R[i]*g[0]
+    };
+
+    template<typename _face>
+    struct faceset_t: public array<_face, _face::multiplicity()> {
+        /// constructor with conjugacy class number
+        faceset_t(size_t cnum);
+        /// face number for element
+        size_t facenum(size_t e) const { return elenum[e]/_face::order(); }
+        /// group elements into faces
+        array<size_t, n_elements> elenum{};
     };
 
     /// dodecahedral face info
     typedef faceinfo_t<5,12> f12_t;
-    extern const array<f12_t,12> dodFaces;
+    extern const faceset_t<f12_t> dodFaces;
 
     /// flip axis info
     typedef faceinfo_t<2,15> f15_t;
-    extern const array<f15_t,15> flipAxes;
+    extern const faceset_t<f15_t> flipAxes;
 
     /// icosahedral face info
     typedef faceinfo_t<3,20> f20_t;
-    extern const array<f20_t,20> icoFaces;
+    extern const faceset_t<f20_t> icoFaces;
 
     /// apply all 60 (120) group elements to vector, eliminating duplicates
     template<typename V>
@@ -112,6 +123,7 @@ namespace Icosahedral {
     void describe();
 
     /// Point classification into 120 domains (corresponding to enumerated group elements), cut by 15 dividing hemispheres
+    /// arbitrary choice of which domain is "fundamental"
     class Navigator: public DecisionTree {
     public:
         /// Constructor

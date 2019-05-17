@@ -5,8 +5,9 @@
 #define DECISIONTREE_HH
 
 #include <algorithm>
-#include <cassert>
+#include <stdexcept>
 #include <stdio.h>
+#include <cassert>
 
 /// Binary decision tree construction and application
 class DecisionTree {
@@ -65,7 +66,7 @@ size_t DecisionTree::decide(const I& i, const F& f) const {
     size_t d = 0;
     while(true) {
         if(f(i,dcs[d].t)) {
-            if(dcs[d].a == d) return dcs[d-1].i;
+            if(dcs[d].a == d) { assert(d); return dcs[d-1].i; }
             d = dcs[d].a;
         } else {
             if(dcs[d].b == d) return dcs[d].i;
@@ -92,12 +93,13 @@ size_t DecisionTree::rpart(it_t iz, it_t i0, it_t i1, const vector<size_t>& vt, 
             if(dN <= 1) break;
         }
     }
-    assert(bdN < size_t(N));    // are we able to subdivide the elements?
+    // are we able to subdivide the elements?
+    if(bdN >= size_t(N)) throw std::runtime_error("Malformed decision tree");
     // re-calculate partition if we did not end on ``perfect'' result
     if(bdN > 1) ix = std::partition(i0, i1, [&](size_t i) { return f(i,t0); });
 
     auto sn = ix - iz;  // absolute splitting point
-    assert(sn);
+    if(!sn) throw std::runtime_error("Malformed decision tree");
     assert(dcs[sn].t == size_t(-1));
     dcs[sn].t = t0;
 
