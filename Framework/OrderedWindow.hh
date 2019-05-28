@@ -46,7 +46,10 @@ public:
 
     /// get ordering parameter for object
     template<typename U>
-    static ordering_t order(U o) { return ordering_t(deref_if_ptr(o)); }
+    static ordering_t order(const U& o) { return ordering_t(o); }
+    /// get ordering parameter for object
+    template<typename U>
+    static ordering_t order(const U* o) { return ordering_t(*o); }
 
     /// Constructor
     OrderedWindow(ordering_t dw): hwidth(dw) { }
