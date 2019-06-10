@@ -7,7 +7,7 @@
 
 int main(int, char**) {
     CodeVersion::display_code_version();
-
+/*
     theSieve().display();
     using namespace Icosahedral;
     describe();
@@ -30,6 +30,6 @@ int main(int, char**) {
         i += c.second.size();
     }
     std::cout << "(total " << i << " elements).\n";
-
+*/
     return EXIT_SUCCESS;
 }

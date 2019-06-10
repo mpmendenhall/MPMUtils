@@ -14,7 +14,7 @@ void* visthread(void*) {
 
 int main(int, char**) {
     CodeVersion::display_code_version();
-
+/*
     vsr::initWindow("testVisr");
 
     pthread_t thread;
@@ -88,6 +88,6 @@ int main(int, char**) {
 
     vsr::set_kill();
     pthread_join(thread, nullptr);
-
+*/
     return EXIT_SUCCESS;
 }

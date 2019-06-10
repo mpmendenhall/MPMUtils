@@ -1,8 +1,11 @@
 /// \file Icosahedral.hh Icosahedral symmetry manipulations
 // Michael P. Mendenhall, 2019
 
+
 #ifndef ICOSAHEDRAL_HH
 #define ICOSAHEDRAL_HH
+
+/*
 
 #include "Matrix.hh"
 #include "PhiField.hh"
@@ -184,6 +187,9 @@ namespace Icosahedral {
         Vec<3,T> v() const { return Matrix<3,3,T>(Rs.element(n))*v0(); }
     };
 }
+*/
+
+#endif
 
 // TODO
 // operators to move into each face
@@ -196,4 +202,4 @@ namespace Icosahedral {
  * icosohedral (+dodecahedron): isomorphic to A5
  */
 
-#endif
+

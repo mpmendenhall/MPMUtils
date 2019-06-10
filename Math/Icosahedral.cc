@@ -1,6 +1,6 @@
 /// \file Icosahedral.cc
 // Michael P. Mendenhall, 2019
-
+/*
 #include "Icosahedral.hh"
 #include <algorithm>
 #include <iostream>
@@ -49,7 +49,7 @@ namespace Icosahedral {
         size_t n = 0;       // face number
         for(auto i: rfi) {  // rotation around face n
             auto& f = this->at(n);
-            f.c = R3axis(Rs.element(i)); // face center axis
+            f.c = R3axis(Rs.element(i));            // face center axis
             f.g[0] = indexel_t(Nav.domain(f.c));    // from fundamental domain to one domain in face
             f.R[0] = indexel_t(nID);                // ID element
 
@@ -151,3 +151,4 @@ void Icosahedral::describe() {
 
     cout << "-------------------------------------------------------\n\n";
 }
+*/
