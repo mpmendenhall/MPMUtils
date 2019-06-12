@@ -231,8 +231,16 @@ def msub_job(curs, jid, mcmds=["-j oe", "-V"]):
 
     o = ou.decode().strip()
     print("Job '%s' submitted as '%s'"%(j[0],o))
-    qid = int(o.split()[-1].split(".")[0])
+
+    try:
+        qid = int(o.split()[-1].split(".")[0])
+    except:
+        print("FAILED to submit job!")
+        return
+
     curs.execute("UPDATE jobs SET queue_id=?, status=1, t_submit = ? WHERE job_id = ?",(qid,time.time(),jid))
+
+
 
 def update_DB_qrunstatus(curs,jstatus):
     """Update run status in database from job status list"""

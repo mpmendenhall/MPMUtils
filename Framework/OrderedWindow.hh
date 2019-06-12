@@ -166,7 +166,7 @@ protected:
     /// delete oldest object off "older" queue, calling dispose(); decrement imid to point to same item
     void disposeLo() {
         assert(imid); // never dispose of mid!
-        auto o = front();
+        auto& o = front();
         processOld(o);
         if(verbose >= 4) { printf("Deleting old "); display(o); }
         pop_front();

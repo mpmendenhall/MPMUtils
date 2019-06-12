@@ -392,10 +392,10 @@ void scale(TGraphErrors& tg, float s, bool xaxis) {
     double x,y;
     for(int i=0; i<tg.GetN(); i++) {
         tg.GetPoint(i,x,y);
-        if(xaxis) {
+	if(xaxis) {
             tg.SetPoint(i, x*s, y);
             tg.SetPointError(i, tg.GetErrorX(i)*s, tg.GetErrorY(i));
-        } else {
+	} else {
             tg.SetPoint(i, x, s*y);
             tg.SetPointError(i, tg.GetErrorX(i), s*tg.GetErrorY(i));
         }
@@ -538,13 +538,13 @@ vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d) {
     vector<TH2F*> h2s;
     for(unsigned int z = 0; z <= n3+1; z++) {
         TH2F* h2 = new TH2F((std::string(h3.GetName())+"_"+to_str(z)).c_str(),
-                            h3.GetTitle(),
-                            n1,
-                            Ax1->GetBinLowEdge(1),
-                            Ax1->GetBinUpEdge(n1),
-                            n2,
-                            Ax2->GetBinLowEdge(1),
-                            Ax2->GetBinUpEdge(n2));
+        h3.GetTitle(),
+        n1,
+        Ax1->GetBinLowEdge(1),
+        Ax1->GetBinUpEdge(n1),
+        n2,
+        Ax2->GetBinLowEdge(1),
+        Ax2->GetBinUpEdge(n2));
         if(h3.GetSumw2()) h2->Sumw2();
         h2->GetXaxis()->SetTitle(Ax1->GetTitle());
         h2->GetYaxis()->SetTitle(Ax2->GetTitle());
@@ -617,7 +617,7 @@ TH1* projectTH2(const TH2& h, double nb, double cx, double cy) {
     double y0 = Ay->GetXmin();
     double y1 = Ay->GetXmax();
     TH1D* hOut = new TH1D((h.GetName()+std::string("_Projected")).c_str(),"Projected Histogram",nb,
-                          cx*(cx>0?x0:x1)+cy*(cy>0?y0:y1),cx*(cx>0?x1:x0)+cy*(cy>0?y1:y0));
+    cx*(cx>0?x0:x1)+cy*(cy>0?y0:y1),cx*(cx>0?x1:x0)+cy*(cy>0?y1:y0));
     for(int bx=1; bx<=Ax->GetNbins(); bx++)
         for(int by=1; by<=Ay->GetNbins(); by++)
             hOut->Fill(cx*Ax->GetBinCenter(bx)+cy*Ay->GetBinCenter(by),h.GetBinContent(bx,by));

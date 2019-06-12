@@ -206,6 +206,16 @@ void makeRBpalette() {
     gStyle->SetNumberContours(NCont);
 }
 
+void shiftZaxis(TH2& h, double dx) {
+    h.Draw("Col Z");
+    gPad->Modified();
+    gPad->Update();
+    auto pt = dynamic_cast<TBox*>(h.GetListOfFunctions()->FindObject("palette"));
+    if(!pt) return;
+    pt->SetX2(pt->GetX2() + dx);
+    pt->SetX1(pt->GetX1() + dx);
+}
+
 void setupSlideStyle(TStyle* S) {
     assert(S);
     S->SetOptStat("");

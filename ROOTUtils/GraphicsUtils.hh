@@ -51,6 +51,9 @@ void makeGrayscalepalette(bool b2w = true);
 /// set up blue-white-red palette
 void makeRBpalette();
 
+/// shift z palette axis on TH2
+void shiftZaxis(TH2& h, double dx);
+
 /// gStyle settings for "slideshow-ready" plots
 void setupSlideStyle(TStyle* S = gStyle);
 
