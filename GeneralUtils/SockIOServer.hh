@@ -78,6 +78,8 @@ class BlockHandler: public ConnHandler {
 public:
     /// Constructor
     BlockHandler(int sfd, SockIOServer* s = nullptr): ConnHandler(sfd, s) { }
+    /// Destructor
+    ~BlockHandler() { delete theblock; }
     /// Receive block size and whole of expected data
     void handle() override;
 
@@ -96,7 +98,7 @@ protected:
     virtual bool read_block(int32_t bsize);
     /// Set theblock to write point, or null if unavailable
     virtual void request_block(int32_t /*bsize*/) { if(!theblock) theblock = new dblock; }
-    /// Return completed block to whence it came
+    /// Return completed block to whence it came --- set to nullptr if not for re-use!
     virtual void return_block() { }
 
     /// Allocate block buffer space
@@ -105,8 +107,6 @@ protected:
     virtual bool process(int32_t bsize);
     /// Process data after buffer read; return false to end communication
     virtual bool process(const vector<char>&);
-    /// end-of-handling routine
-    virtual void end_of_handling() { }
 
     dblock* theblock = nullptr; ///< default buffer space
 };

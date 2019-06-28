@@ -24,7 +24,7 @@ public:
     /// Destructor
     virtual ~ThreadDataSerializer() { clear_pool(); }
 
-    /// Thread-safe get allocated object space, or nullptr if allocation rejected
+    /// Thread-safe get allocated object space, or nullptr if priority-0 allocation rejected
     virtual T* get_allocated(int priority = 0) {
         std::lock_guard<std::mutex> plk(pmutex);
         if(!pool.size()) {
@@ -89,7 +89,7 @@ public:
             // bulk return to pool
             if(itv != v.begin()) {
                 std::lock_guard<std::mutex> plk(pmutex);
-                for(auto it = v.begin(); it != itv; it++) {
+                for(auto it = v.begin(); it != itv; ++it) {
                     if(!*it) continue;
                     reset_allocated(**it);
                     pool.push_back(*it);

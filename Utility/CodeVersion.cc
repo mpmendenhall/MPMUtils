@@ -68,5 +68,6 @@ namespace CodeVersion {
         printf("%s '%s' (%s),\n compiled %s with %s (c++ %s) by %s@%s\n",
                repo_name.c_str(), repo_tagname.c_str(), repo_version.c_str(), compile_time.c_str(),
                compiler.c_str(), cpp_version.c_str(), user.c_str(), host.c_str());
+        fflush(stdout);
     }
 }

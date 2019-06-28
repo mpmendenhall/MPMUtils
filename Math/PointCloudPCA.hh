@@ -68,9 +68,10 @@ public:
     inline double sigma(int a) const { return sqrt(sigma2(a)); }
     /// transverse width^2 from principal axis
     inline double wT2() const { double s = 0; for(int i = 1; i<N; i++) s += width2[i]; return s; }
-    /// transverse spread from principal axis
+    /// transverse spread^2 from principal axis
     inline double sigmaT2() const { return wT2()/sw; }
-
+    /// transverse spread from principal axis
+    inline double sigmaT() const { return sqrt(sigmaT2()); }
 
     /// reverse direction
     void flip() {for(int i = 0; i<N-1; i++) for(int j = 0; j<N; j++) PCA[i][j] *= -1; }

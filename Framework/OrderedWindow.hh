@@ -56,6 +56,9 @@ public:
     /// Destructor: must be cleared before reaching here!
     virtual ~OrderedWindow() { assert(!size()); assert(!imid); }
 
+    /// get window half-width
+    ordering_t windowHalfwidth() const { return hwidth; }
+
     /// clear remaining objects through window (at end of run, etc.)
     void flush() override { while(size()) nextmid(); }
     /// Flush as if inserting new highest at x

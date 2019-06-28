@@ -125,7 +125,6 @@ void BlockHandler::handle() {
         if(bsize > 0 && !read_block(bsize)) break;
         if(!process(bsize)) break;
     }
-    end_of_handling();
 }
 
 bool BlockHandler::read_block(int32_t bsize) {
@@ -213,7 +212,10 @@ void ThreadedSockIOServer::handlerClosed(ConnHandler* h) {
 SockBlockSerializerHandler::SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS): BlockHandler(sfd, SBS), myServer(SBS) { }
 
 void SockBlockSerializerHandler::request_block(int32_t /*bsize*/) { theblock = myServer->get_allocated(); }
-void SockBlockSerializerHandler::return_block() { if(theblock) myServer->return_allocated(theblock); }
+void SockBlockSerializerHandler::return_block() {
+    if(theblock) myServer->return_allocated(theblock);
+    theblock = nullptr;
+}
 
 
 #ifdef SOCKET_TEST

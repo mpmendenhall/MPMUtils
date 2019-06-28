@@ -259,7 +259,7 @@ namespace vsr {
     void circle(vec3 o, vec3 n, int i) {
         int j0 = 0;
         for(auto j: {1,2}) if(fabs(n[j]) > fabs(n[j0])) j0 = j;
-        vec3 dz{};
+        vec3 dz{0,0,0};
         dz[(j0+1)%3] = 1;
 
         auto r = makeunit(n);
