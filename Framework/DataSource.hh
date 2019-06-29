@@ -14,7 +14,7 @@ public:
     /// retrieved value type
     typedef C val_t;
 
-    /// Fill C with next object; return whether C updated
+    /// Fill supplied item with next object; return whether item has been updated
     virtual bool next(val_t&) = 0;
     /// pop with infinite looping
     bool next_loop(val_t& o) { if(pop(o)) return true; reset(); return next(o); }
@@ -37,7 +37,7 @@ public:
     /// Add stream
     virtual void addStream(dsrc_t& S) { v.push_back(S); }
 
-    /// Fill C with next object; return whether C updated
+    /// Fill o with next object; return whether o updated
     bool next(val_t& o) override {
         while(i < v.size() && !v[i].get().next(o)) { nextSource(); ++i; }
         return i < v.size();

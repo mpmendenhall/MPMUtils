@@ -1,7 +1,7 @@
-/// \file MultiOrderer.hh Order items received from multiple "push" sources
+/// \file Collator.hh Combine ordered items received from multiple "push" sources
 
-#ifndef MULTIORDERER_HH
-#define MULTIORDERER_HH
+#ifndef COLLATOR_HH
+#define COLLATOR_HH
 
 #include "DataSink.hh"
 #include "deref_if_ptr.hh"
@@ -14,16 +14,16 @@ using std::vector;
 using std::pair;
 #include <cassert>
 
-/// Order items received from multiple "push" sources
+/// Combine ordered items received from multiple "push" sources
 template<class T0, typename ordering_t = double>
-class MultiOrderer {
+class Collator {
 protected:
     /// item from enumerated source
     typedef pair<size_t,T0> iT0;
 
 public:
     /// polymorphic destructor; remember to flush before!
-    virtual ~MultiOrderer() { assert(PQ.empty()); }
+    virtual ~Collator() { assert(PQ.empty()); }
 
     /// add enumerated input
     size_t add_input(int nreq = 0) {
@@ -51,14 +51,14 @@ public:
     class MOInput: public DataSink<T0> {
     public:
         /// constructor
-        MOInput(MultiOrderer& _M): M(_M), n(M.add_input()) { }
+        MOInput(Collator& _M): M(_M), n(M.add_input()) { }
         /// DataSink push
         void push(const T0& o) override { M.push(n,o); }
         /// bulk push
         void push(const vector<T0>& os) { M.push(n,os); }
 
     protected:
-        MultiOrderer& M;    ///< orderer
+        Collator& M;    ///< orderer
         size_t n;           ///< input enumeration
     };
 

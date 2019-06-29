@@ -65,38 +65,10 @@ public:
                 qready.wait(lk, [this]{return queue.size() || halt;}); // unlock until notified
 
                 if(halt) gothalt = true;
-                else {
-                    // copy items from queue up to end or nullptr
-                    auto itq = queue.begin();
-                    for(; itq != queue.end(); itq++) {
-                        if(!*itq) break;
-                        v.push_back(*itq);
-                    }
-                    qbreak = itq != queue.end();
-                    // shift remaining items to start of queue
-                    auto itq2 = queue.begin();
-                    for(; itq < queue.end(); itq++) *(itq2++) = *itq;
-                    queue.resize(itq2 - queue.begin());
-                }
+                else qbreak = extract_to_break(v);
             }
 
-            // process queued items
-            auto itv = v.begin();
-            for(auto p: v) {
-                if(process_item(*p)) *(itv++) = p;
-            }
-
-            // bulk return to pool
-            if(itv != v.begin()) {
-                std::lock_guard<std::mutex> plk(pmutex);
-                for(auto it = v.begin(); it != itv; ++it) {
-                    if(!*it) continue;
-                    reset_allocated(**it);
-                    pool.push_back(*it);
-                }
-            }
-
-            v.clear(); // re-usable in next round
+            process_items(v);
         }
         if(qbreak) end_of_processing();
         is_launched = false;
@@ -138,6 +110,49 @@ protected:
         for(auto p: pool) deallocate(p);
         pool.clear();
     }
+
+    /// extract items from queue up to nullptr break
+    bool extract_to_break(std::vector<T*>& v) {
+        auto itq = queue.begin();
+        for(; itq != queue.end(); itq++) {
+            if(!*itq) break;
+            v.push_back(*itq);
+        }
+        bool qbreak = itq != queue.end();
+        // shift remaining items to start of queue
+        auto itq2 = queue.begin();
+        for(; itq < queue.end(); itq++) *(itq2++) = *itq;
+        queue.resize(itq2 - queue.begin());
+        return qbreak;
+    }
+
+    /// process multiple items
+    void process_items(std::vector<T*>& v) {
+        auto itv = v.begin();
+        for(auto p: v) if(process_item(*p)) *(itv++) = p;
+
+        // bulk return to pool
+        if(itv != v.begin()) {
+            std::lock_guard<std::mutex> plk(pmutex);
+            for(auto it = v.begin(); it != itv; ++it) {
+                if(!*it) continue;
+                reset_allocated(**it);
+                pool.push_back(*it);
+            }
+        }
+        v.clear();
+    }
+
+    /// flush queued items up to next break
+    void flush_queued_to_break() {
+        std::vector<T*> v;
+        { // scope for queue lock
+            std::unique_lock<std::mutex> lk(qmutex); // acquire unique_lock on queue in this scope
+            extract_to_break(v);
+        }
+        process_items(v);
+    }
+
 
     std::vector<T*> pool;       ///< re-usable allocated objects pool
     std::vector<T*> queue;      ///< items received in processing queue
