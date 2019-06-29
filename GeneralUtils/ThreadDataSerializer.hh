@@ -147,11 +147,20 @@ protected:
     void flush_queued_to_break() {
         std::vector<T*> v;
         { // scope for queue lock
-            std::unique_lock<std::mutex> lk(qmutex); // acquire unique_lock on queue in this scope
+            std::unique_lock<std::mutex> lk(qmutex);
             extract_to_break(v);
         }
         process_items(v);
     }
+
+    /// discard queued items
+    void discard_queued() {
+        std::unique_lock<std::mutex> lk(qmutex);
+        std::lock_guard<std::mutex> plk(pmutex);
+        for(auto i: queue) if(i) { reset_allocated(*i); pool.push_back(i); }
+        queue.clear();
+    }
+
 
 
     std::vector<T*> pool;       ///< re-usable allocated objects pool

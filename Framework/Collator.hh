@@ -22,7 +22,7 @@ protected:
     typedef pair<size_t,T0> iT0;
 
 public:
-    /// polymorphic destructor; remember to flush before!
+    /// polymorphic destructor: remember final flush.
     virtual ~Collator() { assert(PQ.empty()); }
 
     /// add enumerated input
@@ -65,8 +65,7 @@ public:
     /// add item from enumerated input
     void push(size_t nI, const T0& o) {
         assert(nI < input_n.size());
-        auto& n = input_n[nI].first;
-        if(!n++) { --inputs_waiting; assert(inputs_waiting >= 0); }
+        if(!input_n[nI].first++) { --inputs_waiting; assert(inputs_waiting >= 0); }
         PQ.emplace(nI,o);
         while(!inputs_waiting && !PQ.empty()) pop();
     }

@@ -107,7 +107,7 @@ TH2F* OutputManager::registeredTH2F(string hname, string htitle, unsigned int nb
 
 string OutputManager::printCanvas(const string& fname, const TPad* C, string suffix) const {
     if(!suffix.size()) suffix = printsfx;
-    printf("Printing canvas '%s' in '%s'\n",(fname+suffix).c_str(), plotPath.c_str());
+    //printf("Printing canvas '%s' in '%s'\n",(fname+suffix).c_str(), plotPath.c_str());
     if(squelchAllPrinting) { printf("Printing squelched!\n"); return ""; }
 
     makePath(plotPath+"/"+fname+suffix,true);

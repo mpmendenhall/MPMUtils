@@ -48,6 +48,7 @@ bool SockIOServer::process_connections() {
     // block until new socket created for connection
     accept_connections = true;
     while(accept_connections) {
+        { std::lock_guard<std::mutex> al(acceptLock); }
         struct sockaddr cli_addr;
         socklen_t clilen = sizeof(cli_addr); // returns actual size of client address
         auto newsockfd = accept(sockfd, &cli_addr, &clilen);

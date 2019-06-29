@@ -33,6 +33,8 @@ public:
     virtual void handlerClosed(ConnHandler*) { }
 
 protected:
+    std::mutex acceptLock;              ///< lock on accepting new connections
+
     /// handle each new connection --- subclass me!
     virtual void handle_connection(int csockfd);
     /// handler creating thread
