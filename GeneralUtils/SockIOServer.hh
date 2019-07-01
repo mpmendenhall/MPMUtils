@@ -29,15 +29,13 @@ public:
     bool process_connections();
     /// launch process_connections in a separate thread
     void process_connections_thread();
-    /// callback on connection handler close
-    virtual void handlerClosed(ConnHandler*) { }
 
 protected:
     std::mutex acceptLock;              ///< lock on accepting new connections
 
     /// handle each new connection --- subclass me!
     virtual void handle_connection(int csockfd);
-    /// handler creating thread
+    /// handler-creating thread
     pthread_t sockthread;
 };
 
@@ -59,13 +57,13 @@ public:
 class ThreadedSockIOServer: public SockIOServer {
 public:
 
-    /// callback on connection handler close
-    void handlerClosed(ConnHandler* h) override;
+    /// callback on connection handler close (needs to be thread-safe; runs in handler's thread)
+    virtual void handlerClosed(ConnHandler* h);
 
 protected:
-    /// create correct handler type
+    /// create correct handler type (runs in handle_connection() thread)
     virtual ConnHandler* makeHandler(int sfd) { return new ConnHandler(sfd, this); }
-    /// handle each new connection
+    /// handle each new connection, by spawning new thread with makeHandler() object
     void handle_connection(int csockfd) override;
 
     set<ConnHandler*> myConns;  ///< list of active connections
@@ -116,7 +114,6 @@ protected:
 //////////////////////////////
 //////////////////////////////
 
-#include "ThreadDataSerializer.hh"
 class SockBlockSerializerServer;
 
 /// Block protocol handler for serializer server
@@ -125,13 +122,15 @@ public:
     /// Constructor
     SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS);
 protected:
-    /// Set theblock to write point, or null if unavailable
+    /// theblock = myServer->get_allocated()
     void request_block(int32_t /*bsize*/) override;
-    /// Return completed block to whence it came
+    /// myServer->return_allocated(theblock); theblock = nullptr
     void return_block() override;
 
     SockBlockSerializerServer* myServer;    ///< server handling serialization
 };
+
+#include "ThreadDataSerializer.hh"
 
 /// Block data serializer server
 class SockBlockSerializerServer: public ThreadedSockIOServer,

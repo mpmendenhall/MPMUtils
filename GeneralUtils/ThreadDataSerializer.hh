@@ -1,4 +1,5 @@
 /// \file ThreadDataSerializer.hh FIFO processing queue for serializing data from multiple threads
+// Michael P. Mendenhall, 2019
 
 #ifndef THREADDATASERIALIZER_HH
 #define THREADDATASERIALIZER_HH
@@ -25,11 +26,12 @@ public:
     virtual ~ThreadDataSerializer() { clear_pool(); }
 
     /// Thread-safe get allocated object space, or nullptr if priority-0 allocation rejected
+    //  likely called from multiple input threads
     virtual T* get_allocated(int priority = 0) {
         std::lock_guard<std::mutex> plk(pmutex);
         if(!pool.size()) {
             if(!priority && maxAllocate && nAllocated >= maxAllocate) return nullptr;
-            nAllocated++;
+            ++nAllocated;
             return allocate_new();
         }
         auto obj = pool.back();
@@ -38,34 +40,30 @@ public:
     }
 
     /// Thread-safe return object for processing; pass nullptr to end processing
+    //  likely called from multiple input threads
     void return_allocated(T* obj) {
-        std::lock_guard<std::mutex> lk(qmutex);  // get lock on queue
+        std::lock_guard<std::mutex> lk(qmutex);
         queue.push_back(obj);   // add item to queue
         qready.notify_one();    // notify that queue item is ready for processing
-        // lock is released on exiting this scope
     }
 
     /// Thread-safe toggle of halt flag
     void set_halt(bool h) {
-        std::lock_guard<std::mutex> lk(qmutex); // get lock on queue
+        std::lock_guard<std::mutex> lk(qmutex);
         halt = h;
         if(halt) qready.notify_one();           // notification to catch halt
-        // lock is released on exiting this scope
     }
 
-    /// receive and process items as they are placed in queue; terminate on nullptr
-    /// call directly or spawn in separate thread by launch_mythread
+    /// receive and process items as they are placed in queue; terminate on queued nullptr or "halt" flag
+    //  run directly in main thread, or spawn in separate thread by launch_mythread
     void process_queued() {
         std::vector<T*> v;
-        bool gothalt = false; // received halt flag?
         bool qbreak = false; // encountered nullptr break in queue?
-        while(!gothalt && !qbreak) {
+        while(!halt && !qbreak) {
             { // scope for queue lock
                 std::unique_lock<std::mutex> lk(qmutex); // acquire unique_lock on queue in this scope
                 qready.wait(lk, [this]{return queue.size() || halt;}); // unlock until notified
-
-                if(halt) gothalt = true;
-                else qbreak = extract_to_break(v);
+                if(!halt) qbreak = extract_to_break(v);
             }
 
             process_items(v);
@@ -74,14 +72,14 @@ public:
         is_launched = false;
     }
 
-    /// launch buffer thread
+    /// launch thread running "process_queued"
     virtual int launch_mythread() {
         is_launched = true;
         return pthread_create(&mythread, nullptr, queueprocess_thread<typename std::remove_reference<decltype(*this)>::type>, this);
     }
 
     pthread_t mythread;             ///< identifier for queue processing thread
-    bool is_launched = false;       ///< marker for whether thread is launched
+    bool is_launched = false;       ///< marker for whether process_queued() thread is launched
     size_t maxAllocate = 0;         ///< max events to allocate; 0 for unlimited
 
 protected:
@@ -89,22 +87,22 @@ protected:
     /// process item received in queue
     /// return 'true' to return_pool now, or 'false' if we will manually return_pool later
     virtual bool process_item(T& /*obj*/) { return true; }
-    /// run at termination of processing loop
+    /// run at termination of processing loop (within process_queued()'s thread)
     virtual void end_of_processing() { }
-
-    /// creation of new allocation objects
-    virtual T* allocate_new() { return new T; }
-    /// final deallocation of pool objects
-    virtual void deallocate(T* obj) { delete obj; }
-    /// clear re-usable returned objects
+    /// clear re-usable returned objects; must be thread-safe
     virtual void reset_allocated(T& /*obj*/) { }
+
+    /// creation of new allocation objects; must be thread-safe
+    virtual T* allocate_new() { return new T; }
+    /// final deallocation of pool objects, probably in destructor
+    virtual void deallocate(T* obj) { delete obj; }
     /// thread-safe return of one item to pool
     void return_pool(T* obj) {
         reset_allocated(*obj);
         std::lock_guard<std::mutex> plk(pmutex);
         pool.push_back(obj);
     }
-    /// deallocate all pooled objects
+    /// deallocate all pooled objects, probably in destructor
     void clear_pool() {
         std::lock_guard<std::mutex> plk(pmutex);
         for(auto p: pool) deallocate(p);
@@ -147,7 +145,7 @@ protected:
     void flush_queued_to_break() {
         std::vector<T*> v;
         { // scope for queue lock
-            std::unique_lock<std::mutex> lk(qmutex);
+            std::lock_guard<std::mutex> lk(qmutex);
             extract_to_break(v);
         }
         process_items(v);
@@ -155,7 +153,7 @@ protected:
 
     /// discard queued items
     void discard_queued() {
-        std::unique_lock<std::mutex> lk(qmutex);
+        std::lock_guard<std::mutex> lk(qmutex);
         std::lock_guard<std::mutex> plk(pmutex);
         for(auto i: queue) if(i) { reset_allocated(*i); pool.push_back(i); }
         queue.clear();
@@ -164,10 +162,11 @@ protected:
 
 
     std::vector<T*> pool;       ///< re-usable allocated objects pool
-    std::vector<T*> queue;      ///< items received in processing queue
-
     std::mutex pmutex;          ///< mutex for pool access
+
+    std::vector<T*> queue;      ///< items received in processing queue
     std::mutex qmutex;          ///< mutex for queue access
+
     std::condition_variable qready; ///< wait for queue items or halt
     size_t nAllocated = 0;      ///< number of items allocated
     bool halt = false;          ///< processing halt flag (needs qmutex)

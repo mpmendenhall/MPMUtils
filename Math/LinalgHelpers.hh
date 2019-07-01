@@ -70,6 +70,8 @@ public:
     gsl_vector_wrapper& operator=(const gsl_vector_wrapper&);
     /// Move assignemnt
     gsl_vector_wrapper& operator=(gsl_vector_wrapper&& other);
+    /// check pointer validity
+    operator bool() const { return v; }
 
     /// easy element access
     double operator()(size_t i) const { return gsl_vector_get(v,i); }

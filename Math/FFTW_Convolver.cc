@@ -41,7 +41,7 @@ realspace(ArrayPool<double>::get(M)), kspace(ArrayPool<cplx_t>::get(M/2+1)) {
 }
 
 ConvolvePlanR2C& ConvolvePlanR2C::get_ffter(size_t m) {
-    std::unique_lock<std::mutex> lk(fftLock);
+    std::lock_guard<std::mutex> lk(fftLock);
     static map<size_t,ConvolvePlanR2C*> ffters;
     auto it = ffters.find(m);
     if(it != ffters.end()) return *(it->second);
@@ -60,7 +60,7 @@ Convolve_DCT_I::Convolve_DCT_I(size_t m): ConvolvePlanR2R(m) {
 }
 
 ConvolvePlanR2R& Convolve_DCT_I::get_ffter(size_t m) {
-    std::unique_lock<std::mutex> lk(fftLock);
+    std::lock_guard<std::mutex> lk(fftLock);
     static map<size_t, ConvolvePlanR2R*> ffters;
     auto it = ffters.find(m);
     if(it != ffters.end()) return *(it->second);
@@ -80,7 +80,7 @@ Convolve_DCT_DST_I::Convolve_DCT_DST_I(size_t m): ConvolvePlanR2R(m) {
 }
 
 ConvolvePlanR2R& Convolve_DCT_DST_I::get_ffter(size_t m) {
-    std::unique_lock<std::mutex> lk(fftLock);
+    std::lock_guard<std::mutex> lk(fftLock);
     static map<size_t, ConvolvePlanR2R*> ffters;
     auto it = ffters.find(m);
     if(it != ffters.end()) return *(it->second);
@@ -100,7 +100,7 @@ Convolve_DCT_DST_II::Convolve_DCT_DST_II(size_t m): ConvolvePlanR2R(m) {
 }
 
 ConvolvePlanR2R& Convolve_DCT_DST_II::get_ffter(size_t m) {
-    std::unique_lock<std::mutex> lk(fftLock);
+    std::lock_guard<std::mutex> lk(fftLock);
     static map<size_t, ConvolvePlanR2R*> ffters;
     auto it = ffters.find(m);
     if(it != ffters.end()) return *(it->second);
@@ -128,7 +128,7 @@ void ConvolverFactoryR2R::convolve(vector<double>& v) {
 }
 
 const double* ConvolverFactoryR2R::getKernel(size_t i) {
-    std::unique_lock<std::mutex> lk(kernLock);
+    std::lock_guard<std::mutex> lk(kernLock);
 
     auto it = kdata.find(i);
     if(it != kdata.end()) return it->second;
@@ -176,7 +176,7 @@ void ConvolverFactoryR2C::convolve(vector<double>& v) {
 }
 
 const cplx_t* ConvolverFactoryR2C::getKernel(size_t i) {
-    std::unique_lock<std::mutex> lk(kernLock);
+    std::lock_guard<std::mutex> lk(kernLock);
 
     auto it = kdata.find(i);
     if(it != kdata.end()) return it->second;

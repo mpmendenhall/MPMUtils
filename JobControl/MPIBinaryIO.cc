@@ -93,11 +93,12 @@ void MPIBinaryIO::init(int argc, char **argv) {
 
 #else
 
-char* MPIBinaryIO::hostname = "not_an_MPI_host";
+const char* _hname = "not_an_MPI_host";
+char* MPIBinaryIO::hostname = (char*)_hname;
 
-void MPIBinaryIO::_send(void* vptr, int size) { throw std::exception("Not compiled with MPI!"); }
+void MPIBinaryIO::_send(void*, int) { throw std::logic_error("Not compiled with MPI!"); }
 
-void MPIBinaryIO::_receive(void* vptr, int size) { throw std::exception("Not compiled with MPI!"); }
+void MPIBinaryIO::_receive(void*, int) { throw std::logic_error("Not compiled with MPI!"); }
 
 void MPIBinaryIO::init(int, char **) { }
 

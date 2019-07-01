@@ -74,6 +74,7 @@ void* sockioserver_thread(void* p) {
     if(!isListening) exit(EXIT_FAILURE);
     return nullptr;
 }
+
 void SockIOServer::process_connections_thread() {
     pthread_create(&sockthread, nullptr, sockioserver_thread, this);
 }
@@ -185,7 +186,8 @@ char* BlockHandler::alloc_block(int32_t bsize) {
 void* run_sockio_thread(void* p) {
     auto h = (ConnHandler*)p;
     h->handle();
-    if(h->myServer) h->myServer->handlerClosed(h);
+    auto ts = dynamic_cast<ThreadedSockIOServer*>(h->myServer);
+    if(ts) ts->handlerClosed(h);
     close(h->sockfd);
     delete h;
     return nullptr;
@@ -210,9 +212,13 @@ void ThreadedSockIOServer::handlerClosed(ConnHandler* h) {
 ////////////////////
 ////////////////////
 
-SockBlockSerializerHandler::SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS): BlockHandler(sfd, SBS), myServer(SBS) { }
+SockBlockSerializerHandler::SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS):
+BlockHandler(sfd, SBS), myServer(SBS) { }
 
-void SockBlockSerializerHandler::request_block(int32_t /*bsize*/) { theblock = myServer->get_allocated(); }
+void SockBlockSerializerHandler::request_block(int32_t /*bsize*/) {
+    theblock = myServer->get_allocated();
+}
+
 void SockBlockSerializerHandler::return_block() {
     if(theblock) myServer->return_allocated(theblock);
     theblock = nullptr;

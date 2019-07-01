@@ -62,10 +62,10 @@ NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
     size_t j = 0;
     for(auto& p: parts) {
         gsl_vector_wrapper vp0(p.N+j);
-        std::copy(rit, rit+p.N+j, vp0->data);
+        if(vp0) std::copy(rit, rit+p.N+j, vp0->data);
 
         gsl_vector_wrapper vx0(p.N);
-        std::copy(xit, xit+p.N,   vx0->data);
+        if(vx0) std::copy(xit, xit+p.N, vx0->data);
         xit += p.N;
 
         gsl_matrix_wrapper dSi(p.N, j + p.N);

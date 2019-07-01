@@ -1,4 +1,5 @@
 /// \file Collator.hh Combine ordered items received from multiple "push" sources
+// Michael P. Mendenhall, 2019
 
 #ifndef COLLATOR_HH
 #define COLLATOR_HH
@@ -6,21 +7,15 @@
 #include "DataSink.hh"
 #include "deref_if_ptr.hh"
 
+#include <cstddef> // for size_t on some systems
 #include <queue>
-using std::priority_queue;
 #include <vector>
-using std::vector;
 #include <utility>
-using std::pair;
 #include <cassert>
 
 /// Combine ordered items received from multiple "push" sources
-template<class T0, typename ordering_t = double>
+template<class T, typename ordering_t = double>
 class Collator {
-protected:
-    /// item from enumerated source
-    typedef pair<size_t,T0> iT0;
-
 public:
     /// polymorphic destructor: remember final flush.
     virtual ~Collator() { assert(PQ.empty()); }
@@ -48,22 +43,22 @@ public:
     void set_required(size_t nI, int i) { change_required(nI, i-get_required(nI)); }
 
     /// convenience input handle for this orderer
-    class MOInput: public DataSink<T0> {
+    class MOInput: public DataSink<T> {
     public:
         /// constructor
         MOInput(Collator& _M): M(_M), n(M.add_input()) { }
         /// DataSink push
-        void push(const T0& o) override { M.push(n,o); }
+        void push(const T& o) override { M.push(n,o); }
         /// bulk push
-        void push(const vector<T0>& os) { M.push(n,os); }
+        void push(const std::vector<T>& os) { M.push(n,os); }
 
     protected:
         Collator& M;    ///< orderer
-        size_t n;           ///< input enumeration
+        size_t n;       ///< input enumeration
     };
 
     /// add item from enumerated input
-    void push(size_t nI, const T0& o) {
+    void push(size_t nI, const T& o) {
         assert(nI < input_n.size());
         if(!input_n[nI].first++) { --inputs_waiting; assert(inputs_waiting >= 0); }
         PQ.emplace(nI,o);
@@ -71,7 +66,7 @@ public:
     }
 
     /// bulk-add items
-    void push(size_t nI, const vector<T0>& os) {
+    void push(size_t nI, const std::vector<T>& os) {
         assert(nI < input_n.size());
         if(!os.size()) return;
         auto& n = input_n[nI].first;
@@ -95,8 +90,8 @@ public:
     }
 
     /// get list of ``waiting'' inputs
-    vector<size_t> get_waiting() const {
-        vector<size_t> v;
+    std::vector<size_t> get_waiting() const {
+        std::vector<size_t> v;
         for(size_t i=0; i<input_n.size(); ++i)
             if(input_n[i].first <= 0)
                 v.push_back(i);
@@ -104,8 +99,8 @@ public:
     }
 
     /// get list of ``free'' inputs with no wait threshold
-    vector<size_t> get_free() const {
-        vector<size_t> v;
+    std::vector<size_t> get_free() const {
+        std::vector<size_t> v;
         for(size_t i=0; i<input_n.size(); ++i)
             if(input_n[i].second < 0)
                 v.push_back(i);
@@ -113,17 +108,17 @@ public:
     }
 
     /// stop waiting on any "stuck" inputs
-    vector<size_t> unstick() {
+    std::vector<size_t> unstick() {
         auto v = get_waiting();
         for(auto nI: v) set_required(nI,-1);
         return v;
     }
 
-    DataSink<T0>* nextSink = nullptr;   ///< destination for ordered items
+    DataSink<T>* nextSink = nullptr;   ///< destination for ordered items
 
 protected:
 
-    /// pop next element
+    /// pop next element (and push to nextSink)
     void pop() {
         auto& o = PQ.top();
         if(!--input_n[o.first].first) ++inputs_waiting;
@@ -131,19 +126,25 @@ protected:
         PQ.pop();
     }
 
-    int inputs_waiting = 0;         ///< number of inputs with input_n <= 0
-    vector<pair<int,int>> input_n;  ///< counter for required numbers of datapoints from each input, and "waiting" threhsold
+    /// number of inputs with input_n <= 0
+    int inputs_waiting = 0;
+    /// counter for required numbers of datapoints from each input,
+    /// and "waiting" threhsold
+    std::vector<std::pair<int,int>> input_n;
+
+    /// item from enumerated source
+    typedef std::pair<size_t,T> iT;
 
     /// ordering comparator
     struct s_order {
         /// reverse ordering comparison
-        bool operator()(const iT0& a, const iT0& b) const {
+        bool operator()(const iT& a, const iT& b) const {
             return ordering_t(deref_if_ptr(b.second)) < ordering_t(deref_if_ptr(a.second));
         }
     };
 
     /// ordered inputs
-    priority_queue<iT0, vector<iT0>, s_order> PQ;
+    std::priority_queue<iT, std::vector<iT>, s_order> PQ;
 };
 
 #endif

@@ -12,7 +12,12 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 #set(CMAKE_CXX_STANDARD 17) # 'constexpr' getting usable
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_compile_options("-fPIC" "-Wpedantic" "-Wall" "-ansi" "-pedantic-errors")
+add_compile_options("-fPIC" "-Wpedantic" "-Wall" "-Werror" "-ansi" "-pedantic-errors")
+add_compile_options("-Wlogical-op" "-Wshadow")
+# sqlite3.c doesn't like -Wextra; platform-dependent error issues
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wnull-dereference>)
+
 # cmake -DCMAKE_BUILD_TYPE=Release
 string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
 
@@ -42,7 +47,7 @@ endif()
 # BOOST
 #######
 find_package(Boost REQUIRED COMPONENTS fiber)
-include_directories(${Boost_INCLUDE_DIR})
+include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 LIST(APPEND LINKLIBS ${Boost_LIBRARIES})
 
 #####
@@ -68,7 +73,7 @@ endif()
 find_package(MPI)
 if(MPI_FOUND AND NOT NO_MPI)
     add_compile_options("-DWITH_MPI")
-    include_directories(${MPI_INCLUDE_PATH})
+    include_directories(SYSTEM ${MPI_INCLUDE_PATH})
     LIST(APPEND LINKLIBS ${MPI_LIBRARIES})
     add_compile_options(${MPI_COMPILE_FLAGS})
 else()
@@ -80,7 +85,7 @@ endif()
 ######
 find_package(ROOT REQUIRED COMPONENTS MathCore MathMore Core RIO Hist Tree Minuit)
 LIST(APPEND LINKLIBS ${ROOT_LIBRARIES})
-include_directories(${ROOT_INCLUDE_DIRS})
+include_directories(SYSTEM ${ROOT_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/ROOTUtils/)
 include("${ROOT_USE_FILE}")
 ROOT_GENERATE_DICTIONARY(mpmu_Dict "CumulativeData.hh" "TCumulative.hh" "TCumulativeMap.hh" "TDynamicHistogram.hh" LINKDEF "ROOTUtils/LinkDef.h" OPTIONS "")
@@ -91,7 +96,7 @@ list(APPEND SOURCE_FILES "mpmu_Dict.cxx")
 ######
 find_package(HDF5 REQUIRED COMPONENTS C HL)
 message("Including HDF5 paths '${HDF5_INCLUDE_DIRS}' and libraries '${HDF5_LIBRARIES}' in '${HDF5_LIBRARY_DIRS}'")
-include_directories(${HDF5_INCLUDE_DIRS})
+include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
 LIST(APPEND LINKLIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
 

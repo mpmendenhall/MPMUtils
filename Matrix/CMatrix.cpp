@@ -190,9 +190,8 @@ const vector<double>& CMatrix::getRealData() const {
 double CMatrix::norm_L2() const {
     const vector< complex<double> >& v = getKData();
     vector<double> vn;
-    for(size_t i=0; i<v.size(); i++)
-        vn.push_back(abs(v[i]));
-    return *std::max_element(vn.begin(),vn.end());
+    for(size_t i=0; i<v.size(); i++) vn.push_back(abs(v[i]));
+    return vn.size()? *std::max_element(vn.begin(), vn.end()) : 0.;
 }
 
 

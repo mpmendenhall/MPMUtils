@@ -17,13 +17,13 @@ using std::vector;
 /// convenience definition for complex datatype
 typedef std::complex<double> cplx_t;
 
-/// Pool of "recyclable" allocated data arrays
+/// Thread-safe pool of "recyclable" allocated data arrays
 template<typename T>
 class ArrayPool {
 public:
-    /// get allocated array
+    /// get allocated array (thread-safe)
     static T* get(size_t m) {
-        std::unique_lock<std::mutex> lk(A().allocLock);
+        std::lock_guard<std::mutex> lk(A().allocLock);
         auto& v = A().arrays[m];
         if(!v.size()) {
             v.push_back(alloc(m));
@@ -33,9 +33,9 @@ public:
         v.pop_back();
         return a;
     }
-    /// return array after use
+    /// return array after use (thread-safe)
     static void release(T* a) {
-        std::unique_lock<std::mutex> lk(A().allocLock);
+        std::lock_guard<std::mutex> lk(A().allocLock);
         auto sz = A().array_sz.at(a);
         A().arrays[sz].push_back(a);
     }
@@ -63,7 +63,7 @@ template<>
 cplx_t* ArrayPool<cplx_t>::alloc(size_t m);
 
 
-/// Base class for convolution planning
+/// Base class for convolution planning (thread-safe)
 class ConvolvePlan {
 public:
     /// Constructor
