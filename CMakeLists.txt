@@ -12,11 +12,21 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 #set(CMAKE_CXX_STANDARD 17) # 'constexpr' getting usable
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_compile_options("-fPIC" "-Wpedantic" "-Wall" "-Werror" "-ansi" "-pedantic-errors")
-add_compile_options("-Wlogical-op" "-Wshadow")
-# sqlite3.c doesn't like -Wextra; platform-dependent error issues
+add_compile_options("-fPIC" "-Wpedantic" "-Wall" "-Wlogical-op" "-Wshadow" "-Wformat=2" "-ansi" "-pedantic-errors")
+# sqlite3.c doesn't like -Wextra, and has other platform-dependent warnings
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror>)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra>)
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wnull-dereference>)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wuseless-cast>)
+# fails on older gcc:
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0")
+        add_compile_options("-Wduplicated-cond")
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wnull-dereference>)
+    endif()
+    if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0")
+        add_compile_options("-Wduplicated-branches")
+    endif()
+endif()
 
 # cmake -DCMAKE_BUILD_TYPE=Release
 string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")

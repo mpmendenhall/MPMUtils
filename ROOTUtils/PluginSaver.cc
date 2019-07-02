@@ -38,14 +38,14 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& 
     }
 
     auto o = BaseFactory<SegmentSaver>::construct(i, (SegmentSaver&)*this, cfg);
-    string rename = pname;
-    if(copynum >= 0) rename += "_"+to_str(copynum);
-    string rn0 = rename;
-    cfg.lookupValue("rename",rename);
-    o->rename(rename);
-    byName[rename] = o;
+    string _rename = pname;
+    if(copynum >= 0) _rename += "_"+to_str(copynum);
+    string rn0 = _rename;
+    cfg.lookupValue("rename",_rename);
+    o->rename(_rename);
+    byName[_rename] = o;
     myPlugins.push_back(o);
-    if(rn0 == rename) ++copynum;
+    if(rn0 == _rename) ++copynum;
 }
 
 void PluginSaver::Configure(const Setting& cfg, bool skipUnknown) {

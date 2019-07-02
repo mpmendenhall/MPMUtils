@@ -28,6 +28,10 @@
 using std::vector;
 #include <cassert>
 
+/// Handle min in a==b case without tripping -Wduplicated-branches warnings
+template <class T>
+constexpr T constexpr_min(T a, T b) { return a < b ? a : b; }
+
 /// A templatized, fixed size, statically allocated matrix class, stored in rows order.
 /**
  * Not particularly optimized or clever, but convenient for smallish matrices
@@ -44,7 +48,7 @@ public:
     /// number of columns
     static constexpr size_t nCols = N;
     /// min(M,N)
-    static constexpr size_t nDiag = M<N? M : N; //std::min(M,N);
+    static constexpr size_t nDiag = constexpr_min(nRows,nCols);
 
     /// inherit constructors from Vec
     using super::super;

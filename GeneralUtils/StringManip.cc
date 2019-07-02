@@ -150,10 +150,10 @@ string loadFileString(const string& fname) {
     return "";
 }
 
-string displayTime(double t, const string& fmt) {
+string displayTime(double t) {
     time_t tt = t;
-    char buf[1024];
-    strftime(buf,sizeof(buf),fmt.c_str(),localtime(&tt));
+    char buf[128];
+    strftime(buf,sizeof(buf),"%a %b %d %H:%M:%S %Y",localtime(&tt));
     return buf;
 }
 

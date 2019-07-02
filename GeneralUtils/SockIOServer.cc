@@ -162,7 +162,7 @@ bool BlockHandler::process(const vector<char>& v) {
     static int nprocessed = 0;
     nprocessed++;
     received += v.size();
-    if(nprocessed<100 || !(nprocessed % int(nprocessed/100))) {
+    if(nprocessed<100 || !(nprocessed % (nprocessed/100))) {
         printf("%i[%zu]> '", sockfd, v.size());
         if(v.size() < 1024) for(auto c: v) printf("%c",c);
         else printf("%.1f MB", received/(1024*1024.));
