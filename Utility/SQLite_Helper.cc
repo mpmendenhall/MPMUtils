@@ -6,11 +6,12 @@
 // -- Michael P. Mendenhall, 2015
 
 #include "SQLite_Helper.hh"
-#include "SMExcept.hh"
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdexcept>
 
 using std::pair;
 
@@ -30,10 +31,7 @@ SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly) {
     int err = sqlite3_open_v2(dbname.c_str(), &db,
                               readonly? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE, nullptr);
     if(err) {
-        SMExcept e("failed_db_open");
-        e.insert("dbname",dbname);
-        e.insert("err",err);
-        e.insert("message",sqlite3_errmsg(db));
+        std::runtime_error e("Failed to open DB " + dbname + " error " + sqlite3_errmsg(db));
         sqlite3_close(db);
         db = nullptr;
         throw e;
@@ -56,12 +54,7 @@ int SQLite_Helper::setQuery(const char* qry, sqlite3_stmt*& stmt) {
         fflush(stdout);
         usleep(500000+(rand()%500000));
     }
-    if(rc != SQLITE_OK) {
-        SMExcept e("failed_query");
-        e.insert("err",rc);
-        e.insert("message",sqlite3_errmsg(db));
-        throw(e);
-    }
+    if(rc != SQLITE_OK) throw std::runtime_error(string("Failed query '") + qry + "' => '" + sqlite3_errmsg(db) + "'");
     return rc;
 }
 
@@ -90,10 +83,7 @@ int SQLite_Helper::exec(const string& qry, bool checkOK) {
     int rc = busyRetry(stmt);
     sqlite3_reset(stmt);
     if(checkOK && !(rc == SQLITE_OK || rc == SQLITE_DONE)) {
-        SMExcept e("failed_exec");
-        e.insert("err",rc);
-        e.insert("message",sqlite3_errmsg(db));
-        throw(e);
+        throw std::runtime_error(string("Failed exec '") + qry + "' => '" + sqlite3_errmsg(db) + "'");
     }
     return rc;
 }

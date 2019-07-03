@@ -19,6 +19,8 @@ namespace CodeVersion {
     extern const string user;           ///< username of user running program
     extern const string host;           ///< hostname of computer running program
 
+    /// code version descriptive string
+    string description();
     /// print compile info to stdout
     void display_code_version();
 }

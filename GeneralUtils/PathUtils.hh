@@ -38,8 +38,6 @@ void makePath(string p, bool forFile = false);
 vector<string> listdir(const string& dir, bool includeHidden = false, bool fullPath = false);
 /// get time since last file modification (s)
 double fileAge(const string& fname);
-/// get environment variable, with default or fail if missing
-string getEnvSafe(const string& v, const string& dflt = "FAIL_IF_MISSING");
 /// Combine list of PDF files into one multi-page document
 void combo_pdf(const vector<string>& namelist, const string& outname);
 

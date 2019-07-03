@@ -94,20 +94,6 @@ vector<string> listdir(const string& dir, bool includeHidden, bool fullPath) {
     return dirs;
 }
 
-string getEnvSafe(const string& v, const string& dflt) {
-    const char* envv = getenv(v.c_str());
-    if(!envv) {
-        if(dflt == "FAIL_IF_MISSING") {
-            SMExcept e("missingEnv");
-            e.insert("var",v);
-            throw(e);
-            throw("Missing Environment Variable!");
-        }
-        return dflt;
-    }
-    return envv;
-}
-
 void combo_pdf(const vector<string>& namelist, const string& outname) {
     if(!namelist.size()) return;
     makePath(outname, true);
