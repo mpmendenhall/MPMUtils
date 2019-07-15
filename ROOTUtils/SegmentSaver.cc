@@ -86,7 +86,7 @@ TObject* SegmentSaver::tryLoad(const string& oname) {
 }
 
 TH1* SegmentSaver::registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax) {
-    if(saveHists.find(hname)==saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+    if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
     auto h = dynamic_cast<TH1*>(tryLoad(hname));
     if(!h) h = registeredTH1F(hname,title,nbins,xmin,xmax);
     saveHists.emplace(hname,h);
@@ -94,7 +94,7 @@ TH1* SegmentSaver::registerSavedHist(const string& hname, const string& title,un
 }
 
 TH2* SegmentSaver::registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax) {
-    if(saveHists.find(hname)==saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+    if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
     auto h = dynamic_cast<TH2*>(tryLoad(hname));
     if(h) resetZaxis(h);
     else h = registeredTH2F(hname,title,nbinsx,xmin,xmax,nbinsy,ymin,ymax);
@@ -103,7 +103,7 @@ TH2* SegmentSaver::registerSavedHist2(const string& hname, const string& title,u
 }
 
 TH1* SegmentSaver::registerSavedHist(const string& hname, const TH1& hTemplate) {
-    if(saveHists.find(hname)==saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+    if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
     auto h = dynamic_cast<TH1*>(tryLoad(hname));
     if(h) resetZaxis(h);
     else {
