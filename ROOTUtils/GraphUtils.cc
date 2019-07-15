@@ -1,7 +1,6 @@
 /// \file GraphUtils.cc
 #include "GraphUtils.hh"
 #include "StringManip.hh"
-#include "SMExcept.hh"
 #include <math.h>
 #include <TROOT.h>
 #include <TMath.h>
@@ -108,64 +107,6 @@ TGraphErrors* histoDeriv(const TH1* h, unsigned int dxi, double s) {
         n++;
     }
     return g;
-}
-
-Stringmap histoToStringmap(const TH1* h) {
-    assert(h);
-    Stringmap m;
-    m.insert("nbins",h->GetNbinsX());
-    m.insert("name",h->GetName());
-    m.insert("title",h->GetTitle());
-    vector<float> binEdges;
-    vector<float> binConts;
-    vector<float> binErrs;
-    for(int i=0; i<=h->GetNbinsX()+1; i++) {
-        binConts.push_back(h->GetBinContent(i));
-        binErrs.push_back(h->GetBinError(i));
-        if(i<=h->GetNbinsX())
-            binEdges.push_back(h->GetBinLowEdge(i+1));
-    }
-    m.insert("binEdges",vtos(binEdges));
-    m.insert("binErrs",vtos(binErrs));
-    m.insert("binConts",vtos(binConts));
-    return m;
-}
-
-TH1F* stringmapToTH1F(const Stringmap& m) {
-    string hName = m.getDefault("name","hFoo");
-    string hTitle = m.getDefault("name","hFoo");
-    unsigned int nBins = (unsigned int)(m.getDefault("nbins",0));
-    assert(nBins >= 1);
-    vector<double> binEdges = sToDoubles(m.getDefault("binEdges",""));
-    vector<double> binConts = sToDoubles(m.getDefault("binConts",""));
-    vector<double> binErrs = sToDoubles(m.getDefault("binErrs",""));
-    assert(binEdges.size()==nBins+1);
-    assert(binConts.size()==nBins+2);
-    assert(binErrs.size()==nBins+2);
-
-    // TODO does this work right?
-    TH1F* h = new TH1F(hName.c_str(),hTitle.c_str(),nBins,&binEdges[0]);
-    for(unsigned int i=0; i<=nBins+1; i++) {
-        h->SetBinContent(i,binConts[i]);
-        h->SetBinError(i,binErrs[i]);
-    }
-    return h;
-}
-
-Stringmap graphToStringmap(const TGraph& g) {
-    Stringmap m;
-    m.insert("npts",g.GetN());
-    vector<float> xs;
-    vector<float> ys;
-    double x,y;
-    for(int i=0; i<g.GetN(); i++) {
-        g.GetPoint(i,x,y);
-        xs.push_back(x);
-        ys.push_back(y);
-    }
-    m.insert("x",vtos(xs));
-    m.insert("y",vtos(ys));
-    return m;
 }
 
 TGraphErrors* TH1toTGraph(const TH1& h, bool invert) {

@@ -21,8 +21,8 @@
 
 #include "PathUtils.hh"
 #include "StringManip.hh"
-#include "SMExcept.hh"
 
+#include <stdexcept>
 #include <dirent.h>
 #include <algorithm>
 #include <sys/stat.h>
@@ -59,14 +59,7 @@ void makePath(string p, bool forFile) {
         if(!dirExists(thepath)) {
             string cmd = "mkdir -p '"+thepath+"'";
             int err = system(cmd.c_str());
-            if(err || !dirExists(thepath)) {
-                SMExcept e("badPath");
-                e.insert("pathName",thepath);
-                e.insert("errnum",errno);
-                e.insert("errname",strerror(errno));
-                throw(e);
-                throw("Failed to make path!");
-            }
+            if(err || !dirExists(thepath)) throw std::runtime_error("Unable to make path '"+thepath+"'");
         }
     }
 }

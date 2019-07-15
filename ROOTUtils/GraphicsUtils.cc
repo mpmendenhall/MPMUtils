@@ -2,7 +2,6 @@
 #include "GraphicsUtils.hh"
 #include "PathUtils.hh"
 #include "StringManip.hh"
-#include "SMExcept.hh"
 #include <algorithm>
 #include <cassert>
 

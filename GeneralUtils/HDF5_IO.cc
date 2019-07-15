@@ -2,7 +2,7 @@
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "HDF5_IO.hh"
-#include "PathUtils.hh"
+#include "PathUtils.hh" // for makePath
 #include <cassert>
 #include <climits>
 #include <stdexcept>

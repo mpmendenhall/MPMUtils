@@ -2,8 +2,8 @@
 #ifndef GRAPHUTILS_HH
 #define GRAPHUTILS_HH
 
-#include "Stringmap.hh"
 #include "AxisEnum.hh"
+
 #include <TF1.h>
 #include <TH1.h>
 #include <TH1D.h>
@@ -13,7 +13,11 @@
 #include <TProfile.h>
 #include <TGraphErrors.h>
 #include <TCanvas.h>
+
 #include <vector>
+using std::vector;
+#include <string>
+using std::string;
 
 /// bin edges for log histograms
 vector<double> logbinedges(unsigned int nbins, double bmin, double bmax);
@@ -39,13 +43,6 @@ TGraphErrors* histoDeriv(const TH1* h, unsigned int dxi = 1, double s = 1.0);
 
 /// Fill histogram preserving *average* value interpolated between bins
 void fill_interp(TH1* h, double x, double w = 1.0);
-
-/// convert TH1* to Stringmap
-Stringmap histoToStringmap(const TH1* h);
-/// convert Stringmap to TH1F*
-TH1F* stringmapToTH1F(const Stringmap& m);
-/// convert a TGraph to a Stringmap
-Stringmap graphToStringmap(const TGraph& g);
 
 /// convert a histogram to a TGraph, optionally swapping x/y
 TGraphErrors* TH1toTGraph(const TH1& h, bool invert = false);

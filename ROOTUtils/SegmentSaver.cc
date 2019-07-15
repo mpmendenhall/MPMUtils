@@ -21,14 +21,12 @@
 
 #include "SegmentSaver.hh"
 #include "PathUtils.hh"
-#include "SMExcept.hh"
 #include <TString.h>
 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
 OutputManager(nm,pnt), ignoreMissingHistos(true), inflname(inflName) {
     // open file to load existing data
     fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : nullptr;
-    smassert(!fIn || !fIn->IsZombie(),"unreadable_file");
     if(fIn) {
         dirIn = fIn->GetDirectory("");
         inflAge = fileAge(inflname);
@@ -79,11 +77,7 @@ TObject* SegmentSaver::tryLoad(const string& oname) {
             printf("Warning: missing object '%s' in '%s'\n",
                    oname.c_str(), dirIn? dirIn->GetName() : fIn? fIn->GetName() : inflname.c_str());
         } else {
-            SMExcept e("fileStructureMismatch");
-            if(fIn) e.insert("fileName", fIn->GetName());
-            if(dirIn) e.insert("dir", dirIn->GetName());
-            e.insert("objectName",oname);
-            throw(e);
+            throw std::runtime_error("File structure mismatch: missing '"+oname+"'");
         }
     } else {
         addWithName(o, oname);
@@ -92,16 +86,16 @@ TObject* SegmentSaver::tryLoad(const string& oname) {
 }
 
 TH1* SegmentSaver::registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax) {
-    smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
-    TH1* h = dynamic_cast<TH1*>(tryLoad(hname));
+    if(saveHists.find(hname)==saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+    auto h = dynamic_cast<TH1*>(tryLoad(hname));
     if(!h) h = registeredTH1F(hname,title,nbins,xmin,xmax);
     saveHists.emplace(hname,h);
     return h;
 }
 
 TH2* SegmentSaver::registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax) {
-    smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
-    TH2* h = dynamic_cast<TH2*>(tryLoad(hname));
+    if(saveHists.find(hname)==saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+    auto h = dynamic_cast<TH2*>(tryLoad(hname));
     if(h) resetZaxis(h);
     else h = registeredTH2F(hname,title,nbinsx,xmin,xmax,nbinsy,ymin,ymax);
     saveHists.emplace(hname,h);
@@ -109,8 +103,8 @@ TH2* SegmentSaver::registerSavedHist2(const string& hname, const string& title,u
 }
 
 TH1* SegmentSaver::registerSavedHist(const string& hname, const TH1& hTemplate) {
-    smassert(saveHists.find(hname)==saveHists.end(), "duplicate_name_"+hname); // don't duplicate names!
-    TH1* h = dynamic_cast<TH1*>(tryLoad(hname));
+    if(saveHists.find(hname)==saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+    auto h = dynamic_cast<TH1*>(tryLoad(hname));
     if(h) resetZaxis(h);
     else {
         h = (TH1*)addObject((TH1*)hTemplate.Clone(hname.c_str()));
@@ -153,21 +147,13 @@ TH1* SegmentSaver::getSavedHist(const string& hname) {
 
 const TH1* SegmentSaver::getSavedHist(const string& hname) const {
     auto it = saveHists.find(hname);
-    if(it == saveHists.end()) {
-        SMExcept e("missing_histogram");
-        e.insert("name", hname);
-        throw e;
-    }
+    if(it == saveHists.end()) throw std::runtime_error("Missing histogram '"+hname+"'");
     return it->second;
 }
 
 const TCumulative* SegmentSaver::getCumulative(const string& cname) const {
     auto it = cumDat.find(cname);
-    if(it == cumDat.end()) {
-        SMExcept e("missing_cumulative");
-        e.insert("name", cname);
-        throw e;
-    }
+    if(it == cumDat.end()) throw std::runtime_error("Missing cumulative '"+cname+"'");
     return it->second;
 }
 
@@ -190,23 +176,13 @@ void SegmentSaver::scaleData(double s) {
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
     for(auto& kv: saveHists) {
         if(!S.saveHists.count(kv.first)) {
-            if(throwit) {
-                SMExcept e("mismatched_histogram");
-                e.insert("segname", name);
-                e.insert("hname", kv.first);
-                throw e;
-            }
+            if(throwit) throw std::runtime_error("Mismatched histogram '"+kv.first+"' in '"+name+"'");
             return false;
         }
     }
     for(auto& kv: cumDat) {
         if(!S.cumDat.count(kv.first)) {
-            if(throwit) {
-                SMExcept e("mismatched_cumulative");
-                e.insert("segname", name);
-                e.insert("cumname", kv.first);
-                throw e;
-            }
+            if(throwit) throw std::runtime_error("Mismatched cumulative '"+kv.first+"' in '"+name+"'");
             return false;
         }
     }

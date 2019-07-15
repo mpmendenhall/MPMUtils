@@ -29,7 +29,7 @@
 #include <TH1F.h>
 #include <TH2F.h>
 
-/// manages output directory for grouping related information; manages a canvas, output SMFile, output ROOT file, recursive subdirectories
+/// manages output directory for grouping related information; manages a canvas, output ROOT file, recursive subdirectories
 class OutputManager: public TObjCollector {
 public:
     /// constructor for top-level
