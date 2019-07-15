@@ -1,7 +1,6 @@
 /// \file ElectronBindingEnergy.cc Atomic shell binding energy tables
 #include "ElectronBindingEnergy.hh"
 #include "StringManip.hh"
-#include "SMExcept.hh"
 #include <stdio.h>
 
 const string BindingEnergyTable::shellnames = "KLMNOPQRST";
@@ -20,28 +19,13 @@ BindingEnergyTable::BindingEnergyTable(const Stringmap& m): Z(m.getDefault("Z",0
 }
 
 const vector<double>& BindingEnergyTable::getShellBinding(unsigned int n) const {
-    if(n>=eBinding.size()) {
-        return noBinding;
-        SMExcept e("MissingShellInfo");
-        e.insert("Z",Z);
-        e.insert("name",nm);
-        e.insert("shell",n);
-        throw(e);
-    }
+    if(n>=eBinding.size()) return noBinding;
     return eBinding[n];
 }
 
 double BindingEnergyTable::getSubshellBinding(unsigned int n, unsigned int m) const {
     const vector<double>& v = getShellBinding(n);
-    if(m>=v.size()) {
-        return 0;
-        SMExcept e("MissingSubshellInfo");
-        e.insert("Z",Z);
-        e.insert("name",nm);
-        e.insert("shell",n);
-        e.insert("subshell",m);
-        throw(e);
-    }
+    if(m>=v.size()) return 0;
     return v[m];
 }
 
@@ -70,9 +54,7 @@ const BindingEnergyTable* BindingEnergyLibrary::getBindingTable(unsigned int Z, 
     map<unsigned int,BindingEnergyTable*>::const_iterator it =  tables.find(Z);
     if(it==tables.end()) {
         if(allownullptr) return nullptr;
-        SMExcept e("MissingElement");
-        e.insert("Z",Z);
-        throw(e);
+        throw std::runtime_error("Missing Element");
     }
     return it->second;
 }

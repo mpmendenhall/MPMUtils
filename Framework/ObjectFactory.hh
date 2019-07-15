@@ -122,9 +122,9 @@ public:
     /// construct named-class object with arguments; nullptr if unavailable
     template<typename... Args>
     static base* construct(const string& classname, Args&&... a) {
-        auto& m = indexFor<B, Args...>();
-        auto it = m.find(hash(classname));
-        return it == m.end()? nullptr : dynamic_cast<_ArgsBaseFactory<B, Args...>&>(it->second).construct(std::forward<Args>(a)...);
+        auto& mi = indexFor<B, Args...>();
+        auto it = mi.find(hash(classname));
+        return it == mi.end()? nullptr : dynamic_cast<_ArgsBaseFactory<B, Args...>&>(it->second).construct(std::forward<Args>(a)...);
     }
 };
 

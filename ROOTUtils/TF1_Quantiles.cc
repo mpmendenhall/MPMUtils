@@ -1,11 +1,11 @@
 #include "TF1_Quantiles.hh"
-#include "SMExcept.hh"
+#include <stdexcept>
 #include <TMath.h>
 
 TF1_Quantiles::TF1_Quantiles(TF1& f): npx(f.GetNpx()), xMin(f.GetXmin()), xMax(f.GetXmax()), dx((xMax-xMin)/npx),
 integral(npx+1), alpha(npx), beta(npx), gamma(npx) {
 
-    smassert(npx);
+    assert(npx);
 
     integral[0] = 0;
     Int_t intNegative = 0;
@@ -20,12 +20,7 @@ integral(npx+1), alpha(npx), beta(npx), gamma(npx) {
     const Double_t total = integral[npx];
     avg /= total;
 
-    if (intNegative > 0 || !total) {
-        SMExcept e("bad_probability_distribution");
-        e.insert("integral",total);
-        e.insert("negative_segs",intNegative);
-        throw(e);
-    }
+    if(intNegative > 0 || !total) throw std::runtime_error("bad probability distribution");
 
     // normalize integral to CDF
     for (unsigned int i = 1; i <= npx; i++) integral[i] /= total;
