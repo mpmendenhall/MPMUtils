@@ -1,62 +1,64 @@
 -- Analysis results database schema
 -- sqlite3 [analysis DB] < AnalysisDB_Schema.sql
 
--- Analysis code identifier
-CREATE TABLE analysis_code (
-    code_id INTEGER PRIMARY KEY,    -- database ID; best practice: hash of code_description
-    code_description TEXT           -- descriptive string for code version, compile, etc.
+-- Analysis run identifier
+CREATE TABLE analysis_runs (
+    run_id INTEGER PRIMARY KEY, -- database ID
+    dataname TEXT,      -- identifier for dataset/file input
+    anatime REAL        -- timestamp for when analysis was performed
 );
-
--- Analysis dataset identifier
-CREATE TABLE analysis_data (
-    data_id INTEGER PRIMARY KEY,    -- database ID; best practice: hash of data_name
-    data_name TEXT                  -- identifier for dataset/file input
-);
+CREATE UNIQUE INDEX idx_analysis_runs ON analysis_runs(dataname,anatime);
 
 -- Analysis quantity identifier
 CREATE TABLE analysis_vars (
-    var_id INTEGER PRIMARY KEY, -- database ID; best practice: hash of name
-    name TEXT,                  -- name of analysis quantity
-    unit TEXT,                  -- units for quantity
-    descrip TEXT                -- longer description
+    var_id INTEGER PRIMARY KEY, -- database ID
+    name TEXT,          -- name of analysis quantity
+    unit TEXT,          -- units for quantity
+    descrip TEXT        -- longer description
 );
 CREATE UNIQUE INDEX idx_analysis_vars ON analysis_vars(name);
 
--- Analysis results identifiers
+-- Analysis results quantities
 CREATE TABLE analysis_results (
-    result_id INTEGER PRIMARY KEY,  -- database ID; best practice: hash of following items
-    data_id INTEGER,                -- from analysis_data
-    var_id INTEGER,                 -- from analysis_vars
-    code_id INTEGER,                -- from analysis_code
-    anatime REAL,                   -- timestamp for when result was entered
-    FOREIGN KEY(data_id) REFERENCES analysis_data(data_id) ON DELETE CASCADE,
-    FOREIGN KEY(var_id) REFERENCES analysis_vars(var_id) ON DELETE CASCADE,
-    FOREIGN KEY(code_id) REFERENCES analysis_code(code_id) ON DELETE CASCADE
-);
-CREATE UNIQUE INDEX idx_analysis_results ON analysis_results(data_id, var_id);
-CREATE INDEX idx_anaresults_var ON analysis_results(var_id);
-CREATE INDEX idx_anaresults_code ON analysis_results(code_id);
-
--------------------------------------------------------------------
--- User's job to associate data structures with results identifiers
--- Some simple tables below:
-
--- numerical result quantities
-CREATE TABLE number_result (
-    result_id INTEGER,  -- from analysis_results
+    run_id INTEGER,     -- from analysis_runs
+    var_id INTEGER,     -- from analysis_vars
     val REAL,           -- result value
     err REAL,           -- result uncertainty
-    FOREIGN KEY(result_id) REFERENCES analysis_results(result_id) ON DELETE CASCADE
+    FOREIGN KEY(run_id) REFERENCES analysis_runs(run_id) ON DELETE CASCADE,
+    FOREIGN KEY(var_id) REFERENCES analysis_vars(var_id) ON DELETE CASCADE
 );
-CREATE INDEX idx_numresults ON number_result(result_id);
+CREATE UNIQUE INDEX idx_analysis_results ON analysis_results(run_id, var_id);
+CREATE INDEX idx_anaresults_var ON analysis_results(var_id);
 
--- freeform text result quantities
-CREATE TABLE text_result (
-    result_id INTEGER,  -- from analysis_results
+-- Additional freeform text result quantities
+CREATE TABLE analysis_xresults (
+    run_id INTEGER,     -- from analysis_runs
+    var_id INTEGER,     -- from analysis_vars
     val TEXT,           -- result value
-    FOREIGN KEY(result_id) REFERENCES analysis_results(result_id) ON DELETE CASCADE
+    FOREIGN KEY(run_id) REFERENCES analysis_runs(run_id) ON DELETE CASCADE,
+    FOREIGN KEY(var_id) REFERENCES analysis_vars(var_id) ON DELETE CASCADE
 );
-CREATE INDEX idx_textresults ON text_result(result_id);
+CREATE UNIQUE INDEX idx_analysis_xresults ON analysis_xresults(run_id, var_id);
+CREATE INDEX idx_anaxresults_var ON analysis_xresults(var_id);
+
 
 -- PRAGMA journal_mode=WAL; -- not good on network filesystems
--- PRAGMA foreign_keys=ON;  -- needs to be re-done for every connection
+-- PRAGMA foreign_keys=ON; -- needs to be re-done for every connection
+
+---------------------------------------
+---------------------------------------
+-- query recipes
+--
+-- tables joined:
+-- SELECT * FROM analysis_runs,analysis_vars,analysis_results WHERE analysis_results.run_id = analysis_runs.run_id AND analysis_results.var_id = analysis_vars.var_id;
+--
+-- newest analysis for every run:
+-- SELECT * FROM analysis_runs GROUP BY dataname ORDER BY anatime;
+--
+-- newest analysis for a particular run:
+-- SELECT * FROM analysis_runs WHERE dataname = "<dataset name>" GROUP BY dataname ORDER BY anatime;
+--
+-- newest results for particular run:
+-- SELECT * FROM analysis_runs,analysis_vars,analysis_results WHERE analysis_results.run_id = analysis_runs.run_id AND analysis_results.var_id = analysis_vars.var_id
+-- AND analysis_runs.run_id = (SELECT run_id FROM analysis_runs WHERE dataname = "<dataset name>" GROUP BY dataname ORDER BY anatime);
+--

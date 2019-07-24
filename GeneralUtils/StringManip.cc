@@ -152,8 +152,11 @@ string loadFileString(const string& fname) {
 
 string displayTime(double t) {
     time_t tt = t;
+    auto lt = localtime(&tt);
+    if(!lt) return "< Invalid timestamp >";
+
     char buf[128];
-    strftime(buf,sizeof(buf),"%a %b %d %H:%M:%S %Y",localtime(&tt));
+    strftime(buf, 128, "%a %b %d %H:%M:%S %Y", lt);
     return buf;
 }
 

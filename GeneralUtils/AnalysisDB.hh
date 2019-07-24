@@ -1,10 +1,15 @@
 /// \file AnalysisDB.hh Interface to database of analysis results
-// -- Michael P. Mendenhall, LLNL 2019
+// This file was produced under the employ of the United States Government,
+// and is consequently in the PUBLIC DOMAIN, free from all provisions of
+// US Copyright Law (per USC Title 17, Section 105).
+//
+// -- Michael P. Mendenhall, 2016
 
 #ifndef ANALYSISDB_HH
 #define ANALYSISDB_HH
 
 #include "SQLite_Helper.hh"
+#include <stdio.h>
 
 /// Calibration database interface
 class AnalysisDB: public SQLite_Helper {
@@ -16,58 +21,37 @@ public:
 
     static string dbfile;   ///< database file location
 
-    /// Information on an analysis variable
-    struct AnaVar {
-        string name;        ///< name
-        string unit;        ///< units
-        string descrip;     ///< description
-    };
-
-    /// Struct for holding analysis results for later deferred upload
-    struct AnaResult: public AnaVar {
-        /// Constructor
-        AnaResult(const string& nm, const string& u, const string& dsc, double v, double e):
-        AnaVar{nm,u,dsc}, val(v), err(e) { }
-        /// Constructor for text value
-        AnaResult(const string& nm, const string& u, const string& dsc, const string& v):
-        AnaVar{nm,u,dsc}, val(0), err(0), xval(v) { }
-        /// Display contents
-        void display() const;
-
-        double val;         ///< value
-        double err;         ///< uncertainty on value
-        string xval;        ///< text value (supercedes val/err)
-    };
-
-    /// create analysis dataset identifier
-    sqlite3_int64 createAnaData(const string& dataname);
+    /// create analysis run identifier
+    sqlite3_int64 createAnaRun(const string& dataname);
     /// get (or create) analysis variable identifier
     sqlite3_int64 getAnaVar(const string& name, const string& unit, const string& descrip);
-    /// get (or create) analysis variable identifier
-    sqlite3_int64 getAnaVar(const AnaVar& V) { return getAnaVar(V.name,V.unit,V.descrip); }
-    /// create identifier for result
-    sqlite3_int64 getResultID(sqlite3_int64 data_id, sqlite3_int64 var_id);
-
-    /// upload numerical analysis result
-    void uploadAnaResult(sqlite3_int64 result_id, double val, double err);
-    /// upload numerical analysis result
-    void uploadAnaResult(sqlite3_int64 data_id, sqlite3_int64 var_id, double val, double err) {
-        uploadAnaResult(getResultID(data_id,var_id), val, err);
-    }
-
+    /// upload analysis result
+    void uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, double val, double err);
     /// upload text analysis result
-    void uploadAnaResult(sqlite3_int64 result_id, const string& val);
-    /// upload text analysis result
-    void uploadAnaResult(sqlite3_int64 data_id, sqlite3_int64 var_id, const string& val) {
-        uploadAnaResult(getResultID(data_id,var_id), val);
-    }
+    void uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, const string& val);
 
 protected:
     /// Constructor
     AnalysisDB(): SQLite_Helper(dbfile) { }
 
     static AnalysisDB* myDB;    ///< singleton instance of DB connection
-    sqlite3_int64 code_id();    ///< create identifier for code this is run in
+};
+
+/// Struct for holding analysis results until upload
+struct AnaResult {
+    /// Constructor
+    AnaResult(const string& nm, const string& u, const string& dsc, double v, double e): name(nm), unit(u), descrip(dsc), val(v), err(e) { }
+    /// Constructor for text value
+    AnaResult(const string& nm, const string& u, const string& dsc, const string& v): name(nm), unit(u), descrip(dsc), val(0), err(0), xval(v) { }
+    /// Display contents
+    void display() const;
+
+    string name;        ///< name
+    string unit;        ///< units
+    string descrip;     ///< description
+    double val;         ///< value
+    double err;         ///< uncertainty on value
+    string xval;        ///< text value (supercedes val/err)
 };
 
 #endif

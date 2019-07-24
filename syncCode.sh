@@ -13,7 +13,7 @@ f=`basename "$f0"`
 ext="${f##*.}"
 
 if [ "$f" == "Makefile" ] || [ "$f" == "CMakeLists.txt" ] || [ "$f" == "__pycache__" ] || [ "$ext" == "pyc" ] \
-|| [ "$f" == "HDF5_StructInfo.hh" ] || [ "$f" == "HDF5_StructInfo.cc" ] || [ "$f" == "LinkDef.h" ]; then
+|| [ "$f" == "HDF5_StructInfo.hh" ] || [ "$f" == "HDF5_StructInfo.cc" ] || [ "$f" == "LinkDef.h" ] || [  "$f" == "Doxyfile" ]; then
 continue; fi
 
 showdiff() {
