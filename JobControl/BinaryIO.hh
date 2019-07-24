@@ -101,6 +101,20 @@ protected:
     vector<char> wbuff;     ///< deferred write buffer
 };
 
+/// Binary writer with exposed buffer for serialization
+class BinarySerializer: public BinaryWriter {
+public:
+    /// Constructor; starts at wtxDepth 1 to delay buffer clear
+    BinarySerializer() { start_wtx(); }
+    /// direct buffer access
+    vector<char>& buf() { return wbuff; }
+
+protected:
+    /// _send does nothing!
+    void _send(void*, int) { }
+};
+
+
 /// Base binary reader class with deserializer functions
 class BinaryReader {
 public:
@@ -171,7 +185,9 @@ inline void BinaryWriter::send(const char* x) { assert(x); send(string(x)); }
 class MemBReader: public BinaryReader {
 public:
     /// Constructor to non-owned buffer
-    MemBReader(const void* p, size_t n): dR(p), pR(p), eR((const char*)p + n) { }
+    MemBReader(const void* p = nullptr, size_t n = 0) { setReadBuffer(p,n); }
+    /// set buffer
+    void setReadBuffer(const void* p, size_t n) { dR = p; pR = p; eR = (const char*)p + n; }
 
 protected:
     /// blocking data receive
