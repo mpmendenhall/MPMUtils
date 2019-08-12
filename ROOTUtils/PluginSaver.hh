@@ -92,7 +92,7 @@ public:
         auto t0 = steady_clock::now();
         auto P = new Plug(dynamic_cast<Base&>(pnt), S);
         P->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
-        S.lookupValue("order", P->order);
+        S.lookupValue("order", P->SegmentSaver::order);
         return P;
     }
 };

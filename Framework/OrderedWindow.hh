@@ -5,11 +5,11 @@
 #define ORDEREDWINDOW_HH
 
 #include "SFINAEFuncs.hh" // for dispObj
-#include "deref_if_ptr.hh"
 #include "DataSink.hh"
 #include <cassert>
 #include <algorithm> // for std::lower_bound
 #include <type_traits> // for std::remove_pointer
+#include <iterator> // for std::distance
 #include <deque>
 using std::deque;
 #include <utility>
@@ -25,22 +25,22 @@ public:
     iterator& begin() { return this->first; }
     /// range end
     const iterator& end() const { return this->second; }
+    /// number of elements
+    size_t size() const { return this->first==this->second? 0 : std::distance(this->first, this->second); }
 };
 
 /// Flow-through analysis on a ``window'' of ordered objects
-template<class T0, typename _ordering_t = double>
-class OrderedWindow: protected deque<T0>, public DataSink<T0> {
+template<class T, typename _ordering_t = double>
+class OrderedWindow: protected deque<T>, public DataSink<T> {
 public:
     /// ordering type
     typedef _ordering_t ordering_t;
-    /// un-pointered class being ordered
-    typedef typename std::remove_pointer<T0>::type T;
     /// iterator type
-    typedef typename deque<T0>::iterator iterator;
+    typedef typename deque<T>::iterator iterator;
     /// iterator range
     typedef ItRange<iterator> itrange_t;
     /// const_iterator type
-    typedef typename deque<T0>::const_iterator const_iterator;
+    typedef typename deque<T>::const_iterator const_iterator;
     /// const_iterator range
     typedef ItRange<const_iterator> const_itrange_t;
 
@@ -67,8 +67,12 @@ public:
     void flushLo(ordering_t x) {  while(size() && order(front()) < x) { if(!imid) nextmid(); else disposeLo(); } }
 
     /// number of objects in window
-    using deque<T0>::size;
+    using deque<T>::size;
+    using deque<T>::front;
+    using deque<T>::back;
 
+    /// get current middle element
+    const T& getMid() const { return this->at(imid); }
     /// get ordering position of middle object
     ordering_t xMid() const { return size()? order((*this)[imid]) : 0; }
 
@@ -88,9 +92,9 @@ public:
     int nProcessed = 0; ///< number of objects processed through window
 
     /// get iterator to first item in window with order >= x
-    iterator abs_position(ordering_t x) { return std::lower_bound(begin(), end(), x, [](const T0& a, ordering_t t) { return order(a) < t; }); }
+    iterator abs_position(ordering_t x) { return std::lower_bound(begin(), end(), x, [](const T& a, ordering_t t) { return order(a) < t; }); }
     /// get const_iterator to first item in window with order >= x
-    const_iterator abs_position(double x) const { return std::lower_bound(begin(), end(), x, [](const T0& a, ordering_t t) { return order(a) < t; }); }
+    const_iterator abs_position(double x) const { return std::lower_bound(begin(), end(), x, [](const T& a, ordering_t t) { return order(a) < t; }); }
 
     /// get iterator to first item in window with order >= xMid + dx
     iterator rel_position(double dx) { return abs_position(xMid()+dx); }
@@ -106,13 +110,15 @@ public:
 
     /// get window position range for absolute range
     itrange_t abs_range(double x0, double x1) { return {abs_position(x0), abs_position(x1)}; }
+    /// get (const) window position range for absolute range
+    const_itrange_t abs_range(double x0, double x1) const { return {abs_position(x0), abs_position(x1)}; }
 
     /// get number of objects in specified time range around mid
     int window_counts(ordering_t dx0, ordering_t dx1) const { auto x = xMid(); return abs_position(x+dx1) - abs_position(x+dx0); }
 
     /// add next newer object; process older as they pass through window.
-    void push(const T0& oo) override {
-        auto o = oo;
+    void push(const T& oo) override {
+        T o = oo; // copy to permit modification/disposal
         if(verbose >= 4) { printf("Adding new "); display(o); }
         auto x = order(o);
         if(!(x==x)) {
@@ -122,7 +128,7 @@ public:
         } else {
             flushHi(x);
             processNew(o);
-            deque<T0>::push_back(o);
+            deque<T>::push_back(o);
         }
         nProcessed++;
     }
@@ -131,10 +137,9 @@ protected:
 
     ordering_t hwidth;  ///< half-length of analysis window kept around "mid" object
 
-    using deque<T0>::front;
-    using deque<T0>::pop_front;
-    using deque<T0>::begin;
-    using deque<T0>::end;
+    using deque<T>::begin;
+    using deque<T>::end;
+    using deque<T>::pop_front;
 
     // Subclass me to do the interesting stuff!
 
@@ -154,8 +159,7 @@ protected:
     /// analyze current "mid" object with processMid() and increment to next; flush if no next available
     void nextmid() {
         assert(imid < size());
-        processMid((*this)[imid]);
-        imid++;
+        processMid((*this)[imid++]);
 
         if(imid < size()) {
             auto x0 = order((*this)[imid]);

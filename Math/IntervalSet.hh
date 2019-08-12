@@ -7,6 +7,7 @@
 #include <set>
 using std::set;
 #include <stdlib.h> // for size_t
+#include <limits>
 
     /// interval sorting by start point
 template<typename T>
@@ -16,7 +17,7 @@ public:
 };
 
 /// Collection of disjoint intervals
-template<typename T>
+template<typename T = double>
 class IntervalSet: protected set<std::pair<T,T>, CompareFirst<std::pair<T,T>>> {
 public:
     /// interval specified by (start, end)
@@ -36,6 +37,9 @@ public:
     /// add interval to set, merging with any overlapping intervals
     void operator+=(interval i) {
         if(i.second < i.first) std::swap(i.first, i.second); // assure end >= start
+        ++nIndividual;
+        tIndividual += i.second - i.first;
+
         // completely outside of existing range?
         if(!size() || i.second < begin()->first || i.first > rbegin()->second) { insert(i); return; }
 
@@ -51,10 +55,17 @@ public:
 
         erase(it0, it1);
         insert(i);
+
+        // summarize old intervals
+        if(dtMax) summarize(i.first - dtMax);
     }
 
     /// combine (OR) with other intervals
-    void operator+=(const IntervalSet& rhs) { for(auto i: rhs) *this += i; }
+    void operator+=(const IntervalSet& rhs) {
+        for(auto i: rhs) *this += i;
+        nIndividual += rhs.nIndividual;
+        tIndividual += rhs.tIndividual;
+    }
 
     /// intersection (AND) with other intervals
     void operator&=(const IntervalSet& rhs) {
@@ -71,6 +82,8 @@ public:
             }
         }
         *this = inew;
+        nIndividual += rhs.nIndividual;
+        tIndividual += rhs.tIndividual;
     }
 
     /// collapse all intervals ending before specified value into summary
@@ -85,7 +98,10 @@ public:
     }
 
     size_t nSummary = 0;    /// number of summarized non-tracked intervals
-    T tSummary = 0;         /// constent of summarized non-tracked intervals
+    size_t dtMax = 0;       ///< maximum length to store (0 to disable)
+    T tSummary = 0;         /// content of summarized non-tracked intervals
+    T tIndividual = 0;      /// span of individual intervals added before overlap
+    size_t nIndividual = 0; /// number of individual intervals before merge
 
     /// number of intervals
     size_t n() const { return size() + nSummary; }
@@ -96,7 +112,6 @@ public:
         for(auto i: *this) t += i.second - i.first;
         return t;
     }
-
 };
 
 #endif

@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdexcept>
+#include <fcntl.h>
 
 using std::pair;
 
@@ -22,7 +23,12 @@ void errorLogCallback(void*, int iErrCode, const char* zMsg){
 
 bool SQLite_Helper::errlog_configured = false;
 
-SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly) {
+SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create) {
+    if(create && !readonly) {
+        int fd = open(dbname.c_str(), O_WRONLY|O_CREAT|O_NOCTTY|O_NONBLOCK, 0666);
+        close(fd);
+    }
+
     if(!errlog_configured) {
         sqlite3_config(SQLITE_CONFIG_LOG, &errorLogCallback, nullptr);
         errlog_configured = true;

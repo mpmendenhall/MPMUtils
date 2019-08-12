@@ -36,7 +36,7 @@ TObject* TObjCollector::addDeletable(TObject* o) {
 }
 
 TObject* TObjCollector::addWithName(TObject* o, const string& name) {
-    if(anonItems.count(name)) throw std::runtime_error("Duplicate name registered!");
+    if(anonItems.count(name)) throw std::runtime_error("Duplicate name '"+name+"' registered!");
     anonItems[name] = o;
     return o;
 }

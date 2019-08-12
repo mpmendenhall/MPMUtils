@@ -21,7 +21,7 @@ using std::vector;
 class SQLite_Helper {
 public:
     /// Constructor
-    SQLite_Helper(const string& dbname, bool readonly = false);
+    SQLite_Helper(const string& dbname, bool readonly = false, bool create = true);
     /// Destructor
     virtual ~SQLite_Helper();
 
