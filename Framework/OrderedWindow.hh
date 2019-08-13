@@ -74,14 +74,14 @@ public:
     /// get current middle element
     const T& getMid() const { return this->at(imid); }
     /// get ordering position of middle object
-    ordering_t xMid() const { return size()? order((*this)[imid]) : 0; }
+    ordering_t xMid() const { if(!size()) return {}; assert(imid < size()); return order((*this)[imid]); }
 
     /// print window information
     virtual void display() const {
         printf("Window of width %g containing %zu events (mid at %zu).\n", hwidth, size(), imid);
         if(verbose > 1) {
             for(size_t i=0; i<size(); i++) {
-                if(i==imid) printf("*");
+                if(i == imid) printf("*");
                 printf("%g\t", order((*this)[i]));
             }
             printf("\n");
@@ -159,7 +159,8 @@ protected:
     /// analyze current "mid" object with processMid() and increment to next; flush if no next available
     void nextmid() {
         assert(imid < size());
-        processMid((*this)[imid++]);
+        processMid((*this)[imid]);
+        ++imid;
 
         if(imid < size()) {
             auto x0 = order((*this)[imid]);
