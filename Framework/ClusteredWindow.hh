@@ -87,6 +87,13 @@ public:
         OrderedWindow<C>::flush();
     }
 
+    /// push currentC into window
+    void completeCluster() {
+        currentC.close();
+        if(currentC.size() && includeCluster(currentC)) OrderedWindow<C>::push(currentC);
+        currentC.clear();
+    }
+
     /// add object to newest cluster (or start newer cluster), assuming responsibility for deletion
     void push(const T& oo) override {
         auto o = oo;
@@ -107,13 +114,6 @@ protected:
     virtual bool includeCluster(const C&) const { return true; }
 
     C currentC; ///< cluster currently being built
-
-    /// push currentC into window
-    virtual void completeCluster() {
-        currentC.close();
-        if(currentC.size() && includeCluster(currentC)) OrderedWindow<C>::push(currentC);
-        currentC.clear();
-    }
 };
 
 #endif

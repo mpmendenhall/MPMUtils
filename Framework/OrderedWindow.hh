@@ -7,9 +7,11 @@
 #include "SFINAEFuncs.hh" // for dispObj
 #include "DataSink.hh"
 #include <cassert>
+#include <cmath>
 #include <algorithm> // for std::lower_bound
 #include <type_traits> // for std::remove_pointer
 #include <iterator> // for std::distance
+#include <stdexcept>
 #include <deque>
 using std::deque;
 #include <utility>
@@ -54,17 +56,32 @@ public:
     /// Constructor
     OrderedWindow(ordering_t dw): hwidth(dw) { }
     /// Destructor: must be cleared before reaching here!
-    virtual ~OrderedWindow() { assert(!size()); assert(!imid); }
+    virtual ~OrderedWindow() {
+        if(size()) {
+            printf("Potential memory leak: unflushed window of %zu objects.\n", size());
+            if(enforceClear) abort();
+        }
+    }
 
     /// get window half-width
     ordering_t windowHalfwidth() const { return hwidth; }
 
     /// clear remaining objects through window (at end of run, etc.)
-    void flush() override { while(size()) nextmid(); }
+    void flush() override { if(size()) flushHi(order(back()) + hwidth); }
     /// Flush as if inserting new highest at x
-    void flushHi(ordering_t x) { while(size() && order((*this)[imid]) + hwidth <= x) nextmid(); }
+    void flushHi(ordering_t x) {
+        window_Hi = x;
+        if(!size()) window_Lo = x - 2*hwidth;
+        while(size() && order((*this)[imid]) + hwidth <= x) nextmid();
+    }
     /// Flush until lowest > x (or queue empty)
-    void flushLo(ordering_t x) {  while(size() && order(front()) < x) { if(!imid) nextmid(); else disposeLo(); } }
+    void flushLo(ordering_t x) {
+        window_Hi = std::max(window_Hi, x + 2*hwidth);
+        while(size() && order(front()) < x) {
+            if(!imid) nextmid();
+            else disposeLo();
+        }
+    }
 
     /// number of objects in window
     using deque<T>::size;
@@ -94,27 +111,59 @@ public:
     /// get iterator to first item in window with order >= x
     iterator abs_position(ordering_t x) { return std::lower_bound(begin(), end(), x, [](const T& a, ordering_t t) { return order(a) < t; }); }
     /// get const_iterator to first item in window with order >= x
-    const_iterator abs_position(double x) const { return std::lower_bound(begin(), end(), x, [](const T& a, ordering_t t) { return order(a) < t; }); }
+    const_iterator abs_position(ordering_t x) const { return std::lower_bound(begin(), end(), x, [](const T& a, ordering_t t) { return order(a) < t; }); }
+    /// check if item is in available range
+    bool in_range(ordering_t x) const { return window_Lo < x && x < window_Hi; }
 
     /// get iterator to first item in window with order >= xMid + dx
-    iterator rel_position(double dx) { return abs_position(xMid()+dx); }
+    iterator rel_position(ordering_t dx) { return abs_position(xMid()+dx); }
     /// get const_iterator to first item in window with order >= xMid + dx
-    const_iterator rel_position(double dx) const { return abs_position(xMid()+dx); }
+    const_iterator rel_position(ordering_t dx) const { return abs_position(xMid()+dx); }
 
+    /// get window position range for range offset from mid --- no bounds check
+    itrange_t _rel_range(ordering_t dx0, ordering_t dx1) { return {rel_position(dx0), rel_position(dx1)}; }
     /// get window position range for range offset from mid
-    itrange_t rel_range(double dx0, double dx1) { return {rel_position(dx0), rel_position(dx1)}; }
+    itrange_t rel_range(ordering_t dx0, ordering_t dx1) {
+        if(!size()) throw std::runtime_error("Rel_range undefined on empty window");
+        if(std::fabs(dx0) > hwidth || std::fabs(dx1) > hwidth) throw std::runtime_error("Rel_range larger than window requested");
+        return _rel_range(dx0,dx1);
+    }
+
+    /// get (const) window position range for range offset from mid -- no bounds check
+    const_itrange_t _rel_range(ordering_t dx0, ordering_t dx1) const { return {rel_position(dx0), rel_position(dx1)}; }
     /// get (const) window position range for range offset from mid
-    const_itrange_t rel_range(double dx0, double dx1) const { return {rel_position(dx0), rel_position(dx1)}; }
-    /// count items in range
-    size_t rel_count(double dx0, double dx1) const { return rel_position(dx1).I - rel_position(dx0).I; }
+    const_itrange_t rel_range(ordering_t dx0, ordering_t dx1) const {
+        if(!size()) throw std::runtime_error("rel_range undefined on empty window");
+        if(std::fabs(dx0) > hwidth || std::fabs(dx1) > hwidth) throw std::runtime_error("rel_range larger than window requested");
+        return _rel_range(dx0,dx1);
+    }
 
+    /// count items in relative range
+    size_t rel_count(ordering_t dx0, ordering_t dx1) const { return rel_range(dx0,dx1).size(); }
+
+    static constexpr bool PARANOID_BOUNDS = false;
+    bool enforceClear = true;
+
+    /// get window position range for absolute range (no bounds checking)
+    itrange_t _abs_range(ordering_t x0, ordering_t x1) { return {abs_position(x0), abs_position(x1)}; }
     /// get window position range for absolute range
-    itrange_t abs_range(double x0, double x1) { return {abs_position(x0), abs_position(x1)}; }
-    /// get (const) window position range for absolute range
-    const_itrange_t abs_range(double x0, double x1) const { return {abs_position(x0), abs_position(x1)}; }
+    itrange_t abs_range(ordering_t x0, ordering_t x1) {
+        if(PARANOID_BOUNDS && (!in_range(x0) || !in_range(x1)))
+            throw std::runtime_error("abs_range outside window requested");
+        return _abs_range(x0,x1);
+    }
 
-    /// get number of objects in specified time range around mid
-    int window_counts(ordering_t dx0, ordering_t dx1) const { auto x = xMid(); return abs_position(x+dx1) - abs_position(x+dx0); }
+    /// get (const) window position range for absolute range
+    const_itrange_t _abs_range(ordering_t x0, ordering_t x1) const { return {abs_position(x0), abs_position(x1)}; }
+    /// get (const) window position range for absolute range
+    const_itrange_t abs_range(ordering_t x0, ordering_t x1) const {
+        if(PARANOID_BOUNDS && (!in_range(x0) || !in_range(x1)))
+            throw std::runtime_error("abs_range outside window requested");
+        return _abs_range(x0,x1);
+    }
+
+    /// count items in absolute range
+    size_t abs_count(ordering_t dx0, ordering_t dx1) const { return abs_range(dx0,dx1).size(); }
 
     /// add next newer object; process older as they pass through window.
     void push(const T& oo) override {
@@ -132,6 +181,9 @@ public:
         }
         nProcessed++;
     }
+
+    ordering_t window_Lo = {};  ///< newest discarded (start of available range)
+    ordering_t window_Hi = {};  ///< newest added/flushed (end of available range)
 
 protected:
 
@@ -160,11 +212,11 @@ protected:
     void nextmid() {
         assert(imid < size());
         processMid((*this)[imid]);
+        window_Lo = order((*this)[imid]) - hwidth;
         ++imid;
 
         if(imid < size()) {
-            auto x0 = order((*this)[imid]);
-            while(order(front()) + hwidth <= x0) disposeLo();
+            while(order(front()) <= window_Lo) disposeLo();
         } else {
             while(size()) disposeLo();
             assert(!imid);

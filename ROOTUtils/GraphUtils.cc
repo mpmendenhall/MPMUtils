@@ -31,7 +31,7 @@ void fill_interp(TH1* h, double x, double w) {
 void normalize_to_bin_width(TH1* f, double xscale, const string& ytitle) {
     if(!f) return;
     Int_t bx,by,bz;
-    for(int i=0; i<f->GetNcells(); i++) {
+    for(int i=0; i<f->GetNcells(); ++i) {
         f->GetBinXYZ(i,bx,by,bz);
         TAxis* A = f->GetXaxis();
         double scale = 1./A->GetBinWidth(bx);
@@ -40,6 +40,10 @@ void normalize_to_bin_width(TH1* f, double xscale, const string& ytitle) {
     }
     f->Scale(xscale);
     if(ytitle.size()) f->GetYaxis()->SetTitle(ytitle.c_str());
+}
+
+void addConst(TH1& h, double c) {
+    for(int i=0; i<h.GetNcells(); ++i) h.SetBinContent(i, h.GetBinContent(i) + c);
 }
 
 void normalize_to_bin_area(TH2* h, double xscale) {

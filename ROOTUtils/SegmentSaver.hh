@@ -31,9 +31,11 @@
 #include <map>
 #include <string>
 #include <stdexcept>
+#include <set>
 
 using std::map;
 using std::string;
+using std::set;
 
 /// class for saving, retrieving, and summing data from file
 class SegmentSaver: public OutputManager {
@@ -136,6 +138,7 @@ protected:
     TObject* tryLoad(const string& oname);
 
     map<string,TH1*> saveHists;         ///< saved cumulative histograms
+    set<TObject*> doNotScale;           ///< items not to rescale
     map<string,TCumulative*> cumDat;    ///< non-TH1-derived cumulative datatypes
     double inflAge = 0;                 ///< age of input file [s]; 0 for brand-new files
 };

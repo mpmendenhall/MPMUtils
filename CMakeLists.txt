@@ -40,6 +40,12 @@ string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
 find_library(CONFIG_LIBS config++)
 LIST(APPEND LINKLIBS ${CONFIG_LIBS})
 
+#########
+# libuuid
+#########
+find_library(UUID_LIBS uuid)
+LIST(APPEND LINKLIBS ${UUID_LIBS})
+
 ########
 # OpenGL
 ########

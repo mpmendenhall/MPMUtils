@@ -163,14 +163,15 @@ void SegmentSaver::zeroSavedHists() {
 }
 
 void SegmentSaver::scaleData(double s) {
-    if(s==1.) return;
+    if(s == 1.) return;
     for(auto& kv: saveHists) {
+        if(doNotScale.count(kv.second)) continue;
         if(kv.second->ClassName() != TString("TProfile") && kv.second->ClassName() != TString("TProfile2D")) {
             if(!kv.second->GetSumw2()) kv.second->Sumw2();
             kv.second->Scale(s);
         }
     }
-    for(auto& kv: cumDat) kv.second->_Scale(s);
+    for(auto& kv: cumDat) if(!doNotScale.count(kv.second)) kv.second->_Scale(s);
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
