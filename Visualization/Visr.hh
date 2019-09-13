@@ -51,7 +51,7 @@ namespace vsr {
     /// draw ball at location
     void ball(vec3 p, double r, int nx = 8, int ny = 8);
     /// draw circle (polygon) with center o, normal/radius n; i line segments
-    void circle(vec3 o, vec3 n, int i = 36);
+    void circle(vec3 o, vec3 n, int i = 36, double th0 = 0);
     /// draw teapot
     void teapot(double s = 1.0);
 
@@ -82,6 +82,7 @@ namespace vsr {
         virtual void _visualize() const = 0;
 
         static bool vis_on;
+        static bool wireframeMode;
     };
 }
 

@@ -4,6 +4,7 @@
 #ifndef POINTCLOUDPCA_HH
 #define POINTCLOUDPCA_HH
 
+#include <stdexcept>
 #include <vector>
 using std::vector;
 #include <cstddef> // for size_t
@@ -11,38 +12,63 @@ using std::vector;
 #include <cmath>
 #include <array>
 using std::array;
+
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 #include <TMatrixDSymEigen.h>
-#include <cassert>
 
 /// point with weight in point cloud
-template<int N>
+template<int N, typename T = double>
 struct weightedpt {
-    /// Constructor
-    weightedpt(double* xx = nullptr, double ww = 1): w(ww) { if(xx) std::copy(xx, xx+N, x.data()); else std::fill(x.begin(), x.end(), 0); }
+    typedef array<T,N> coord_t;
 
-    array<double,N> x;  ///< coordinate
-    double w;           ///< weight
+    /// Weights-only constructor
+    weightedpt(double ww = 1): x{{}}, w(ww) { }
+
+    /// Constructor with array value
+    weightedpt(T* xx, double ww = 1): w(ww) {
+        if(xx) std::copy(xx, xx+N, x.data());
+        else std::fill(x.begin(), x.end(), T{});
+    }
+
+    coord_t x;  ///< coordinate
+    double w;   ///< weight
 };
 
 /// PCA calculation
-template<int N>
+template<int N, typename T = double>
 class PointCloudPCA {
 public:
+    /// associated weighted-point type
+    typedef weightedpt<N,T> wpt_t;
+
+    // data
+    typename wpt_t::coord_t mu{{}};     ///< mean center
+    array<array<double,N>,N> Cov{{}};   ///< covariance matrix
+    array<array<double,N>,N> PCA{{}};   ///< orthogonal principal components vectors in PCA[i], largest to smallest
+    array<double,N> width2{{}};         ///< spread along principal directions (eigenvalues of Cov), largest to smallest
+    size_t n = 0;                       ///< number of points
+    double sw = 0;                      ///< sum of weights
+
     /// Default constructor
     PointCloudPCA() { }
 
     /// Constructor, calculated from points
-    PointCloudPCA(const vector<weightedpt<N>>& v): n(v.size()) {
+    PointCloudPCA(const vector<wpt_t>& v): n(v.size()) {
+        if(!n) return;
+
         // weights vector
         TMatrixD w(1,n);
         for(size_t i=0; i<n; i++) { w(0,i) = v[i].w; }
         sw = w.Sum();
+        if(!sw) return;
+        if(!(sw == sw)) throw std::runtime_error("Invalid NaN sum weights");
 
         // points matrix
         TMatrixD M(n,N);
-        for(size_t i=0; i<n; i++) for(int j = 0; j<N; j++) M(i,j) = v[i].x[j];
+        for(size_t i=0; i<n; i++)
+            for(int j = 0; j<N; j++)
+                M(i,j) = v[i].x[j];
 
         // calculate mean
         auto u = w*M;
@@ -76,20 +102,13 @@ public:
     /// reverse direction
     void flip() {for(int i = 0; i<N-1; i++) for(int j = 0; j<N; j++) PCA[i][j] *= -1; }
 
-    array<double,N> mu;     ///< mean center
-    double Cov[N][N];       ///< covariance matrix
-    array<double,N> PCA[N]; ///< orthogonal principal components vectors in PCA[i], largest to smallest
-    array<double,N> width2; ///< spread along principal directions (eigenvalues of Cov), largest to smallest
-    size_t n;               ///< number of points
-    double sw;              ///< sum of weights
-
-    void operator+=(const PointCloudPCA<N>& P) {
+    void operator+=(const PointCloudPCA& P) {
         if(!sw) {
             *this = P;
             return;
         }
 
-        PointCloudPCA<N> Pnew;
+        PointCloudPCA Pnew;
 
         Pnew.n = n + P.n;
         Pnew.sw = sw + P.sw;
@@ -102,7 +121,7 @@ public:
         }
 
         *this = Pnew;
-        calcPrincipalComponents(TMatrixDSym(N,Cov[0]));
+        calcPrincipalComponents(TMatrixDSym(N, Cov[0].data()));
     }
 
     /// out-of-place sum
@@ -122,7 +141,7 @@ public:
         printf("Cloud of %zu %i-points (average weight %g):\n", n, N, n? sw/n : 0);
         if(N==3) {
             printf("\tmean = %g\t%g\t%g\t\twidth2 = %g\t%g\t%g\n",
-            mu[0], mu[1], mu[2], width2[0], width2[1], width2[2]);
+            double(mu[0]), double(mu[1]), double(mu[2]), width2[0], width2[1], width2[2]);
             for(int i=0; i<3; i++) {
                 printf("\t%g\t%g\t%g\t\t%g\t%g\t%g\n",
                     Cov[i][0], Cov[i][1], Cov[i][2],

@@ -50,7 +50,7 @@ namespace vsr {
     void set_kill() { kill_flag = true; }
     void _wireframe(std::vector<float>&) { wireframe = true; }
     void _solid(std::vector<float>&) { wireframe = false; }
-    void setWireframe(bool w) { addCmd(w? _wireframe : _solid); }
+    void setWireframe(bool w) { Visualizable::wireframeMode = w; addCmd(w? _wireframe : _solid); }
 
     void setClearColor(float r, float g, float b, float a) {
         bgR = r;
@@ -70,6 +70,7 @@ namespace vsr {
 namespace vsr {
 
     bool Visualizable::vis_on = true;
+    bool Visualizable::wireframeMode = true;
     std::vector<GLuint> displaySegs;
 
     void doGlutLoop() {
@@ -78,6 +79,14 @@ namespace vsr {
         glutLooping = false;
     }
 
+    struct screendump_request {
+        int h0 = 0;
+        int w0 = 0;
+        bool doDump = false;
+        int ndumps = 0;
+        char fname[1024];
+    } theSDR;
+
     void redrawDisplay() {
         if(!displaySegs.size()) return;
 
@@ -85,9 +94,32 @@ namespace vsr {
         glutSwapBuffers();
         glFlush();
         glFinish();
+
+        if(!theSDR.doDump) return;
+
+        printf("Saving %i x %i screendump to '%s'\n", winwidth, winheight, theSDR.fname);
+        auto fout = fopen(theSDR.fname,"wb");
+
+        std::vector<char> pbuff(3*winwidth*winheight);
+        glGetError();
+        glReadBuffer(GL_FRONT);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glReadPixels(0, 0, winwidth, winheight, GL_BGR, GL_UNSIGNED_BYTE, pbuff.data());
+        assert(glGetError() == GL_NO_ERROR);
+
+        short fhead[] = { 0, 2, 0, 0, 0, 0, short(winwidth), short(winheight), 24 }; // .tga file header
+        fwrite(fhead, sizeof(fhead), 1, fout);
+        fwrite(pbuff.data(), pbuff.size(), 1, fout);
+        fclose(fout);
+
+        theSDR.doDump = false;
+        auto w0 = theSDR.w0;
+        auto h0 = theSDR.h0;
+        theSDR.w0 = theSDR.h0 = 0;
+        glutReshapeWindow(w0, h0);
     }
 
-    void resetViewTransformation();
     void reshapeWindow(int width, int height);
     void keypress(unsigned char key, int x, int y);
     void specialKeypress(int key, int x, int y);
@@ -171,29 +203,6 @@ namespace vsr {
         pthread_mutex_unlock(&commandLock);
     }
 
-    void screendump(const char* fname) {
-        if(!window_open || !fname) return;
-        pthread_mutex_lock(&commandLock);
-
-        printf("Saving %i x %i screendump to '%s'\n", winwidth, winheight, fname);
-        auto fout = fopen(fname,"wb");
-
-        std::vector<char> pbuff(3*winwidth*winheight);
-        glGetError();
-        glReadBuffer(GL_FRONT);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        glReadPixels(0, 0, winwidth, winheight, GL_BGR, GL_UNSIGNED_BYTE, pbuff.data());
-        assert(glGetError() == GL_NO_ERROR);
-
-        short fhead[] = { 0, 2, 0, 0, 0, 0, short(winwidth), short(winheight), 24 }; // .tga file header
-        fwrite(fhead, sizeof(fhead), 1, fout);
-        fwrite(pbuff.data(), pbuff.size(), 1, fout);
-        fclose(fout);
-
-        pthread_mutex_unlock(&commandLock);
-    }
-
     void _line(std::vector<float>& v) {
         assert(v.size()==6);
         glBegin(GL_LINES);
@@ -256,28 +265,6 @@ namespace vsr {
         glEnd();
     }
 
-    void circle(vec3 o, vec3 n, int i) {
-        int j0 = 0;
-        for(auto j: {1,2}) if(fabs(n[j]) > fabs(n[j0])) j0 = j;
-        vec3 dz{0,0,0};
-        dz[(j0+1)%3] = 1;
-
-        auto r = makeunit(n);
-        r *= scale;
-        vec3 dx;
-        vec3 dy;
-        ortho_frame(dz, n, dx, dy);
-
-        qcmd cp(_polyline);
-        for(int p=0; p<i; p++) {
-            double th = p*2*M_PI/i;
-            double c = r*cos(th);
-            double s = r*sin(th);
-            for(auto j: {0,1,2}) cp.v.push_back(o[j]*scale+c*dx[j]+s*dy[j]);
-        }
-        addCmd(cp);
-    }
-
     void _quad(std::vector<float>& xyz) {
         assert(xyz.size()==12);
         if(wireframe) glBegin(GL_LINE_LOOP);
@@ -293,6 +280,28 @@ namespace vsr {
         c.v = std::vector<float>(xyz,xyz+12);
         for(size_t i = 0; i < 12; i++) c.v[i] *= scale;
         addCmd(c);
+    }
+
+    void circle(vec3 o, vec3 n, int i, double th0) {
+        int j0 = 0;
+        for(auto j: {1,2}) if(fabs(n[j]) > fabs(n[j0])) j0 = j;
+        vec3 dz{0,0,0};
+        dz[(j0+1)%3] = 1;
+
+        auto r = makeunit(n);
+        r *= scale;
+        vec3 dx;
+        vec3 dy;
+        ortho_frame(dz, n, dx, dy);
+
+        qcmd cp(_polyline);
+        for(int p=0; p<i; p++) {
+            double th = th0 + p*2*M_PI/i;
+            double c = r*cos(th);
+            double s = r*sin(th);
+            for(auto j: {0,1,2}) cp.v.push_back(o[j]*scale+c*dx[j]+s*dy[j]);
+        }
+        addCmd(cp);
     }
 
     void _ball(std::vector<float>& v) {
@@ -422,6 +431,8 @@ namespace vsr {
         updateViewWindow();
         glFlush();
         glFinish();
+
+        theSDR.doDump |= theSDR.w0 && theSDR.h0 && winwidth > theSDR.w0 && winheight > theSDR.h0;
     }
 
     void updateViewWindow() {
@@ -453,10 +464,10 @@ namespace vsr {
         if(key == 32 || key == 13) pause_display = false; // spacebar or return
         else if(key == 27) resetViewTransformation();     // escape
         else if(key == 100) { // 'd'
-            static int ndumps = 0;
-            char dname[1024];
-            sprintf(dname, "screendump_%03i.tga", ndumps++);
-            screendump(dname);
+            sprintf(theSDR.fname, "screendump_%03i.tga", theSDR.ndumps++);
+            theSDR.w0 = winwidth;
+            theSDR.h0 = winheight;
+            glutReshapeWindow(3*winwidth, 3*winheight);
         }
         else printf("Un-assigned keypress %u at %i,%i\n", key, x, y);
     }
@@ -525,7 +536,7 @@ namespace vsr {
     void quad(float*) {}
     void dot(vec3) {}
     void ball(vec3, double, int, int) { }
-    void circle(vec3, vec3, int) { }
+    void circle(vec3, vec3, int, double) { }
     void teapot(double) { }
     void screendump(const char*) { }
 
