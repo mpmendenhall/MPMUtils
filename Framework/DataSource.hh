@@ -5,7 +5,7 @@
 #define DATASOURCE_HH
 
 #include <vector>
-#include <functional> // for std::reference_wrapper
+using std::vector;
 
 /// Virtual base class for accepting a stream of objects
 template<class C>
@@ -13,6 +13,8 @@ class DataSource {
 public:
     /// retrieved value type
     typedef C val_t;
+    /// maximum "infinite" entries
+    static constexpr size_t max_entries = std::numeric_limits<size_t>::max();
 
     /// Virtual destructor
     virtual ~DataSource() { }
@@ -25,6 +27,10 @@ public:
     bool next_loop(val_t& o) { if(next(o)) return true; reset(); return next(o); }
     /// Reset to start
     virtual void reset() { }
+    /// Estimate remaining data size (including loop)
+    size_t entries_optloop() { return doLoop? max_entries  : entries(); }
+    /// Estimate remaining data size (no loop)
+    virtual size_t entries() { return 0; }
 
     /// whether to do infinite looping
     bool doLoop = false;
@@ -45,23 +51,35 @@ public:
     using D::D;
 
     /// Add stream
-    virtual void addStream(dsrc_t& S) { v.push_back(S); }
+    virtual void addStream(dsrc_t& S) { v.push_back(&S); }
 
     /// Fill o with next object; return whether o updated
     bool next(val_t& o) override {
-        while(i < v.size() && !v[i].get().next(o)) { nextSource(); ++i; }
+        while(i < v.size() && !v[i]->next(o)) { nextSource(); ++i; }
         return i < v.size();
     }
 
     /// Reset to start
-    void reset() override { while(i) v[--i].get().reset(); }
+    void reset() override { while(i) v[--i]->reset(); }
+
+    /// Estimate remaining data size (no loop)
+    size_t entries() override {
+        size_t e = 0;
+        for(auto j = i; j < v.size(); ++j) {
+            auto ee = v[j]->entries();
+            if(ee == D::max_entries) return D::max_entries;
+            e += ee;
+        }
+        return e;
+    }
+
 
 protected:
     /// Called when switching to next source
     virtual void nextSource() { }
 
-    std::vector<std::reference_wrapper<dsrc_t>> v;    ///< underlying sources
-    size_t i = 0;   ///< current position in sources list
+    vector<dsrc_t*> v;  ///< underlying sources
+    size_t i = 0;       ///< current position in sources list
 };
 
 #endif

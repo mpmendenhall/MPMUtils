@@ -29,6 +29,8 @@ public:
     bool skip(size_t n) override;
     /// Re-start at beginning of stream
     void reset() override { setFile(_infile_id); }
+    /// Remaining entries estimate
+    size_t entries() override { return maxread-nread; }
 
     /// (re)set read file
     void setFile(hid_t f);
