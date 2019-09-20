@@ -113,6 +113,8 @@ public:
     /// Base type
     typedef B base;
 
+    using FactoriesIndex::display;
+
     /// construct indexed class with arguments --- fails on unregistered index
     template<typename... Args>
     static base* construct(size_t i, Args&&... a) {

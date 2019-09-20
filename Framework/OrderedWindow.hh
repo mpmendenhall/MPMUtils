@@ -22,7 +22,7 @@ template<class iterator>
 class ItRange: public pair<iterator, const iterator> {
 public:
     /// Constructor
-    ItRange(const iterator& i0, const iterator& i1): pair<iterator, const iterator>(i0,i1) { }
+    ItRange(const iterator& i0, const iterator& i1): pair<iterator, const iterator>(i0,i1) { assert(i0 <= i1); }
     /// range start
     iterator& begin() { return this->first; }
     /// range end
@@ -125,6 +125,7 @@ public:
     /// get window position range for range offset from mid
     itrange_t rel_range(ordering_t dx0, ordering_t dx1) {
         if(!size()) throw std::runtime_error("Rel_range undefined on empty window");
+        if(!(dx0 <= dx1)) throw std::runtime_error("Invalid reverse-order rel_range requested");
         if(std::fabs(dx0) > hwidth || std::fabs(dx1) > hwidth) throw std::runtime_error("Rel_range larger than window requested");
         return _rel_range(dx0,dx1);
     }
@@ -134,6 +135,7 @@ public:
     /// get (const) window position range for range offset from mid
     const_itrange_t rel_range(ordering_t dx0, ordering_t dx1) const {
         if(!size()) throw std::runtime_error("rel_range undefined on empty window");
+        if(!(dx0 <= dx1)) throw std::runtime_error("Invalid reverse-order rel_range requested");
         if(std::fabs(dx0) > hwidth || std::fabs(dx1) > hwidth) throw std::runtime_error("rel_range larger than window requested");
         return _rel_range(dx0,dx1);
     }
@@ -148,6 +150,7 @@ public:
     itrange_t _abs_range(ordering_t x0, ordering_t x1) { return {abs_position(x0), abs_position(x1)}; }
     /// get window position range for absolute range
     itrange_t abs_range(ordering_t x0, ordering_t x1) {
+        if(!(x0 <= x1)) throw std::runtime_error("Invalid reverse-order abs_range requested");
         if(PARANOID_BOUNDS && (!in_range(x0) || !in_range(x1)))
             throw std::runtime_error("abs_range outside window requested");
         return _abs_range(x0,x1);
@@ -157,6 +160,7 @@ public:
     const_itrange_t _abs_range(ordering_t x0, ordering_t x1) const { return {abs_position(x0), abs_position(x1)}; }
     /// get (const) window position range for absolute range
     const_itrange_t abs_range(ordering_t x0, ordering_t x1) const {
+        if(!(x0 <= x1)) throw std::runtime_error("Invalid reverse-order abs_range requested");
         if(PARANOID_BOUNDS && (!in_range(x0) || !in_range(x1)))
             throw std::runtime_error("abs_range outside window requested");
         return _abs_range(x0,x1);
@@ -174,6 +178,8 @@ public:
             printf("*** NaN warning at item %i! Skipping!\n ***", nProcessed);
             display(o);
             dispose(o);
+        } else if(x < window_Hi && size()) {
+            processDisordered(o);
         } else {
             flushHi(x);
             processNew(o);
@@ -195,6 +201,14 @@ protected:
 
     // Subclass me to do the interesting stuff!
 
+    /// handle acceptance of out-of-order items
+    virtual void processDisordered(T& o) {
+        printf("Out-of-order ");
+        display(o);
+        flush();
+        processNew(o);
+        deque<T>::push_back(o);
+    }
     /// processing hook for each object as it first enters window
     virtual void processNew(T&) { }
     /// processing hook for each object as it passes through middle of window

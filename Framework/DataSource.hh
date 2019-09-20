@@ -14,12 +14,22 @@ public:
     /// retrieved value type
     typedef C val_t;
 
+    /// Virtual destructor
+    virtual ~DataSource() { }
+
     /// Fill supplied item with next object; return whether item has been updated
     virtual bool next(val_t&) = 0;
+    /// Skip ahead n items
+    virtual bool skip(size_t n) { val_t x; while(n--) if(!next(x)) return false; return true; }
     /// pop with infinite looping
-    bool next_loop(val_t& o) { if(pop(o)) return true; reset(); return next(o); }
+    bool next_loop(val_t& o) { if(next(o)) return true; reset(); return next(o); }
     /// Reset to start
     virtual void reset() { }
+
+    /// whether to do infinite looping
+    bool doLoop = false;
+    /// next with optional looping
+    bool next_optloop(val_t& o) { return doLoop? next_loop(o) : next(o); }
 };
 
 /// Sequence of D ~ DataSource

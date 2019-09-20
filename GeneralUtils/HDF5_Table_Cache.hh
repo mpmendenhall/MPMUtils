@@ -25,6 +25,8 @@ public:
 
     /// get next table row; return whether successful or failed (end-of-file)
     bool next(T& val) override;
+    /// skip ahead number of entries
+    bool skip(size_t n) override;
     /// Re-start at beginning of stream
     void reset() override { setFile(_infile_id); }
 
@@ -188,6 +190,30 @@ bool HDF5_Table_Cache<T>::next(T& val) {
 
     assert(cache_idx < cached.size());
     val = cached[cache_idx++];
+    return true;
+}
+
+template<typename T>
+bool HDF5_Table_Cache<T>::skip(size_t n) {
+    if(!n) return true;
+    if(!_infile_id) return false;
+
+    if(cache_idx + n < cached.size()) {
+        cache_idx += n;
+        return true;
+    }
+
+    if(cache_idx < cached.size()) {
+        n -= cached.size() - cache_idx;
+        cache_idx = 0;
+        cached.clear();
+    }
+
+    if(nread + n > maxread) {
+        nread = maxread;
+        return false;
+    }
+    nread += n;
     return true;
 }
 
