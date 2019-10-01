@@ -152,12 +152,12 @@ bool BlockHandler::read_block(int32_t bsize) {
 
 bool BlockHandler::process(int32_t bsize) {
     if(!bsize || !theblock) return false;
-    bool b = process(theblock->data);
+    bool b = process_v(theblock->data);
     return_block();
     return b;
 }
 
-bool BlockHandler::process(const vector<char>& v) {
+bool BlockHandler::process_v(const vector<char>& v) {
     static size_t received = 0;
     static int nprocessed = 0;
     nprocessed++;

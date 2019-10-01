@@ -5,9 +5,8 @@
 #define XMLTAG_HH
 
 #include "TreeWrap.hh"
+#include "to_str.hh"
 
-#include <string>
-using std::string;
 #include <map>
 using std::map;
 #include <vector>
@@ -15,7 +14,6 @@ using std::vector;
 #include <cassert>
 #include <iostream>
 using std::ostream;
-#include <sstream>
 
 /// XML tag base
 class _XMLTag {
@@ -24,10 +22,6 @@ public:
     _XMLTag(const string& nm = ""): name(nm) { }
     /// Destructor
     virtual ~_XMLTag() { }
-
-    /// utility function for converting to string
-    template<typename T>
-    static string to_str(T x) { std::stringstream ss; ss << x; return ss.str(); }
 
     /// Add a tag attribute
     virtual void addAttr(const string& nm, const string& val) { attrs[nm] = val; }
@@ -83,10 +77,6 @@ public:
     string tagname;                     ///< this item's tag name
 
 protected:
-    /// utility function for converting to string
-    template<typename T>
-    static string to_str(T x) { std::stringstream ss; ss << x; return ss.str(); }
-
     /// add class-specific XML data; subclass me!
     virtual void _makeXML(XMLTag&) { }
 

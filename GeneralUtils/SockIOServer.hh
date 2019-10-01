@@ -103,10 +103,10 @@ protected:
 
     /// Allocate block buffer space
     virtual char* alloc_block(int32_t bsize);
-    /// Process data after buffer read; return false to end communication
+    /// Process data `theblock` after buffer read; return false to end communication
     virtual bool process(int32_t bsize);
     /// Process data after buffer read; return false to end communication
-    virtual bool process(const vector<char>&);
+    virtual bool process_v(const vector<char>&);
 
     dblock* theblock = nullptr; ///< default buffer space
 };

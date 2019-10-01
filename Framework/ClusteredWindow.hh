@@ -94,6 +94,7 @@ public:
         currentC.clear();
     }
 
+    using OrderedWindow<C, ordering_t>::push;
     /// add object to newest cluster (or start newer cluster), assuming responsibility for deletion
     void push(const T& oo) override {
         auto o = oo;

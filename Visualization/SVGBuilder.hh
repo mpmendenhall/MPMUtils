@@ -12,10 +12,6 @@
 
 namespace SVG {
 
-    /// utility function for converting to string
-    template<typename T>
-    string to_str(T x) { std::stringstream ss; ss << x; return ss.str(); }
-
     /// convenience typedef for 2D point
     typedef std::array<double,2> xypoint;
 

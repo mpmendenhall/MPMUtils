@@ -27,25 +27,15 @@
 /// convert #define variable contents to const char*
 #define STRINGIFY(X) STRINGIFY2(X)
 
-#include <string>
+#include "to_str.hh"
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <cctype>
 #include <algorithm>
 
-using std::string;
 using std::vector;
 using std::ifstream;
-
-/// utility function for converting to string
-template<typename T>
-string to_str(T x) {
-    std::stringstream ss;
-    ss << x;
-    return ss.str();
-}
 
 /// integer to roman numerals string
 string itosRN(int i);

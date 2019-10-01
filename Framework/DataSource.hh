@@ -4,6 +4,7 @@
 #ifndef DATASOURCE_HH
 #define DATASOURCE_HH
 
+#include <limits>
 #include <vector>
 using std::vector;
 
