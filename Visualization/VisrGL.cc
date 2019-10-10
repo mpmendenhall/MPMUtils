@@ -2,28 +2,40 @@
 // Michael P. Mendenhall, LLNL 2019
 
 #ifdef WITH_OPENGL
+
 #include "VisrGL.hh"
-#include <cassert>
 #include <unistd.h> // for usleep
 
 /// singleton registered OpenGL window
 GLVisDriver* GLDr = nullptr;
 
-GLVisDriver::GLVisDriver() {
-    if(GLDr) throw std::logic_error("Only one OpenGL visualizer can exist at a time");
-    GLDr = this;
-}
-
-GLVisDriver::~GLVisDriver() {
-    if(GLDr == this) GLDr = nullptr;
+void* visthread(void*) {
+    glutMainLoop();
+    return NULL;
 }
 
 bool kill_flag = false;
 pthread_t vthread;
 
+void GLVisDriver::doGlutLoop() {
+    if(GLDr) throw std::logic_error("Only one OpenGL visualizer can run at a time");
+    kill_flag = false;
+    GLDr = this;
+    pthread_create(&vthread, NULL, &visthread, nullptr);
+}
+
+void GLVisDriver::endGlutLoop() {
+    if(GLDr != this) return;
+
+    kill_flag = true;
+    pthread_join(vthread, nullptr);
+    GLDr = nullptr;
+}
+
 void GLVisDriver::resetViewTransformation() {
     viewrange = 1.0;
-    xtrans = ytrans = 0;
+    win_c[0] = win_c[1] = 0;
+    win_c[2] = 5;
     glLineWidth(1.5/viewrange);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -32,7 +44,7 @@ void GLVisDriver::resetViewTransformation() {
     updateViewWindow();
 }
 
-void GLVisDriver::clearWindow(const vector<float>& v) {
+void GLVisDriver::_clearWindow(const vector<float>& v) {
     if(v.size() == 4) glClearColor(v[0], v[1], v[2], v[3]);
     else glClearColor(1, 1, 1, 1);
     glClearDepth(100.0);
@@ -45,20 +57,17 @@ void GLVisDriver::pause() {
     while(pause_display) usleep(50000);
 }
 
-void GLVisDriver::setColor(const vector<float>& v) {
-    assert(v.size() == 4);
+void GLVisDriver::_setColor(const vector<float>& v) {
     glColor4f(v[0],v[1],v[2],v[3]);
 }
 
-void GLVisDriver::lines(const vector<float>& v) {
-    assert(v.size()%3 == 1);
+void GLVisDriver::_lines(const vector<float>& v) {
     glBegin(v.back()? GL_LINE_LOOP : GL_LINE_STRIP);
     for(size_t i = 0; i+3 < v.size(); i += 3) glVertex3f(v[i],v[i+1],v[i+2]);
     glEnd();
 }
 
-void GLVisDriver::ball(const vector<float>& v) {
-    assert(v.size() == 6);
+void GLVisDriver::_ball(const vector<float>& v) {
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glTranslatef(v[0],v[1],v[2]);
@@ -68,12 +77,12 @@ void GLVisDriver::ball(const vector<float>& v) {
     glPopMatrix();
 }
 
-void GLVisDriver::teapot(const vector<float>& v) {
+void GLVisDriver::_teapot(const vector<float>& v) {
     if(v.size() == 2) glutSolidTeapot(v[0]);
     else glutWireTeapot(v[0]);
 }
 
-void GLVisDriver::startRecording(const vector<float>& v) {
+void GLVisDriver::_startRecording(const vector<float>& v) {
     glFlush();
     glFinish();
 
@@ -86,11 +95,11 @@ void GLVisDriver::startRecording(const vector<float>& v) {
     if(!displaySegs.size()) {
         displaySegs.push_back(glGenLists(1));       // one new display list name
         glNewList(displaySegs.back(), GL_COMPILE);  // compile but do not immediately execute
-        clearWindow(v);                             // always start clear
+        _clearWindow(v);                            // always start clear
     }
 }
 
-void GLVisDriver::stopRecording(const vector<float>&) {
+void GLVisDriver::_stopRecording(const vector<float>&) {
     glEndList();
     glutPostRedisplay();
     glFlush();
@@ -147,7 +156,6 @@ void GLVisDriver::redrawDisplay() {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(0, 0, winwidth, winheight, GL_BGR, GL_UNSIGNED_BYTE, pbuff.data());
-    assert(glGetError() == GL_NO_ERROR);
 
     short fhead[] = { 0, 2, 0, 0, 0, 0, short(winwidth), short(winheight), 24 }; // .tga file header
     fwrite(fhead, sizeof(fhead), 1, fout);
@@ -159,28 +167,6 @@ void GLVisDriver::redrawDisplay() {
     auto h0 = theSDR.h0;
     theSDR.w0 = theSDR.h0 = 0;
     glutReshapeWindow(w0, h0);
-}
-
-using namespace vsr;
-
-bool glutLooping = false;
-
-void* visthread(void*) {
-    glutMainLoop();
-    return NULL;
-}
-
-void doGlutLoop() {
-    if(glutLooping) throw std::runtime_error("GLUT main loop already running");
-    kill_flag = false;
-    glutLooping = true;
-    pthread_create(&vthread, NULL, &visthread, nullptr);
-}
-
-void endGlutLoop() {
-    kill_flag = true;
-    if(glutLooping) pthread_join(vthread, nullptr);
-    glutLooping = false;
 }
 
 void _tryFlush() {
@@ -224,9 +210,8 @@ void GLVisDriver::getMatrix() {
     for(auto i: {0,1,2,3}) {
         for(auto j: {0,1,2,3}) {
             mProj[i][j] = PVM[j][i];
-            if(j==0) mProj[i][j] *= (win_x1 - win_x0)/2;
-            if(j==1) mProj[i][j] *= (win_y1 - win_y0)/2;
-            if(j==2) mProj[i][j] *= -(win_z1 - win_z0)/2.;
+            if(j<3) mProj[i][j] *= (win_hi[j] - win_lo[j])/2;
+            if(j==2) mProj[i][j] *= -1;
         }
     }
 }
@@ -235,11 +220,16 @@ void GLVisDriver::updateViewWindow() {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glTranslatef(0,0,1); // viewer sits at z=+1, looking in -z direction
-    win_x0 = xtrans - viewrange*ar;
-    win_x1 = xtrans + viewrange*ar;
-    win_y0 = ytrans - viewrange;
-    win_y1 = ytrans + viewrange;
-    glOrtho(win_x0, win_x1, win_y0, win_y1, win_z0, win_z1);
+
+    win_lo[0] = win_c[0] - viewrange*ar;
+    win_hi[0] = win_c[0] + viewrange*ar;
+    win_lo[1] = win_c[1] - viewrange;
+    win_hi[1] = win_c[1] + viewrange;
+    win_lo[2] = win_c[2] - 5;
+    win_hi[2] = win_c[2] + 5;
+    glOrtho(win_lo[0], win_hi[0],
+            win_lo[1], win_hi[1],
+            win_lo[2], win_hi[2]);
 
     getMatrix();
 }
@@ -287,8 +277,8 @@ void GLVisDriver::mouseTrackingAction(int x, int y) {
         glLineWidth(1.5/viewrange);
 
     } else if(modifier == GLUT_ACTIVE_CTRL) {
-        xtrans -= ar*2.0*(x-clickx0)*viewrange/winwidth;
-        ytrans += 2.0*(y-clicky0)*viewrange/winheight;
+        win_c[0] -= ar*2.0*(x-clickx0)*viewrange/winwidth;
+        win_c[1] += 2.0*(y-clicky0)*viewrange/winheight;
         updateViewWindow();
     } else {
 
@@ -313,7 +303,6 @@ void GLVisDriver::mouseTrackingAction(int x, int y) {
     glFinish();
     updated = true;
 }
-
 
 void GLVisDriver::initWindow(const std::string& windowTitle) {
 
@@ -372,12 +361,10 @@ void GLVisDriver::initWindow(const std::string& windowTitle) {
 
     resetViewTransformation();
 
-    vsr::startRecording(true);
-    vsr::setWireframe(true);
-    vsr::setColor(0.7, 0, 1, 0.5);
-    vsr::teapot(0.5);
-    vsr::setWireframe(false);
-    vsr::stopRecording();
+    startRecording(true);
+    setColor(0.7, 0, 1, 0.5);
+    teapot(0.5);
+    stopRecording();
 }
 
 

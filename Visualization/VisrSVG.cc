@@ -3,11 +3,11 @@
 
 #include "VisrSVG.hh"
 
-void SVGVisDriver::setColor(const vector<float>& v) {
+void SVGVisDriver::_setColor(const vector<float>& v) {
     cLine = cFill = color::rgb(v[0],v[1],v[2],v[3]);
 }
 
-void SVGVisDriver::lines(const vector<float>& v) {
+void SVGVisDriver::_lines(const vector<float>& v) {
     if(v.size() < 7) return;
 
     PL.myObjs.push_back(make_unique<ProjectablePoly>());
@@ -22,7 +22,7 @@ void SVGVisDriver::lines(const vector<float>& v) {
     SVG::set_stroke(P.attrs, cLine);
 }
 
-void SVGVisDriver::ball(const vector<float>& v) {
+void SVGVisDriver::_ball(const vector<float>& v) {
     xyzpt p{(double)v[0], (double)v[1], (double)v[2]};
     PL.myObjs.push_back(std::unique_ptr<ProjectableBall>(new ProjectableBall(p, v[3])));
     auto& P = *PL.myObjs.back().get();
