@@ -60,10 +60,8 @@ public:
     void startMouseTracking(int button, int state, int x, int y);
     void mouseTrackingAction(int x, int y);
 
-    /// Current transformation matrix (column-major order)
-    float PVM[4][4];
     /// Window range
-    float win_x0, win_y0, win_x1, win_y1;
+    float win_x0, win_y0, win_x1, win_y1, win_z0 = 0, win_z1 = 10;
 
 protected:
     /// get current transformation matrix

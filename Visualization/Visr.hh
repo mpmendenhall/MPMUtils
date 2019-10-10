@@ -40,11 +40,13 @@ public:
     /// OpenGL teapot
     virtual void teapot(const vector<float>&) { }
 
-    /// Display aspect ratio
-    float ar = 1.0;
-    float viewrange;
+    float ar = 1.0;         ///< (x range)/(y range) window aspect ratio
+    float viewrange;        ///< half-height (y) range
     float xrot,yrot,zrot;
-    float xtrans, ytrans;
+    float xtrans, ytrans;   ///< x/y center of view
+
+    /// Coordinates projection matrix (row-major order)
+    float mProj[4][4];
 };
 
 /// Queued drawing command for a driver

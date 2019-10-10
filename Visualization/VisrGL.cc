@@ -211,14 +211,24 @@ void GLVisDriver::reshapeWindow(int width, int height) {
 void GLVisDriver::getMatrix() {
 
 
-    float MV[16]; // column-major order
-    glGetFloatv(GL_PROJECTION_MATRIX,  MV);   // download projection matrix
-
+    float mP[4][4];
+    glGetFloatv(GL_PROJECTION_MATRIX,  mP[0]); // download projection matrix
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();                           // copy of modelview matrix on stack
-    glMultMatrixf(MV);                        // multiply PROJECTION*MODELVIEW
+    glMultMatrixf(mP[0]);                     // multiply PROJECTION*MODELVIEW
+    float PVM[4][4];
     glGetFloatv(GL_MODELVIEW_MATRIX, PVM[0]); // download multiplied matrix
     glPopMatrix();                            // remove modified matrix
+
+    // convert from column to row-major order; unscale from clipping coordinates
+    for(auto i: {0,1,2,3}) {
+        for(auto j: {0,1,2,3}) {
+            mProj[i][j] = PVM[j][i];
+            if(j==0) mProj[i][j] *= (win_x1 - win_x0)/2;
+            if(j==1) mProj[i][j] *= (win_y1 - win_y0)/2;
+            if(j==2) mProj[i][j] *= -(win_z1 - win_z0)/2.;
+        }
+    }
 }
 
 void GLVisDriver::updateViewWindow() {
@@ -229,7 +239,8 @@ void GLVisDriver::updateViewWindow() {
     win_x1 = xtrans + viewrange*ar;
     win_y0 = ytrans - viewrange;
     win_y1 = ytrans + viewrange;
-    glOrtho(win_x0, win_x1, win_y0, win_y1, 0, 10);
+    glOrtho(win_x0, win_x1, win_y0, win_y1, win_z0, win_z1);
+
     getMatrix();
 }
 
