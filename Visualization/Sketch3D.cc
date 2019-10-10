@@ -46,6 +46,7 @@ void ProjectableBall::setPerspective(const Perspective& P) {
     P.project(c,cp);
     z = cp[2];
     s = cp[3];
+    delete myXML;
     myXML = new SVG::circle(cp[0], cp[1], fabs(s*r));
     setAttrs();
 }
@@ -54,6 +55,7 @@ void ProjectablePoly::setPerspective(const Perspective& P) {
     auto pg = new SVG::polyline;
     P.projectPoly(pts, pg->pts, s, z);
     if(closed) pg->name = "polygon";
+    delete myXML;
     myXML = pg;
     setAttrs();
 }
@@ -113,5 +115,13 @@ bool compare_projectables(const unique_ptr<ProjectablePrimitive>& lhs,
 void PrimitivesLayer::drawInto(XMLTag& X, const Perspective& P) {
     for(auto& o: myObjs) { assert(o); o->setPerspective(P); }
     std::sort(myObjs.begin(), myObjs.end(), &compare_projectables);
-    for(auto& o: myObjs) { assert(o->myXML); X.addChild(o->myXML); }
+    for(auto& o: myObjs) {
+        assert(o->myXML);
+        X.addChild(o->myXML);
+        o->myXML = nullptr;
+    }
+    X.attrs["fill"] = "none";
+    X.attrs["stroke"] = "none";
+    X.attrs["stroke-width"] = "0.05";
+    X.attrs["stroke-linecap"] = "round";
 }

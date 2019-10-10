@@ -1,16 +1,11 @@
 /// \file testVisr.cc Test program showing visualizer
 
-#include "Visr.hh"
+#include "VisrGL.hh"
 #include "Icosahedral.hh"
 #include "CodeVersion.hh"
 #include <TRandom3.h>
 #include <stdlib.h>
 #include "ColorSpec.hh"
-
-void* visthread(void*) {
-    vsr::doGlutLoop();
-    return NULL;
-}
 
 int main(int, char**) {
     CodeVersion::display_code_version();

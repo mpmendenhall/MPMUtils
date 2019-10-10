@@ -3,17 +3,12 @@
 #include "CodeVersion.hh"
 #include "Quadratic.hh"
 #include "QuadraticT.hh"
-#include "Visr.hh"
+#include "VisrGL.hh"
 #include <vector>
 using std::vector;
 #include <TGraph.h>
 #include <TPad.h>
 #include <TRandom3.h>
-
-void* visthread(void*) {
-    vsr::doGlutLoop();
-    return NULL;
-}
 
 /// Plot out ellipse slice in specified axis plane from columns basis m
 TGraph vEllipse(const gsl_matrix* m, double x0, double y0, size_t ax = 0, size_t ay = 1, int npts = 100) {
@@ -65,9 +60,9 @@ void visEllipse(const gsl_matrix* m, size_t ax0 = 0, size_t ax1 = 1, size_t ax2 
         vsr::line(mx, x);
 
         //vsr::setColor(0,0,1,0.3);
-        vsr::startLines();
+        vector<vsr::vec3> vtxs;
         int nsp = 11;
-        for(int k=0; k <= nsp*npts; k++) {
+        for(int k=0; k < nsp*npts; k++) {
             auto z = (k-npts*nsp/2.)*2/(nsp*npts);
             gsl_vector_set(v, a, z);
             gsl_vector_set(v, a1, sqrt(1.-z*z)*vc[k % npts]);
@@ -75,9 +70,9 @@ void visEllipse(const gsl_matrix* m, size_t ax0 = 0, size_t ax1 = 1, size_t ax2 
             gsl_blas_dgemv(CblasNoTrans, 1., m, v, 0., v2);
 
             x = {gsl_vector_get(v2, 0), gsl_vector_get(v2, 1), gsl_vector_get(v2, 2)};
-            vsr::vertex(x);
+            vtxs.push_back(x);
         }
-        vsr::endLines();
+        vsr::lines(vtxs, true);
     }
 }
 
@@ -114,8 +109,8 @@ void visProj(QuadraticCholesky& QC, int ax0 = 0, int ax1 = 1, int ax2 = 2) {
         vsr::line(x2, x);
 
         vsr::setColor(0,1,0);
-        vsr::startLines();
-        for(int k=0; k <= npts; k++) {
+        vector<vsr::vec3> vtxs;
+        for(int k=0; k < npts; k++) {
             gsl_vector_set(v, 0, vc[k]);
             gsl_vector_set(v, 1, vs[k]);
             gsl_blas_dgemv(CblasNoTrans, 1., EAP.P, v, 0., v2);
@@ -123,9 +118,9 @@ void visProj(QuadraticCholesky& QC, int ax0 = 0, int ax1 = 1, int ax2 = 2) {
             x[a] = 0;
             x[a1] = gsl_vector_get(v2, 0);
             x[a2] = gsl_vector_get(v2, 1);
-            vsr::vertex(x);
+            vtxs.push_back(x);
         }
-        vsr::endLines();
+        vsr::lines(vtxs, true);
     }
 
 }
@@ -133,9 +128,10 @@ void visProj(QuadraticCholesky& QC, int ax0 = 0, int ax1 = 1, int ax2 = 2) {
 int main(int, char**) {
     CodeVersion::display_code_version();
 
-    vsr::initWindow("Ellipses!", 0.2);
-    pthread_t thread;
-    pthread_create(&thread, NULL, &visthread, nullptr );
+    GLVisDriver VD;
+    VD.initWindow("Ellipses!");
+    vsr::theDriver = &VD;
+    doGlutLoop();
 
 
     QuadraticT<3> R(vector<double>({1.,2.,3.,4.,5.,6.,7.,8.,9.,10.}));
@@ -221,8 +217,6 @@ int main(int, char**) {
 
     }
 
-    vsr::set_kill();
-    pthread_join(thread, nullptr);
-
+    endGlutLoop();
     return EXIT_SUCCESS;
 }

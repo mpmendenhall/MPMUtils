@@ -35,7 +35,7 @@ public:
 
     bool isOrtho = true;    /// orthographic projection mode
     bool flipY = true;      /// y "flip" for +y=down drawing coordinates
-    double M[3][3];         /// model points rotation matrix
+    double M[3][3];         /// model points rotation matrix: row-major order
     double v0[3] = {0,0,0}; /// viewer position
 
     /// append list of output points to projection vector; return average z and scale factor
