@@ -8,6 +8,7 @@ import fortranformat as ff
 
 from bisect import bisect
 from textwrap import indent
+from math import *
 
 class ENDF_Record(object):
     """Generic record (line in file) parser"""
@@ -113,8 +114,7 @@ class ENDF_Ranges(ENDF_CONT_Record):
         """Return point lower-bound index and interpolation scheme"""
         b = bisect(self.xs, x)
         if b < 1 or b >= len(self.xs): return None, None
-        r = bisect(self.NBT, b)
-        return b, self.INT[r-1]
+        return b, self.INT[bisect(self.NBT, b)]
 
     def printid(self):
         return super().printid() + " {%i/%i}"%(self.NP, self.NR)
@@ -144,6 +144,7 @@ class InterpolationPoints:
         b = bisect(self.binedges, x)
         if b < 1 or b >= len(self.binedges): return None, None
         i = self.binterps[b-1]
+
         if i == 1: return b-1, 0
         x0 = self.binedges[b-1]
         x1 = self.binedges[b]
@@ -175,6 +176,7 @@ class ENDF_Tab1(ENDF_Ranges):
 
         y0 = self.ys[b-1]
         if i == 1: return y0
+
         y1 = self.ys[b]
         return self.__class__.interpl(x, self.xs[b-1], y0, self.xs[b], y1, i)
 
