@@ -28,6 +28,7 @@ using std::vector;
 #include <map>
 using std::map;
 #include <mutex>
+#include <type_traits>
 
 /// Sieve of Eratosthenes primes/factoring utility
 class PrimeSieve {
@@ -38,7 +39,7 @@ public:
     /// signed integer divisor math
     typedef long long int int_t;
     /// Unfactored integer type handled
-    typedef std::make_unsigned_t<int_t> uint_t;
+    typedef typename std::make_unsigned<int_t>::type uint_t;
 
     /// factorization (sorted); empty vector for 1, {0} for 0
     typedef vector<uint_t> factors_t;

@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>
 #include <limits> // for std::numeric_limits
+#include <type_traits> // for std::make_unsigned
 #include <stdio.h>
 
 /// Precalculated fast divisor calculation
@@ -15,7 +16,7 @@ public:
     /// signed version of integer
     typedef _int_t int_t;
     /// unsigned version of integer
-    typedef std::make_unsigned_t<int_t> uint_t;
+    typedef typename std::make_unsigned<int_t>::type uint_t;
 
     /// constructor from divisor
     DivisorCheck(int_t dd): d(std::abs(dd)) {

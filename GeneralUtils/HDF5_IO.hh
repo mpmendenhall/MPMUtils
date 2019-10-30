@@ -29,11 +29,11 @@ public:
 
 /// HDF5_InputFile with specific table
 template<class T>
-class HDF5_TableInput: public HDF5_InputFile, public HDF5_Table_Cache<T>, protected HDF5_StructInfo {
+class HDF5_TableInput: public HDF5_InputFile, public HDF5_Table_Cache<T> {
 public:
     /// Constructor
-    HDF5_TableInput(int v = 0, int nch = 1024): HDF5_InputFile(""),
-    HDF5_Table_Cache<T>(HDF5_table_setup<T>(v),nch) { }
+    HDF5_TableInput(const string& tname = "", int v = 0, int nch = 1024): HDF5_InputFile(""),
+    HDF5_Table_Cache<T>(HDF5_table_setup<T>(tname, v), nch) { }
 
     /// Open named input file
     void openInput(const string& filename) override {
@@ -75,11 +75,11 @@ public:
 
 /// HDF5_OutputFile with specific table
 template<class T>
-class HDF5_TableOutput: public HDF5_OutputFile, public HDF5_Table_Writer<T>, protected HDF5_StructInfo {
+class HDF5_TableOutput: public HDF5_OutputFile, public HDF5_Table_Writer<T> {
 public:
     /// Constructor
-    HDF5_TableOutput(int v = 0, int nch = 1024): HDF5_OutputFile(""),
-    HDF5_Table_Writer<T>(HDF5_table_setup<T>(v),nch) { }
+    HDF5_TableOutput(const string& tname = "", int v = 0, int nch = 1024): HDF5_OutputFile(""),
+    HDF5_Table_Writer<T>(HDF5_table_setup<T>(tname, v),nch) { }
 
     /// Destructor
     ~HDF5_TableOutput() { if(outfile_id) writeFile(); }

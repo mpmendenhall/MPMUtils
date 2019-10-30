@@ -34,9 +34,16 @@ class ncapt_thermal:
         # neutron velocity at measured point [c]
         v0 = sqrt(2*E0/m_n)
 
-        # Non-elastic directly available?
-        sNEl = EDB.find_sections({"A": A, "Z": Z, "MF": 3, "MT": 3})
-        nel0 = EDB.get_section(sNEl[0])(E0) if sNEl else None
+        nel0 = 0;
+
+        if not (Z==3 and A==6):
+            # MT102 radiative capture for non-6Li?
+            sRC = EDB.find_sections({"A": A, "Z": Z, "MF": 3, "MT": 102})
+            nel0 = EDB.get_section(sRC[0])(E0) if sRC else None
+        if not nel0:
+            # Non-elastic directly available?
+            sNEl = EDB.find_sections({"A": A, "Z": Z, "MF": 3, "MT": 3})
+            nel0 = EDB.get_section(sNEl[0])(E0) if sNEl else None
 
         if nel0:
             #print("\tof which", nel0, "is inelastic")

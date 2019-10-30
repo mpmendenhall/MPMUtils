@@ -66,7 +66,7 @@ size_t DecisionTree::decide(const I& i, const F& f) const {
     size_t d = 0;
     while(true) {
         if(f(i,dcs[d].t)) {
-            if(dcs[d].a == d) { assert(d); return dcs[d-1].i; }
+            if(dcs[d].a == d) return dcs[d-1].i;
             d = dcs[d].a;
         } else {
             if(dcs[d].b == d) return dcs[d].i;
