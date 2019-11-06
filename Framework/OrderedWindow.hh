@@ -67,7 +67,13 @@ public:
     ordering_t windowHalfwidth() const { return hwidth; }
 
     /// clear remaining objects through window (at end of run, etc.)
-    void flush() override { if(size()) flushHi(order(back()) + hwidth); }
+    void flush() override {
+        if(size()) {
+            window_Hi = order(back());
+            window_Lo = window_Hi - 2*hwidth;
+        }
+        while(size()) nextmid();
+    }
     /// Flush as if inserting new highest at x
     void flushHi(ordering_t x) {
         window_Hi = x;
@@ -173,15 +179,18 @@ public:
     void push(const T& oo) override {
         T o = oo; // copy to permit modification/disposal
         if(verbose >= 4) { printf("Adding new "); display(o); }
+
         auto x = order(o);
+
         if(!(x==x)) {
             printf("*** NaN warning at item %i! Skipping!\n ***", nProcessed);
             display(o);
             dispose(o);
-        } else if(x < window_Hi && size()) {
+        } else if(hwidth && x < window_Lo && size()) {
             processDisordered(o);
         } else {
-            flushHi(x);
+            if(!hwidth) while(size()) nextmid();
+            else flushHi(x);
             processNew(o);
             deque<T>::push_back(o);
         }
@@ -190,6 +199,7 @@ public:
 
     ordering_t window_Lo = {};  ///< newest discarded (start of available range)
     ordering_t window_Hi = {};  ///< newest added/flushed (end of available range)
+    bool skip_disordered = true;///< skip over disordered events
 
 protected:
 
@@ -203,11 +213,16 @@ protected:
 
     /// handle acceptance of out-of-order items
     virtual void processDisordered(T& o) {
-        printf("Out-of-order ");
+        printf("Out-of-order (< %g (%g)) window entry: ", window_Hi, hwidth);
         display(o);
-        flush();
-        processNew(o);
-        deque<T>::push_back(o);
+        if(skip_disordered) {
+            dispose(o);
+        } else {
+            throw std::runtime_error("Disordered window event");
+            //flush();
+            //processNew(o);
+            //deque<T>::push_back(o);
+        }
     }
     /// processing hook for each object as it first enters window
     virtual void processNew(T&) { }

@@ -13,12 +13,14 @@
 #include <poll.h>      // for poll(...)
 #include <pthread.h>
 #include <cassert>
+#include <stdexcept>
 
 bool SockIOServer::process_connections() {
     // open socket file descriptor
     auto sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         fprintf(stderr, "ERROR %i opening socket\n", sockfd);
+        throw std::runtime_error("Cannot open socket\n");
         return false;
     }
 

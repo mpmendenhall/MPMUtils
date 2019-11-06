@@ -11,6 +11,7 @@
 #include <queue>
 #include <vector>
 #include <utility>
+#include <stdio.h>
 #include <cassert>
 
 /// Combine ordered items received from multiple "push" sources
@@ -32,10 +33,10 @@ public:
     /// change minimum number required from input
     void change_required(size_t nI, int i) {
         auto& n = input_n.at(nI).first;
-        if(n <= 0 && n+i > 0) { --inputs_waiting; assert(inputs_waiting >= 0); }
-        if(n > 0 && n+i <= 0) ++inputs_waiting;
+        if(n <= 0 && n-i > 0) { --inputs_waiting; assert(inputs_waiting >= 0); }
+        if(n > 0 && n-i <= 0) ++inputs_waiting;
         input_n[nI].second += i;
-        n += i;
+        n -= i;
     }
     /// get requirement threshold for input
     int get_required(size_t nI) const { return input_n.at(nI).second; }
@@ -62,6 +63,7 @@ public:
         assert(nI < input_n.size());
         if(!input_n[nI].first++) { --inputs_waiting; assert(inputs_waiting >= 0); }
         PQ.emplace(nI,o);
+
         while(!inputs_waiting && !PQ.empty()) pop();
     }
 
@@ -73,6 +75,7 @@ public:
         if(n <= 0 && n + os.size() > 0) { --inputs_waiting; assert(inputs_waiting >= 0); }
         n += os.size();
         for(auto& o: os) PQ.emplace(nI,o);
+
         while(!inputs_waiting && !PQ.empty()) pop();
     }
 
@@ -126,10 +129,9 @@ protected:
         PQ.pop();
     }
 
-    /// number of inputs with input_n <= 0
+    /// number of inputs with input_n.first <= 0
     int inputs_waiting = 0;
-    /// counter for required numbers of datapoints from each input,
-    /// and "waiting" threhsold
+    /// counter for (required number, waiting threshold) of datapoints from each input
     std::vector<std::pair<int,int>> input_n;
 
     /// item from enumerated source

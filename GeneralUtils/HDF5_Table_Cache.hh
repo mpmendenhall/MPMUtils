@@ -39,9 +39,9 @@ public:
     /// get number of rows available
     hsize_t getNRows() const { return maxread; }
     /// get identifying number for value type
-    static int64_t getIdentifier(const T& val) { throw std::logic_error("getIdentifier unimplemented"); }
+    static int64_t getIdentifier(const T&) { throw std::logic_error("getIdentifier unimplemented"); }
     /// set identifying number for value type
-    static void setIdentifier(T& val, int64_t id) { throw std::logic_error("setIdentifier unimplemented"); }
+    static void setIdentifier(T&, int64_t) { throw std::logic_error("setIdentifier unimplemented"); }
 
     /// load next "event" of entries with same identifer into vector; return event identifier loaded
     int64_t loadEvent(vector<T>& v);
@@ -69,7 +69,7 @@ template<typename T>
 class HDF5_Table_Writer: virtual public DataSink<T> {
 public:
     /// Constructor, from name of table and struct offsets/sizes
-    HDF5_Table_Writer(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(0), hsize_t nc = 1024, int cmp = 9): Tspec(ts), nchunk(nc), compress(cmp) { }
+    HDF5_Table_Writer(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(), hsize_t nc = 1024, int cmp = 9): Tspec(ts), nchunk(nc), compress(cmp) { }
     /// Destructor
     ~HDF5_Table_Writer() { flush(); }
 
