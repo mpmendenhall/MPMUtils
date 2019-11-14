@@ -14,4 +14,13 @@ public:
     virtual void flush() { }
 };
 
+/// Virtual base for chaining to next sink
+template<class C>
+class SinkOut {
+public:
+    virtual void setSink(DataSink<C>* ns) { nextSink = ns; }
+protected:
+    DataSink<C>* nextSink = nullptr;
+};
+
 #endif

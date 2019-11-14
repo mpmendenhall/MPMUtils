@@ -16,7 +16,7 @@
 
 /// Combine ordered items received from multiple "push" sources
 template<class T, typename ordering_t = double>
-class Collator {
+class Collator: public SinkOut<T> {
 public:
     /// polymorphic destructor: remember final flush.
     virtual ~Collator() { assert(PQ.empty()); }
@@ -82,7 +82,7 @@ public:
     /// flush all data
     virtual void flush() {
         while(!PQ.empty()) pop();
-        if(nextSink) nextSink->flush();
+        if(this->nextSink) this->nextSink->flush();
     }
 
     /// clear all inputs
@@ -117,15 +117,13 @@ public:
         return v;
     }
 
-    DataSink<T>* nextSink = nullptr;   ///< destination for ordered items
-
 protected:
 
     /// pop next element (and push to nextSink)
     void pop() {
         auto& o = PQ.top();
         if(!--input_n[o.first].first) ++inputs_waiting;
-        if(nextSink) nextSink->push(o.second);
+        if(this->nextSink) this->nextSink->push(o.second);
         PQ.pop();
     }
 
