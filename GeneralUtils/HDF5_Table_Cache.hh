@@ -21,7 +21,7 @@ template<typename T>
 class HDF5_Table_Cache: virtual public DataSource<T> {
 public:
     /// Constructor, from name of table and struct offsets/sizes
-    HDF5_Table_Cache(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(0), hsize_t nc = 1024): Tspec(ts), nchunk(nc)  { }
+    HDF5_Table_Cache(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(), hsize_t nc = 1024): Tspec(ts), nchunk(nc)  { }
 
     /// get next table row; return whether successful or failed (end-of-file)
     bool next(T& val) override;
@@ -55,6 +55,7 @@ public:
 protected:
     hid_t _infile_id = 0;       ///< file to read from
     T next_read;                ///< next item read in for event list reads
+    int64_t id_current_evt = -1;  ///< event identifier of next_read
 
     vector<T> cached;           ///< cached read data
     size_t cache_idx = 0;       ///< index in cached data
@@ -164,7 +165,7 @@ void HDF5_Table_Cache<T>::setFile(hid_t f) {
             _infile_id = 0;
         }
     }
-    setIdentifier(next_read, -1);
+    id_current_evt = -1;
 }
 
 template<typename T>
@@ -222,24 +223,28 @@ bool HDF5_Table_Cache<T>::skip(size_t n) {
 template<typename T>
 int64_t HDF5_Table_Cache<T>::loadEvent(vector<T>& v) {
     v.clear();
-    auto current_evt = getIdentifier(next_read); // = -1 on the first time; -2 at file end
-    if(current_evt == -2) {
-        setIdentifier(next_read, -1); // reset to restart at begin of data
+    if(id_current_evt == -2) { // = -1 on the first time; -2 at file end
+        id_current_evt = -1; // reset to restart at begin of data
         return -2;
     }
-    if(current_evt != -1) v.push_back(next_read);
+
+    if(id_current_evt != -1) v.push_back(next_read);
 
     while(true) {
         if(!next(next_read)) {
-            setIdentifier(next_read, -2);
+            id_current_evt = -2;
             break;
         }
 
-        if(current_evt == -1) current_evt = getIdentifier(next_read);
-        else if(getIdentifier(next_read) != current_evt) break;
+        auto nextid = getIdentifier(next_read);
+        if(id_current_evt == -1) id_current_evt = nextid;
+        else if(nextid != id_current_evt) {
+            id_current_evt = nextid;
+            break;
+        }
         v.push_back(next_read);
     }
-    return current_evt;
+    return id_current_evt;
 }
 
 template<typename T>
