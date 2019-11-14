@@ -51,10 +51,13 @@ void GLVisDriver::_clearWindow(const vector<float>& v) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void GLVisDriver::pause() {
-    pause_display = true;
+void _end_pause(void*, VGLCallback*) { }
+
+void GLVisDriver::pause(void (*f)(void*, VGLCallback*), void* args) {
+    pause_callback = f;
+    pause_args = args;
     printf("Press [enter] in visualization window to continue...\n");
-    while(pause_display) usleep(50000);
+    while(pause_callback != &_end_pause) usleep(50000);
 }
 
 void GLVisDriver::_setColor(const vector<float>& v) {
@@ -239,15 +242,29 @@ void _keypress(unsigned char key, int x, int y) {
 }
 
 void GLVisDriver::keypress(unsigned char key, int x, int y) {
-    if(key == 32 || key == 13) pause_display = false; // spacebar or return
-    else if(key == 27) resetViewTransformation();     // escape
-    else if(key == 100) { // 'd'
+    if(key == 32 || key == 13) {  // spacebar or return
+        pause_callback = &_end_pause;
+        return;
+    } else if(key == 27) resetViewTransformation();     // escape
+    else if(key == 'd') {
+        /*
         sprintf(theSDR.fname, "screendump_%03i.tga", theSDR.ndumps++);
         theSDR.w0 = winwidth;
         theSDR.h0 = winheight;
         glutReshapeWindow(3*winwidth, 3*winheight);
+        */
     }
     else printf("Un-assigned keypress %u at %i,%i\n", key, x, y);
+
+    if(pause_callback) {
+        VGLCallback C;
+        C.x = x;
+        C.y = y;
+        C.a = key;
+        C.b = 0;
+        C.reason = VGLCallback::KEYPRESS;
+        (*pause_callback)(pause_args, &C);
+    }
 }
 
 void _specialKeypress(int, int, int) { }
@@ -256,11 +273,21 @@ void _startMouseTracking(int button, int state, int x, int y) {
     if(GLDr) GLDr->startMouseTracking(button, state, x, y);
 }
 
-void GLVisDriver::startMouseTracking(int, int state, int x, int y) {
+void GLVisDriver::startMouseTracking(int button, int state, int x, int y) {
     modifier = glutGetModifiers();
     if(state == GLUT_DOWN) {
         clickx0 = x;
         clicky0 = y;
+    }
+
+    if(pause_callback) {
+        VGLCallback C;
+        C.x = x;
+        C.y = y;
+        C.a = state;
+        C.b = button;
+        C.reason = VGLCallback::STARTMOUSE;
+        (*pause_callback)(pause_args, &C);
     }
 }
 
@@ -302,11 +329,19 @@ void GLVisDriver::mouseTrackingAction(int x, int y) {
     glFlush();
     glFinish();
     updated = true;
+
+    if(pause_callback) {
+        VGLCallback C;
+        C.x = x;
+        C.y = y;
+        C.a = modifier;
+        C.b = 0;
+        C.reason = VGLCallback::MOVEMOUSE;
+        (*pause_callback)(pause_args, &C);
+    }
 }
 
 void GLVisDriver::initWindow(const std::string& windowTitle) {
-
-    pause_display = false;
     pthread_mutexattr_t displayLockAttr;
     pthread_mutexattr_init(&displayLockAttr);
     pthread_mutexattr_settype(&displayLockAttr, PTHREAD_MUTEX_RECURSIVE);

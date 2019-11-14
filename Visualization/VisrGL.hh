@@ -11,6 +11,18 @@
 #include <deque>
 #include <pthread.h>
 
+/// Callback base during generic pause operation
+class VGLCallback {
+public:
+    enum Callback_t {
+        STARTMOUSE,
+        MOVEMOUSE,
+        KEYPRESS
+    } reason;
+
+    int x, y, a, b;
+};
+
 /// OpenGL window visualization driver
 class GLVisDriver: public VisDriver {
 public:
@@ -26,7 +38,9 @@ public:
     void initWindow(const std::string& title = "OpenGL Viewer Window");
 
     /// pause for user interaction
-    void pause() override;
+    void pause() override { pause(nullptr); }
+    /// pause for user interaction, with optional callbacks function
+    void pause(void (*f)(void*, VGLCallback*), void* args = nullptr);
 
     //-/////////////////////////////////
     // actions called in GLUT event loop
@@ -77,7 +91,9 @@ protected:
     /// get current transformation matrix
     void getMatrix();
 
-    bool pause_display = false; ///< flag to maintain display pause
+    void (*pause_callback)(void*, VGLCallback*) = nullptr;  ///< callback during pause
+    void* pause_args = nullptr;                             ///< callback arguments
+
     bool updated = true;        ///< flag to refresh updated drawing
     int clickx0, clicky0;       ///< click (start) location
     int modifier;               ///< modifier key
