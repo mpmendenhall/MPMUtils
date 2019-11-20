@@ -24,7 +24,7 @@
 #include <TString.h>
 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
-OutputManager(nm,pnt), ignoreMissingHistos(true), inflname(inflName) {
+OutputManager(nm,pnt), inflname(inflName) {
     // open file to load existing data
     fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : nullptr;
     if(fIn) {

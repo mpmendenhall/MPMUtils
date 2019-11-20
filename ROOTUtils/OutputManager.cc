@@ -64,7 +64,7 @@ TDirectory* OutputManager::writeItems(TDirectory* d) {
 }
 
 void OutputManager::openROOT(OutputManager* base){
-	if(!base) base = this;
+    if(!base) base = this;
     if(!rootOut) {
         makePath(base->rootPath);
         string outfname = base->rootPath+"/"+base->name+".root";

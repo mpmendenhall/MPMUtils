@@ -337,10 +337,10 @@ void scale(TGraphErrors& tg, float s, bool xaxis) {
     double x,y;
     for(int i=0; i<tg.GetN(); i++) {
         tg.GetPoint(i,x,y);
-	if(xaxis) {
+        if(xaxis) {
             tg.SetPoint(i, x*s, y);
             tg.SetPointError(i, tg.GetErrorX(i)*s, tg.GetErrorY(i));
-	} else {
+    } else {
             tg.SetPoint(i, x, s*y);
             tg.SetPointError(i, tg.GetErrorX(i), s*tg.GetErrorY(i));
         }

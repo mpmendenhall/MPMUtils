@@ -93,7 +93,7 @@ public:
     /// statistical test of histogram similarity
     virtual map<string,float> compareKolmogorov(const SegmentSaver& S) const;
 
-    bool ignoreMissingHistos;   ///< whether to quietly ignore missing histograms in input file
+    bool ignoreMissingHistos = true;    ///< whether to quietly ignore missing histograms in input file
 
 
     // ----- Subclass me! ----- //

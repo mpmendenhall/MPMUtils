@@ -64,7 +64,7 @@ public:
     using SockDistribClient::SockDistribClient;
 protected:
     /// Process received data as array of T
-	bool process_v(const vector<char>& v) override { return process((T*)v.data(), v.size()/sizeof(T)); }
+    bool process_v(const vector<char>& v) override { return process((T*)v.data(), v.size()/sizeof(T)); }
     /// Process received data as array of T --- Subclass me!
     virtual bool process(const T*, size_t n) { return n; }
 };
