@@ -89,7 +89,7 @@ public:
     static void display() {
         for(auto& kv: index()) {
             printf("--- %zu ---\n", kv.first);
-            for(auto& kv2: kv.second) printf("%zu:\t%s\n", kv2.first, kv2.second.classname.c_str());
+            for(auto& kv2: kv.second) printf("%zu:\t'%s'\n", kv2.first, kv2.second.classname.c_str());
         }
     }
 };
@@ -126,7 +126,7 @@ public:
     static base* construct(const string& classname, Args&&... a) {
         auto& mi = indexFor<B, Args...>();
         auto it = mi.find(hash(classname));
-        return it == mi.end()? nullptr : dynamic_cast<_ArgsBaseFactory<B, Args...>&>(it->second).construct(std::forward<Args>(a)...);
+        return it == mi.end()?  nullptr : dynamic_cast<_ArgsBaseFactory<B, Args...>&>(it->second).construct(std::forward<Args>(a)...);
     }
 };
 

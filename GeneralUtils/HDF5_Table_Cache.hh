@@ -72,7 +72,7 @@ public:
     /// Constructor, from name of table and struct offsets/sizes
     HDF5_Table_Writer(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(), hsize_t nc = 1024, int cmp = 9): Tspec(ts), nchunk(nc), compress(cmp) { }
     /// Destructor
-    ~HDF5_Table_Writer() { flush(); }
+    ~HDF5_Table_Writer() { signal(DATASTREAM_END); }
 
     /// write table row
     void push(const T& val) override;
@@ -84,8 +84,8 @@ public:
     void setFile(hid_t f);
     /// create table in output file
     void initTable() { makeTable(Tspec, _outfile_id, nchunk, compress); }
-    /// flush to disk
-    void flush() override;
+    /// accept data flow signal
+    void signal(datastream_signal_t sig) override;
 
     HDF5_Table_Spec Tspec;      ///< configuration for table to read
 
@@ -121,25 +121,26 @@ public:
 template<typename T>
 void HDF5_Table_Writer<T>::push(const vector<T>& vals) {
     cached.insert(cached.end(), vals.begin(), vals.end());
-    if(cached.size() >= nchunk) flush();
+    if(cached.size() >= nchunk) signal(DATASTREAM_FLUSH);
     nwrite += vals.size();
 }
 
 template<typename T>
 void HDF5_Table_Writer<T>::push(const T& val) {
     cached.push_back(val);
-    if(cached.size() >= nchunk) flush();
+    if(cached.size() >= nchunk) signal(DATASTREAM_FLUSH);
     nwrite++;
 }
 
 template<typename T>
 void HDF5_Table_Writer<T>::setFile(hid_t f) {
-    flush();
+    signal(DATASTREAM_FLUSH);
     _outfile_id = f;
 }
 
 template<typename T>
-void HDF5_Table_Writer<T>::flush() {
+void HDF5_Table_Writer<T>::signal(datastream_signal_t sig) {
+    if(sig < DATASTREAM_FLUSH) return;
     if(_outfile_id && cached.size()) {
         herr_t err = H5TBappend_records(_outfile_id,  Tspec.table_name.c_str(), cached.size(),
                                         sizeof(T),  Tspec.offsets, Tspec.field_sizes, cached.data());
@@ -232,8 +233,9 @@ int64_t HDF5_Table_Cache<T>::loadEvent(vector<T>& v) {
 
     while(true) {
         if(!next(next_read)) {
+            auto i = id_current_evt;
             id_current_evt = -2;
-            break;
+            return i;
         }
 
         auto nextid = getIdentifier(next_read);
@@ -286,7 +288,7 @@ bool HDF5_Table_Transfer<T>::transferIDs(const vector<int64_t>& ids, int64_t new
         if(!transferID(id, newID)) return false;
         if(newID >= 0) newID++;
     }
-    tableOut.flush();
+    tableOut.signal(DATASTREAM_FLUSH);
     return true;
 }
 

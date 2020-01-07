@@ -65,7 +65,7 @@ public:
 class _XMLProvider {
 public:
     /// Constructor
-    _XMLProvider(const string& name): tagname(name) { }
+    _XMLProvider(const string& name = "UNKNOWN"): tagname(name) { }
     /// build XML output
     virtual XMLTag* makeXML();
     /// Add a tag attribute

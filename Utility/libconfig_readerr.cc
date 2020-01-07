@@ -3,6 +3,15 @@
 
 void readConfigFile(Config& cfg, const string& cfgfile, bool autoconvert) {
     cfg.setAutoConvert(autoconvert);
+
+    // set @include paths relative to config file instead of exec working dir
+    auto i = cfgfile.find_last_of('/');
+    if(i != string::npos) {
+        auto cfgdir = cfgfile.substr(0,i+1);
+        printf("Config base '%s'\n", cfgdir.c_str());
+        cfg.setIncludeDir(cfgdir.c_str());
+    }
+
     try { cfg.readFile(cfgfile.c_str()); }
     catch(ParseException& e) {
         printf("\n\nConfiguration file syntax error!\n");

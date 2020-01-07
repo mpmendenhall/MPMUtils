@@ -24,7 +24,7 @@
 #include <TString.h>
 
 SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
-OutputManager(nm,pnt), inflname(inflName) {
+OutputManager(nm, pnt), inflname(inflName) {
     // open file to load existing data
     fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : nullptr;
     if(fIn) {
@@ -55,10 +55,10 @@ bool SegmentSaver::isNormalized() {
 }
 
 void SegmentSaver::rename(const string& nm) {
-    OutputManager::rename(nm);
+    path = nm;
     if(!fIn) {
         auto PSS = dynamic_cast<SegmentSaver*>(parent);
-        if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(nm.c_str());
+        if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(path.c_str());
     }
 }
 
@@ -177,13 +177,13 @@ void SegmentSaver::scaleData(double s) {
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
     for(auto& kv: saveHists) {
         if(!S.saveHists.count(kv.first)) {
-            if(throwit) throw std::runtime_error("Mismatched histogram '"+kv.first+"' in '"+name+"'");
+            if(throwit) throw std::runtime_error("Mismatched histogram '"+kv.first+"' in '"+path+"'");
             return false;
         }
     }
     for(auto& kv: cumDat) {
         if(!S.cumDat.count(kv.first)) {
-            if(throwit) throw std::runtime_error("Mismatched cumulative '"+kv.first+"' in '"+name+"'");
+            if(throwit) throw std::runtime_error("Mismatched cumulative '"+kv.first+"' in '"+path+"'");
             return false;
         }
     }

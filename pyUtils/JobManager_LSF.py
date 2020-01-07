@@ -4,22 +4,6 @@
 
 from JobManager_Interface import *
 import subprocess
-import datetime
-
-"""JOBID   USER    STAT  QUEUE      FROM_HOST   EXEC_HOST   JOB_NAME   SUBMIT_TIME
-689979  mpm     RUN   pbatch0    lassen709   1*launch_ho test       Nov 19 15:24
-                                             40*batch_hosts
-689980  mpm     RUN   pbatch0    lassen709   1*launch_ho test       Nov 19 15:24
-                                             40*batch_hosts
-689981  mpm     RUN   pbatch0    lassen709   1*launch_ho test       Nov 19 15:24
-                                             40*batch_hosts
-689982  mpm     RUN   pbatch0    lassen709   1*launch_ho test       Nov 19 15:24
-                                             40*batch_hosts
-689983  mpm     RUN   pbatch0    lassen709   1*launch_ho test       Nov 19 15:24
-                                             40*batch_hosts
-689984  mpm     RUN   pbatch0    lassen709   1*launch_ho test       Nov 19 15:25
-                                             40*batch_hosts
-"""
 
 class LSFInterface(BatchQueueInterface):
 
@@ -60,7 +44,6 @@ class LSFInterface(BatchQueueInterface):
 
         mcmds = ["-nnodes 1",
                  "-ln_slots %i"%J.ncores,
-                 #'-R "cu[usablecuslots=%i]"'%J.ncores,
                  "-W %i"%(1.+J.wtreq/60.)]
         if J.acct: mcmds.append("-G "+J.acct)
         if J.logfile: mcmds.append("-o "+J.logfile)
@@ -68,7 +51,6 @@ class LSFInterface(BatchQueueInterface):
         if J.q: mcmds.append("-q "+J.q)
 
         cmd = '\n'.join(["#BSUB "+m for m in mcmds]+['\n', J.script])
-        #print(cmd)
         bsub = subprocess.Popen(["bsub"], stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
         bsub.stdin.write(cmd.encode())
         ou,er = bsub.communicate()

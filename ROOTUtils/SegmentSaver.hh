@@ -49,7 +49,7 @@ public:
     /// get age of analyzer's input file
     double getInflAge() const { return inflAge; }
     /// change name, and subpaths if in parent
-    void rename(const string& nm) override;
+    virtual void rename(const string& nm);
 
     /// generate or restore from file a saved TH1F histogram
     TH1* registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax);

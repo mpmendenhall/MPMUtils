@@ -10,7 +10,7 @@
 using std::vector;
 
 /// "Cluster" base class
-template<class _T, typename _ordering_t = double>
+template<class _T, typename _ordering_t = typename _T::ordering_t>
 class Cluster: public vector<_T> {
 public:
     typedef _T T;
@@ -71,32 +71,34 @@ protected:
     ordering_t x_median = 0;    ///< representative median object position
 };
 
-/// OrderedWindow of "clustered" objects
+
+/// Cluster builder
 template<class C>
-class ClusteredWindow: public DataSink<typename C::T>, public OrderedWindow<C, typename C::ordering_t> {
+class ClusterBuilder: public DataSink<typename C::T> {
 public:
-    typedef typename C::T T;
-    typedef typename C::ordering_t ordering_t;
+    typedef C cluster_t;
+    typedef typename cluster_t::T T;
+    typedef typename cluster_t::ordering_t ordering_t;
 
     /// Constructor
-    ClusteredWindow(ordering_t cdx, ordering_t dw): OrderedWindow<C>(dw), cluster_dx(cdx) { currentC.dx = cluster_dx; }
+    ClusterBuilder(ordering_t cdx): cluster_dx(cdx) {  }
 
-    /// clear remaining objects through window
-    void flush() override {
-        completeCluster();
-        OrderedWindow<C>::flush();
+    /// accept data flow signal
+    void signal(datastream_signal_t sig) override {
+        if(sig >= DATASTREAM_FLUSH) completeCluster();
+        if(clustOut) clustOut->signal(sig);
     }
 
     /// push currentC into window
     void completeCluster() {
         currentC.close();
-        if(currentC.size() && includeCluster(currentC)) OrderedWindow<C>::push(currentC);
+        if(currentC.size() && checkCluster(currentC) && clustOut) clustOut->push(currentC);
         currentC.clear();
     }
 
-    using OrderedWindow<C, ordering_t>::push;
     /// add object to newest cluster (or start newer cluster), assuming responsibility for deletion
     void push(const T& oo) override {
+        currentC.dx = cluster_dx;
         auto o = oo;
         processSingle(o);
         if(!currentC.tryAdd(o)) {
@@ -105,16 +107,49 @@ public:
         }
     }
 
-    ordering_t cluster_dx;  ///< time spread for cluster identification
+    ordering_t cluster_dx;                      ///< time spread for cluster identification
+    DataSink<cluster_t>* clustOut = nullptr;    ///< clustered objects recipient
 
 protected:
-
     /// process new single element before adding to clustering sequence --- Subclass me!
     virtual void processSingle(T&) { }
-    /// decide whether to include cluster
-    virtual bool includeCluster(const C&) const { return true; }
+    /// examine and decide whether to include cluster
+    virtual bool checkCluster(cluster_t&) { return true; }
 
-    C currentC; ///< cluster currently being built
+    cluster_t currentC; ///< cluster currently being built
 };
+
+/// Wrap ClusterBuilder in OrderedWindow
+template<class CB>
+class CBWindow: public CB, public OrderedWindow<typename CB::cluster_t, typename CB::ordering_t> {
+public:
+    typedef typename CB::cluster_t cluster_t;
+    typedef typename cluster_t::T T;
+    typedef typename cluster_t::ordering_t ordering_t;
+
+    /// Basic constructor
+    CBWindow(ordering_t cdx, ordering_t dw):
+    CB(cdx), OrderedWindow<cluster_t, ordering_t>(dw) {
+        CB::clustOut = this;
+    }
+
+    /// Special-purpose constructor (specialize me!)
+    template<typename... Args>
+    CBWindow(Args&&...) { }
+
+    /// Non-loopy signal passthrough
+    using CB::signal;
+    void signal(datastream_signal_t sig) override {
+        if(sig >= DATASTREAM_FLUSH) this->completeCluster();
+        OrderedWindow<cluster_t, ordering_t>::signal(sig);
+    }
+
+    using CB::push;
+    using OrderedWindow<cluster_t, ordering_t>::push;
+};
+
+/// OrderedWindow of "clustered" objects
+template<class C>
+using ClusteredWindow = CBWindow<ClusterBuilder<C>>;
 
 #endif

@@ -15,8 +15,8 @@
 #include <cassert>
 
 /// Combine ordered items received from multiple "push" sources
-template<class T, typename ordering_t = double>
-class Collator: public SinkOut<T> {
+template<class T, typename ordering_t = typename T::ordering_t>
+class Collator {
 public:
     /// polymorphic destructor: remember final flush.
     virtual ~Collator() { assert(PQ.empty()); }
@@ -80,14 +80,14 @@ public:
     }
 
     /// flush all data
-    virtual void flush() {
-        while(!PQ.empty()) pop();
-        if(this->nextSink) this->nextSink->flush();
+    virtual void signal(datastream_signal_t sig) {
+        if(sig >= DATASTREAM_FLUSH) while(!PQ.empty()) pop();
+        if(this->nextSink) this->nextSink->signal(sig);
     }
 
     /// clear all inputs
     virtual void reset() {
-        flush();
+        signal(DATASTREAM_FLUSH);
         inputs_waiting = 0;
         input_n.clear();
     }
@@ -116,6 +116,8 @@ public:
         for(auto nI: v) set_required(nI,-1);
         return v;
     }
+
+    DataSink<T>* nextSink = nullptr;
 
 protected:
 

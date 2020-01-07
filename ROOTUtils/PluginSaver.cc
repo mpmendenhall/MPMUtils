@@ -73,10 +73,10 @@ map<string,float> PluginSaver::compareKolmogorov(const SegmentSaver& S) const {
     auto m = SegmentSaver::compareKolmogorov(S);
     auto& PS = dynamic_cast<const PluginSaver&>(S);
     for(auto P: myPlugins) {
-        auto Si = PS.getPlugin(P->name);
+        auto Si = PS.getPlugin(P->path);
         if(!Si) continue;
         auto mm = P->compareKolmogorov(*Si);
-        for(auto& kv: mm) m[P->name + "." + kv.first] = kv.second;
+        for(auto& kv: mm) m[P->path + "." + kv.first] = kv.second;
     }
     return m;
 }
@@ -119,18 +119,18 @@ void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
     SegmentSaver::addSegment(S);
     auto& PS = dynamic_cast<const PluginSaver&>(S);
     for(auto P: myPlugins) {
-        auto Si = PS.getPlugin(P->name);
+        auto Si = PS.getPlugin(P->path);
         if(Si) P->addSegment(*Si,sc);
-        else printf("Warning: PluginSaver::addSegment missing matching plugin for '%s'\n", P->name.c_str());
+        else printf("Warning: PluginSaver::addSegment missing matching plugin for '%s'\n", P->path.c_str());
     }
 }
 
 void PluginSaver::checkpoint(const SegmentSaver& Sprev) {
     auto& PS = dynamic_cast<const PluginSaver&>(Sprev);
     for(auto P: myPlugins) {
-        auto Si = PS.getPlugin(P->name);
+        auto Si = PS.getPlugin(P->path);
         if(Si) P->checkpoint(*Si);
-        else printf("Warning: PluginSaver::checkpoint missing matching plugin for '%s'\n", P->name.c_str());
+        else printf("Warning: PluginSaver::checkpoint missing matching plugin for '%s'\n", P->path.c_str());
     }
 }
 
@@ -146,6 +146,8 @@ void PluginSaver::makePlots() {
 }
 
 void PluginSaver::startData() {
+    ana_t0 = steady_clock::now();
+
     for(auto P: myPlugins) {
         auto t0 = steady_clock::now();
         P->startData();
@@ -173,7 +175,7 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
         vector<SegmentSaver*> vPi;
         for(auto PS: vP) {
             if(!PS) vPi.push_back(nullptr);
-            else vPi.push_back(PS->getPlugin(P->name));
+            else vPi.push_back(PS->getPlugin(P->path));
         }
         P->defaultCanvas.cd();
         P->compare(vPi);
@@ -184,7 +186,7 @@ void PluginSaver::calculateResults() {
     SegmentSaver::calculateResults();
     for(auto P: myPlugins) {
         auto t0 = steady_clock::now();
-        printf("\n## PLUGIN %s CalculateResults ##\n\n", P->name.c_str());
+        printf("\n## PLUGIN %s CalculateResults ##\n\n", P->path.c_str());
         P->calculateResults();
         P->tCalc += std::chrono::duration<double>(steady_clock::now()-t0).count();
     }
@@ -200,7 +202,7 @@ double PluginSaver::displayTimeUse() const {
     double p_tPlot = 0;
     for(auto pb: myPlugins) {
         double ttot = pb->tSetup + pb->tProcess + pb->tCalc + pb->tPlot;
-        printf("* %s\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f s\n", pb->name.c_str(),
+        printf("* %s\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f s\n", pb->path.c_str(),
                 pb->tSetup, pb->tProcess, pb->tCalc, pb->tPlot, ttot);
         p_tSetup += pb->tSetup;
         p_tProcess += pb->tProcess;
@@ -210,15 +212,19 @@ double PluginSaver::displayTimeUse() const {
     }
     printf("----- Total ------\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f s\n",
            p_tSetup, p_tProcess, p_tCalc, p_tPlot, tall);
+
+    double tFramework = std::chrono::duration<double>(steady_clock::now()-ana_t0).count();
+    printf("Framework time use: %.2f s\n\n", tFramework - tall);
+
     return tall;
 }
 
 TDirectory* PluginSaver::writeItems(TDirectory* d) {
-    d = SegmentSaver::writeItems(d);
+    SegmentSaver::writeItems(d);
     printf("Writing plugins: ");
     for(auto& kv: byName) {
         printf(" %s", kv.first.c_str());
-        kv.second->writeItems(d);
+        kv.second->writeROOT();
     }
     printf("\n");
     return d;

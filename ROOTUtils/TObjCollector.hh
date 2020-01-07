@@ -11,6 +11,9 @@
 #include <TObject.h>
 #include <TNamed.h>
 #include <TDirectory.h>
+#include <TH1.h>
+#include <TH1F.h>
+#include <TH2F.h>
 
 #include <string>
 using std::string;
@@ -35,6 +38,13 @@ public:
     virtual TObject* addDeletable(TObject* o);
     /// register an anonymous ROOT object under the specified name
     virtual TObject* addWithName(TObject* o, const string& name);
+
+    /// generate a TH1F registered with output objects list
+    TH1F* registeredTH1F(string hname, string htitle, unsigned int nbins, float x0, float x1);
+    /// generate a TH1D registered with output objects list
+    TH1D* registeredTH1D(string hname, string htitle, unsigned int nbins, float x0, float x1);
+    /// generate a TH2F registered with output objects list
+    TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
 
     vector<TNamed*> namedItems;         ///< objects with their own names; held until deleted
     map<string,TObject*> anonItems;     ///< objects assigned a name; held until deleted.

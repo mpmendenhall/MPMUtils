@@ -32,7 +32,7 @@ public:
 };
 
 /// Flow-through analysis on a ``window'' of ordered objects
-template<class T, typename _ordering_t = double>
+template<typename T, typename _ordering_t = typename T::ordering_t>
 class OrderedWindow: protected deque<T>, public DataSink<T> {
 public:
     /// ordering type
@@ -67,7 +67,8 @@ public:
     ordering_t windowHalfwidth() const { return hwidth; }
 
     /// clear remaining objects through window (at end of run, etc.)
-    void flush() override {
+    void signal(datastream_signal_t sig) override {
+        if(sig < DATASTREAM_FLUSH) return;
         if(size()) {
             window_Hi = order(back());
             window_Lo = window_Hi - 2*hwidth;

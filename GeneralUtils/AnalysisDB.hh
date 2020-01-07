@@ -19,8 +19,6 @@ public:
     /// close and delete instance
     static void closeDB() { if(myDB) { delete myDB; myDB = nullptr; } }
 
-    static string dbfile;   ///< database file location
-
     /// create analysis run identifier
     sqlite3_int64 createAnaRun(const string& dataname);
     /// get (or create) analysis variable identifier
@@ -32,7 +30,7 @@ public:
 
 protected:
     /// Constructor
-    AnalysisDB(): SQLite_Helper(dbfile) { }
+    AnalysisDB();
 
     static AnalysisDB* myDB;    ///< singleton instance of DB connection
 };

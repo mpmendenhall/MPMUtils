@@ -73,6 +73,7 @@ protected:
     /// load and configure plugin by class name
     void buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown);
 
+    decltype(steady_clock::now()) ana_t0;   ///< analysis start time
     map<string, SegmentSaver*> byName;      ///< available named plugins list
     vector<SegmentSaver*> myPlugins;        ///< plugins in run order
     TObjString* configstr;                  ///< configuration file contents

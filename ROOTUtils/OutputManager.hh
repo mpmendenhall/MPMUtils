@@ -1,23 +1,5 @@
-/// \file OutputManager.hh Convenience class for bundling ROOT output into a directory
-/*
- * OutputManager.hh, part of the MPMUtils package.
- * Copyright (c) 2014 Michael P. Mendenhall
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
+/// \file OutputManager.hh Organize output into parallel hierarchies of filesystem and ROOT TFile directories
+// Michael P. Mendenhall, LLNL 2020
 
 #ifndef OUTPUTMANAGER_HH
 #define OUTPUTMANAGER_HH
@@ -25,54 +7,53 @@
 #include "TObjCollector.hh"
 #include <TCanvas.h>
 #include <TPad.h>
-#include <TH1.h>
-#include <TH1F.h>
-#include <TH2F.h>
 
-/// manages output directory for grouping related information; manages a canvas, output ROOT file, recursive subdirectories
+/// Organize output into parallel hierarchies of filesystem and ROOT TFile directories
+/*
+ * OutputManager parent("path/to/parent");
+ * OutputManager child("child", &parent);
+ *
+ * path/to/
+ *         parent.root
+ *              (parents's TObjects)
+ *              child/
+ *                  (child's TObjects)
+ *         parent/
+ *              (parent's outputs)
+ *              child/
+ *                    (child's outputs)
+ *
+*/
 class OutputManager: public TObjCollector {
 public:
-    /// constructor for top-level
-    OutputManager(string nm, string bp);
-    /// constructor for nested
-    OutputManager(string nm, OutputManager* pnt);
+    /// Constructor
+    OutputManager(const string& bp, OutputManager* pnt = nullptr);
+    /// Destructor
+    ~OutputManager() { if(!parent) delete rootDir; }
 
-    /// destructor
-    virtual ~OutputManager() { clearItems(); }
-
-    /// generate a TH1F registered with this runs output objects list
-    TH1F* registeredTH1F(string hname, string htitle, unsigned int nbins, float x0, float x1);
-    /// generate a TH1D registered with this runs output objects list
-    TH1D* registeredTH1D(string hname, string htitle, unsigned int nbins, float x0, float x1);
-    /// generate a TH2F registered with this runs output objects list
-    TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
     /// print current canvas; return filename printed
     virtual string printCanvas(const string& fname, const TPad* P = nullptr, string suffix="") const;
     /// set printCanvas suffix (filetype)
     virtual void setPrintSuffix(const string& sfx) { printsfx = sfx; }
 
-    /// change name, and subpaths if in parent
-    virtual void rename(const string& nm);
-    /// write items to currently open directory, or specified
-    TDirectory* writeItems(TDirectory* d = nullptr) override;
     /// open output ROOT file
     void openROOT(OutputManager* base=nullptr);
-    /// write output ROOT file, or to new directory within parent
-    string writeROOT(TDirectory* parentDir = nullptr);
+    /// write output ROOT file (or directory within parent)
+    string writeROOT();
 
     TCanvas defaultCanvas;              ///< canvas for drawing plots
-    OutputManager* parent = nullptr;    ///< parent output manager
-    string basePath;                    ///< general output path
-    string plotPath;                    ///< specific output path for plots
-    string dataPath;                    ///< specific output path for output data
-    string rootPath;                    ///< specific output path for ROOT files
-    string name;                        ///< name for this subsystem
-    string printsfx = ".pdf";           ///< printCanvas default suffix
-
+    OutputManager* parent = nullptr;    ///< parent output manager (provides starting subdirectories)
+    string path;                        ///< output name/path (relative to parent if provided)
     static bool squelchAllPrinting;     ///< whether to cancel all printCanvas output
 
+    /// ROOT output directory
+    TDirectory* getRootOut();
+    /// full output path
+    string fullPath() const;
+
 protected:
-    static TFile* rootOut;              ///< output file
+    string printsfx = ".pdf";           ///< printCanvas default suffix (file type)
+    TDirectory* rootDir = nullptr;      ///< ROOT objects output directory
 };
 
 #endif
