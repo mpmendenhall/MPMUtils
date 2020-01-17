@@ -133,19 +133,19 @@ public:
         CB::clustOut = this;
     }
 
-    /// Special-purpose constructor (specialize me!)
+    /// Special-purpose constructor (specialize me, including CB::clustOut = this)
     template<typename... Args>
-    CBWindow(Args&&...) { }
+    CBWindow(Args&&...) { throw std::logic_error("Unimplemented constructor"); }
 
-    /// Non-loopy signal passthrough
     using CB::signal;
+    /// special override for non-loopy signalling
     void signal(datastream_signal_t sig) override {
-        if(sig >= DATASTREAM_FLUSH) this->completeCluster();
+        if(sig >= DATASTREAM_FLUSH) CB::completeCluster();
         OrderedWindow<cluster_t, ordering_t>::signal(sig);
     }
 
-    using CB::push;
-    using OrderedWindow<cluster_t, ordering_t>::push;
+    using CB::push; // push T
+    using OrderedWindow<cluster_t, ordering_t>::push; // push cluster_t
 };
 
 /// OrderedWindow of "clustered" objects

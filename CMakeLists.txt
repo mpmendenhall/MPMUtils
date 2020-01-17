@@ -197,19 +197,5 @@ get_filename_component(EXN ${E} NAME_WE)
     target_link_libraries(${EXN} MPM)
 endforeach(E)
 
-#################
-# Documentation with Doxygen
-#################
+add_subdirectory(doc)
 
-#################
-# Documentation with Doxygen
-#################
-find_package(Doxygen QUIET)
-if(DOXYGEN_FOUND)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-    add_custom_target(doc
-        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Generating API documentation with Doxygen" VERBATIM
-    )
-endif(DOXYGEN_FOUND)

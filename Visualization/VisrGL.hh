@@ -5,11 +5,14 @@
 #define VISRGL_HH
 
 #include "Visr.hh"
+#include <string>
+using std::string;
 
 #ifdef WITH_OPENGL
 #include <GL/freeglut.h>
 #include <deque>
 #include <pthread.h>
+#endif
 
 /// Callback base during generic pause operation
 class VGLCallback {
@@ -26,21 +29,34 @@ public:
 /// OpenGL window visualization driver
 class GLVisDriver: public VisDriver {
 public:
-    /// Destructor
-    ~GLVisDriver() { endGlutLoop(); }
 
     /// start interactive drawing loop thread
     void doGlutLoop();
     /// stop interactive drawing loop thread
     void endGlutLoop();
-
     /// initialize visualization window
     void initWindow(const std::string& title = "OpenGL Viewer Window");
-
     /// pause for user interaction
     void pause() override { pause(nullptr); }
     /// pause for user interaction, with optional callbacks function
     void pause(void (*f)(void*, VGLCallback*), void* args = nullptr);
+
+    static const string _pause_info;    ///< default pause help
+    string pause_info = _pause_info;    ///< info to display on pause
+
+    //-///////////////////
+    // viewing window info
+
+    float win_c[3];     ///< center of window view
+    float ar = 1.0;     ///< (x range)/(y range) window aspect ratio
+    float viewrange;    ///< half-height (y) range
+    float win_lo[3];    ///< Window lower range
+    float win_hi[3];    ///< Window upper range
+    int winwidth, winheight;    ///< pixel dimensions
+
+#ifdef WITH_OPENGL
+    /// Destructor
+    ~GLVisDriver() { endGlutLoop(); }
 
     //-/////////////////////////////////
     // actions called in GLUT event loop
@@ -55,16 +71,6 @@ public:
     void specialKeypress(int key, int x, int y);
     void startMouseTracking(int button, int state, int x, int y);
     void mouseTrackingAction(int x, int y);
-
-    //-///////////////////
-    // viewing window info
-
-    float win_c[3];     ///< center of window view
-    float ar = 1.0;     ///< (x range)/(y range) window aspect ratio
-    float viewrange;    ///< half-height (y) range
-    float win_lo[3];    ///< Window lower range
-    float win_hi[3];    ///< Window upper range
-    int winwidth, winheight;    ///< pixel dimensions
 
 protected:
 
@@ -101,18 +107,7 @@ protected:
     std::deque<VisCmd> commands;    ///< to-be-processed commands
     pthread_mutex_t commandLock;    ///< commands queue lock
     std::vector<GLuint> displaySegs;
+#endif
 };
 
-#else
-
-/// Null visualization driver without OpenGL
-class GLVisDriver: public VisDriver {
-public:
-    /// start interactive drawing loop thread
-    void doGlutLoop() { }
-    /// stop interactive drawing loop thread
-    void endGlutLoop() { }
-}
-
-#endif
 #endif

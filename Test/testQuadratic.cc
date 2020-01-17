@@ -1,5 +1,8 @@
 /// \file testQuadratic.cc Test quadratic manipulations
 
+int main(int, char**) { return 0; }
+
+/*
 #include "CodeVersion.hh"
 #include "Quadratic.hh"
 #include "QuadraticT.hh"
@@ -220,3 +223,4 @@ int main(int, char**) {
     endGlutLoop();
     return EXIT_SUCCESS;
 }
+*/

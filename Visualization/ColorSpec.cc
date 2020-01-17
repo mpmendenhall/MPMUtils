@@ -137,7 +137,7 @@ namespace color {
     Gradient Gradient::subGradient(double, double) const {
         Gradient G;
         if(!stops.size()) return G;
-        assert(false); // TODO implement this!
+        throw; /// \todo MPM implement this!
         return G;
     }
 }

@@ -1,9 +1,18 @@
 /// \file VisrGL.cc
 // Michael P. Mendenhall, LLNL 2019
 
+#include "VisrGL.hh"
+
+const string GLVisDriver::_pause_info =
+"Visualizer controls:\n"
+"  * [enter] continue\n"
+"  * Click-and-drag: rotate\n"
+"  * [ctrl]-click-and-drag horizontally: zoom\n"
+"  * [shift]-click-and-drag: shift view center\n"
+"  * [esc]   reset view\n";
+
 #ifdef WITH_OPENGL
 
-#include "VisrGL.hh"
 #include <unistd.h> // for usleep
 
 /// singleton registered OpenGL window
@@ -56,7 +65,7 @@ void _end_pause(void*, VGLCallback*) { }
 void GLVisDriver::pause(void (*f)(void*, VGLCallback*), void* args) {
     pause_callback = f;
     pause_args = args;
-    printf("Press [enter] in visualization window to continue...\n");
+    if(pause_info.size()) printf("%s", pause_info.c_str());
     while(pause_callback != &_end_pause) usleep(50000);
 }
 
@@ -246,17 +255,7 @@ void GLVisDriver::keypress(unsigned char key, int x, int y) {
         pause_callback = &_end_pause;
         return;
     } else if(key == 27) resetViewTransformation();     // escape
-    else if(key == 'd') {
-        /*
-        sprintf(theSDR.fname, "screendump_%03i.tga", theSDR.ndumps++);
-        theSDR.w0 = winwidth;
-        theSDR.h0 = winheight;
-        glutReshapeWindow(3*winwidth, 3*winheight);
-        */
-    }
-    else printf("Un-assigned keypress %u at %i,%i\n", key, x, y);
-
-    if(pause_callback) {
+    else if(pause_callback) {
         VGLCallback C;
         C.x = x;
         C.y = y;
@@ -264,7 +263,7 @@ void GLVisDriver::keypress(unsigned char key, int x, int y) {
         C.b = 0;
         C.reason = VGLCallback::KEYPRESS;
         (*pause_callback)(pause_args, &C);
-    }
+    } else printf("Un-assigned keypress %u at %i,%i\n", key, x, y);
 }
 
 void _specialKeypress(int, int, int) { }
@@ -297,13 +296,13 @@ void _mouseTrackingAction(int x, int y) {
 
 void GLVisDriver::mouseTrackingAction(int x, int y) {
 
-    if(modifier == GLUT_ACTIVE_SHIFT) {
+    if(modifier == GLUT_ACTIVE_CTRL) {
         float s = (1 - 0.005*(x-clickx0));
         if( (viewrange > 1.0e-2 || s > 1.0) && (viewrange < 1.0e3 || s < 1.0) ) viewrange *= s;
         updateViewWindow();
         glLineWidth(1.5/viewrange);
 
-    } else if(modifier == GLUT_ACTIVE_CTRL) {
+    } else if(modifier == GLUT_ACTIVE_SHIFT) {
         win_c[0] -= ar*2.0*(x-clickx0)*viewrange/winwidth;
         win_c[1] += 2.0*(y-clicky0)*viewrange/winheight;
         updateViewWindow();
@@ -466,5 +465,12 @@ void GLVisDriver::initWindow(const std::string& windowTitle) {
         addCmd(c);
     }
     */
+
+#else
+
+void GLVisDriver::doGlutLoop() { }
+void GLVisDriver::endGlutLoop() { }
+void GLVisDriver::initWindow(const std::string&) { }
+void GLVisDriver::pause(void (*)(void*, VGLCallback*), void*) { }
 
 #endif

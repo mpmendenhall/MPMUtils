@@ -1,3 +1,5 @@
+/// \file libconfig_readerr.cc
+
 #include "libconfig_readerr.hh"
 #include <stdio.h>
 
