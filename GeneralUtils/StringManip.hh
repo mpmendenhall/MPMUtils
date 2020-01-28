@@ -23,9 +23,9 @@
 #define STRINGMANIP_HH
 
 /// convert text to const char* (used below with macro expansion)
-#define STRINGIFY2(X) #X
+#define STRINGIFY_VERBATIM(...) #__VA_ARGS__
 /// convert #define variable contents to const char*
-#define STRINGIFY(X) STRINGIFY2(X)
+#define STRINGIFY(X) STRINGIFY_VERBATIM(X)
 
 #include "to_str.hh"
 #include <vector>

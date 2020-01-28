@@ -1,6 +1,7 @@
 #include "TF1_Quantiles.hh"
 #include <stdexcept>
 #include <TMath.h>
+#include <cassert>
 
 TF1_Quantiles::TF1_Quantiles(TF1& f): npx(f.GetNpx()), xMin(f.GetXmin()), xMax(f.GetXmax()), dx((xMax-xMin)/npx),
 integral(npx+1), alpha(npx), beta(npx), gamma(npx) {
