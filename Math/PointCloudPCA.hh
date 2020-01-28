@@ -31,6 +31,7 @@ struct weightedpt {
         else std::fill(x.begin(), x.end(), T{});
     }
 
+    int i = 0;  ///< origin index
     coord_t x;  ///< coordinate
     double w;   ///< weight
 };
@@ -89,13 +90,13 @@ public:
     }
 
     /// mean square spread along principal components direction
-    inline double sigma2(int a) const { return width2[a]/sw; }
+    inline double sigma2(int a) const { return sw? width2[a]/sw : 0.; }
     /// rms spread along principal components direction
     inline double sigma(int a) const { return sqrt(sigma2(a)); }
     /// transverse width^2 from principal axis
     inline double wT2() const { double s = 0; for(int i = 1; i<N; i++) s += width2[i]; return s; }
     /// transverse spread^2 from principal axis
-    inline double sigmaT2() const { return wT2()/sw; }
+    inline double sigmaT2() const { return sw? wT2()/sw : 0.; }
     /// transverse spread from principal axis
     inline double sigmaT() const { return sqrt(sigmaT2()); }
 
@@ -138,10 +139,10 @@ public:
     }
 
     void display() const {
-        printf("Cloud of %zu %i-points (average weight %g):\n", n, N, n? sw/n : 0);
+        printf("Cloud of %zu %i-points (total weight %g, average %g):\n", n, N, sw, n? sw/n : 0);
         if(N==3) {
-            printf("\tmean = %g\t%g\t%g\t\twidth2 = %g\t%g\t%g\n",
-            double(mu[0]), double(mu[1]), double(mu[2]), width2[0], width2[1], width2[2]);
+            printf("\tmean = %g\t%g\t%g\t\tRMS = %g\t%g\t%g\n",
+            double(mu[0]), double(mu[1]), double(mu[2]), sigma(0), sigma(1), sigma(2));
             for(int i=0; i<3; i++) {
                 printf("\t%g\t%g\t%g\t\t%g\t%g\t%g\n",
                     Cov[i][0], Cov[i][1], Cov[i][2],

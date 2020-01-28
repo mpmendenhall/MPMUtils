@@ -12,6 +12,33 @@
 template<typename T>
 using array_contents_t = typename std::remove_reference<decltype(std::declval<T&>()[0])>::type;
 
+/// Vector sum a+b
+template<typename T, typename U>
+T vsum(const T& a, const U& b) {
+    T d = a;
+    auto itb = b.begin();
+    for(auto& x: d) x += *(itb++);
+    return d;
+}
+
+/// Vector sum a + k*b
+template<typename T, typename U, typename V>
+T vsum(const T& a, const U& k, const V& b) {
+    T d = a;
+    auto itb = b.begin();
+    for(auto& x: d) x += (*(itb++))*k;
+    return d;
+}
+
+/// Vector difference a-b
+template<typename T, typename U>
+T vdiff(const T& a, const U& b) {
+    T d = a;
+    auto itb = b.begin();
+    for(auto& x: d) x -= *(itb++);
+    return d;
+}
+
 /// Vector dot product; for mixed vector types, convert to contents of first
 template<typename T, typename U>
 inline array_contents_t<T> dot(const T& a,  const U& b) {
@@ -32,48 +59,9 @@ inline array_contents_t<V> mag2(const V& v) {
     return std::accumulate(v.begin(), v.end(), T{}, [](const T& a, const T& b) { return a + b*b; });
 }
 
-/// |a|^2 |b|^2 - |a.b|^2, parallelogram area^2 with edge vectors a,b
-template<typename V>
-inline auto dotmag2(const V& a, const V& b) -> decltype(mag2(a)) { auto ab = dot(ab); return mag2(a)*mag2(b) + ab*ab; }
-
-/// `distance^2' between vector directions in [0,2], no sqrt; casts to type of a
-template<typename U, typename V>
-inline auto direction_d2(const U& a, const V& b) -> decltype(dot(a,b)) {
-    auto ab = dot(a,b);
-    auto aabb = mag2(a) * decltype(ab)(mag2(b));
-    return (ab > 0? aabb - ab*ab : aabb + ab*ab)/aabb;
-}
-
 /// vector magnitude
 template<typename T>
 inline array_contents_t<T> mag(const T& v) { return sqrt(mag2(v)); }
-
-/// Vector sum a+b
-template<typename T>
-T vsum(const T& a, const T& b) {
-    T d = a;
-    auto itb = b.begin();
-    for(auto& x: d) x += *(itb++);
-    return d;
-}
-
-/// Vector sum a + k*b
-template<typename T, typename U>
-T vsum(const T& a, const U& k, const T& b) {
-    T d = a;
-    auto itb = b.begin();
-    for(auto& x: d) x += (*(itb++))*k;
-    return d;
-}
-
-/// Vector difference a-b
-template<typename T>
-T vdiff(const T& a, const T& b) {
-    T d = a;
-    auto itb = b.begin();
-    for(auto& x: d) x -= *(itb++);
-    return d;
-}
 
 /// vector cross product
 template<typename T>
@@ -102,6 +90,18 @@ inline array_contents_t<T> makeunit(T& v) {
     return d;
 }
 
+/// |a|^2 |b|^2 - |a.b|^2, parallelogram area^2 with edge vectors a,b
+template<typename V>
+inline auto dotmag2(const V& a, const V& b) -> decltype(mag2(a)) { auto ab = dot(ab); return mag2(a)*mag2(b) + ab*ab; }
+
+/// `distance^2' between vector directions in [0,2], no sqrt; casts to type of a
+template<typename U, typename V>
+inline auto direction_d2(const U& a, const V& b) -> decltype(dot(a,b)) {
+    auto ab = dot(a,b);
+    auto aabb = mag2(a) * decltype(ab)(mag2(b));
+    return (ab > 0? aabb - ab*ab : aabb + ab*ab)/aabb;
+}
+
 /// height of triangle
 /**
  * @param b0 one point on triangle base
@@ -116,7 +116,24 @@ inline array_contents_t<T> triangle_height2(const T& b0,  const T& b1, const T& 
     auto d2 = dot(d,d);
     auto v2 = dot(v,v);
     auto x =  dot(d,v);
-    return v2 - x*x/d2;
+    return array_contents_t<T>(v2 - x*x/d2);
+}
+
+/// area of triangle
+/**
+ * @param b0 one point on triangle base
+ * @param b1 other point on triangle base
+ * @param h third triangle vertex
+ * @return area^2 of the triangle
+ */
+template<typename T>
+inline array_contents_t<T> triangle_area2(const T& b0,  const T& b1, const T& h) {
+    const auto d = vdiff(b1,b0);
+    const auto v = vdiff(h,b0);
+    auto d2 = dot(d,d);
+    auto v2 = dot(v,v);
+    auto x =  dot(d,v);
+    return 0.25*(v2*d2-x*x);
 }
 
 /// area^2 of trapezoid (or 4x area of triangle) defined by 3 points
@@ -220,10 +237,10 @@ void closest_approach_points(const T& p1, const T& d1,
  * @param[out] c1 closest approach is at p1 + c1*d1
  * @param[out] c2 closest approach is at p2 + c2*d2
  */
-template<typename T>
+template<typename T, typename U>
 void closest_approach_points_normalized(
-    const T& p1, const T& d1,
-    const T& p2, const T& d2,
+    const T& p1, const U& d1,
+    const T& p2, const U& d2,
     array_contents_t<T>& c1, array_contents_t<T>& c2) {
 
     auto d0  = vdiff(p2,p1);
@@ -255,10 +272,10 @@ void closest_approach_points_normalized(
  * @param c2 second point at at p2 + c2*d2
  * @return distance^2 between first and second point
  */
-template<typename T>
+template<typename T, typename U>
 inline array_contents_t<T> line_points_distance2(
-    const T& p1, const T& d1,
-    const T& p2, const T& d2,
+    const T& p1, const U& d1,
+    const T& p2, const U& d2,
     const array_contents_t<T>& c1,
     const array_contents_t<T>& c2) { return mag2(vdiff(vsum(p1,c1,d1), vsum(p2,c2,d2))); }
 
