@@ -1,4 +1,6 @@
 /// \file NuclEvtGen.hh Nuclear decay scheme event generator
+// Michael P. Mendenhall
+
 #ifndef NUCLEVTGEN_HH
 #define NUCLEVTGEN_HH
 
@@ -6,6 +8,7 @@
 #include "BetaSpectrumGenerator.hh"
 #include "TF1_Quantiles.hh"
 #include "FloatErr.hh"
+
 #include <TF1.h>
 #include <vector>
 using std::vector;
@@ -35,7 +38,7 @@ public:
     void scale(double s) { for(auto& p: cumprob) p *= s; }
 
 protected:
-    vector<double> cumprob;        ///< cumulative probabilites
+    vector<double> cumprob; ///< cumulative probabilites
 };
 
 /// generate an isotropic random direction, from optional random in [0,1]^2
@@ -64,36 +67,33 @@ public:
 
 /// primary particle types
 /// using PDG numbering scheme, http://pdg.lbl.gov/2012/reviews/rpp2012-rev-monte-carlo-numbering.pdf
-enum DecayType {
+enum DecayType_t {
     D_GAMMA = 22,
     D_ELECTRON = 11,
     D_POSITRON = -11,
-    D_NEUTRINO = -12, // anti-nu_e
+    D_NUEBAR = -12,
     D_ALPHA = 1000020040,
     D_NONEVENT = 0
 };
 
 /// string name of particle types
-string particleName(DecayType t);
+string particleName(DecayType_t t);
 /// decay type from particle name
-DecayType particleType(const string& s);
+DecayType_t particleType(const string& s);
 
 
 /// specification for a decay particle
-class NucDecayEvent {
-public:
-    /// constructor
-    NucDecayEvent(): eid(0), E(0), d(D_NONEVENT), t(0), w(1.) {}
+struct NucDecayEvent {
     /// randomize momentum direction
     void randp(double* rnd = nullptr) { randomDirection(p[0],p[1],p[2],rnd); }
 
-    unsigned int eid;   ///< event ID number
-    double E;           ///< particle energy [keV]
-    double p[3];        ///< particle momentum direction
-    double x[3];        ///< vertex position [arb.]
-    DecayType d;        ///< particle type [PDG/Geant PID]
-    double t;           ///< time of event [s]
-    double w;           ///< weighting for event
+    unsigned int eid = 0;       ///< event ID number
+    double E = 0;               ///< particle energy [keV]
+    double p[3];                ///< particle momentum direction
+    double x[3];                ///< vertex position [arb.]
+    DecayType_t d = D_NONEVENT; ///< particle type [PDG/Geant PID]
+    double t = 0;               ///< time of event [s]
+    double w = 1;               ///< weighting for event
 };
 
 /// Atom/electron information
@@ -250,6 +250,8 @@ public:
     ~NucDecaySystem();
     /// set cutoff lifetime for intermediate states
     void setCutoff(double t);
+    /// effective number of starting points after time cuts
+    double nStarts() const { return lStart.getCumProb(); }
     /// display transitions summary
     void display(bool verbose = false) const;
     /// display list of levels

@@ -1,4 +1,6 @@
 /// \file BetaSpectrumGenerator.hh Class for calculating beta spectrum shape
+// Michael P. Mendenhall
+
 #ifndef BETASPECTRUMGENERATOR_HH
 #define BETASPECTRUMGENERATOR_HH
 
@@ -16,7 +18,7 @@ public:
 
     double A;                   ///< number of nucleons
     double Z;                   ///< number of protons
-    double EP;                  ///< endpoint kinetic energy, keV
+    double EP;                  ///< endpoint kinetic energy, MeV
     double W0;                  ///< endpoint total energy, m_e*c^2
     double R;                   ///< effective nuclear radius
     double M0;                  ///< nuclear mass, m_e*c^2

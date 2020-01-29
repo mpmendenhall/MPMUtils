@@ -1,4 +1,6 @@
 /// \file SatoNiitaNeutrons.hh ``Tuneable'' cosmic neutron spectrum parametrization.
+// Michael P. Mendenhall
+
 #ifndef SATONIITANEUTRONS_HH
 #define SATONIITANEUTRONS_HH
 

@@ -1,4 +1,6 @@
-/// \file UnpolarizedBeta.hh calculations for beta decay spectrum from unpolarized neutron/nucleus
+/// \file UnpolarizedBeta.hh Unpolarized nucleus beta decay spectrum/corrections
+// Michael P. Mendenhall, LLNL 2020
+
 #ifndef UNPOLARIZEDBETA_HH
 #define UNPOLARIZEDBETA_HH
 
@@ -11,7 +13,21 @@
 // [5] Wilkinson, Evaluation of Beta-Decay V,   NIM A 365 (1995) 497-507
 
 #include <math.h>
-#include "NeutronPhysConstants.hh"
+#include "NuclPhysConstants.hh"
+using namespace physconst;
+
+const double proton_M0 = m_p/m_e;           ///< proton mass, ``natural'' units
+const double neutron_M0 = m_n/m_e;          ///< neutron mass, ``natural'' units
+const double beta_W0 = delta_mn_mp/m_e;     ///< neutron beta decay energy, ``natural'' units
+const double neutron_R0 = 0.0025896*1.2;    ///< neutron and proton radius approximation, in "natural" units (1.2fm)/(hbar/m_e*c)
+
+const double A0_PDG = -0.1184;                  ///< +-(10), beta decay asymmetry A_0, PDG 2014
+const double lambda = 1.2723;                   ///< +-(23), lambda = |g_A/g_V|, PDG 2014 value, Wilkinson sign convention
+const double delta_mu = 2.792847356-(-1.91304273);  ///< mu_p - mu_n = 2.792847356(23) - -1.91304273(45) PDG 2010
+
+/// a_0 calculated from given lambda
+inline double calc_a0(double l = lambda) { return (1-l*l)/(1+3*l*l); }
+
 
 // NOTE: functions of W are using Wilkinson's ``natural'' units for energy, W=(KE+m_e)/m_e
 

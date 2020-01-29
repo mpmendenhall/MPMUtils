@@ -36,7 +36,6 @@ public:
     /// Constructor
     NeutronDecayKinematics(NKine_Rndm_Src* R): myR(R) { assert(R); }
 
-    const double G_F = 1.1663787e-17;   ///< Fermi coupling constant, [/keV^2]
     const double G2_V = G_F*G_F*0.94920; ///< |G_V|^2 = |V_ud G_F g_V|^2
     const double m = m_n;               ///< initial nucleus mass
     const double m_2 = m_e;             ///< mass of charged lepton
@@ -55,14 +54,14 @@ public:
     /// set fixed electron kinetic energy
     virtual void set_KEe(double k) { use_KEe = k; }
 
-    double E_2;         ///< electron total energy [keV]
-    double p_2;         ///< electron momentum magnitude [keV/c]
+    double E_2;         ///< electron total energy [MeV]
+    double p_2;         ///< electron momentum magnitude [MeV/c]
     double n_2[3];      ///< electron unit direction
     double beta;        ///< electron velocity v/c
 
-    double E0_1;        ///< antineutrino energy in center-of-mass frame [keV]
-    double E_1;         ///< antineutrino energy minus photon [keV]
-    double p_1;         ///< neutrino momentum magnitude [keV/c]
+    double E0_1;        ///< antineutrino energy in center-of-mass frame [MeV]
+    double E_1;         ///< antineutrino energy minus photon [MeV]
+    double p_1;         ///< neutrino momentum magnitude [MeV/c]
     double n_1[3];      ///< neutrino momentum unit direction
 
     double K = 0;       ///< hard photon energy
@@ -220,7 +219,6 @@ public:
     /// Constructor
     Gluck93_Distribution() { }
 
-    const double G_F = 1.1663787e-17;   ///< Fermi coupling constant, [/keV^2]
     const double G2_V = G_F*G_F*0.94920; ///< |G_V|^2 = |V_ud G_F g_V|^2
     const double m_i = m_n;             ///< initial nucleus mass
     const double m_f = m_p;             ///< final nucleus mass
@@ -251,7 +249,7 @@ public:
 /// formula in equation (10), with 1+3*lambda^2 factored out
 /// and also dividing out (1+beta*a0*cth) to avoid double-counting 'a' contribution.
 /// lambda = |lambda| > 0 sign convention.
-/// E is electron total energy in keV
+/// E is electron total energy in MeV
 double B59_rwm_cxn(double E, double cos_thn);
 
 /// Radiative correction according to Garcia, Maya, Phys. Rev. D, 1978 (irrelevant for lab (proton) observables)

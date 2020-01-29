@@ -18,10 +18,12 @@ class BatchQueueInterface:
         self.curs.executemany("UPDATE jobs SET status=? WHERE queue_id=?",[(j[1],j[0]) for j in jstatus])
 
         jknown = frozenset([j[0] for j in jstatus if 1 <= j[1] <= 3])
-        self.curs.execute("SELECT queue_id FROM jobs WHERE 1 <= status AND (status <= 3 OR status == 5) AND (q_name is NULL OR q_name != 'local')")
-        missingjobs = [(j[0], self.checkjob(j[0])) for j in self.curs.fetchall() if j[0] not in jknown]
-        missingjobs = [(j[1]["status"],j[1].get("ret_code",None),j[1].get("walltime",None),j[0]) for j in missingjobs]
-        if missingjobs: self.curs.executemany("UPDATE jobs SET status=?,return_code=?,use_walltime=? WHERE queue_id=?", missingjobs)
+        self.curs.execute("SELECT job_id, queue_id FROM jobs WHERE 1 <= status AND (status <= 3 OR status == 5) AND (q_name is NULL OR q_name != 'local')")
+        missingjobs = [(j[0], self.checkjob(j[1])) for j in self.curs.fetchall() if j[1] not in jknown]
+        missingjobs = [(j[1]["status"], j[1].get("ret_code",None), j[1].get("walltime",None), j[0]) for j in missingjobs]
+        if missingjobs: self.curs.executemany("UPDATE jobs SET status=?,return_code=?,use_walltime=? WHERE job_id=?", missingjobs)
+        for j in missingjobs:
+            if j[0] in (4, 6): post_completion(self.curs, j[-1])
 
         self.conn.commit()
 

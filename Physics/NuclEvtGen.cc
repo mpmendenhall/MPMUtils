@@ -1,47 +1,49 @@
 /// \file NuclEvtGen.cc
+
 #include "NuclEvtGen.hh"
-#include "SMExcept.hh"
-#include "StringManip.hh"
-#include "PathUtils.hh"
 #include "NuclPhysConstants.hh"
 using namespace physconst;
+
 #include <math.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <stdexcept>
+
 #include <TRandom.h>
+
 
 unsigned int PSelector::select(double* x) const {
     static double rnd_tmp;
     if(!x) { x=&rnd_tmp; rnd_tmp=gRandom->Uniform(0,cumprob.back()); }
-    else { smassert(0. <= *x && *x <= 1.); (*x) *= cumprob.back(); }
+    else { assert(0. <= *x && *x <= 1.); (*x) *= cumprob.back(); }
     vector<double>::const_iterator itsel = std::upper_bound(cumprob.begin(),cumprob.end(),*x);
     unsigned int selected = (unsigned int)(itsel-cumprob.begin()-1);
-    smassert(selected<cumprob.size()-1);
+    assert(selected < cumprob.size()-1);
     (*x) = ((*x) - cumprob[selected])/(cumprob[selected+1]-cumprob[selected]);
     return selected;
 }
 
 double PSelector::getProb(unsigned int n) const {
-    smassert(n<cumprob.size()-1);
+    assert(n<cumprob.size()-1);
     return (cumprob[n+1]-cumprob[n])/cumprob.back();
 }
 
 //-----------------------------------------
 
-string particleName(DecayType t) {
+string particleName(DecayType_t t) {
     if(t==D_GAMMA) return "gamma";
     if(t==D_ELECTRON) return "e-";
     if(t==D_POSITRON) return "e+";
-    if(t==D_NEUTRINO) return "neutrino";
+    if(t==D_NUEBAR) return "neutrino";
     if(t==D_ALPHA) return "alpha";
     return "UNKNOWN";
 }
 
-DecayType particleType(const std::string& s) {
+DecayType_t particleType(const std::string& s) {
     if(s=="gamma") return D_GAMMA;
     if(s=="e-") return D_ELECTRON;
     if(s=="e+") return D_POSITRON;
-    if(s=="neutrino") return D_NEUTRINO;
+    if(s=="neutrino") return D_NUEBAR;
     if(s=="alpha") return D_ALPHA;
     return D_NONEVENT;
 }
@@ -60,7 +62,7 @@ void randomDirection(double& x, double& y, double& z, double* rnd) {
 NucLevel::NucLevel(const Stringmap& m): fluxIn(0), fluxOut(0) {
     name = m.getDefault("nm","0.0.0");
     vector<string> v = split(name,".");
-    smassert(v.size()==3);
+    assert(v.size()==3);
     A = atoi(v[0].c_str());
     Z = atoi(v[1].c_str());
     n = atoi(v[2].c_str());
@@ -86,7 +88,7 @@ DecayAtom::DecayAtom(BindingEnergyTable const* B): BET(B), Iauger(0), Ikxr(0), I
 
 void DecayAtom::load(const Stringmap& m) {
     for(auto& kv: m) {
-        smassert(kv.first.size());
+        assert(kv.first.size());
         if(kv.first[0]=='a') Iauger += atof(kv.second.c_str())/100.0;
         else if(kv.first[0]=='k') Ikxr += atof(kv.second.c_str())/100.0;
     }
@@ -194,7 +196,7 @@ double ConversionGamma::getConversionEffic() const {
 }
 
 double ConversionGamma::shellAverageE(unsigned int n) const {
-    smassert(n<subshells.size());
+    assert(n<subshells.size());
     double e = 0;
     double w = 0;
     for(unsigned int i=0; i<subshells[n].getN(); i++) {
@@ -235,9 +237,8 @@ AlphaDecayTrans::AlphaDecayTrans(NucLevel& f, NucLevel& t, const Stringmap& m): 
 
     // relativistic calculation of alpha kinetic energy including nucleus recoil
     const double Q = from.E-to.E;
-    const double ma = 3727379.378; // alpha particle mass, keV
-    const double m0 = to.Z*m_p + (to.A-to.Z)*m_n + ma + Q; // approximate initial nucleus mass, keV
-    Ealpha = Q*(1-(ma + 0.5*Q)/m0);
+    const double m0 = to.Z*m_p + (to.A-to.Z)*m_n + m_alpha + 1000*Q; // approximate initial nucleus mass, MeV
+    Ealpha = Q*(1-(m_alpha + 0.5*1000*Q)/m0);
     // optional direct specification of energy from config file
     Ealpha = m.getDefault("E", Ealpha);
 }
@@ -312,11 +313,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     std::sort(levels.begin(),levels.end(),sortLevels);
     int nlev = 0;
     for(auto& l: levels) {
-        if(levelIndex.find(l.name) != levelIndex.end()) {
-            SMExcept e("RepeatedLevel");
-            e.insert("name",l.name);
-            throw(e);
-        }
+        if(levelIndex.find(l.name) != levelIndex.end()) throw std::runtime_error("Repeated level " + l.name);
         l.n = nlev++;
         levelIndex.emplace(l.name, l.n);
     }
@@ -336,11 +333,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     for(auto& tr: transitions) tr->toAtom->ICEK += tr->getPVacant(0)*tr->Itotal;
     for(auto& a: Q.retrieve("AugerK")) {
         int Z = a.getDefault("Z",0);
-        if(!Z) {
-            SMExcept e("BadAugerZ");
-            e.insert("Z",Z);
-            throw(e);
-        }
+        if(!Z) throw std::runtime_error("Bad Auger Z");
         getAtom(Z)->load(a);
     }
 
@@ -377,7 +370,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
             }
         } else {
             NucLevel& Ldest = levels[levIndex(to)];
-            smassert(Ldest.A == Lorig.A && Ldest.Z+1 == Lorig.Z && Ldest.E < Lorig.E);
+            assert(Ldest.A == Lorig.A && Ldest.Z+1 == Lorig.Z && Ldest.E < Lorig.E);
             ECapture* EC = new ECapture(Lorig,Ldest);
             EC->Itotal = ec.getDefault("I",0.)/100.;
             addTransition(EC);
@@ -392,11 +385,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
 }
 
 void NucDecaySystem::circle_check(unsigned int n, set<unsigned int>& passed, set<unsigned int> pnts) const {
-    if(pnts.count(n)) {
-        SMExcept e("circular_transition");
-        e.insert("level",n);
-        throw(e);
-    }
+    if(pnts.count(n)) throw std::runtime_error("Circular transition");
     pnts.insert(n);
     for(auto tr: transOut[n]) if(!passed.count(tr->to.n)) circle_check(tr->to.n, passed, pnts);
     passed.insert(n);
@@ -432,7 +421,7 @@ void NucDecaySystem::setCutoff(double t) {
         levelDecays[n] = PSelector();
         for(auto tr : transOut[n]) levelDecays[n].addProb(tr->Itotal);
 
-        double pStart = (n+1==levels.size());
+        double pStart = (n+1==levels.size()); // starting probability 1 at top level
         if(!pStart && levels[n].hl > tcut && transOut[n].size())
             for(auto tr: transIn[n]) pStart += tr->Itotal;
         lStart.addProb(pStart);
@@ -471,11 +460,7 @@ void NucDecaySystem::displayAtoms(bool verbose) const {
 
 unsigned int NucDecaySystem::levIndex(const std::string& s) const {
     map<std::string,unsigned int>::const_iterator n = levelIndex.find(s);
-    if(n==levelIndex.end()) {
-        SMExcept e("UnknownLevel");
-        e.insert("name",s);
-        throw(e);
-    }
+    if(n==levelIndex.end()) throw std::runtime_error("Unknown level " + s);
     return n->second;
 }
 
@@ -491,8 +476,7 @@ void NucDecaySystem::genDecayChain(vector<NucDecayEvent>& v, double* rnd, unsign
     T->run(v, rnd);
     if(rnd) rnd += T->getNDF(); // remove random numbers "consumed" by continuous processes
     unsigned int nAugerK = T->nVacant(0);
-    while(nAugerK--)
-        getAtom(T->to.Z)->genAuger(v);
+    while(nAugerK--) getAtom(T->to.Z)->genAuger(v);
 
     // determine and apply time delay for this decay stage
     if(!init) t0 += -(levels[n].hl/log(2))*log(1.-gRandom->Uniform());
@@ -568,11 +552,7 @@ NucDecaySystem& NucDecayLibrary::getGenerator(const std::string& gennm) {
     auto it = NDs.find(gennm);
     if(it != NDs.end()) return *(it->second);
     string fname = datpath+"/"+gennm+".txt";
-    if(!fileExists(fname)) {
-        SMExcept e("MissingDecayData");
-        e.insert("fname",fname);
-        throw(e);
-    }
+    //if(!fileExists(fname)) throw std::runtime_error("Missing decay data " + fname);
     return *(NDs.emplace(gennm, new NucDecaySystem(SMFile(fname),BEL,tcut)).first->second);
 }
 
@@ -591,12 +571,8 @@ bool NucDecayLibrary::hasGenerator(const std::string& gennm) {
 
 
 GammaForest::GammaForest(const std::string& fname, double E2keV) {
-    if(!fileExists(fname)) {
-        SMExcept e("fileUnreadable");
-        e.insert("filename",fname);
-        throw(e);
-    }
     std::ifstream fin(fname.c_str());
+    if(!fin.good()) throw std::runtime_error("File unreadable: " + fname);
     string s;
     while (fin.good()) {
         std::getline(fin,s);

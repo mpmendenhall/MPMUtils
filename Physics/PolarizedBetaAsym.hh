@@ -1,4 +1,6 @@
-/// \file PolarizedBetaAsym.hh calculations for the beta spectrum and various related corrections
+/// \file PolarizedBetaAsym.hh Polarized nucleus beta decay spectrum/corrections
+// Michael P. Mendenhall
+
 #ifndef POLARIZEDBETAASYM_HH
 #define POLARIZEDBETAASYM_HH
 
@@ -12,7 +14,7 @@
 // [4] Wilkinson, Evaluation of Beta-Decay IV,  NIM A 365 (1995) 203-207
 // [5] Wilkinson, Evaluation of Beta-Decay V,   NIM A 365 (1995) 497-507
 
-/// uncorrected asymmetry as a function of kinetic energy [keV]
+/// uncorrected asymmetry as a function of kinetic energy [MeV]
 inline double plainAsymmetry(double KE, double costheta=0.5) { return A0_PDG*beta(KE)*costheta; }
 
 /// Shann's h * alpha/2pi radiative correction
