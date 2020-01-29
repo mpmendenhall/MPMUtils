@@ -4,22 +4,14 @@
 #ifndef UNPOLARIZEDBETA_HH
 #define UNPOLARIZEDBETA_HH
 
-// references:
-// [0] Wilkinson, Analysis of Neutron Beta-Decay, Nucl. Phys. A 377 (1982) 474-504
-// [1] Wilkinson, Evaluation of Beta-Decay I,   NIM A 275 (1989) 378-386
-// [2] Wilkinson, Evaluation of Beta-Decay II,  NIM A 290 (1990) 509-515
-// [3] Wilkinson, Evaluation of Beta-Decay III, NIM A 335 (1995) 305-309
-// [4] Wilkinson, Evaluation of Beta-Decay IV,  NIM A 365 (1995) 203-207
-// [5] Wilkinson, Evaluation of Beta-Decay V,   NIM A 365 (1995) 497-507
-
 #include <math.h>
 #include "NuclPhysConstants.hh"
 using namespace physconst;
 
-const double proton_M0 = m_p/m_e;           ///< proton mass, ``natural'' units
-const double neutron_M0 = m_n/m_e;          ///< neutron mass, ``natural'' units
-const double beta_W0 = delta_mn_mp/m_e;     ///< neutron beta decay energy, ``natural'' units
-const double neutron_R0 = 0.0025896*1.2;    ///< neutron and proton radius approximation, in "natural" units (1.2fm)/(hbar/m_e*c)
+const double proton_M0 = m_p/m_e;               ///< proton mass, ``natural'' units
+const double neutron_M0 = m_n/m_e;              ///< neutron mass, ``natural'' units
+const double beta_W0 = delta_mn_mp/m_e;         ///< neutron beta decay energy, ``natural'' units
+const double neutron_R0 = 0.0025896*1.2;        ///< neutron and proton radius approximation, in "natural" units (1.2fm)/(hbar/m_e*c)
 
 const double A0_PDG = -0.1184;                  ///< +-(10), beta decay asymmetry A_0, PDG 2014
 const double lambda = 1.2723;                   ///< +-(23), lambda = |g_A/g_V|, PDG 2014 value, Wilkinson sign convention
@@ -28,15 +20,22 @@ const double delta_mu = 2.792847356-(-1.91304273);  ///< mu_p - mu_n = 2.7928473
 /// a_0 calculated from given lambda
 inline double calc_a0(double l = lambda) { return (1-l*l)/(1+3*l*l); }
 
-
-// NOTE: functions of W are using Wilkinson's ``natural'' units for energy, W=(KE+m_e)/m_e
-
-/// dilog function, L = -int_0^x ln(1-z)/z dz
+/// dilog function, L = -int_0^x ln(1-z)/z dz = gsl_sf_dilog(x)
 double dilog(double x);
 /// Spence function with positive sign convention, L = +int_0^x ln(1-z)/z dz
 inline double SpenceL(double x) { return -dilog(x); }
 
 //-------------- Spectrum corrections ------------------
+
+// references:
+// [0] Wilkinson, Analysis of Neutron Beta-Decay, Nucl. Phys. A 377 (1982) 474-504
+// [1] Wilkinson, Evaluation of Beta-Decay I,   NIM A 275 (1989) 378-386
+// [2] Wilkinson, Evaluation of Beta-Decay II,  NIM A 290 (1990) 509-515
+// [3] Wilkinson, Evaluation of Beta-Decay III, NIM A 335 (1995) 305-309
+// [4] Wilkinson, Evaluation of Beta-Decay IV,  NIM A 365 (1995) 203-207
+// [5] Wilkinson, Evaluation of Beta-Decay V,   NIM A 365 (1995) 497-507
+
+// NOTE: functions of W are using Wilkinson's ``natural'' units for energy, W=(KE+m_e)/m_e
 
 /// beta decay phase space without corrections
 inline double plainPhaseSpace(double W, double W0=beta_W0) { return (1.<W && W<W0)?sqrt(W*W-1)*W*(W0-W)*(W0-W):0; }

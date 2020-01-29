@@ -7,13 +7,13 @@
 /// Unpolarized beta decay spectrum calculating class
 class BetaSpectrumGenerator {
 public:
-    /// constructor
+    /// Constructor, with endpoint in [MeV]
     BetaSpectrumGenerator(double a, double z, double ep);
 
     /// shape correction to basic phase space
     double spectrumCorrectionFactor(double W) const;
 
-    /// decay probability at given KE
+    /// decay probability at given KE [MeV]
     double decayProb(double KE) const;
 
     double A;                   ///< number of nucleons

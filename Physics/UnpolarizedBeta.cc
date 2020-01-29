@@ -264,21 +264,7 @@ double WilkinsonQ(double, double W, double W0, double M) {
     return 1.-M_PI*alpha/(M*sqrt(W*W-1))*(1+B*(W0-W)/(3.*W));
 }
 
-double dilog(double x) {
-    return gsl_sf_dilog(x);
-
-    /*
-    //sum approximation : positive sign
-    assert(-1.<x && x<=1.);
-    double s = 0;
-    double xk = x;
-    for(unsigned int k=1; k<=50; k++) {
-        s += xk/(k*k);
-        xk *= x;
-    }
-    return s;
-    */
-}
+double dilog(double x) { return gsl_sf_dilog(x); }
 
 double Sirlin_g_a2pi(double KE,double KE0,double m) {
     if(KE<=0 || KE>=KE0)

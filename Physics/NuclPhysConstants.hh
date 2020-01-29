@@ -28,9 +28,9 @@ namespace physconst {
 
     const double N_A = 6.022140857e23;              ///< +-(23), Avogadro constant       [mol^-1]  CODATA 2014
 
-    const double c_mps = 299792458.;                ///< (exact) speed of light in vacuum [m/s]    CODATA 2014
+    const double c_mps = 299792458.;                ///< exact speed of light in vacuum  [m/s]     CODATA 2014
 
-    const double G_F = 1.1663787e-11;               ///< +-(6), Fermi coupling constant   [/MeV^2] CODATA 2014
+    const double G_F = 1.1663787e-11;               ///< +-(6), Fermi coupling constant  [/MeV^2]  CODATA 2014
 
     const double gamma_euler = 0.57721566490153286060651209008240243104215933593992;     ///< Euler's constant (to 50 digits)
 }

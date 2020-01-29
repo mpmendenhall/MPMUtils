@@ -5,13 +5,6 @@
 #include <vector>
 #include <map>
 
-#ifdef USE_ROOT_MATH
-#include <TMath.h>
-#define Gamma(x) TMath::Gamma(x)
-#else
-#define Gamma(x) tgamma(x)
-#endif
-
 double shann_h_a2pi(double KE, double KE0, double m) {
     if(KE<=0 || KE>=KE0)
         return 0;

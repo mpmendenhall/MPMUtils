@@ -54,12 +54,15 @@ public:
     /// scale probabilities
     void scale(double s) { fluxIn *= s; fluxOut *= s; }
 
+    /// ordering operator
+    bool operator<(const NucLevel& b) const { return E < b.E; }
+
     string name;        ///< name for this level
     unsigned int A;     ///< nucleus A
     unsigned int Z;     ///< nucleus Z
     unsigned int n;     ///< level number
-    double E;           ///< energy
-    double hl;          ///< half-life
+    double E;           ///< energy [MeV]
+    double hl;          ///< half-life [s]
     string jpi;         ///< spin/parity
     double fluxIn;      ///< net flux into level
     double fluxOut;     ///< net flux out of level
@@ -88,7 +91,7 @@ struct NucDecayEvent {
     void randp(double* rnd = nullptr) { randomDirection(p[0],p[1],p[2],rnd); }
 
     unsigned int eid = 0;       ///< event ID number
-    double E = 0;               ///< particle energy [keV]
+    double E = 0;               ///< particle energy [MeV]
     double p[3];                ///< particle momentum direction
     double x[3];                ///< vertex position [arb.]
     DecayType_t d = D_NONEVENT; ///< particle type [PDG/Geant PID]
@@ -109,7 +112,7 @@ public:
     void display(bool verbose = false) const;
 
     BindingEnergyTable const* BET;      ///< binding energy table
-    double Eauger;                      ///< Auger K energy
+    double Eauger;                      ///< Auger K energy [MeV]
     double Iauger;                      ///< intensity of Auger electron emissions
     double Ikxr;                        ///< intensity of k X-Ray emissions
     double ICEK;                        ///< intensity of CE K events
@@ -170,7 +173,7 @@ public:
     /// scale probability
     void scale(double s) override;
 
-    double Egamma;      ///< gamma energy
+    double Egamma;      ///< gamma energy [MeV]
     int shell;          ///< selected conversion electron shell
     int subshell;       ///< selected conversion electron subshell
     double Igamma;      ///< total gamma intensity
@@ -185,15 +188,18 @@ protected:
 class ECapture: public TransitionBase {
 public:
     /// constructor
-    ECapture(NucLevel& f, NucLevel& t): TransitionBase(f,t) {}
+    ECapture(NucLevel& f, NucLevel& t): TransitionBase(f,t) {
+        if(t.A != f.A || t.Z+1 != f.Z || t.E >= f.E)
+            throw std::runtime_error("Invalid ECapture transition");
+    }
     /// select transition outcome
     void run(vector<NucDecayEvent>&, double* rnd = nullptr) override;
     /// display transition line info
     void display(bool verbose = false) const override { printf("Ecapture "); TransitionBase::display(verbose); }
     /// get probability of removing an electron from a given shell
-    double getPVacant(unsigned int n) const override { return n==0?toAtom->IMissing:0; }
+    double getPVacant(unsigned int n) const override { return n==0? toAtom->IMissing : 0; }
     /// get whether said electron was knocked out
-    unsigned int nVacant(unsigned int n) const override { return n==0?isKCapt:0; }
+    unsigned int nVacant(unsigned int n) const override { return n==0? isKCapt : 0; }
 
     /// return number of continuous degrees of freedom needed to specify transition
     unsigned int getNDF() const override { return 0; }
@@ -213,7 +219,7 @@ public:
     /// return number of continuous degrees of freedom needed to specify transition
     unsigned int getNDF() const override { return 2; }
 
-    double Ealpha; ///< alpha kinetic energy
+    double Ealpha; ///< alpha kinetic energy [MeV]
 };
 
 /// beta decay transitions
@@ -222,7 +228,8 @@ public:
     /// constructor
     BetaDecayTrans(NucLevel& f, NucLevel& t, unsigned int forbidden = 0);
     /// destructor
-    ~BetaDecayTrans();
+    ~BetaDecayTrans() {  delete betaQuantiles; }
+
     /// select transition outcome
     void run(vector<NucDecayEvent>& v, double* rnd = nullptr) override;
     /// display transition line info
@@ -235,8 +242,9 @@ public:
     BetaSpectrumGenerator BSG;          ///< spectrum shape generator
 
 protected:
-    /// evaluate beta spectrum probability
-    double evalBeta(double* x, double*);
+    /// evaluate beta spectrum probability as function of KE [MeV]
+    double evalBeta(double* x, double*) { return BSG.decayProb(*x); }
+
     TF1 betaTF1;                        ///< TF1 for beta spectrum shape
     TF1_Quantiles* betaQuantiles;       ///< inverse CDF of beta spectrum shape for random point selection
 };
@@ -261,7 +269,8 @@ public:
     /// display list of atoms
     void displayAtoms(bool verbose = false) const;
     /// generate a chain of decay events starting from level n, starting time offset t0
-    void genDecayChain(vector<NucDecayEvent>& v, double* rnd = nullptr, unsigned int n = std::numeric_limits<unsigned int>::max(), double t0 = 0);
+    void genDecayChain(vector<NucDecayEvent>& v, double* rnd = nullptr,
+                       unsigned int n = std::numeric_limits<unsigned int>::max(), double t0 = 0);
     /// rescale all probabilities
     void scale(double s);
 
@@ -321,14 +330,14 @@ protected:
 /// class for throwing from large list of gammas
 class GammaForest {
 public:
-    /// constructor
-    GammaForest(const string& fname, double E2keV = 1000);
+    /// Constructor, with conversion factor to MeV
+    GammaForest(const string& fname, double E2MeV = 1);
     /// get total cross section
     double getCrossSection() const { return gammaProb.getCumProb(); }
     /// generate cluster of gamma decays
     void genDecays(vector<NucDecayEvent>& v, double n = 1.0);
 protected:
-    vector<double> gammaE;      ///< gamma energies
+    vector<double> gammaE;      ///< gamma energies [MeV]
     PSelector gammaProb;        ///< gamma probabilities selector
 };
 

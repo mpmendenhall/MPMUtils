@@ -15,7 +15,7 @@
 // [5] Wilkinson, Evaluation of Beta-Decay V,   NIM A 365 (1995) 497-507
 
 /// uncorrected asymmetry as a function of kinetic energy [MeV]
-inline double plainAsymmetry(double KE, double costheta=0.5) { return A0_PDG*beta(KE)*costheta; }
+inline double plainAsymmetry(double KE, double costheta) { return A0_PDG * beta(KE) * costheta; }
 
 /// Shann's h * alpha/2pi radiative correction
 double shann_h_a2pi(double KE, double KE0=neutronBetaEp, double m = m_e);
@@ -25,8 +25,8 @@ double shann_h_minus_g_a2pi(double W, double W0=beta_W0);
 double WilkinsonACorrection(double W);
 
 /// combined order-alpha asymmetry corrections
-inline double asymmetryCorrectionFactor(double KE) { double W = (KE+m_e)/m_e; return 1.0+WilkinsonACorrection(W)+shann_h_minus_g_a2pi(W); }
+inline double asymmetryCorrectionFactor(double KE) { double W = (KE+m_e)/m_e; return 1. + WilkinsonACorrection(W) + shann_h_minus_g_a2pi(W); }
 /// corrected asymmetry
-inline double correctedAsymmetry(double KE, double costheta=0.5) { return plainAsymmetry(KE,costheta)*asymmetryCorrectionFactor(KE); }
+inline double correctedAsymmetry(double KE, double costheta) { return plainAsymmetry(KE,costheta) * asymmetryCorrectionFactor(KE); }
 
 #endif
