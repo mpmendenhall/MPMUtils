@@ -26,7 +26,7 @@ public:
     void end_data(DataFrame& F) override;
 
     /// receive frame back after processing completed
-    virtual void finished(DataFrame& F, FrameSink& S);
+    void finished(DataFrame& F, FrameSink& S) override;
 
     /// Construct appropriate class from setting
     static ConfigProcess* construct(const Setting& S);

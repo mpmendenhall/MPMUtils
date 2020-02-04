@@ -39,9 +39,9 @@ public:
     /// get number of rows available
     hsize_t getNRows() const { return maxread; }
     /// get identifying number for value type
-    static int64_t getIdentifier(const T&) { throw std::logic_error("getIdentifier unimplemented"); }
+    static int64_t getIdentifier(const T& i) { return i.evt; }
     /// set identifying number for value type
-    static void setIdentifier(T&, int64_t) { throw std::logic_error("setIdentifier unimplemented"); }
+    static void setIdentifier(T& i, int64_t n) { i.evt = n; }
 
     /// load next "event" of entries with same identifer into vector; return event identifier loaded
     int64_t loadEvent(vector<T>& v);

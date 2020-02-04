@@ -40,7 +40,7 @@
 inline double randunif(double a, double b) { return a + (b-a)*double(rand())/double(RAND_MAX); }
 
 class DimensionMismatchError: public std::exception {
-    virtual const char* what() const throw() {
+    const char* what() const throw() override {
         return "Dimension mismatch error!";
     }
 };

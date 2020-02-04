@@ -12,21 +12,21 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 #set(CMAKE_CXX_STANDARD 17) # 'constexpr' getting usable
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_compile_options("-fPIC" "-Wpedantic" "-Wall" "-Wlogical-op" "-Wshadow" "-Wformat=2" "-ansi" "-pedantic-errors")
-# sqlite3.c doesn't like -Wextra, and has other platform-dependent warnings
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Werror>)
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wextra>)
-add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wuseless-cast>)
-# fails on older gcc:
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+# c++11 is "minimum" standard for codebase; ROOT may specify newer below.
+LIST(APPEND CXXOPTS "-fPIC" "-std=c++11" "-Wall" "-Wextra" "-Werror")
+
+IF(CMAKE_COMPILER_IS_GNUCC)
+    LIST(APPEND CXXOPTS "-Wpedantic" "-Wlogical-op" "-Wshadow" "-Wformat=2" "-pedantic-errors" "-Wuseless-cast")
+
     if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0")
-        add_compile_options("-Wduplicated-cond")
-        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wnull-dereference>)
+        LIST(APPEND CXXOPTS "-Wduplicated-cond" "-Wmissing-include-dirs" "-Wredundant-decls"
+        "-Wnull-dereference" "-Wsuggest-override")
     endif()
     if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0")
-        add_compile_options("-Wduplicated-branches")
+        LIST(APPEND CXXOPTS "-Wduplicated-branches" "-Woverloaded-virtual")
     endif()
 endif()
+
 
 # cmake -DCMAKE_BUILD_TYPE=Release
 string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
@@ -179,6 +179,11 @@ SET_SOURCE_FILES_PROPERTIES(
 ################
 # build targets
 ################
+
+# CXXFLAGS compile options, for c++ only.
+FOREACH(CXXOPT ${CXXOPTS})
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${CXXOPT}>)
+ENDFOREACH()
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     add_compile_options("-O")

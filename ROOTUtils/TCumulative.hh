@@ -19,7 +19,7 @@ public:
     /// Destructor
     virtual ~TCumulative() { }
 
-    ClassDef(TCumulative,1);
+    ClassDefOverride(TCumulative,1);
 };
 
 #endif

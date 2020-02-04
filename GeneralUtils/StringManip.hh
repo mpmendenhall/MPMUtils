@@ -40,21 +40,16 @@ using std::ifstream;
 /// integer to roman numerals string
 string itosRN(int i);
 
-/// convert an array to a string list
-template<typename T>
-string vtos(const T* st, const T* en, string sep = ",") {
-    string ss = "";
-    if(st==en)
-        return ss;
-    ss = to_str(*st);
-    for(const T* it = st+1; it != en; it++)
-        ss += sep + to_str(*it);
-    return ss;
+/// convert iterable container to a string list
+template<typename VT>
+string vtos(const VT& ds, const string& sep = ",") {
+     string ss = "";
+     for(auto& i: ds) {
+         if(ss.size()) ss += sep;
+         ss += to_str(i);
+     }
+     return ss;
 }
-
-/// convert a vector to a string list
-template<typename T>
-string vtos(const vector<T>& ds, string sep = ",") {  return vtos(&*ds.begin(),&*ds.end(),sep); }
 
 /// split a string into a vector of doubles
 vector<double> sToDoubles(const string& str, const string splitchars = ", \t\r\n");

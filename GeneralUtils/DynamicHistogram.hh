@@ -67,9 +67,9 @@ public:
 protected:
 
     /// choose bin center for inserting data point
-    virtual double bincenter(const DHBinData& d) const { return round((d.mu()-x0)/dx); }
+    double bincenter(const DHBinData& d) const override { return round((d.mu()-x0)/dx); }
     /// choose bin for inserting data point
-    virtual map<double,DHBinData>::iterator choosebin(const DHBinData& d) { return dat.find(bincenter(d)); }
+    map<double,DHBinData>::iterator choosebin(const DHBinData& d) override { return dat.find(bincenter(d)); }
 };
 
 #endif

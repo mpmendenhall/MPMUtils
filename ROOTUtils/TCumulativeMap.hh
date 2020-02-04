@@ -38,7 +38,7 @@ public:
     /// Get sum total of all contents
     V_ GetTotal() const { V_ sm = {}; for(auto& kv: *this) sm += kv.second; return sm; }
 
-    ClassDef(TCumulativeMap, 2)
+    ClassDefOverride(TCumulativeMap, 2)
 };
 
 #endif

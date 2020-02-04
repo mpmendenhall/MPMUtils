@@ -84,7 +84,7 @@ public:
     /// constructor
     InputRequester(string d, void (*f)(StreamInteractor*) = nullptr, StreamInteractor* fObj = nullptr);
     /// action when selected
-    virtual void doIt();
+    void doIt() override;
     /// add new argument
     virtual void addArg(const string& s, const string& dflt = "", const string& descrip = "", NamedInteractor* filter = nullptr);
     /// add new argument, assuming descriptions come from filter
@@ -94,7 +94,7 @@ public:
     /// get option name
     virtual string getArgname(unsigned int i) const;
     ///get my name/description
-    virtual string getDescription();
+    string getDescription() override;
 
     static InputRequester exitMenu;
 
@@ -129,17 +129,17 @@ public:
     /// display available options
     virtual void displayOptions();
     /// get choice from input queue, return selected item on stack
-    virtual void doIt();
+    void doIt() override;
     /// get my name/description
-    virtual string getDescription();
+    string getDescription() override;
     /// set default choice
     virtual void setDefault(string s) { defaultArgs[0] = s; }
     /// set catchall action
     virtual void setCatchall(StreamInteractor* SI) { catchAll = SI; }
     /// prevent adding arguments (doesn't make sense in this context)
-    virtual void addArg(const string&, const string& = "", const string& = "", NamedInteractor* = nullptr) { assert(false); }
+    void addArg(const string&, const string& = "", const string& = "", NamedInteractor* = nullptr) override { throw; }
     /// prevent adding arguments (doesn't make sense in this context)
-    virtual void addArg(NamedInteractor*, const string& = "") { assert(false); }
+    void addArg(NamedInteractor*, const string& = "") override { throw; }
     /// add a synonym for an existing argument
     virtual void addSynonym(string arg0, string syn);
     /// set soft-matching function (set to nullptr to disable soft matching)
@@ -169,7 +169,7 @@ public:
     /// add choice to selections list
     virtual void addChoice(NamedInteractor* M, string nm = "", Selector_Option_Flags o = SELECTOR_NORMAL);
     /// prevent adding choices through base mechanism
-    virtual void addChoice(string, string, Selector_Option_Flags, string, StreamInteractor*) { assert(false); }
+    void addChoice(string, string, Selector_Option_Flags, string, StreamInteractor*) override { throw; }
 };
 
 

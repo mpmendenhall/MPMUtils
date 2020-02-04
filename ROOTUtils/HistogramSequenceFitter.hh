@@ -67,10 +67,10 @@ public:
     ExponentialIntegralFitter(): IntervalIntegralFitter(2), T0(0) { }
 
     /// indefinite integral of variation function (subclass me!)
-    virtual double integ_f(double t, const double* params) const;
+    double integ_f(double t, const double* params) const override;
 
     /// initial fit parameter estimation
-    virtual void init_params();
+    void init_params() override;
 
 protected:
 
@@ -84,10 +84,10 @@ public:
     /// constructor
     PolynomialIntegralFitter(unsigned int npar): IntervalIntegralFitter(npar), T0(0) { }
     /// indefinite integral of variation function (subclass me!)
-    virtual double integ_f(double t, const double* params) const;
+    double integ_f(double t, const double* params) const override;
 
     /// initial fit parameter estimation
-    virtual void init_params();
+    void init_params() override;
 
 protected:
 

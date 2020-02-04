@@ -111,7 +111,7 @@ public:
 
 protected:
     /// _send does nothing!
-    void _send(void*, int) { }
+    void _send(void*, int) override { }
 };
 
 

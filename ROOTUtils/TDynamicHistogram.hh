@@ -49,9 +49,9 @@ public:
     virtual void normalize_to_bin_width(Double_t sc = 1.);
 
     /// Scale contents by factor
-    virtual void _Scale(Double_t s) { Scale(s); }
+    void _Scale(Double_t s) override { Scale(s); }
     /// add another histogram, assuming same binning convention or re-calculating bins
-    virtual void _Add(const CumulativeData* CD, Double_t s = 1.);
+    void _Add(const CumulativeData* CD, Double_t s = 1.) override;
 
 protected:
 
@@ -60,7 +60,7 @@ protected:
     Double_t fX0;               ///< beginning of prototype interval
     Double_t fX1;               ///< end of prototype interval
 
-    ClassDef(TDynamicHistogram,2);
+    ClassDefOverride(TDynamicHistogram,2);
 };
 
 #endif
