@@ -98,6 +98,12 @@ public:
 
     /// add object to newest cluster (or start newer cluster), assuming responsibility for deletion
     void push(const T& oo) override {
+        ordering_t t(oo);
+        if(!(t_prev <= t)) {
+            dispObj(oo);
+            throw std::runtime_error("Out-of-order item received for clustering");
+        }
+        t_prev = t;
         currentC.dx = cluster_dx;
         auto o = oo;
         processSingle(o);
@@ -117,6 +123,7 @@ protected:
     virtual bool checkCluster(cluster_t&) { return true; }
 
     cluster_t currentC; ///< cluster currently being built
+    ordering_t t_prev = -std::numeric_limits<ordering_t>::max();    ///< previous item arrival
 };
 
 /// Wrap ClusterBuilder in OrderedWindow

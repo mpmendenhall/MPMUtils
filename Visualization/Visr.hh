@@ -33,12 +33,6 @@ public:
     void lines(const vector<vec3>& v, bool closed = false);
     /// draw specified line
     void line(vec3 s, vec3 e) { lines({s,e}); }
-    /// draw specified plane, centered at o, +/- x and y vectors TODO
-    //void plane(vec3 o, vec3 dx, vec3 dy);
-    /// draw quadrangle (wireframe or filled) TODO
-    //void quad(float* xyz);
-    /// draw dot at location TODO
-    //void dot(vec3 p);
     /// draw ball at location
     void ball(vec3 p, double r, int nx = 8, int ny = 8);
     /// draw circle (polygon) with center o, normal/radius n; i line segments

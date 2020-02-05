@@ -421,7 +421,6 @@ void GLVisDriver::initWindow(const std::string& windowTitle) {
         addCmd(c);
     }
 
-
     void _quad(std::vector<float>& xyz) {
         assert(xyz.size()==12);
         if(wireframe) glBegin(GL_LINE_LOOP);
@@ -436,32 +435,6 @@ void GLVisDriver::initWindow(const std::string& windowTitle) {
         qcmd c(_quad);
         c.v = std::vector<float>(xyz,xyz+12);
         for(size_t i = 0; i < 12; i++) c.v[i] *= scale;
-        addCmd(c);
-    }
-    */
-
-    /*
-    void _dot(std::vector<float>& p) {
-        assert(p.size()==3);
-        double l = viewrange/100.0;
-        glBegin(GL_QUADS);
-        glVertex3f(p[0]+l,p[1],p[2]);
-        glVertex3f(p[0],p[1]+l,p[2]);
-        glVertex3f(p[0]-l,p[1],p[2]);
-        glVertex3f(p[0],p[1]-l,p[2]);
-        glVertex3f(p[0]+l,p[1],p[2]);
-        glVertex3f(p[0],p[1],p[2]+l);
-        glVertex3f(p[0]-l,p[1],p[2]);
-        glVertex3f(p[0],p[1],p[2]-l);
-        glVertex3f(p[0],p[1]+l,p[2]);
-        glVertex3f(p[0],p[1],p[2]+l);
-        glVertex3f(p[0],p[1]-l,p[2]);
-        glVertex3f(p[0],p[1],p[2]-l);
-        glEnd();
-    }
-    void dot(vec3 v) {
-        qcmd c(_dot);
-        appendv(c.v, v*scale);
         addCmd(c);
     }
     */

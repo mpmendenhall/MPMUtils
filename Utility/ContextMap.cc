@@ -65,3 +65,11 @@ const std::string& requiredGlobalArg(const std::string& argname) {
     if(v.size() != 1) throw std::runtime_error("Expected one '-"+argname+"' argument");
     return v[0];
 }
+
+const std::string& optionalGlobalArg(const std::string& argname, const std::string& dflt) {
+    auto& GA = GlobalArgs();
+    auto it = GA.find(argname);
+    if(it == GA.end() || !it->second.size()) return dflt;
+    if(it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
+    return it->second[0];
+}
