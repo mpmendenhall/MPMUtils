@@ -79,20 +79,10 @@ double sumCoeffs(const vector<coeff3>& coeffs, double x=1.0, double y=1.0, doubl
 double WilkinsonGamma(double Z = 1.) { return sqrt(1-(alpha*Z)*(alpha*Z)); }
 
 double WilkinsonF_PowerSeries(double Z, double W, double R) {
-    // set up coeffs
-    static vector<coeff3> coeffs;
-    if(!coeffs.size()) {
-        coeffs.push_back(coeff3(0,0,0,1.));
-
-        coeffs.push_back(coeff3(1,1,0,M_PI));
-
-        coeffs.push_back(coeff3(2,0,0,0.577216));
-        coeffs.push_back(coeff3(2,0,1,-1.));
-        coeffs.push_back(coeff3(2,2,0,3.289868));
-
-        coeffs.push_back(coeff3(3,1,0,1.813376));
-        coeffs.push_back(coeff3(3,1,1,-M_PI));
-    }
+    static const vector<coeff3> coeffs = {
+        {0,0,0,1.}, {1,1,0,M_PI}, {2,0,0,0.577216}, {2,0,1,-1.},
+        {2,2,0,3.289868}, {3,1,0,1.813376}, {3,1,1,-M_PI}
+    };
 
     double p = sqrt(W*W-1);
     double gm = WilkinsonGamma(Z);
@@ -166,75 +156,31 @@ double Bilenkii59_RWM(double W) {
 }
 
 double WilkinsonL0(double Z, double W, double R) {
-    // set up coeffs
-    static bool isInit = false;
-    static vector<coeff1> ai[6];
-    static vector<coeff1> aminus1;
+    static const vector<coeff1> ai[6] = {
+        {{1, -0.00062}, {2,0.007165}, {3,0.01841}, {4,-0.53736}, {5,1.2691},  {6,-1.5467}},
+        {{1,0.02482},   {2,-0.5975},  {3,4.84199}, {4,-15.3374}, {5,23.9774}, {6,-12.6534}},
+        {{1,-0.14038},  {2,3.64953},  {3,-38.8143},{4,172.1368}, {5,-346.708},{6,288.7873}},
+        {{1,0.008152},  {2,-1.15664}, {3,49.9663}, {4,-273.711}, {5,657.6292},{6,-603.7033}},
+        {{1,1.2145},    {2,-23.9931}, {3,149.9718}, {4,-471.2985}, {5,662.1909}, {6,-305.6804}},
+        {{1,-1.5632},   {2,33.4192},  {3,-255.1333}, {4,938.5297}, {5,-1641.2845}, {6,1095.358}}
+    };
+
+    static const vector<coeff1> aminus1 = {
+        {1, 0.115},  {2,-1.8123}, {3, 8.2498},
+        {4,-11.223}, {5,-14.854}, {6, 32.086}
+    };
+
     static map<double,vector<coeff1> > aiZ;
     static map<double,double> aminus1Z;
 
-    if(!isInit) {
-        aminus1.push_back(coeff1(1,0.115));
-        aminus1.push_back(coeff1(2,-1.8123));
-        aminus1.push_back(coeff1(3,8.2498));
-        aminus1.push_back(coeff1(4,-11.223));
-        aminus1.push_back(coeff1(5,-14.854));
-        aminus1.push_back(coeff1(6,32.086));
-
-        ai[0].push_back(coeff1(1,-0.00062));
-        ai[1].push_back(coeff1(1,0.02482));
-        ai[2].push_back(coeff1(1,-0.14038));
-        ai[3].push_back(coeff1(1,0.008152));
-        ai[4].push_back(coeff1(1,1.2145));
-        ai[5].push_back(coeff1(1,-1.5632));
-
-        ai[0].push_back(coeff1(2,0.007165));
-        ai[1].push_back(coeff1(2,-0.5975));
-        ai[2].push_back(coeff1(2,3.64953));
-        ai[3].push_back(coeff1(2,-1.15664));
-        ai[4].push_back(coeff1(2,-23.9931));
-        ai[5].push_back(coeff1(2,33.4192));
-
-        ai[0].push_back(coeff1(3,0.01841));
-        ai[1].push_back(coeff1(3,4.84199));
-        ai[2].push_back(coeff1(3,-38.8143));
-        ai[3].push_back(coeff1(3,49.9663));
-        ai[4].push_back(coeff1(3,149.9718));
-        ai[5].push_back(coeff1(3,-255.1333));
-
-        ai[0].push_back(coeff1(4,-0.53736));
-        ai[1].push_back(coeff1(4,-15.3374));
-        ai[2].push_back(coeff1(4,172.1368));
-        ai[3].push_back(coeff1(4,-273.711));
-        ai[4].push_back(coeff1(4,-471.2985));
-        ai[5].push_back(coeff1(4,938.5297));
-
-        ai[0].push_back(coeff1(5,1.2691));
-        ai[1].push_back(coeff1(5,23.9774));
-        ai[2].push_back(coeff1(5,-346.708));
-        ai[3].push_back(coeff1(5,657.6292));
-        ai[4].push_back(coeff1(5,662.1909));
-        ai[5].push_back(coeff1(5,-1641.2845));
-
-        ai[0].push_back(coeff1(6,-1.5467));
-        ai[1].push_back(coeff1(6,-12.6534));
-        ai[2].push_back(coeff1(6,288.7873));
-        ai[3].push_back(coeff1(6,-603.7033));
-        ai[4].push_back(coeff1(6,-305.6804));
-        ai[5].push_back(coeff1(6,1095.358));
-
-        isInit = true;
-    }
+    if(W <= 1) return 0;
 
     if(!aiZ.count(Z)) {
         vector<coeff1> aiZi;
-        for(unsigned int i=0; i<6; i++)
-            aiZi.push_back(coeff1(i, sumCoeffs(ai[i], alpha*Z)));
+        for(unsigned int i=0; i<6; i++) aiZi.emplace_back(i, sumCoeffs(ai[i], alpha*Z));
         aiZ.emplace(Z, aiZi);
         aminus1Z.emplace(Z, sumCoeffs(aminus1,alpha*Z));
     }
-
-    if(W <= 1) return 0;
 
     double gm = WilkinsonGamma(Z);
     double L0 = (1. + 13.*(alpha*Z)*(alpha*Z)/60. - W*R*alpha*Z*(41.-26.*gm)/(15.*(2.*gm-1.))

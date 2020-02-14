@@ -133,13 +133,13 @@ public:
         const TVectorD& eigenVal = eigen.GetEigenValues();
         const TMatrixD& eigenVec = eigen.GetEigenVectors();
         for(int i = 0; i<N; i++) {
-            width2[i] = eigenVal[i];
+            width2[i] = eigenVal[i] > 0? eigenVal[i] : 0.; // fix negative values rounding error near 0
             for(int j = 0; j<N; j++) PCA[j][i] = eigenVec(i,j);
         }
     }
 
     void display() const {
-        printf("Cloud of %zu %i-points (total weight %g, average %g):\n", n, N, sw, n? sw/n : 0);
+        printf("Cloud of %zu points (total weight %g, average %g):\n", n, sw, n? sw/n : 0);
         if(N==3) {
             printf("\tmean = %g\t%g\t%g\t\tRMS = %g\t%g\t%g\n",
             double(mu[0]), double(mu[1]), double(mu[2]), sigma(0), sigma(1), sigma(2));
