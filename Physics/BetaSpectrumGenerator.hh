@@ -16,6 +16,11 @@ public:
     /// decay probability at given KE [MeV]
     double decayProb(double KE) const;
 
+    /// display settings
+    void display() const;
+    /// display correction factors at energy [MeV]
+    void showCorrections(double KE) const;
+
     double A;                   ///< number of nucleons
     double Z;                   ///< number of protons
     double EP;                  ///< endpoint kinetic energy, MeV

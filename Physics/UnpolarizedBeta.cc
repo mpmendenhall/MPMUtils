@@ -4,6 +4,8 @@
 #include <map>
 #include <cassert>
 #include <gsl/gsl_sf_dilog.h>
+#include <cmath>
+#include <stdexcept>
 
 #ifdef USE_ROOT_MATH
 #include <TMath.h>
@@ -165,12 +167,13 @@ double Bilenkii59_RWM(double W) {
 
 double WilkinsonL0(double Z, double W, double R) {
     // set up coeffs
+    static bool isInit = false;
     static vector<coeff1> ai[6];
     static vector<coeff1> aminus1;
     static map<double,vector<coeff1> > aiZ;
     static map<double,double> aminus1Z;
 
-    if(!ai[0].size()) {
+    if(!isInit) {
         aminus1.push_back(coeff1(1,0.115));
         aminus1.push_back(coeff1(2,-1.8123));
         aminus1.push_back(coeff1(3,8.2498));
@@ -219,6 +222,8 @@ double WilkinsonL0(double Z, double W, double R) {
         ai[3].push_back(coeff1(6,-603.7033));
         ai[4].push_back(coeff1(6,-305.6804));
         ai[5].push_back(coeff1(6,1095.358));
+
+        isInit = true;
     }
 
     if(!aiZ.count(Z)) {
@@ -229,16 +234,16 @@ double WilkinsonL0(double Z, double W, double R) {
         aminus1Z.emplace(Z, sumCoeffs(aminus1,alpha*Z));
     }
 
-    if(W<=1)
-        return 0;
+    if(W <= 1) return 0;
 
     double gm = WilkinsonGamma(Z);
-    double L0 = (1.+13.*(alpha*Z)*(alpha*Z)/60.-W*R*alpha*Z*(41.-26.*gm)/(15.*(2.*gm-1.))
-    -alpha*Z*R*gm*(17.-2.*gm)/(30.*W*(2.*gm-1.))
-    +aminus1Z[Z]*R/W+sumCoeffs(aiZ[Z],W*R)
-    +0.41*(R-0.0164)*pow(alpha*Z,4.5) );
+    double L0 = (1. + 13.*(alpha*Z)*(alpha*Z)/60. - W*R*alpha*Z*(41.-26.*gm)/(15.*(2.*gm-1.))
+     - alpha*Z*R*gm*(17.-2.*gm)/(30.*W*(2.*gm-1.))
+     + aminus1Z[Z]*R/W + sumCoeffs(aiZ[Z], W*R)
+     + 0.41*(R-0.0164) * pow(alpha*Z, 4.5));
 
-    return L0==L0?L0*2./(1.+gm):0;
+    if(!std::isfinite(L0)) throw std::logic_error("Invalid L0 calculation");
+    return L0 * 2./(1.+gm);
 }
 
 double WilkinsonVC(double Z, double W, double W0, double R) {

@@ -115,7 +115,7 @@ public:
         Pnew.sw = sw + P.sw;
         for(int j = 0; j<N; j++) Pnew.mu[j] = (mu[j]*sw + P.mu[j]*P.sw)/Pnew.sw;
 
-        for(int i = 0; i<N-1; i++) {
+        for(int i = 0; i<N; i++) {
             for(int j = 0; j<N; j++) {
                 Pnew.Cov[i][j] = Cov[i][j] + P.Cov[i][j] + (mu[i]-P.mu[i])*(mu[j]-P.mu[j])*sw*P.sw/Pnew.sw;
             }

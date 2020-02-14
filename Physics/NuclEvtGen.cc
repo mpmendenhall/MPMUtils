@@ -254,9 +254,10 @@ TransitionBase(f,t), positron(f.Z > t.Z), BSG(to.A,int(to.Z)*(positron? -1 : 1),
 betaTF1((f.name+"-"+t.name+"_Beta").c_str(), this, &BetaDecayTrans::evalBeta, 0, 1, 0) {
     BSG.forbidden = forbidden;
     betaTF1.SetNpx(1000);
-    betaTF1.SetRange(0, from.E - to.E);
+    betaTF1.SetRange(0, BSG.EP);
     if(from.jpi == to.jpi) { BSG.M2_F = 1; BSG.M2_GT = 0; }
     else { BSG.M2_GT = 1; BSG.M2_F = 0; } // TODO not strictly true; need more general mechanism to fix
+
     betaQuantiles = new TF1_Quantiles(betaTF1);
 }
 
