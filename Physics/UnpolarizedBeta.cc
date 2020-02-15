@@ -269,12 +269,14 @@ double Davidson_C1T(double W, double W0, double Z, double R) {
     double S0 = sqrt(1-a2Z2);
     double S1 = sqrt(4-a2Z2);
     const double C = pow(Gamma(0.25),2)/sqrt(8*M_PI*M_PI*M_PI); // "Gauss number"
+
     double sm = 0;
     for(unsigned int n=1; n<10; n++) sm += 1/(n*(n*n+y*y));
+
     double A = ( (S1+2)/(2*S0+2) * pow(12*Gamma(2.*S0+1.)/Gamma(2.*S1+1.),2) *
     pow(2*p*R,a2Z2/2) * (pow(1-a2Z2/4,2)+y*y) * (1-a2Z2*C/2+a2Z2*y*y*sm/2) );
 
-    return (1+S0)*((W0-W)*(W0-W)+A*(W*W-1))/24;
+    return (1+S0)*((W0-W)*(W0-W) + A*(W*W-1))/24;
 }
 
 double Langer_Cs137_C2T(double W, double W0) {
@@ -297,11 +299,13 @@ double Behrens_l2(double W, double /*W0*/, double Z, double R) {
 
 double Behrens_Cs137_C(double W, double W0) {
     double q2 = (W0-W)*(W0-W);
-    double p2 = W*W-1;
-    double l2 = Behrens_l2(W,W0,56,pow(137,1./3.)*neutron_R0);
+    double p2 = W*W - 1;
+    double l2 = Behrens_l2(W, W0, 56, pow(137, 1./3.)*neutron_R0);
     double a1 = 0.000346865*q2 + 0.00331725*l2*p2 - 0.000050327*q2*W + 0.000155636*l2*p2*W + 0.000114834*q2/W;
     double a2 = -0.00427141*q2 - 0.00645269*l2*p2 + 0.000063321*q2*W - 0.000913829*l2*p2*W - 0.000566409*q2/W + 0.0000576232*l2*p2/W;
     double a3 =   0.0131499*q2 + 0.00313793*l2*p2 + 0.00151806*q2*W  + 0.000741562*l2*p2*W - 0.000865957*q2/W - 0.000272219*l2*p2/W;
-    double x = 1.07;
-    return a1+a2*x+a3*x*x;
+    double x = 1.07; // empirical fit value
+
+    double C = a1 + a2*x + a3*x*x;
+    return C > 0? C : 0; // fix roundoff error
 }

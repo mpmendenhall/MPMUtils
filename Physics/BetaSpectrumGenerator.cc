@@ -48,7 +48,7 @@ void BetaSpectrumGenerator::showCorrections(double KE) const {
         printf("1st Forbidden:        %g\n", Davidson_C1T(W, W0, Z, R) - 1);
 
     if(forbidden == 2 && A == 137 && Z == 56)
-        printf("Cs137 shape:          %g\n", Behrens_Cs137_C(W, W0) - 1);
+        printf("Cs137 shape:          %g\n", Behrens_Cs137_C(W, W0));
 }
 
 double BetaSpectrumGenerator::decayProb(double KE) const {
