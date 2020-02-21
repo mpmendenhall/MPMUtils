@@ -8,6 +8,7 @@
 #include <fftw3.h>
 #include <limits>
 
+/// placeholder for various FFTW data type operations
 template<typename T>
 struct fftwx { };
 
@@ -20,7 +21,7 @@ struct fftwx<double> {
 
     static real_t* alloc_real(size_t i) { return fftw_alloc_real(i); }
     static fcplx_t* alloc_complex(size_t i) { return fftw_alloc_complex(i); }
-    static void xfree(void* p) { fftw_free(p); }
+    static void free(void* p) { fftw_free(p); }
     static void execute(plan_t& p) { fftw_execute(p); }
 
     template<typename... Args>
@@ -40,7 +41,7 @@ struct fftwx<float> {
 
     static real_t* alloc_real(size_t i) { return fftwf_alloc_real(i); }
     static fcplx_t* alloc_complex(size_t i) { return fftwf_alloc_complex(i); }
-    static void xfree(void* p) { fftwf_free(p); }
+    static void free(void* p) { fftwf_free(p); }
     static void execute(plan_t& p) { fftwf_execute(p); }
 
     template<typename... Args>
@@ -60,7 +61,7 @@ struct fftwx<long double> {
 
     static real_t* alloc_real(size_t i) { return fftwl_alloc_real(i); }
     static fcplx_t* alloc_complex(size_t i) { return fftwl_alloc_complex(i); }
-    static void xfree(void* p) { fftwl_free(p); }
+    static void free(void* p) { fftwl_free(p); }
     static void execute(plan_t& p) { fftwl_execute(p); }
 
     template<typename... Args>
@@ -98,7 +99,7 @@ struct fftwx_real_allocator {
     }
 
     /// deallocation (required)
-    void deallocate(value_type* p, std::size_t) noexcept { fftwx<T>::xfree(p); }
+    void deallocate(value_type* p, std::size_t) noexcept { fftwx<T>::free(p); }
 };
 
 /// complex allocator wrapper for using FFTW allocate functions with std::vector
@@ -126,15 +127,15 @@ struct fftwx_complex_allocator {
     }
 
     /// deallocation (required)
-    void deallocate(value_type* p, std::size_t) noexcept { fftwx<T>::xfree(p); }
+    void deallocate(value_type* p, std::size_t) noexcept { fftwx<T>::free(p); }
 };
 
 /// FFTW-allocated real data
 template <typename T>
-using fftwvec_r = vector<T, fftwx_real_allocator<T>>;
+using fftw_real_vec = vector<T, fftwx_real_allocator<T>>;
 
 /// FFTW-allocated complex data
 template <typename T>
-using fftwvec_c = vector<typename fftwx<T>::scplx_t, fftwx_complex_allocator<typename fftwx<T>::scplx_t>>;
+using fftw_cplx_vec = vector<typename fftwx<T>::scplx_t, fftwx_complex_allocator<typename fftwx<T>::scplx_t>>;
 
 #endif
