@@ -1,13 +1,389 @@
 /// \file FFTW_Convolver.hh Fast convolution utilities using FFTW3
 // Michael P. Mendenhall, LLNL 2020
 
+/* ***********************************************************************
+
+-------------------------
+-- FFTW Real DFT notes --
+-------------------------
+
+General case: N real entries -> N/2 + 1 uniquely-determined
+complex entries, symmetric by complex conjugate around center.
+
+
+Example: [N = n = 4, even]
+a b c d  < x-space input
+M u V u* < k-space: N//2 + 1 = 3 unique entries (M real, u complex, V == V* real)
+
+Example: [N = n = 5, odd]
+a b c d e   < x-space input
+M u v v*u*  < k-space: N//2 + 1 = 3 unique entries (M real, u,v complex)
+
+-------------------
+- Additional symmetries reflected in k-space results
+-------------------
+
+n = number of elements to uniquely determine pattern, given symmetries ("physical dimension")
+N = periodicity size ("logical dimension")
+
+-------------------------------------
+-------------------------------------
+For even-symmetry inputs, k-space is real and even.
+
+DCT-I [REDFT00] N = 2*(n-1), even around j=0 and even around j=n-1.
+0 1 2 3 4        < inputs
+a b c d e d c b  < implied logical
+u v w x y x w v  < k-space
+0 1 2 3 4        < outputs
+
+DCT-II [REDFT10] N = 2*n, ("the" DCT) even around j=-0.5 and even around j=n-0.5.
+  0   1   2               < inputs
+0 a 0 b 0 c 0 c 0 b 0 a   < implied logical
+u v w 0 W V U V W 0 w v   < k-space
+0 1 2                     < outputs
+
+DCT-III [REDFT01] N = 4*n, ("the" IDCT) even around j=0 and odd around j=n.
+0 1 2                     < inputs
+a b c 0 C B A B C 0 c b   < implied
+0 u 0 v 0 w w 0 v 0 u 0   < k-space
+  0   1   2               < outputs
+n = number of elements to uniquely determine pattern, given symmetries ("physical dimension")
+
+DCT-IV [REDFT11] N = 4*n, even around j=-0.5 and odd around j=n-0.5.
+  0   1   2                                     < inputs
+0 a 0 b 0 c 0 C 0 B 0 A 0 A 0 B 0 C 0 c 0 b 0 a < implied
+0 u 0 v 0 w 0 W 0 V 0 U 0|U 0 V 0 W 0 w 0 v 0 u < k-space
+  0   1   2                                     < outputs
+
+-------------------------------------
+-------------------------------------
+For odd-symmetry inputs, k-space is imaginary and odd.
+
+DST-I [RODFT00] N = 2*(n+1), odd around j=-1 and odd around j=n.
+  0 1 2             < inputs
+0 a b c 0 C B A     < implied
+0 u v w 0 W V U     < k-space
+  0 1 2             < outputs
+
+DST-II [RODFT10] N = 2*n, odd around j=-0.5 and odd around j=n-0.5.
+  0   1   2                 < inputs
+0 a 0 b 0 c 0 C 0 B 0 A     < implied
+0 u v w v u 0 U V W V U     < k-space
+  0 1 2                     < outputs
+
+DST-III [RODFT01] N = 4*n, odd around j=-1 and even around j=n-1.
+  0 1 2                     < inputs
+0 a b c b a 0 A B C B A     < implied
+0 u 0 v 0 w 0 W 0 V 0 U     < k-space
+  0   1   2                 < outputs
+
+DST-IV [RODFT11] N = 4*n, odd around j=-0.5 and even around j=n-0.5
+  0   1   2                                         < inputs
+0 a 0 b 0 c 0 c 0 b 0 a 0 A 0 B 0 C 0 C 0 B 0 A     < implied
+0 a 0 b 0 c 0 c 0 b 0 a 0 A 0 B 0 C 0 C 0 B 0 A     < k-space
+  0   1   2                                         < outputs
+
+
+**************************************************************** */
+
+
 #ifndef FFTW_CONVOLVER_H
 #define FFTW_CONVOLVER_H
 
 #include "fftwx.hh"
+#include <cmath>
 #include <mutex>
 #include <map>
 using std::map;
+
+//--------------------------------
+//--------------------------------
+//----- locks on FFT planner -----
+//--------------------------------
+//--------------------------------
+
+template<typename T>
+std::mutex& fftw_planner_mutex();
+template<>
+std::mutex& fftw_planner_mutex<double>();
+template<>
+std::mutex& fftw_planner_mutex<float>();
+template<>
+std::mutex& fftw_planner_mutex<long double>();
+
+//-----------------
+//-----------------
+//----- Plans -----
+//-----------------
+//-----------------
+
+/// Plan with workspace size info
+template<typename T>
+class TransformPlan: public fftwx<T> {
+public:
+    typedef typename fftwx<T>::plan_t plan_t;
+
+    /// Constructor
+    TransformPlan(size_t m, size_t nl, size_t k):
+    M(m), Nlog(nl), K(k) { }
+
+    /// Polymorphic Destructor
+    virtual ~TransformPlan() { }
+
+    /// execute plan (optional round-trip normalization)
+    void execute() { fftwx<T>::execute(p); }
+
+    plan_t p;           ///< plan
+
+    const size_t M;     ///< input array size
+    const size_t Nlog;  ///< logical (normalization) size
+    const size_t K;     ///< output array size
+
+protected:
+    /// convenience function for planner flags
+    virtual int planner_flags() const { return FFTW_PATIENT | FFTW_DESTROY_INPUT; }
+};
+
+/// 1D (complex-to-complex) Discrete Fourier Transform plan
+template<typename T = double>
+class DFTPlan: public TransformPlan<T> {
+protected:
+    typedef typename fftwx<T>::fcplx_t xspace_t;
+    typedef typename fftwx<T>::fcplx_t kspace_t;
+    typedef fftw_cplx_vec<T> xvec_t;
+    typedef fftw_cplx_vec<T> kvec_t;
+
+    /// Constructor
+    DFTPlan(size_t m): TransformPlan<T>(m, m, m) { }
+
+    /// make plan
+    void makePlan(bool fwd, xspace_t* v_x, kspace_t* v_k) {
+        if(fwd) this->p = this->plan_dft_1d(this->M, v_x, v_k, FFTW_FORWARD, this->planner_flags());
+        else    this->p = this->plan_dft_1d(this->M, v_k, v_x, FFTW_BACKWARD, this->planner_flags());
+    }
+};
+
+/// 1D real-to-complex plan
+template<typename T = double>
+class R2CPlan: public TransformPlan<T> {
+public:
+    typedef typename fftwx<T>::real_t xspace_t;
+    typedef typename fftwx<T>::fcplx_t kspace_t;
+    typedef fftw_real_vec<T> xvec_t;
+    typedef fftw_cplx_vec<T> kvec_t;
+
+    /// constructor
+    R2CPlan(size_t m): TransformPlan<T>(m, m, m/2+1) { }
+
+    /// make plan
+    void makePlan(bool fwd, xspace_t* v_x, kspace_t* v_k) {
+        if(fwd) this->p = this->plan_dft_r2c_1d(this->M, v_x, v_k, this->planner_flags());
+        else    this->p = this->plan_dft_c2r_1d(this->M, v_k, v_x, this->planner_flags());
+    }
+};
+
+/// 1D real-to-real plan base
+template<typename T = double>
+class R2RPlan: public TransformPlan<T> {
+public:
+    typedef typename fftwx<T>::real_t xspace_t;
+    typedef typename fftwx<T>::real_t kspace_t;
+    typedef fftw_real_vec<T> xvec_t;
+    typedef fftw_real_vec<T> kvec_t;
+
+    /// Constructor
+    R2RPlan(size_t m, size_t nl): TransformPlan<T>(m, nl, m) { }
+};
+
+
+/// DCT-I real-to-real transform
+template<typename T>
+class DCT_I_Plan: public R2RPlan<T> {
+public:
+    /// Constructor
+    DCT_I_Plan(size_t m): R2RPlan<T>(m, 2*(m-1)) { }
+
+    /// make plan
+    void makePlan(bool fwd, T* v_x, T* v_k) {
+        if(fwd) this->p = this->plan_r2r_1d(this->M, v_x, v_k, FFTW_REDFT00, this->planner_flags());
+        else    this->p = this->plan_r2r_1d(this->K, v_k, v_x, FFTW_REDFT00, this->planner_flags());
+    }
+};
+
+/// DCT-II real-to-real transform
+template<typename T>
+class DCT_II_Plan: public R2RPlan<T> {
+public:
+    /// Constructor
+    DCT_II_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+
+    /// make plan
+    void makePlan(bool fwd, T* v_x, T* v_k) {
+        if(fwd) this->p = this->plan_r2r_1d(this->M, v_x, v_k, FFTW_REDFT10, this->planner_flags());
+        else    this->p = this->plan_r2r_1d(this->K, v_k, v_x, FFTW_REDFT01, this->planner_flags());
+    }
+};
+
+/// DCT-III real-to-real transform
+template<typename T>
+class DCT_III_Plan: public R2RPlan<T> {
+public:
+    /// Constructor
+    DCT_III_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+
+    /// make plan
+    void makePlan(bool fwd, T* v_x, T* v_k) {
+        if(fwd) this->p = this->plan_r2r_1d(this->M, v_x, v_k, FFTW_REDFT01, this->planner_flags());
+        else    this->p = this->plan_r2r_1d(this->K, v_k, v_x, FFTW_REDFT10, this->planner_flags());
+    }
+};
+
+
+/// DCT-IV real-to-real transform
+template<typename T>
+class DCT_IV_Plan: public R2RPlan<T> {
+public:
+    /// Constructor
+    DCT_IV_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+
+    /// make plan
+    void makePlan(bool fwd, T* v_x, T* v_k) {
+        if(fwd) this->p = this->plan_r2r_1d(this->M, v_x, v_k, FFTW_REDFT11, this->planner_flags());
+        else    this->p = this->plan_r2r_1d(this->K, v_k, v_x, FFTW_REDFT11, this->planner_flags());
+    }
+};
+
+/// DST-I real-to-real transform
+template<typename T>
+class DST_I_Plan: public R2RPlan<T> {
+public:
+    /// Constructor
+    DST_I_Plan(size_t m): R2RPlan<T>(m, 2*(m+1)) { }
+
+    /// make plan
+    void makePlan(bool fwd, T* v_x, T* v_k) {
+        if(fwd) this->p = this->plan_r2r_1d(this->M, v_x, v_k, FFTW_RODFT00, this->planner_flags());
+        else    this->p = this->plan_r2r_1d(this->K, v_k, v_x, FFTW_RODFT00, this->planner_flags());
+    }
+};
+
+/// DST-II real-to-real transform
+template<typename T>
+class DST_II_Plan: public R2RPlan<T> {
+public:
+    /// Constructor
+    DST_II_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+
+    /// make plan
+    void makePlan(bool fwd, T* v_x, T* v_k) {
+        if(fwd) this->p = this->plan_r2r_1d(this->M, v_x, v_k, FFTW_RODFT10, this->planner_flags());
+        else    this->p = this->plan_r2r_1d(this->K, v_k, v_x, FFTW_RODFT01, this->planner_flags());
+    }
+};
+
+/// DST-III real-to-real transform
+template<typename T>
+class DST_III_Plan: public R2RPlan<T> {
+public:
+    /// Constructor
+    DST_III_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+
+    /// make plan
+    void makePlan(bool fwd, T* v_x, T* v_k) {
+        if(fwd) this->p = this->plan_r2r_1d(this->M, v_x, v_k, FFTW_RODFT01, this->planner_flags());
+        else    this->p = this->plan_r2r_1d(this->K, v_k, v_x, FFTW_RODFT10, this->planner_flags());
+    }
+};
+
+/// DST-IV real-to-real transform
+template<typename T>
+class DST_IV_Plan: public R2RPlan<T> {
+public:
+    /// Constructor
+    DST_IV_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+
+    /// make plan
+    void makePlan(bool fwd, T* v_x, T* v_k) {
+        if(fwd) this->p = this->plan_r2r_1d(this->M, v_x, v_k, FFTW_RODFT11, this->planner_flags());
+        else    this->p = this->plan_r2r_1d(this->K, v_k, v_x, FFTW_RODFT11, this->planner_flags());
+    }
+};
+
+//----------------------
+//----------------------
+//----- Workspaces -----
+//----------------------
+//----------------------
+
+/// Workspace wrapper for plan
+template<class Plan>
+class FFTWorkspace: public Plan {
+public:
+    typename Plan::xvec_t v_x;  ///< x-space
+    typename Plan::kvec_t v_k;  ///< k-space
+
+    /// Constructor
+    FFTWorkspace(size_t m, bool fwd): Plan(m), v_x(Plan::M), v_k(Plan::K) {
+        this->makePlan(fwd,
+                       (typename Plan::xspace_t*)v_x.data(),
+                       (typename Plan::kspace_t*)v_k.data());
+    }
+};
+
+/// 1D (complex-to-complex) Discrete Fourier Transform plan + workspace
+template<typename T = double>
+class DFTWorkspace: public FFTWorkspace<DFTPlan<T>> {
+public:
+    /// inherit constructor
+    using FFTWorkspace<DFTPlan<T>>::FFTWorkspace;
+
+    /// get precalculated FFT workspace for dimension m
+    static DFTWorkspace& get_ffter(size_t m, bool fwd) {
+        static map<size_t, DFTWorkspace*> ffters[2];
+        std::lock_guard<std::mutex> lk(fftw_planner_mutex<T>());
+        auto it = ffters[fwd].find(m);
+        if(it != ffters[fwd].end()) return *(it->second);
+        return *(ffters[fwd][m] = new DFTWorkspace(m,fwd));
+    }
+};
+
+/// 1D (real-to-complex) Discrete Fourier Transform plan + workspace
+template<typename T = double>
+class R2CWorkspace: public FFTWorkspace<R2CPlan<T>> {
+public:
+    /// inherit constructor
+    using FFTWorkspace<R2CPlan<T>>::FFTWorkspace;
+
+    /// get precalculated FFT workspace for dimension m
+    static R2CWorkspace& get_ffter(size_t m, bool fwd) {
+        static map<size_t, R2CWorkspace*> ffters[2];
+        std::lock_guard<std::mutex> lk(fftw_planner_mutex<T>());
+        auto it = ffters[fwd].find(m);
+        if(it != ffters[fwd].end()) return *(it->second);
+        return *(ffters[fwd][m] = new R2CWorkspace(m,fwd));
+    }
+};
+
+/// Conjugate forward/reverse pair
+template<class Plan>
+class IFFTWorkspace: public FFTWorkspace<Plan> {
+public:
+    /// Constructor
+    IFFTWorkspace(size_t m): FFTWorkspace<Plan>(m, true), p_rev(m) {
+        p_rev.makePlan(false,
+                       (typename Plan::xspace_t*)this->v_x.data(),
+                       (typename Plan::kspace_t*)this->v_k.data());
+    }
+
+    /// execute reverse, with normalization
+    void etucexe() {
+        p_rev.execute();
+        for(auto& x: this->v_x) x /= this->Nlog;
+    }
+
+    Plan p_rev; ///< reverse plan
+};
+
 
 //-----------------------------
 //-----------------------------
@@ -15,183 +391,102 @@ using std::map;
 //-----------------------------
 //-----------------------------
 
-/// Base class for precalculated convolution plan
-template<typename T = double>
-class ConvolvePlan: public fftwx<T> {
+/// Base class for precalculated convolution scheme, combining data forward-transform DP, forward kernel plan KP, and reverse output reverse RP
+template<class DP, class KP, class RP>
+class ConvolvePlan: public FFTWorkspace<DP> {
 public:
-    typedef typename fftwx<T>::plan_t plan_t;
+    typedef FFTWorkspace<DP> WS;
+    typedef typename WS::xspace_t xspace_t;
+    typedef typename WS::kspace_t kspace_t;
+    typedef typename WS::kvec_t kvec_t;
 
     /// Constructor
-    ConvolvePlan(size_t m): M(m), realspace(M) { }
-
-    /// Polymorphic Destructor
-    virtual ~ConvolvePlan() { }
-
-    const size_t M; ///< number of elements (input)
-
-    plan_t d_fwd;   ///< data real->kspace plan
-    plan_t k_fwd;   ///< kernel real->kspace plan
-    plan_t p_rev;   ///< convolved product kspace->real plan
-
-    fftw_real_vec<T> realspace; ///< real-space side of transform data
-
-    /// normalization "logical size" for given input size
-    virtual size_t normSize() const { return 2*M; }
-    /// output size after convolution
-    virtual size_t outSize() const { return M; }
-    /// k-space kernel size
-    virtual size_t kkernSize() const { return M; }
-
-    /// convenience function for planner flags
-    virtual int planner_flags() const { return FFTW_PATIENT | FFTW_DESTROY_INPUT; }
-
-    static std::mutex& plannerLock();   ///< lock on using FFTW to generate plans
-};
-
-template<>
-std::mutex& ConvolvePlan<double>::plannerLock();
-template<>
-std::mutex& ConvolvePlan<float>::plannerLock();
-template<>
-std::mutex& ConvolvePlan<long double>::plannerLock();
-
-
-/// Real-to-complex (periodic boundary conditions) convolution workspace
-template<typename T = double>
-class ConvolvePlanR2C: public ConvolvePlan<T> {
-public:
-    typedef typename fftwx<T>::fcplx_t fcplx_t;
-
-    fftw_cplx_vec<T> kspace;    ///< kspace-side of transform data
-
-    /// get precalculated convolution workspace for dimension m
-    static ConvolvePlanR2C& get_ffter(size_t m) {
-        static map<size_t, ConvolvePlanR2C<T>*> ffters;
-        std::lock_guard<std::mutex> lk(ConvolvePlan<T>::plannerLock());
-        auto it = ffters.find(m);
-        if(it != ffters.end()) return *(it->second);
-        return *(ffters[m] = new ConvolvePlanR2C<T>(m));
+    ConvolvePlan(size_t m, size_t _km = 0, size_t _rm = 0):
+    WS(m, true), kernPlan(_km? _km : m), revPlan(_rm? _rm : m) {
+        kernPlan.makePlan(true, (xspace_t*)this->v_x.data(), (kspace_t*)this->v_k.data());
+        revPlan.makePlan(false, (xspace_t*)this->v_x.data(), (kspace_t*)this->v_k.data());
     }
 
-    /// k-space kernel size
-    size_t kkernSize() const override { return this->M/2 + 1; }
-    /// normalization "logical size" for given input size
-    size_t normSize() const override { return this->M; }
+    KP kernPlan;    ///< kernel transform v_x -> v_k
+    RP revPlan;     ///< reverse transform v_k * kernel -> v_x
 
-protected:
-    /// Constructor
-    ConvolvePlanR2C(size_t m): ConvolvePlan<T>(m), kspace(m/2+1) {
-        this->d_fwd = this->plan_dft_r2c_1d(m, this->realspace.data(), (fcplx_t*)kspace.data(), this->planner_flags());
-        this->k_fwd = this->plan_dft_r2c_1d(m, this->realspace.data(), (fcplx_t*)kspace.data(), this->planner_flags());
-        this->p_rev = this->plan_dft_c2r_1d(m, (fcplx_t*)kspace.data(), this->realspace.data(), this->planner_flags());
+    /// multiply k-space kernel (with any appropriate shifts) --- specialize as needed
+    virtual void kmul(const kvec_t& k) {
+        if(k.size() != this->v_k.size()) throw std::logic_error("Mismatched k-space kernel size");
+        for(size_t i=0; i<this->M; i++) this->v_k[i] *= k[i];
+    }
+
+    /// perform convolution using pre-calculated k-space kernel
+    void convolve(const kvec_t& kkern) {
+        this->execute();
+        kmul(kkern);
+        revPlan.execute();
+    }
+
+    /// load input data
+    template<typename V>
+    void load(const V& v) {
+        if(v.size() > this->M) throw std::logic_error("Mismatched convolution input");
+        std::copy(v.begin(), v.end(), this->v_x.begin());
+    }
+
+    /// calculate (pre-normalized) k-space kernel
+    template<typename V>
+    void kkern(const V& k) {
+        if(k.size() != kernPlan.M) throw std::logic_error("Mismatched convolution kernel size");
+        load(k);
+        kernPlan.execute();
+        for(auto& x: this->v_k) x /= kernPlan.Nlog;
+    }
+
+    /// fetch result
+    template<typename V>
+    void fetch(V& v) const { v.assign(this->v_x.begin(), this->v_x.begin() + revPlan.M); }
+
+    /// full convolution sequence
+    template<typename V, typename U>
+    void convolve(V& v, const U& k) {
+        kkern(k);
+        auto kk = this->v_k;
+        load(v);
+        convolve(kk);
+        fetch(v);
     }
 };
 
-
-/// Real-to-real (symmetric boundary conditions) convolution workspace
 template<typename T = double>
-class ConvolvePlanR2R: public ConvolvePlan<T> {
-public:
+using ConvolvePlanR2C = ConvolvePlan<R2CPlan<T>, R2CPlan<T>, R2CPlan<T>>;
 
+template<typename T>
+using Convolve_DCT_I = ConvolvePlan<DCT_I_Plan<T>, DCT_I_Plan<T>, DCT_I_Plan<T>>;
+
+template<typename T>
+using Convolve_DCT_II = ConvolvePlan<DCT_II_Plan<T>, DCT_II_Plan<T>, DCT_II_Plan<T>>;
+
+template<typename T>
+using _Convolve_DCT_DST_I = ConvolvePlan<DCT_I_Plan<T>, DST_I_Plan<T>, DST_I_Plan<T>>;
+
+template<typename T>
+class Convolve_DCT_DST_I: public _Convolve_DCT_DST_I<T> {
+public:
+    /// Constructor
+    Convolve_DCT_DST_I(size_t m): _Convolve_DCT_DST_I<T>(m, m-2, m-2) { }
     /// multiply k-space kernel (with any appropriate shifts)
-    virtual void kmul(const vector<T>& k) { for(size_t i=0; i<this->M; i++) kspace[i] *= k[i]; }
-
-    fftw_real_vec<T> kspace;    ///< kspace-side of transform data
-
-protected:
-    /// Constructor
-    ConvolvePlanR2R(size_t m): ConvolvePlan<T>(m), kspace(m) { }
+    void kmul(const typename _Convolve_DCT_DST_I<T>::kvec_t& k) override { for(size_t i=0; i<this->M-2; i++) this->v_k[i] = k[i] * this->v_k[i+1]; }
 };
 
-
-/// Convolution plan for DCT-I * DCT-I -> DCT-I
-/// abcd, efgh -> abcdcb * efghgf
-template<typename T = double>
-class Convolve_DCT_I: public ConvolvePlanR2R<T> {
-public:
-    /// get precalculated convolution workspace for dimension m
-    static ConvolvePlanR2R<T>& get_ffter(size_t m) {
-        static map<size_t,ConvolvePlanR2R<T>*> ffters;
-        std::lock_guard<std::mutex> lk(ConvolvePlan<T>::plannerLock());
-        auto it = ffters.find(m);
-        if(it != ffters.end()) return *(it->second);
-        return *(ffters[m] = new Convolve_DCT_I<T>(m));
-    }
-
-    /// normalization "logical size" for given input size
-    size_t normSize() const override { return 2*(this->M-1); }
-
-protected:
-    /// Constructor
-    Convolve_DCT_I(size_t m): ConvolvePlanR2R<T>(m) {
-        this->d_fwd = this->plan_r2r_1d(m, this->realspace.data(), this->kspace.data(), FFTW_REDFT00, this->planner_flags());
-        this->k_fwd = this->d_fwd;
-        this->p_rev = this->plan_r2r_1d(m, this->kspace.data(), this->realspace.data(), FFTW_REDFT00, this->planner_flags());
-    }
-};
-
-
-/// Convolution plan for DCT-I * DST-I -> DST-I
-/// abcd, ef ->   abcdcb * ef0FE0
-template<typename T = double>
-class Convolve_DCT_DST_I: public ConvolvePlanR2R<T> {
-public:
-    /// get precalculated convolution workspace for dimension m
-    static ConvolvePlanR2R<T>& get_ffter(size_t m) {
-        static map<size_t, ConvolvePlanR2R<T>*> ffters;
-        std::lock_guard<std::mutex> lk(ConvolvePlan<T>::plannerLock());
-        auto it = ffters.find(m);
-        if(it != ffters.end()) return *(it->second);
-        return *(ffters[m] = new Convolve_DCT_DST_I<T>(m));
-    }
-
-    /// normalization "logical size" for given input size
-    size_t normSize() const override { return 2*(this->M-1); }
-    /// convolved output data size
-    size_t outSize() const override { return this->M - 2; }
-    /// k-space kernel size
-    size_t kkernSize() const override { return this->M - 2; }
-
-    /// multiply k-space kernel (with any appropriate shifts)
-    void kmul(const vector<T>& k) override { for(size_t i=0; i<this->M-2; i++) this->kspace[i] = k[i]*this->kspace[i+1]; }
-
-protected:
-    /// Constructor
-    Convolve_DCT_DST_I(size_t m): ConvolvePlanR2R<T>(m) {
-        this->d_fwd = this->plan_r2r_1d(m,   this->realspace.data(), this->kspace.data(), FFTW_REDFT00, this->planner_flags());
-        this->k_fwd = this->plan_r2r_1d(m-2, this->realspace.data(), this->kspace.data(), FFTW_RODFT00, this->planner_flags());
-        this->p_rev = this->plan_r2r_1d(m-2, this->kspace.data(), this->realspace.data(), FFTW_RODFT00, this->planner_flags());
-    }
-};
-
+template<typename T>
+using _Convolve_DCT_DST_II = ConvolvePlan<DCT_II_Plan<T>, DST_II_Plan<T>, DST_I_Plan<T>>;
 
 /// Convolution plan for DCT-II * DST-II -> DST-I
-/// abcd, efgh ->  abcddcba * efghHGFE
-template<typename T = double>
-class Convolve_DCT_DST_II: public ConvolvePlanR2R<T> {
+/// abcd, efgh ->  abcddcba * efghHGFE = uvw0WVU0
+template<typename T>
+class Convolve_DCT_DST_II: public _Convolve_DCT_DST_II<T> {
 public:
-    /// get FFTer for dimension m
-    static ConvolvePlanR2R<T>& get_ffter(size_t m) {
-        static map<size_t, ConvolvePlanR2R<T>*> ffters;
-        std::lock_guard<std::mutex> lk(ConvolvePlan<T>::plannerLock());
-        auto it = ffters.find(m);
-        if(it != ffters.end()) return *(it->second);
-        return *(ffters[m] = new Convolve_DCT_DST_II<T>(m));
-    }
-
-    /// convolved output data size
-    size_t outSize() const override { return this->M - 1; }
-
-    /// multiply k-space kernel (with any appropriate shifts)
-    void kmul(const vector<T>& k) override { for(size_t i=0; i<this->M-1; i++) this->kspace[i] = k[i]*this->kspace[i+1]; }
-
-protected:
     /// Constructor
-    Convolve_DCT_DST_II(size_t m): ConvolvePlanR2R<T>(m) {
-        this->d_fwd = this->plan_r2r_1d(m,   this->realspace.data(), this->kspace.data(), FFTW_REDFT10, this->planner_flags());
-        this->k_fwd = this->plan_r2r_1d(m,   this->realspace.data(), this->kspace.data(), FFTW_RODFT10, this->planner_flags());
-        this->p_rev = this->plan_r2r_1d(m-1, this->kspace.data(), this->realspace.data(), FFTW_RODFT00, this->planner_flags());
-    }
+    Convolve_DCT_DST_II(size_t m): _Convolve_DCT_DST_II<T>(m, m, m-1) { }
+    /// multiply k-space kernel (with any appropriate shifts)
+    void kmul(const typename _Convolve_DCT_DST_II<T>::kvec_t& k) override { for(size_t i=0; i<this->M-1; i++) this->v_k[i] = k[i]*this->v_k[i+1]; }
 };
 
 
@@ -201,11 +496,12 @@ protected:
 //-------------------------------
 //-------------------------------
 
-
-/// Base for convolver "factory," keeping pre-calculated kspace kernels
-template<typename T>
-class ConvolverFactory: public fftwx<T> {
+/// Base for convolver "factory," storing pre-calculated kspace kernels
+template<class _C>
+class ConvolverFactory {
 public:
+    typedef _C Convolver_t;
+
     /// Polymorphic Destructor
     virtual ~ConvolverFactory() { }
 
@@ -213,115 +509,78 @@ public:
     template<typename Vec_t>
     void convolve(Vec_t& v) {
         prepareKernel(v.size());
-        auto& P = getPlan(v.size());
-        auto& vr = P.realspace;
-        std::copy(v.begin(), v.end(), vr.begin());
-        _convolve(v.size());
-        v.assign(vr.begin(), vr.begin() + P.outSize());
+        auto& C = getConvolver(v.size());
+        C.load(v);
+        C.convolve(kdata.at(v.size()));
+        C.fetch(v);
+    }
+
+    /// Generate appropriately-sized convolver
+    static Convolver_t& getConvolver(size_t m) {
+        static map<size_t, Convolver_t*> cs;
+        auto it = cs.find(m);
+        if(it != cs.end()) return *it->second;
+        return *(cs[m] = new Convolver_t(m));
     }
 
 protected:
-    /// calculate/cache kernel for specified size
-    virtual void prepareKernel(size_t i) = 0;
-    /// get planner for specified size
-    virtual ConvolvePlan<T>& getPlan(size_t i) const = 0;
     /// calculate real-space convolution kernel for given input size
-    virtual vector<T> calcKernel(size_t i) const = 0;
-    /// perform convolution on pre-filled planned size
-    virtual void _convolve(size_t i) = 0;
-};
-
-/// Real-to-real symmetric data/kernel convolver factory base
-template<typename T = double>
-class ConvolverFactoryR2R: public ConvolverFactory<T> {
-protected:
-    /// perform convolution on pre-filled planned size
-    void _convolve(size_t i) override {
-        auto& ffter = getR2RPlan(i);
-        this->execute(ffter.d_fwd);
-        ffter.kmul(kdata.at(i));
-        this->execute(ffter.p_rev);
-    }
-
-    /// get generic planner
-    ConvolvePlan<T>& getPlan(size_t i) const override { return getR2RPlan(i); }
-
-    /// get appropriate plan type
-    virtual ConvolvePlanR2R<T>& getR2RPlan(size_t i) const = 0;
+    virtual vector<typename Convolver_t::xspace_t> calcKernel(size_t i) const = 0;
 
     /// calculate/cache kernel for specified size
-    void prepareKernel(size_t i) override {
+    void prepareKernel(size_t i) {
         if(kdata.count(i)) return;
-
-        auto& ffter = getR2RPlan(i);
-        auto kern = this->calcKernel(i);
-        for(auto& k: kern) k /= ffter.normSize();
-
-        for(auto& x: ffter.realspace) x = 0;
-        std::copy(kern.begin(), kern.end(), ffter.realspace.begin());
-        this->execute(ffter.k_fwd);
-
-        kdata[i].assign(ffter.kspace.begin(), ffter.kspace.begin() + ffter.kkernSize());
+        auto& C = getConvolver(i);
+        C.kkern(this->calcKernel(i));
+        kdata[i].assign(C.v_k.begin(), C.v_k.begin() + C.kernPlan.M);
     }
 
-    map<size_t, vector<T>> kdata; ///< cached kspace kernels for each input size
+    map<size_t, typename Convolver_t::kvec_t> kdata;  ///< cached kspace kernels for each input size
 };
 
-/// Gaussian convolutions generator
+/// Gaussian convolutions generator, symmetrizing boundary conditions
 template<typename T = double>
-class GaussConvolverFactory: public ConvolverFactoryR2R<T> {
+class GaussConvolverFactory: public ConvolverFactory<Convolve_DCT_I<T>> {
 public:
     /// Constructor
     GaussConvolverFactory(double rr): r(rr) { }
     const double r;     ///< convolution radius in samples
 
 protected:
-    /// get appropriate plan type
-    ConvolvePlanR2R<T>& getR2RPlan(size_t i) const override { return Convolve_DCT_I<T>::get_ffter(i); }
-
     /// calculate convolution kernel for given size
     vector<T> calcKernel(size_t i) const override {
-        vector<T> v(i);
+        if(i <= 2) return vector<T>(i);
+        vector<T> v(i-2);
         double nrm = 0;
-        for(int n=0; n<(int)i; n++) {
-            v[n] = exp(-pow((n+0.5)/r,2)/2);
-            nrm += (n? 2:1)*v[n];
+        for(int n=0; n<(int)i; ++n) {
+            v[n] = exp(-n*n/(2*r*r));
+            nrm += (n? 2 : 1)*v[n];
         }
         for(auto& x: v) x /= nrm;
         return v;
     }
 };
 
-/// Real-to-complex (arbitrary periodic) convolver factory base
+/// Gaussian-smoothed derivative filter; symmetrizing boundary conditions
 template<typename T = double>
-class ConvolverFactoryR2C: public ConvolverFactory<T> {
+class GaussDerivFactory: public ConvolverFactory<Convolve_DCT_DST_II<T>> {
+public:
+    /// Constructor
+    GaussDerivFactory(double rr): r(rr) { }
+    const double r; ///< convolution radius in samples
+
 protected:
-    /// get appropriate-size convolver plan
-    ConvolvePlan<T>& getPlan(size_t i) const override { return ConvolvePlanR2C<T>::get_ffter(i); }
+    /// calculate convolution kernel for given size
+    vector<T> calcKernel(size_t i) const override {
+        // erfs at bin edges for integrals of Gaussian in bins
+        vector<double> ej(i+2);
+        for(int j=0; j<(int)i+2; j++) ej[j] = std::erf((j-0.5)/(sqrt(2.)*r));
 
-    /// perform convolution on pre-filled planned size
-    void _convolve(size_t i) override {
-        auto& ffter = ConvolvePlanR2C<T>::get_ffter(i);
-        auto& kern = kdata.at(i);
-        this->execute(ffter.d_fwd);
-        for(size_t n=0; n<kern.size(); ++n) ffter.kspace[n] *= kern[n];
-        this->execute(ffter.p_rev);
+        // smoothing kernel * {-1,1} derivative
+        vector<T> v(i);
+        for(unsigned int j=0; j<i; j++) v[j] = -0.5*(-ej[j]+2*ej[j+1]-ej[j+2]);
+        return v;
     }
-
-    /// prepare kernel for size
-    void prepareKernel(size_t i) override {
-        if(kdata.count(i)) return;
-        auto& ffter = ConvolvePlanR2C<T>::get_ffter(i);
-        auto kern = this->calcKernel(i);
-        for(auto& k: kern) k /= ffter.normSize();
-
-        std::copy(kern.begin(), kern.end(), ffter.realspace);
-        this->execute(ffter.k_fwd);
-
-        kdata[i].assign(ffter.kspace, ffter.kspace+i/2+1);
-    }
-
-    map<size_t, vector<std::complex<T>>> kdata; ///< cached kspace kernels for each input size
 };
 
 #endif

@@ -25,6 +25,8 @@ struct fftwx<double> {
     static void execute(plan_t& p) { fftw_execute(p); }
 
     template<typename... Args>
+    static plan_t plan_dft_1d(Args&&... a) { return fftw_plan_dft_1d(std::forward<Args>(a)...); }
+    template<typename... Args>
     static plan_t plan_dft_r2c_1d(Args&&... a) { return fftw_plan_dft_r2c_1d(std::forward<Args>(a)...); }
     template<typename... Args>
     static plan_t plan_dft_c2r_1d(Args&&... a) { return fftw_plan_dft_c2r_1d(std::forward<Args>(a)...); }
@@ -45,6 +47,8 @@ struct fftwx<float> {
     static void execute(plan_t& p) { fftwf_execute(p); }
 
     template<typename... Args>
+    static plan_t plan_dft_1d(Args&&... a) { return fftwf_plan_dft_1d(std::forward<Args>(a)...); }
+    template<typename... Args>
     static plan_t plan_dft_r2c_1d(Args&&... a) { return fftwf_plan_dft_r2c_1d(std::forward<Args>(a)...); }
     template<typename... Args>
     static plan_t plan_dft_c2r_1d(Args&&... a) { return fftwf_plan_dft_c2r_1d(std::forward<Args>(a)...); }
@@ -64,6 +68,8 @@ struct fftwx<long double> {
     static void free(void* p) { fftwl_free(p); }
     static void execute(plan_t& p) { fftwl_execute(p); }
 
+    template<typename... Args>
+    static plan_t plan_dft_1d(Args&&... a) { return fftwl_plan_dft_1d(std::forward<Args>(a)...); }
     template<typename... Args>
     static plan_t plan_dft_r2c_1d(Args&&... a) { return fftwl_plan_dft_r2c_1d(std::forward<Args>(a)...); }
     template<typename... Args>

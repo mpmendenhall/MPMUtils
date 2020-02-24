@@ -3,8 +3,8 @@
 #include "FFTW_Convolver.hh"
 
 template<>
-std::mutex& ConvolvePlan<double>::plannerLock() { static std::mutex l; return l; }
+std::mutex& fftw_planner_mutex<double>() { static std::mutex l; return l; }
 template<>
-std::mutex& ConvolvePlan<float>::plannerLock() { static std::mutex l; return l; }
+std::mutex& fftw_planner_mutex<float>() { static std::mutex l; return l; }
 template<>
-std::mutex& ConvolvePlan<long double>::plannerLock() { static std::mutex l; return l; }
+std::mutex& fftw_planner_mutex<long double>() { static std::mutex l; return l; }
