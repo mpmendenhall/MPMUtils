@@ -78,6 +78,33 @@ struct fftwx<long double> {
     static plan_t plan_r2r_1d(Args&&... a) { return fftwl_plan_r2r_1d(std::forward<Args>(a)...); }
 };
 
+#ifdef WITH_FFTW_FLOAT128
+
+template<>
+struct fftwx<__float128> {
+    typedef __float128 real_t;
+    typedef fftwq_plan plan_t;
+    typedef fftwq_complex fcplx_t;
+    typedef std::complex<real_t> scplx_t;
+
+    static real_t* alloc_real(size_t i) { return fftwq_alloc_real(i); }
+    static fcplx_t* alloc_complex(size_t i) { return fftwq_alloc_complex(i); }
+    static void free(void* p) { fftwq_free(p); }
+    static void execute(plan_t& p) { fftwq_execute(p); }
+
+    template<typename... Args>
+    static plan_t plan_dft_1d(Args&&... a) { return fftwq_plan_dft_1d(std::forward<Args>(a)...); }
+    template<typename... Args>
+    static plan_t plan_dft_r2c_1d(Args&&... a) { return fftwq_plan_dft_r2c_1d(std::forward<Args>(a)...); }
+    template<typename... Args>
+    static plan_t plan_dft_c2r_1d(Args&&... a) { return fftwq_plan_dft_c2r_1d(std::forward<Args>(a)...); }
+    template<typename... Args>
+    static plan_t plan_r2r_1d(Args&&... a) { return fftwq_plan_r2r_1d(std::forward<Args>(a)...); }
+};
+
+#endif
+
+
 #include <vector>
 using std::vector;
 

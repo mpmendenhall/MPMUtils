@@ -80,7 +80,8 @@ if(FFTW_LIBS-NOTFOUND OR NO_FFTW)
     message("Disabling FFTW3 dependency")
     add_compile_options("-DWITHOUT_FFTW")
 else()
-    LIST(APPEND LINKLIBS ${FFTW_LIBS})
+    add_compile_options("-DWITH_FFTW_FLOAT128")
+    LIST(APPEND LINKLIBS ${FFTW_LIBS} fftw3f fftw3l fftw3q quadmath m)
 endif()
 
 #####
@@ -199,7 +200,7 @@ file(GLOB TESTEXEC Test/*.cc)
 foreach(E ${TESTEXEC})
 get_filename_component(EXN ${E} NAME_WE)
     add_executable(${EXN} ${E})
-    target_link_libraries(${EXN} MPM)
+    target_link_libraries(${EXN} MPM ${LINKLIBS})
 endforeach(E)
 
 add_subdirectory(doc)

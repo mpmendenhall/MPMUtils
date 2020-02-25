@@ -110,6 +110,10 @@ template<>
 std::mutex& fftw_planner_mutex<float>();
 template<>
 std::mutex& fftw_planner_mutex<long double>();
+#ifdef WITH_FFTW_FLOAT128
+template<>
+std::mutex& fftw_planner_mutex<__float128>();
+#endif
 
 //-----------------
 //-----------------
@@ -195,6 +199,9 @@ public:
     R2RPlan(size_t m, size_t nl): TransformPlan<T>(m, nl, m) { }
 };
 
+//-----------------
+//-- R2R variations
+//-----------------
 
 /// DCT-I real-to-real transform
 template<typename T>
@@ -309,6 +316,8 @@ public:
     }
 };
 
+
+
 //----------------------
 //----------------------
 //----- Workspaces -----
@@ -385,6 +394,8 @@ public:
 };
 
 
+
+
 //-----------------------------
 //-----------------------------
 //----- Convolution plans -----
@@ -439,9 +450,14 @@ public:
         for(auto& x: this->v_k) x /= kernPlan.Nlog;
     }
 
-    /// fetch result
+    /// fetch real-space result
     template<typename V>
-    void fetch(V& v) const { v.assign(this->v_x.begin(), this->v_x.begin() + revPlan.M); }
+    void fetch(V& v, size_t kshift = 0) const {
+        if(kshift) kshift = kshift % this->M;
+        auto p0 = this->v_x.begin() + kshift;
+        v.assign(p0, this->v_x.begin() + revPlan.M);
+        if(kshift) v.insert(v.end(), this->v_x.begin(), p0);
+    }
 
     /// full convolution sequence
     template<typename V, typename U>
@@ -512,12 +528,12 @@ public:
         auto& C = getConvolver(v.size());
         C.load(v);
         C.convolve(kdata.at(v.size()));
-        C.fetch(v);
+        C.fetch(v, kshift(v.size()));
     }
 
     /// Generate appropriately-sized convolver
     static Convolver_t& getConvolver(size_t m) {
-        static map<size_t, Convolver_t*> cs;
+        static thread_local map<size_t, Convolver_t*> cs;
         auto it = cs.find(m);
         if(it != cs.end()) return *it->second;
         return *(cs[m] = new Convolver_t(m));
@@ -525,7 +541,9 @@ public:
 
 protected:
     /// calculate real-space convolution kernel for given input size
-    virtual vector<typename Convolver_t::xspace_t> calcKernel(size_t i) const = 0;
+    virtual vector<typename Convolver_t::xspace_t> calcKernel(size_t i) = 0;
+    /// kshift to assign for kernel size
+    virtual size_t kshift(size_t) const { return 0; }
 
     /// calculate/cache kernel for specified size
     void prepareKernel(size_t i) {
@@ -543,12 +561,12 @@ template<typename T = double>
 class GaussConvolverFactory: public ConvolverFactory<Convolve_DCT_I<T>> {
 public:
     /// Constructor
-    GaussConvolverFactory(double rr): r(rr) { }
+    GaussConvolverFactory(double _r): r(_r) { }
     const double r;     ///< convolution radius in samples
 
 protected:
     /// calculate convolution kernel for given size
-    vector<T> calcKernel(size_t i) const override {
+    vector<T> calcKernel(size_t i) override {
         if(i <= 2) return vector<T>(i);
         vector<T> v(i-2);
         double nrm = 0;
@@ -566,21 +584,27 @@ template<typename T = double>
 class GaussDerivFactory: public ConvolverFactory<Convolve_DCT_DST_II<T>> {
 public:
     /// Constructor
-    GaussDerivFactory(double rr): r(rr) { }
-    const double r; ///< convolution radius in samples
+    GaussDerivFactory(T _r): r(_r) { }
+    const T r; ///< convolution radius in samples
 
 protected:
     /// calculate convolution kernel for given size
-    vector<T> calcKernel(size_t i) const override {
-        // erfs at bin edges for integrals of Gaussian in bins
-        vector<double> ej(i+2);
-        for(int j=0; j<(int)i+2; j++) ej[j] = std::erf((j-0.5)/(sqrt(2.)*r));
+    vector<T> calcKernel(size_t i) override {
+        while(verf.size() < i + 2) {
+            int j = verf.size();
+            verf.push_back(std::erf((long double)((j-0.5)/(sqrt(2.)*r))));
+        }
 
-        // smoothing kernel * {-1,1} derivative
-        vector<T> v(i);
-        for(unsigned int j=0; j<i; j++) v[j] = -0.5*(-ej[j]+2*ej[j+1]-ej[j+2]);
-        return v;
+        while(vkern.size() < i) {
+            auto j = vkern.size();
+            vkern.push_back(-0.5*(-verf[j]+2*verf[j+1]-verf[j+2]));
+        }
+
+        return vector<T>(vkern.begin(), vkern.begin() + i);
     }
+
+    vector<T> verf;     ///< erfs at bin edges for integrals of Gaussian in bins
+    vector<T> vkern;    ///< smoothing kernel * {-1,1} derivative
 };
 
 #endif

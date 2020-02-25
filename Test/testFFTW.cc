@@ -6,20 +6,26 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef double calcs_t;                 // calculation precision type
-typedef fftwx<calcs_t>::scplx_t cplx_t;  // complex type
+// calculation precision type
+//typedef float calcs_t;       // 32 bit
+typedef double calcs_t;      // 64 bit; min_exponent = -1021
+//typedef long double calcs_t; // 80 bits stored in 128; min_exponent = -16381
+//typedef __float128 calcs_t;  // 128 bit
+
+// std::complex type
+typedef fftwx<calcs_t>::scplx_t cplx_t;
 
 /// print real vector
 template<class V>
 void display(const V& v) {
-    for(auto x: v) printf("\t%5g", x);
+    for(auto x: v) printf("\t%5g", (double)x);
     printf("\n");
 }
 
 /// print complex vector
 template<class V>
 void cdisplay(const V& v) {
-    for(auto& x: v) printf("  (%5g %+5gi)", x.real(), x.imag());
+    for(auto& x: v) printf("  (%5g %+5gi)", (double)x.real(), (double)x.imag());
     printf("\n");
 }
 
@@ -142,6 +148,8 @@ void test_roundtrips(const V& v) {
 
 int main(int, char**) {
     CodeVersion::display_code_version();
+    printf("\nsizeof(calcs_t) = %zu, min_exponent = %i\n\n", sizeof(calcs_t),
+           std::numeric_limits<calcs_t>::min_exponent);
 
     vector<calcs_t> v3({1., 2.5, 3.});
     vector<calcs_t> v3k({0.3, 1., 2.});
@@ -214,12 +222,16 @@ int main(int, char**) {
     GaussConvolverFactory<calcs_t> GCF(0.5);
     GaussDerivFactory<calcs_t> GDF(0.5);
 
+    vector<calcs_t> delta1(10);
+    for(int j=0; j<10; ++j) delta1[j] = 0.1*j;
+    GDF.convolve(delta1);
+    display(delta1);
+
     for(int i=0; i<10; ++i) {
-        vector<calcs_t> delta(10);
-        for(int j=0; j<10; ++j) delta[j] = 0.1*j;
-        delta[i] += 1;
-        GDF.convolve(delta);
-        display(delta);
+        vector<calcs_t> delta2(10);
+        delta2[i] += 1;
+        GDF.convolve(delta2);
+        display(delta2);
     }
 
     return EXIT_SUCCESS;
