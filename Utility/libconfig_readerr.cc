@@ -23,10 +23,10 @@ void readConfigFile(Config& cfg, const string& cfgfile, bool autoconvert) {
         if(efile) printf("In file: '%s' ", efile);
         printf("Line %i\n\n", e.getLine());
         fflush(stdout);
-        throw e;
+        throw;
     } catch(FileIOException& e) {
         printf("File I/O error loading config '%s'; check file exists and is readable!\n", cfgfile.c_str());
         fflush(stdout);
-        throw e;
+        throw;
     }
 }

@@ -274,7 +274,7 @@ public:
     LUPDecomp() { }
 
     /// Constructor, from matrix to decompose
-    LUPDecomp(const super& A): super(A) {
+    explicit LUPDecomp(const super& A): super(A) {
         // initial unit permutation
         size_t i = 0;
         for(auto& x: P) x = i++;
@@ -329,7 +329,7 @@ public:
         if(isSingular()) return T{};
         auto d = (*this)(0,0);
         for(size_t i=1; i<N; i++) d *= (*this)(i,i);
-        return nP%2? -d : d;
+        return (nP % 2)? -d : d;
     }
 
     /// Fill Ai with inverse of A

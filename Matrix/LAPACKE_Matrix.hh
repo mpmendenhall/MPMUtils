@@ -65,39 +65,40 @@ class Mat_Ops_Real: public Mat_Ops<T> {
 public:
 
     /// form a new matrix by multiplication C = alpha * o(A)*o(B) + beta * C
-    virtual VarMat<T>* mul(const VarMat<T>& A,
-                           const VarMat<T>& B,
-                           CBLAS_TRANSPOSE opA = CblasNoTrans,
-                           CBLAS_TRANSPOSE opB = CblasNoTrans,
-                           VarMat<T>* C = nullptr,
-                           T alpha = 1, T beta = 0) const {
+    VarMat<T>* mul(const VarMat<T>& A,
+                   const VarMat<T>& B,
+                   CBLAS_TRANSPOSE opA = CblasNoTrans,
+                   CBLAS_TRANSPOSE opB = CblasNoTrans,
+                   VarMat<T>* C = nullptr,
+                   T alpha = 1, T beta = 0
+    ) const override {
 
-                               const size_t opA_rows = A.nDim(opA == CblasNoTrans);
-                               const size_t opA_cols = A.nDim(opA != CblasNoTrans);
-                               const size_t opB_rows = B.nDim(opB == CblasNoTrans);
-                               const size_t opB_cols = B.nDim(opB != CblasNoTrans);
+        const size_t opA_rows = A.nDim(opA == CblasNoTrans);
+        const size_t opA_cols = A.nDim(opA != CblasNoTrans);
+        const size_t opB_rows = B.nDim(opB == CblasNoTrans);
+        const size_t opB_cols = B.nDim(opB != CblasNoTrans);
 
-                               assert(opA_cols == opB_rows);
-                               if(!C) C = new VarMat<T>(opA_rows, opB_cols);
-                               assert(C->nRows() == opA_rows && C->nCols() == opB_cols);
+        assert(opA_cols == opB_rows);
+        if(!C) C = new VarMat<T>(opA_rows, opB_cols);
+        assert(C->nRows() == opA_rows && C->nCols() == opB_cols);
 
-                               (*f_gemm)(CblasColMajor, // data order, CblasColMajor or CblasRowMajor
-                                         opA,           // op(A) = CblasNoTrans, CblasTrans, CblasConjTrans
-                                         opB,           // op(B) = CblasNoTrans, CblasTrans, CblasConjTrans
-                                         C->nRows(),    // rows of op(A) and C
-                                         C->nCols(),    // columns of op(B) and C
-                                         opA_cols,      // columns of op(A), rows of op(B)
-                                         alpha,         // scalar alpha
-                                         &A[0],         // matrix A's data
-                                         A.nRows(),     // leading dimension of A
-                                         &B[0],         // matrix B's data
-                                         B.nRows(),     // B's leading dimension
-                                         beta,          // scalar beta
-                                         &(*C)[0],      // output matrix C data
-                                         C->nRows()     // leading dimension of C
-                               );
-                               return C;
-                           }
+        (*f_gemm)(CblasColMajor, // data order, CblasColMajor or CblasRowMajor
+                  opA,           // op(A) = CblasNoTrans, CblasTrans, CblasConjTrans
+                  opB,           // op(B) = CblasNoTrans, CblasTrans, CblasConjTrans
+                  C->nRows(),    // rows of op(A) and C
+                  C->nCols(),    // columns of op(B) and C
+                  opA_cols,      // columns of op(A), rows of op(B)
+        alpha,         // scalar alpha
+        &A[0],         // matrix A's data
+        A.nRows(),     // leading dimension of A
+                  &B[0],         // matrix B's data
+                  B.nRows(),     // B's leading dimension
+                  beta,          // scalar beta
+                  &(*C)[0],      // output matrix C data
+                  C->nRows()     // leading dimension of C
+        );
+        return C;
+    }
 
     /// matrix multiply BLAS function
     static void (*f_gemm)(const enum CBLAS_ORDER, const enum CBLAS_TRANSPOSE, const enum CBLAS_TRANSPOSE,
@@ -111,44 +112,45 @@ class Mat_Ops_Complex: public Mat_Ops<CT> {
 public:
 
     /// form a new matrix by multiplication C = alpha * o(A)*o(B) + beta * C
-    virtual VarMat<CT>* mul(const VarMat<CT>& A,
-                            const VarMat<CT>& B,
-                            CBLAS_TRANSPOSE opA = CblasNoTrans,
-                            CBLAS_TRANSPOSE opB = CblasNoTrans,
-                            VarMat<CT>* C = nullptr,
-                            CT alpha = 1, CT beta = 0) const {
+    VarMat<CT>* mul(const VarMat<CT>& A,
+                    const VarMat<CT>& B,
+                    CBLAS_TRANSPOSE opA = CblasNoTrans,
+                    CBLAS_TRANSPOSE opB = CblasNoTrans,
+                    VarMat<CT>* C = nullptr,
+                    CT alpha = 1, CT beta = 0
+    ) const override {
 
-                                const size_t opA_rows = A.nDim(opA == CblasNoTrans);
-                                const size_t opA_cols = A.nDim(opA != CblasNoTrans);
-                                const size_t opB_rows = B.nDim(opB == CblasNoTrans);
-                                const size_t opB_cols = B.nDim(opB != CblasNoTrans);
+        const size_t opA_rows = A.nDim(opA == CblasNoTrans);
+        const size_t opA_cols = A.nDim(opA != CblasNoTrans);
+        const size_t opB_rows = B.nDim(opB == CblasNoTrans);
+        const size_t opB_cols = B.nDim(opB != CblasNoTrans);
 
-                                assert(opA_cols == opB_rows);
-                                if(!C) C = new VarMat<CT>(opA_rows, opB_cols);
-                                assert(C->nRows() == opA_rows && C->nCols() == opB_cols);
+        assert(opA_cols == opB_rows);
+        if(!C) C = new VarMat<CT>(opA_rows, opB_cols);
+        assert(C->nRows() == opA_rows && C->nCols() == opB_cols);
 
-                                (*f_gemm)(CblasColMajor,        // data order, CblasColMajor or CblasRowMajor
-                                          opA,                  // op(A) = CblasNoTrans, CblasTrans, CblasConjTrans
-                                          opB,                  // op(B) = CblasNoTrans, CblasTrans, CblasConjTrans
-                                          C->nRows(),           // rows of op(A) and C
-                                          C->nCols(),           // columns of op(B) and C
-                                          opA_cols,             // columns of op(A), rows of op(B)
-                                          &alpha,               // scalar alpha
-                                          &A[0],                // matrix A's data
-                                          A.nRows(),            // leading dimension of A
-                                          &B[0],                // matrix B's data
-                                          B.nRows(),            // B's leading dimension
-                                          &beta,                // scalar beta
-                                          &(*C)[0],             // output matrix C data
-                                          C->nRows()            // leading dimension of C
-                                );
-                                return C;
-                            }
+        (*f_gemm)(CblasColMajor,        // data order, CblasColMajor or CblasRowMajor
+                  opA,                  // op(A) = CblasNoTrans, CblasTrans, CblasConjTrans
+                  opB,                  // op(B) = CblasNoTrans, CblasTrans, CblasConjTrans
+                  C->nRows(),           // rows of op(A) and C
+                  C->nCols(),           // columns of op(B) and C
+                  opA_cols,             // columns of op(A), rows of op(B)
+        &alpha,               // scalar alpha
+        &A[0],                // matrix A's data
+        A.nRows(),            // leading dimension of A
+                  &B[0],                // matrix B's data
+                  B.nRows(),            // B's leading dimension
+                  &beta,                // scalar beta
+                  &(*C)[0],             // output matrix C data
+                  C->nRows()            // leading dimension of C
+        );
+        return C;
+    }
 
-                            /// matrix multiply BLAS function
-                            static void (*f_gemm)(const enum CBLAS_ORDER, const enum CBLAS_TRANSPOSE, const enum CBLAS_TRANSPOSE,
-                                                  const int, const int, const int, const void*, const void*, const int lda,
-                                                  const void*, const int, const void*, void*, const int);
+    /// matrix multiply BLAS function
+    static void (*f_gemm)(const enum CBLAS_ORDER, const enum CBLAS_TRANSPOSE, const enum CBLAS_TRANSPOSE,
+                          const int, const int, const int, const void*, const void*, const int lda,
+                          const void*, const int, const void*, void*, const int);
 };
 
 
@@ -158,7 +160,7 @@ template<typename T, typename CT>
 class LAPACKE_Matrix_SVD: public BinaryOutputObject {
 public:
     /// Constructor
-    LAPACKE_Matrix_SVD(VarMat<CT>& A): S(std::min(A.nRows(), A.nCols()),1), U(A.nRows(), S.nRows()), VT(S.nRows(), A.nCols()), PsI(nullptr), PsI_epsilon(0) {
+    explicit LAPACKE_Matrix_SVD(VarMat<CT>& A): S(std::min(A.nRows(), A.nCols()),1), U(A.nRows(), S.nRows()), VT(S.nRows(), A.nCols()), PsI(nullptr), PsI_epsilon(0) {
 
         lapack_int info;
         bool verbose = false;
@@ -177,10 +179,10 @@ public:
                           A.nCols(),            // n: number of columns in A
                           &A[0],                // matrix A
                           A.nRows(),            // lda: leading dimension of A, >= max(1,m)
-                          &S[0],                // diagonal elements of B, dimension >= max(1, min(m, n))
-                          &e[0],                // off-diagonal elements of B, dimension >= max(1, min(m, n) - 1)
-                          tauQ,                 // array with extra into on Q, dimension >= max(1, min(m, n))
-                          tauP                  // array with extra info on P, dimension >= max(1, min(m, n))
+        &S[0],                // diagonal elements of B, dimension >= max(1, min(m, n))
+        &e[0],                // off-diagonal elements of B, dimension >= max(1, min(m, n) - 1)
+        tauQ,                 // array with extra into on Q, dimension >= max(1, min(m, n))
+        tauP                  // array with extra info on P, dimension >= max(1, min(m, n))
         );
         assert(!info);
 
@@ -196,7 +198,7 @@ public:
 
         info = (*f_orgbr)(LAPACK_COL_MAJOR,     // LAPACK_COL_MAJOR or LAPACK_ROW_MAJOR data ordering,
                           'Q',                  // extract 'Q' or 'P' (P^T)
-                          U.nRows(),            // rows in extracted matrix
+        U.nRows(),            // rows in extracted matrix
                           S.nRows(),            // columns in extracted matrix
                           A.nCols(),            // columns for Q, rows for P of original matrix reduced by ?gebrd
                           &U[0],                // (copy of) return matrix A of ?gebrd, will be over-written
@@ -207,7 +209,7 @@ public:
 
         info = (*f_orgbr)(LAPACK_COL_MAJOR,     // LAPACK_COL_MAJOR or LAPACK_ROW_MAJOR data ordering,
                           'P',                  // extract 'Q' or 'P' (P^T)
-                          S.nRows(),            // rows in extracted matrix
+        S.nRows(),            // rows in extracted matrix
                           VT.nCols(),           // columns in extracted matrix
                           A.nRows(),            // columns for Q, rows for P of original matrix reduced by ?gebrd
                           &VT[0],               // (copy of) return matrix A of ?gebrd, will be over-written
@@ -239,12 +241,12 @@ public:
                           A.nRows(),            // nru: number of rows of U, left singular vectors to calculate
                           0,                    // ncc: number of columns in C used for QH*C; set 0 if no "C" supplied
                           &S[0],                // d: diagonal elements of B; must be size >= max(1,n)
-                          &e[0],                // e: n-1 off-diagonal elements of B; must be size >= max(1,n)
-                          &VT[0],               // n * ncvt matrix for right singular vectors; unused if ncvt=0
-                          VT.nRows(),           // leading dimension of VT; >= max(1,n) for ncvt>0; >= 1 otherwise.
+        &e[0],                // e: n-1 off-diagonal elements of B; must be size >= max(1,n)
+        &VT[0],               // n * ncvt matrix for right singular vectors; unused if ncvt=0
+        VT.nRows(),           // leading dimension of VT; >= max(1,n) for ncvt>0; >= 1 otherwise.
                           &U[0],                // nru * n unit matrix U; unused if nru=0
                           U.nRows(),            // leading dimension of U; >= max(1,nru)
-                          nullptr,                 // matrix for calculating Q^H*C; second dimension >= max(1,ncc); unused if ncc = 0
+        nullptr,                 // matrix for calculating Q^H*C; second dimension >= max(1,ncc); unused if ncc = 0
                           1                     // leading dimension of C; >= max(1,n) if ncc>0; >=1 otherwise
         );
         assert(!info);

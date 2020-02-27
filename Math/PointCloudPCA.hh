@@ -26,7 +26,7 @@ struct weightedpt {
     weightedpt(double ww = 1): x{{}}, w(ww) { }
 
     /// Constructor with array value
-    weightedpt(T* xx, double ww = 1): w(ww) {
+    explicit weightedpt(T* xx, double ww = 1): w(ww) {
         if(xx) std::copy(xx, xx+N, x.data());
         else std::fill(x.begin(), x.end(), T{});
     }

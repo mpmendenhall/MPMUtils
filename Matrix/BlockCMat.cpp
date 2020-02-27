@@ -41,7 +41,7 @@ BlockCMat makeBlockCMatRandom(size_t n, size_t mc) {
 // utility class for sorting enumerated singular values
 class Compare_BCM_SVD_singular_values {
 public:
-    Compare_BCM_SVD_singular_values(const BlockCMat_SVD* b): B(b) {}
+    explicit Compare_BCM_SVD_singular_values(const BlockCMat_SVD* b): B(b) {}
     bool operator() (size_t i, size_t j) { return B->getSV(j) < B->getSV(i); }
     const BlockCMat_SVD* B;
 };
@@ -96,11 +96,10 @@ void BlockCMat_SVD::sort_singular_values() {
     // sorted list of singular values
     for(size_t i=0; i<Ms*Mc; i++) svalues.push_back(getSV(sloc[i]));
 }
-
+#ifdef WITH_LAPACKE
 VarVec<double> BlockCMat_SVD::getRightSVec(size_t i) const {
-    i = sloc[i];
     VarVec<double> v;
-    #ifdef WITH_LAPACKE
+    i = sloc[i];
     // check whether this vector belongs to implied complementary set
     size_t idiag = i/Ms;
     assert(idiag < Mc);
@@ -115,9 +114,11 @@ VarVec<double> BlockCMat_SVD::getRightSVec(size_t i) const {
         const vector<double>& r = C.getRealData();
         for(size_t mc=0; mc<Mc; mc++) v.push_back(r[mc]);
     }
-    #endif
     return v;
 }
+#else
+VarVec<double> BlockCMat_SVD::getRightSVec(size_t) const { return VarVec<double>(); }
+#endif
 
 #ifdef WITH_LAPACKE
 const BlockCMat& BlockCMat_SVD::calc_pseudo_inverse(double epsilon) {

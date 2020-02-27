@@ -14,7 +14,7 @@
 class KMeansCalculator {
 public:
     /// Constructor
-    KMeansCalculator(unsigned int m): nmeans(m), class_counts(m), class_means(m) { }
+    explicit KMeansCalculator(unsigned int m): nmeans(m), class_counts(m), class_means(m) { }
 
     /// full means and reclassification step
     unsigned int kMeans_step();

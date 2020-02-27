@@ -43,7 +43,7 @@ BlockCMat makeBlockCMatRandom(size_t n, size_t mc);
 class BlockCMat_SVD: public BinaryOutputObject {
 public:
     /// constructor
-    BlockCMat_SVD(const BlockCMat& BC);
+    explicit BlockCMat_SVD(const BlockCMat& BC);
     /// destructor
     ~BlockCMat_SVD();
 

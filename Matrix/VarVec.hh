@@ -50,12 +50,12 @@ template<class T>
 class VarVec: public BinaryOutputObject {
 public:
     /// Constructor
-    VarVec(size_t n = 0): data(n) {}
+    explicit VarVec(size_t n = 0): data(n) {}
     /// Constructor with fill element
     VarVec(size_t n, const T& i): data(n,i) {}
     /// Constructor from fixed-length vector
     template<size_t N>
-    VarVec(const Vec<N,T>& v): data(&v[0],&v[0]+N) { }
+    explicit VarVec(const Vec<N,T>& v): data(&v[0],&v[0]+N) { }
     /// construct from start/end pointers
     template <class InputIterator>
     VarVec(InputIterator first, InputIterator last): data(first,last) {}

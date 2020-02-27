@@ -158,7 +158,7 @@ protected:
     typedef fftw_cplx_vec<T> kvec_t;
 
     /// Constructor
-    DFTPlan(size_t m): TransformPlan<T>(m, m, m) { }
+    explicit DFTPlan(size_t m): TransformPlan<T>(m, m, m) { }
 
     /// make plan
     void makePlan(bool fwd, xspace_t* v_x, kspace_t* v_k) {
@@ -177,7 +177,7 @@ public:
     typedef fftw_cplx_vec<T> kvec_t;
 
     /// constructor
-    R2CPlan(size_t m): TransformPlan<T>(m, m, m/2+1) { }
+    explicit R2CPlan(size_t m): TransformPlan<T>(m, m, m/2+1) { }
 
     /// make plan
     void makePlan(bool fwd, xspace_t* v_x, kspace_t* v_k) {
@@ -208,7 +208,7 @@ template<typename T>
 class DCT_I_Plan: public R2RPlan<T> {
 public:
     /// Constructor
-    DCT_I_Plan(size_t m): R2RPlan<T>(m, 2*(m-1)) { }
+    explicit DCT_I_Plan(size_t m): R2RPlan<T>(m, 2*(m-1)) { }
 
     /// make plan
     void makePlan(bool fwd, T* v_x, T* v_k) {
@@ -222,7 +222,7 @@ template<typename T>
 class DCT_II_Plan: public R2RPlan<T> {
 public:
     /// Constructor
-    DCT_II_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+    explicit DCT_II_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
 
     /// make plan
     void makePlan(bool fwd, T* v_x, T* v_k) {
@@ -236,7 +236,7 @@ template<typename T>
 class DCT_III_Plan: public R2RPlan<T> {
 public:
     /// Constructor
-    DCT_III_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+    explicit DCT_III_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
 
     /// make plan
     void makePlan(bool fwd, T* v_x, T* v_k) {
@@ -251,7 +251,7 @@ template<typename T>
 class DCT_IV_Plan: public R2RPlan<T> {
 public:
     /// Constructor
-    DCT_IV_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+    explicit DCT_IV_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
 
     /// make plan
     void makePlan(bool fwd, T* v_x, T* v_k) {
@@ -265,7 +265,7 @@ template<typename T>
 class DST_I_Plan: public R2RPlan<T> {
 public:
     /// Constructor
-    DST_I_Plan(size_t m): R2RPlan<T>(m, 2*(m+1)) { }
+    explicit DST_I_Plan(size_t m): R2RPlan<T>(m, 2*(m+1)) { }
 
     /// make plan
     void makePlan(bool fwd, T* v_x, T* v_k) {
@@ -279,7 +279,7 @@ template<typename T>
 class DST_II_Plan: public R2RPlan<T> {
 public:
     /// Constructor
-    DST_II_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+    explicit DST_II_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
 
     /// make plan
     void makePlan(bool fwd, T* v_x, T* v_k) {
@@ -293,7 +293,7 @@ template<typename T>
 class DST_III_Plan: public R2RPlan<T> {
 public:
     /// Constructor
-    DST_III_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+    explicit DST_III_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
 
     /// make plan
     void makePlan(bool fwd, T* v_x, T* v_k) {
@@ -307,7 +307,7 @@ template<typename T>
 class DST_IV_Plan: public R2RPlan<T> {
 public:
     /// Constructor
-    DST_IV_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
+    explicit DST_IV_Plan(size_t m): R2RPlan<T>(m, 2*m) { }
 
     /// make plan
     void makePlan(bool fwd, T* v_x, T* v_k) {
@@ -378,7 +378,7 @@ template<class Plan>
 class IFFTWorkspace: public FFTWorkspace<Plan> {
 public:
     /// Constructor
-    IFFTWorkspace(size_t m): FFTWorkspace<Plan>(m, true), p_rev(m) {
+    explicit IFFTWorkspace(size_t m): FFTWorkspace<Plan>(m, true), p_rev(m) {
         p_rev.makePlan(false,
                        (typename Plan::xspace_t*)this->v_x.data(),
                        (typename Plan::kspace_t*)this->v_k.data());
@@ -412,7 +412,7 @@ public:
     typedef typename WS::kvec_t kvec_t;
 
     /// Constructor
-    ConvolvePlan(size_t m, size_t _km = 0, size_t _rm = 0):
+    explicit ConvolvePlan(size_t m, size_t _km = 0, size_t _rm = 0):
     WS(m, true), kernPlan(_km? _km : m), revPlan(_rm? _rm : m) {
         kernPlan.makePlan(true, (xspace_t*)this->v_x.data(), (kspace_t*)this->v_k.data());
         revPlan.makePlan(false, (xspace_t*)this->v_x.data(), (kspace_t*)this->v_k.data());
@@ -486,7 +486,7 @@ template<typename T>
 class Convolve_DCT_DST_I: public _Convolve_DCT_DST_I<T> {
 public:
     /// Constructor
-    Convolve_DCT_DST_I(size_t m): _Convolve_DCT_DST_I<T>(m, m-2, m-2) { }
+    explicit Convolve_DCT_DST_I(size_t m): _Convolve_DCT_DST_I<T>(m, m-2, m-2) { }
     /// multiply k-space kernel (with any appropriate shifts)
     void kmul(const typename _Convolve_DCT_DST_I<T>::kvec_t& k) override { for(size_t i=0; i<this->M-2; i++) this->v_k[i] = k[i] * this->v_k[i+1]; }
 };
@@ -500,7 +500,7 @@ template<typename T>
 class Convolve_DCT_DST_II: public _Convolve_DCT_DST_II<T> {
 public:
     /// Constructor
-    Convolve_DCT_DST_II(size_t m): _Convolve_DCT_DST_II<T>(m, m, m-1) { }
+    explicit Convolve_DCT_DST_II(size_t m): _Convolve_DCT_DST_II<T>(m, m, m-1) { }
     /// multiply k-space kernel (with any appropriate shifts)
     void kmul(const typename _Convolve_DCT_DST_II<T>::kvec_t& k) override { for(size_t i=0; i<this->M-1; i++) this->v_k[i] = k[i]*this->v_k[i+1]; }
 };
@@ -561,7 +561,7 @@ template<typename T = double>
 class GaussConvolverFactory: public ConvolverFactory<Convolve_DCT_I<T>> {
 public:
     /// Constructor
-    GaussConvolverFactory(double _r): r(_r) { }
+    explicit GaussConvolverFactory(double _r): r(_r) { }
     const double r;     ///< convolution radius in samples
 
 protected:
@@ -583,7 +583,7 @@ template<typename T = double>
 class GaussDerivFactory: public ConvolverFactory<Convolve_DCT_DST_II<T>> {
 public:
     /// Constructor
-    GaussDerivFactory(T _r): r(_r) { }
+    explicit GaussDerivFactory(T _r): r(_r) { }
     const T r; ///< convolution radius in samples
 
 protected:

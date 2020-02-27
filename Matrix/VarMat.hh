@@ -40,10 +40,10 @@ template<typename T>
 class VarMat: public BinaryOutputObject {
 public:
     /// constructor with prototype element
-    VarMat(size_t m=0, size_t n=0, const T& i = 0): M(m), N(n), vv(n*m,i) { }
+    explicit VarMat(size_t m=0, size_t n=0, const T& i = 0): M(m), N(n), vv(n*m,i) { }
     /// constructor from fixed matrix
     template<size_t MM, size_t NN>
-    VarMat(Matrix<MM,NN,T> A): M(MM), N(NN), vv(A.getData()) {}
+    explicit VarMat(Matrix<MM,NN,T> A): M(MM), N(NN), vv(A.getData()) {}
     /// destructor
     ~VarMat() {}
 

@@ -21,7 +21,7 @@ namespace SVG {
         /// Convenience typedef for 2D bounding boxes
         typedef BBox<2,double> BBox2;
         /// Constructor
-        BBXML(const string& nm): XMLTag(nm) { }
+        explicit BBXML(const string& nm): XMLTag(nm) { }
         /// Get (override to calculate) bounding box
         virtual BBox2 getBB() { return BB; }
     protected:
@@ -98,7 +98,7 @@ namespace SVG {
 
     class title: public XMLTag {
     public:
-        title(const string& t): XMLTag("title") { addChild(new XMLText(t)); oneline = true; }
+        explicit title(const string& t): XMLTag("title") { addChild(new XMLText(t)); oneline = true; }
     };
 
     class line: public BBXML {
@@ -124,7 +124,7 @@ namespace SVG {
             BB.expand({{x,y}});
             BB.expand({{x+dx,y+dy}});
         }
-        rect(BBox2 B, const string& style = ""): BBXML("rect") {
+        explicit rect(BBox2 B, const string& style = ""): BBXML("rect") {
             if(style.size()) attrs["style"] = style;
             BB = B;
         }

@@ -29,7 +29,7 @@
 class ProgressBar {
 public:
     /// Constructor, given total number of items and number of output steps
-    ProgressBar(uint64_t nt, unsigned int ns = 20, bool v=true);
+    explicit ProgressBar(uint64_t nt, unsigned int ns = 20, bool v=true);
     /// Destructor
     ~ProgressBar() { if(verbose) printf("  Done.\n"); }
 

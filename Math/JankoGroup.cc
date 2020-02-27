@@ -12,7 +12,7 @@ namespace JankoGroup {
     }
 
     const J1_mrepr_t mY = makeY();
-    const J1_mrepr_t mZ = {{-3, 2,-1,-1,-3,-1,-3,
+    const J1_mrepr_t mZ   {{-3, 2,-1,-1,-3,-1,-3,
                             -2, 1, 1, 3, 1, 3, 3,
                             -1,-1,-3,-1,-3,-3, 2,
                             -1,-3,-1,-3,-3, 2,-1,

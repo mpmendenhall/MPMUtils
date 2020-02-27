@@ -55,7 +55,7 @@ public:
 class XMLText: public XMLTag {
 public:
     /// Constructor
-    XMLText(const string& c): contents(c) { }
+    explicit XMLText(const string& c): contents(c) { }
     /// write output
     void write(ostream& o, unsigned int ndeep = 0, const string& indent = "    ") override { while(ndeep--) o << indent; o << contents; }
     string contents;    ///< text to include between tags

@@ -7,13 +7,6 @@
 
 #include "TLS_Solver.hh"
 
-TLS_Solver::TLS_Solver(size_t nn, size_t mm): n(nn), B(mm,n), mu(n), v(n) {
-}
-
-TLS_Solver::~TLS_Solver() {
-    delete mySVD;
-}
-
 void TLS_Solver::solve() {
     // mean value
     mu = B.getColSum()*(1./B.nRows());

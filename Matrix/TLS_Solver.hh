@@ -16,9 +16,10 @@
 class TLS_Solver {
 public:
     /// Constructor
-    TLS_Solver(size_t nn, size_t mm = 0);
+    explicit TLS_Solver(size_t nn, size_t mm = 0):
+    n(nn), B(mm,n), mu(n), v(n), mySVD(nullptr) { }
     /// Destructor
-    ~TLS_Solver();
+    ~TLS_Solver() { delete mySVD; }
     /// solve TLS system
     void solve();
     /// Get sum of squares of residuals
@@ -31,7 +32,7 @@ public:
     VarVec<double> v;           ///< direction vector
 
 protected:
-    LAPACKE_Matrix_SVD<double,double>* mySVD = nullptr;
+    LAPACKE_Matrix_SVD<double,double>* mySVD;
 };
 
 #endif

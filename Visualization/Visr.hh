@@ -53,7 +53,7 @@ protected:
     /// Queued drawing command for a driver
     struct VisCmd {
         /// Constructor
-        VisCmd(void (VisDriver::*f)(const vector<float>&), const vector<float>& _v = {}): fcn(f), v(_v) { }
+        explicit VisCmd(void (VisDriver::*f)(const vector<float>&), const vector<float>& _v = {}): fcn(f), v(_v) { }
 
         void (VisDriver::*fcn)(const vector<float>&);   ///< function to call
         vector<float> v;                                ///< function arguments

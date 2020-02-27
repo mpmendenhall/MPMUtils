@@ -33,7 +33,7 @@ using std::vector;
 class Permutation {
 public:
     /// Constructor
-    Permutation(size_t n);
+    explicit Permutation(size_t n);
     /// Destructor
     ~Permutation() {}
 

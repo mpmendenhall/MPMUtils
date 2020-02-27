@@ -40,7 +40,7 @@ using std::complex;
 class cmatrix_fft {
 public:
     /// constructor
-    cmatrix_fft(size_t m);
+    explicit cmatrix_fft(size_t m);
     /// destructor
     ~cmatrix_fft() { delete[] realspace; delete[] kspace; }
 
