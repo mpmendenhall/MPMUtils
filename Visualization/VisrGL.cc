@@ -14,6 +14,7 @@ const string GLVisDriver::_pause_info =
 #ifdef WITH_OPENGL
 
 #include <unistd.h> // for usleep
+#include <GL/glut.h>
 
 /// singleton registered OpenGL window
 GLVisDriver* GLDr = nullptr;
@@ -25,6 +26,16 @@ void* visthread(void*) {
 
 bool kill_flag = false;
 pthread_t vthread;
+
+void GLVisDriver::display() const {
+    auto glversion = glGetString(GL_VERSION);
+    auto glutversion = glutGet(0x01FC); // GLUT_VERSION in freeglut_ext.h header
+#ifdef FREEGLUT
+    printf("Visualizer using OpenGL '%s', freeGLUT %i\n", glversion, glutversion);
+#else
+    printf("Visualizer using OpenGL '%s', GLUT %i\n", glversion, glutversion);
+#endif
+}
 
 void GLVisDriver::doGlutLoop() {
     if(GLDr) throw std::logic_error("Only one OpenGL visualizer can run at a time");

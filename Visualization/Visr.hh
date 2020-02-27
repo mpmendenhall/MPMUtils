@@ -24,6 +24,8 @@ public:
     void stopRecording();
     /// pause for user interaction
     virtual void pause() { }
+    /// Display driver info
+    virtual void display() const { printf("Unspecified visualization driver\n"); }
 
     /// clear window to blank screen --- automatic on startRecording(true)
     void clearWindow(float r = 1, float g = 1, float b = 1, float a = 1);

@@ -9,7 +9,6 @@
 using std::string;
 
 #ifdef WITH_OPENGL
-#include <GL/freeglut.h>
 #include <deque>
 #include <pthread.h>
 #endif
@@ -60,6 +59,9 @@ public:
     /// Destructor
     ~GLVisDriver() { endGlutLoop(); }
 
+    /// Display driver info
+    void display() const override;
+
     //-/////////////////////////////////
     // actions called in GLUT event loop
 
@@ -108,7 +110,7 @@ protected:
 
     std::deque<VisCmd> commands;    ///< to-be-processed commands
     pthread_mutex_t commandLock;    ///< commands queue lock
-    std::vector<GLuint> displaySegs;
+    std::vector<unsigned int> displaySegs;  ///< OpenGL display segment identifiers
 #else
     static constexpr bool hasGL = false;
 #endif
