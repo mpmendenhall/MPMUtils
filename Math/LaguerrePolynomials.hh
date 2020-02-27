@@ -17,8 +17,8 @@ public:
     const polynomial_t& operator()(size_t n);
 
 protected:
-    const polynomial_t L0{{{0, {1,1}}}};    ///< L_0(x) = 1
-    const polynomial_t L1{{{0, {1,1}}, {1, {-1,1}}}};    ///< L_1(x) = 1-x
+    const polynomial_t L0{{ {0, {1,1}} }};              ///< L_0(x) = 1
+    const polynomial_t L1{{ {0, {1,1}}, {1, {-1,1}} }}; ///< L_1(x) = 1-x
     vector<polynomial_t> Ln{L0,L1};         ///< precalculated Laguerre polynomials
 };
 

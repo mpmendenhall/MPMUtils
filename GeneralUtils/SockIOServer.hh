@@ -43,7 +43,7 @@ protected:
 class ConnHandler {
 public:
     /// Constructor
-    ConnHandler(int sfd, SockIOServer* s = nullptr): sockfd(sfd), myServer(s) { }
+    explicit ConnHandler(int sfd, SockIOServer* s = nullptr): sockfd(sfd), myServer(s) { }
     /// Destructor
     virtual ~ConnHandler() { }
     /// Communicate with accepted connection
@@ -77,7 +77,7 @@ protected:
 class BlockHandler: public ConnHandler {
 public:
     /// Constructor
-    BlockHandler(int sfd, SockIOServer* s = nullptr): ConnHandler(sfd, s) { }
+    explicit BlockHandler(int sfd, SockIOServer* s = nullptr): ConnHandler(sfd, s) { }
     /// Destructor
     ~BlockHandler() { delete theblock; }
     /// Receive block size and whole of expected data

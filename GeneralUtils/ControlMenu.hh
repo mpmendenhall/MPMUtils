@@ -70,7 +70,7 @@ public:
 class NamedInteractor: public StreamInteractor {
 public:
     /// constructor
-    NamedInteractor(string nm): name(nm) {}
+    explicit NamedInteractor(string nm): name(nm) {}
     /// get my name/description
     virtual string getDescription() { return name; }
 
@@ -82,7 +82,7 @@ public:
 class InputRequester: public NamedInteractor {
 public:
     /// constructor
-    InputRequester(string d, void (*f)(StreamInteractor*) = nullptr, StreamInteractor* fObj = nullptr);
+    explicit InputRequester(string d, void (*f)(StreamInteractor*) = nullptr, StreamInteractor* fObj = nullptr);
     /// action when selected
     void doIt() override;
     /// add new argument
@@ -123,7 +123,7 @@ bool nameselector_default_softmatch(const string& a, const string& b);
 class NameSelector: public InputRequester {
 public:
     /// constructor
-    NameSelector(string t, string promptval = "Selection", bool persist = false);
+    explicit NameSelector(string t, string promptval = "Selection", bool persist = false);
     /// add selection choice
     virtual void addChoice(string d, string nm = "", Selector_Option_Flags o = SELECTOR_NORMAL, string mname = "", StreamInteractor* action = nullptr);
     /// display available options
@@ -163,7 +163,7 @@ protected:
 class OptionsMenu: public NameSelector {
 public:
     /// constructor
-    OptionsMenu(string t, bool persist = true): NameSelector(t,"Selection",persist) { }
+    explicit OptionsMenu(string t, bool persist = true): NameSelector(t,"Selection",persist) { }
     /// destructor
     virtual ~OptionsMenu() {}
     /// add choice to selections list

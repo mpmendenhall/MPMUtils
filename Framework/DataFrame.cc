@@ -6,7 +6,7 @@
 DataManager::~DataManager() {
     if(nAlloc != pool.size()) {
         printf("Memory leak: allocated %zu DataFrames, but %zu returned to pool\n", nAlloc, pool.size());
-        display();
+        DataManager::display();
     }
     for(auto d: dtypes) delete d;
 }

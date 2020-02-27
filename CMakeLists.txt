@@ -205,3 +205,8 @@ endforeach(E)
 
 add_subdirectory(doc)
 
+# run "cppcheck" static code analysis on project
+SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_custom_target(cppcheck
+    cppcheck --project=compile_commands.json --enable=all --quiet
+)

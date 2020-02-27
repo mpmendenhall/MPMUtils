@@ -13,52 +13,17 @@
 
 namespace color {
 
-    rgb::rgb(const hsv& c) {
-        a = c.a;
+    rgb::operator hsv() const {
+        hsv C(0, 0, std::max(r, std::max(g, b)), a);
+        double d = C.v - std::min(r, std::min(g, b));
+        if(d==0) return C;
 
-        if(c.s==0) {
-            r = g = b = c.v;
-            return;
-        }
-
-        double h = c.h < 0? 2*M_PI-fmod(fabs(c.h),2*M_PI) : fmod(c.h, 2*M_PI);
-        double var_h = 3*h/M_PI;
-        int var_i = (int)floor(var_h);
-        double var_1 = c.v * ( 1 - c.s );
-        double var_2 = c.v * ( 1 - c.s * ( var_h - var_i ));
-        double var_3 = c.v * ( 1 - c.s * ( 1 - ( var_h - var_i )));
-        switch(var_i) {
-            case 0:
-                r = c.v;
-                g = var_3;
-                b = var_1;
-                return;
-            case 1:
-                r = var_2;
-                g = c.v;
-                b = var_1;
-                return;
-            case 2:
-                r = var_1;
-                g = c.v;
-                b = var_3;
-                return;
-            case 3:
-                r = var_1;
-                g = var_2;
-                b = c.v;
-                return;
-            case 4:
-                r = var_3;
-                g = var_1;
-                b = c.v;
-                return;
-            case 5:
-                r = c.v;
-                g = var_1;
-                b = var_2;
-                return;
-        }
+        C.s = d/C.v;
+        if(C.v == r) C.h = (g - b)/d;
+        else if(C.v == g) C.h = 2 + (b - r)/d;
+        else C.h = 4 + (r - g)/d;
+        C.h *= M_PI/3;
+        return C;
     }
 
     int32_t rgb::as24bit() const {
@@ -77,17 +42,24 @@ namespace color {
         return c;
     }
 
-    hsv::hsv(const rgb& c) {
-        a = c.a;
-        v = std::max(c.r,std::max(c.g, c.b));
-        double d = v - std::min(c.r, std::min(c.g, c.b));
-        if(d==0) { h=0; s=0; return; }
+    hsv::operator rgb() const {
+        if(s==0) return rgb(v,v,v,a);
 
-        s = d/v;
-        if(v == c.r) h = (c.g - c.b)/d;
-        else if(v == c.g) h = 2 + (c.b -c.r)/d;
-        else h = 4 + (c.r - c.g)/d;
-        h *= M_PI/3;
+        double hh = h < 0? 2*M_PI-fmod(fabs(h),2*M_PI) : fmod(h, 2*M_PI);
+        double H = 3*hh/M_PI;
+        int I = (int)floor(H);
+        double X = v * ( 1 - s );
+        double Y = v * ( 1 - s * ( H - I ));
+        double Z = v * ( 1 - s * ( 1 - ( H - I )));
+        switch(I) {
+            case 0: return rgb(v, Z, X, a);
+            case 1: return rgb(Y, v, X, a);
+            case 2: return rgb(X, v, Z, a);
+            case 3: return rgb(X, Y, v, a);
+            case 4: return rgb(Z, X, v, a);
+            case 5: return rgb(v, X, Y, a);
+            default: abort();
+        }
     }
 
 

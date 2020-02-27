@@ -9,9 +9,9 @@ using std::string;
 class float_err {
 public:
     /// constructor
-    float_err(float c=0, float dc=0): x(c), err(dc) {}
+    explicit float_err(float c=0, float dc=0): x(c), err(dc) {}
     /// constructor from std::string
-    float_err(const std::string& s);
+    explicit float_err(const std::string& s);
     /// converto to a string
     string toString() const;
 

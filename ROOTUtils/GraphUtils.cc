@@ -34,9 +34,9 @@ void normalize_to_bin_width(TH1* f, double xscale, const string& ytitle) {
     for(int i=0; i<f->GetNcells(); ++i) {
         f->GetBinXYZ(i,bx,by,bz);
         TAxis* A = f->GetXaxis();
-        double scale = 1./A->GetBinWidth(bx);
-        f->SetBinContent(i, f->GetBinContent(i)*scale);
-        f->SetBinError(i, f->GetBinError(i)*scale);
+        double s = 1./A->GetBinWidth(bx);
+        f->SetBinContent(i, f->GetBinContent(i)*s);
+        f->SetBinError(i, f->GetBinError(i)*s);
     }
     f->Scale(xscale);
     if(ytitle.size()) f->GetYaxis()->SetTitle(ytitle.c_str());
@@ -54,9 +54,9 @@ void normalize_to_bin_area(TH2* h, double xscale) {
     for(int i=0; i<h->GetNcells(); i++) {
         h->GetBinXYZ(i,bx,by,bz);
         if(!bx || !by || bx > Ax->GetNbins() || by > Ay->GetNbins()) continue;
-        double scale = 1./Ax->GetBinWidth(bx)/Ay->GetBinWidth(by);
-        h->SetBinContent(i, h->GetBinContent(i)*scale);
-        h->SetBinError(i, h->GetBinError(i)*scale);
+        double s = 1./Ax->GetBinWidth(bx)/Ay->GetBinWidth(by);
+        h->SetBinContent(i, h->GetBinContent(i)*s);
+        h->SetBinError(i, h->GetBinError(i)*s);
     }
     h->Scale(xscale);
 }
@@ -89,9 +89,9 @@ void scale_times_bin_center(TH1* f) {
     for(int i=0; i<f->GetNcells(); i++) {
         f->GetBinXYZ(i,bx,by,bz);
         TAxis* A = f->GetXaxis();
-        double scale = sqrt(A->GetBinLowEdge(bx)*A->GetBinUpEdge(bx));
-        f->SetBinContent(i, f->GetBinContent(i)*scale);
-        f->SetBinError(i, f->GetBinError(i)*scale);
+        double s = sqrt(A->GetBinLowEdge(bx)*A->GetBinUpEdge(bx));
+        f->SetBinContent(i, f->GetBinContent(i)*s);
+        f->SetBinError(i, f->GetBinError(i)*s);
     }
     f->Scale(1.0);
 }

@@ -18,7 +18,7 @@
 class gzWrapper {
 public:
     /// Constructor
-    gzWrapper(const std::string& fname, bool isGZ = true): isZipped(isGZ),
+    explicit gzWrapper(const std::string& fname, bool isGZ = true): isZipped(isGZ),
     fgz(fname.c_str(), std::ios_base::in | std::ios_base::binary), f(&fsb) {
         if(isZipped) fsb.push(boost::iostreams::gzip_decompressor());
         fsb.push(fgz);
@@ -44,7 +44,7 @@ public:
 class gzOutWrapper {
 public:
     /// Constructor
-    gzOutWrapper(const std::string& fname, bool isGZ = true): isZipped(isGZ),
+    explicit gzOutWrapper(const std::string& fname, bool isGZ = true): isZipped(isGZ),
     fgz(fname.c_str(), std::ios_base::out | std::ios_base::binary), f(&fsb) {
         if(isZipped) fsb.push(boost::iostreams::gzip_compressor());
         fsb.push(fgz);

@@ -30,8 +30,8 @@ namespace color {
         rgb(): r(0), g(0), b(0), a(0) { }
         /// Constructor from rgb(a)
         rgb(double R, double G, double B, double A=1): r(R), g(G), b(B), a(A) { }
-        /// Constructor from hsv specification
-        explicit rgb(const hsv& c);
+        /// Auto-convert to HSV
+        operator hsv() const;
         /// Construct from 8-bit integer values
         static rgb hex(int R, int G, int B, int A=255.) { return rgb(R/255.,G/255.,B/255.,A/255); }
 
@@ -52,8 +52,8 @@ namespace color {
         hsv(): h(0), s(0), v(0), a(0) { }
         /// Constructor from hsv(a)
         hsv(double H, double S, double V, double A=1): h(H), s(S), v(V), a(A) { }
-        /// Constructor from rgb specification
-        explicit hsv(const rgb& c);
+        /// Auto-convert to RGB
+        operator rgb() const;
     };
 
     /// Color gradient generator, defined by color values at stops

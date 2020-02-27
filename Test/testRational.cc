@@ -79,7 +79,7 @@ int main(int, char**) {
 
     Rational a;
     for(int i=1; i<=20; i++) {
-        Rational b(i%2? 1 : -1, i);
+        Rational b((i%2)? 1 : -1, i);
         testAdd(a,b);
     }
     a += 2;

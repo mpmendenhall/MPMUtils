@@ -14,12 +14,13 @@ using std::map;
 #include <condition_variable>
 #include <stdio.h>
 #include <boost/core/noncopyable.hpp>
+#include <cassert>
 
 /// Parallel-processing pipeline management
 class JobQueue: private boost::noncopyable {
 public:
     /// Destructor
-    virtual ~JobQueue() { shutdown(); }
+    virtual ~JobQueue() { assert(!halt); }
 
     /// Base class defining a job to run
     class Job {
@@ -54,7 +55,7 @@ protected:
     class jthread {
     public:
         /// Constructor, spins up thread
-        jthread(JobQueue& jq);
+        explicit jthread(JobQueue& jq);
         /// Destructor, waits to close thread
         ~jthread();
 

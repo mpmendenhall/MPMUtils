@@ -15,7 +15,7 @@ public:
     static size_t nterms(const size_t n) { return ((n+2)*(n+1))/2; }
 
     /// default constructor
-    Quadratic(size_t n): N(n), A((N*(N+1))/2), b(N) { }
+    explicit Quadratic(size_t n): N(n), A((N*(N+1))/2), b(N) { }
 
     /// number of dimensions
     const size_t N;
@@ -124,11 +124,11 @@ public:
     /// evaluate terms for linear fit at specified coordinate
     template<typename coord>
     static void evalTerms(const coord& v, terms_t& t) {
-        const size_t N = v.size();
-        t.resize(nterms(N));
+        const size_t N0 = v.size();
+        t.resize(nterms(N0));
         int n = 0;
-        for(size_t i=0; i<N; i++) for(size_t j=0; j<=i; j++) t[n++] = v[i]*v[j];
-        for(size_t i=0; i<N; i++) t[n++] = v[i];
+        for(size_t i=0; i<N0; i++) for(size_t j=0; j<=i; j++) t[n++] = v[i]*v[j];
+        for(size_t i=0; i<N0; i++) t[n++] = v[i];
         t[n] = 1;
     }
 };
@@ -139,7 +139,7 @@ public:
 class QuadraticCholesky {
 public:
     /// Constructor
-    QuadraticCholesky(size_t n): N(n), x0(N), L(N,N), M(N,N), v(N) { }
+    explicit QuadraticCholesky(size_t n): N(n), x0(N), L(N,N), M(N,N), v(N) { }
 
     /// perform Cholesky decomposition of quadratic form
     template<class Quad>
@@ -241,7 +241,7 @@ public:
 class QuadraticPCA: protected EigSymmWorkspace {
 public:
     /// Constructor
-    QuadraticPCA(size_t N): EigSymmWorkspace(N), USi(N,N), S2(N), Si(N) { }
+    explicit QuadraticPCA(size_t N): EigSymmWorkspace(N), USi(N,N), S2(N), Si(N) { }
 
     /// perform decomposition
     template<class Quad>
@@ -261,7 +261,7 @@ public:
 class CoveringEllipse {
 public:
     /// Constructor
-    CoveringEllipse(size_t n): E1(n), E2(n), EC(n), SVD(n), L2P(n,n) { }
+    explicit CoveringEllipse(size_t n): E1(n), E2(n), EC(n), SVD(n), L2P(n,n) { }
 
     /// Calculate covering ellipse EC from E1, E2
     void calcCovering(bool cover = true) {

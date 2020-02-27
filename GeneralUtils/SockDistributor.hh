@@ -11,7 +11,7 @@
 class SockDistribHandler: public ConnHandler, public SockOutBuffer {
 public:
     /// Constructor
-    SockDistribHandler(int sfd, SockIOServer* s = nullptr): ConnHandler(sfd,s) { SockOutBuffer::sockfd = sfd; SockOutBuffer::launch_mythread(); }
+    explicit SockDistribHandler(int sfd, SockIOServer* s = nullptr): ConnHandler(sfd,s) { SockOutBuffer::sockfd = sfd; SockOutBuffer::launch_mythread(); }
 
     /// handle responses from client (do nothing; wait for output to break)
     void handle() override {

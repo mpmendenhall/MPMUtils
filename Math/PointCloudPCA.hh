@@ -55,7 +55,7 @@ public:
     PointCloudPCA() { }
 
     /// Constructor, calculated from points
-    PointCloudPCA(const vector<wpt_t>& v): n(v.size()) {
+    explicit PointCloudPCA(const vector<wpt_t>& v): n(v.size()) {
         if(!n) return;
 
         // weights vector

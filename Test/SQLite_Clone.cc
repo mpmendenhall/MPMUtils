@@ -34,20 +34,19 @@ int backupDb(
 ){
   int rc;                     /* Function return code */
   sqlite3 *pFile;             /* Database connection opened on zFilename */
-  sqlite3_backup *pBackup;    /* Backup handle used to copy data */
-  int npg = 5;                /* number of pages to back up per step */
   /* Open the database file identified by zFilename. */
   rc = sqlite3_open(zFilename, &pFile);
   if( rc==SQLITE_OK ){
 
     /* Open the sqlite3_backup object used to accomplish the transfer */
-    pBackup = sqlite3_backup_init(pFile, "main", pDb, "main");
+    auto pBackup = sqlite3_backup_init(pFile, "main", pDb, "main");
     if( pBackup ){
 
       /* Each iteration of this loop copies 5 <= n <= 5000 database pages from database
       ** pDb to the backup database. If the return value of backup_step()
       ** indicates that there are still further pages to copy, sleep for
       ** 250 ms before repeating. */
+      int npg = 5;                /* number of pages to back up per step */
       do {
         rc = sqlite3_backup_step(pBackup, npg);
         auto np = sqlite3_backup_pagecount(pBackup);

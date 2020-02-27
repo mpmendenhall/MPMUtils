@@ -25,7 +25,7 @@ struct callable {
 /// function with arguments
 void countdown(const string& s, unsigned int n) {
     while(n--) {
-        printf("\t%s: %i\n", s.c_str(), n);
+        printf("\t%s: %u\n", s.c_str(), n);
         boost::this_fiber::yield();
     }
 }

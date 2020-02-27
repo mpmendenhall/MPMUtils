@@ -25,12 +25,14 @@ public:
     /// for map-style construction
     typedef map<gen_t, num_t> fmap_t;
 
-    /// Default constructor to 0
-    Rational() { emplace_back(0,1); }
+    /// Default construct 0
+    Rational() { emplace_back(0, 1); }
+    /// Construct from integer
+    Rational(int_t n);
     /// Constructor from numerator, denominator
-    Rational(int_t n, int_t d = 1);
+    Rational(int_t n, int_t d);
     /// From factor : power list
-    Rational(const fmap_t& m, bool pos = true);
+    explicit Rational(const fmap_t& m, bool pos = true);
     /// to double
     explicit operator double() const { auto nd = components(); return double(nd.first)/nd.second; }
     /// check if nonzero
@@ -93,19 +95,19 @@ public:
 
 protected:
     /// Constructor from sorted factors list != 1
-    Rational(const PrimeSieve::factors_t& f);
+    explicit Rational(const PrimeSieve::factors_t& f);
 };
 
 /// convenience "opposite order" addition
-inline const Rational operator+(Rational::int_t i, const Rational& R) { return R+i; }
+inline const Rational operator+(Rational::int_t i, const Rational& R) { return R + Rational(i); }
 /// convenience "opposite order" subtraction
-inline const Rational operator-(Rational::int_t i, const Rational& R) { return -R+i; }
+inline const Rational operator-(Rational::int_t i, const Rational& R) { return -R + Rational(i); }
 /// convenience "opposite order" multiplication
-inline const Rational operator*(Rational::int_t i, const Rational& R) { return R*i; }
+inline const Rational operator*(Rational::int_t i, const Rational& R) { return R*Rational(i); }
 /// convenience "opposite order" division
-inline const Rational operator/(Rational::int_t i, Rational R) { return R.invert()*i; }
+inline const Rational operator/(Rational::int_t i, Rational R) { return R.invert()*Rational(i); }
 /// convenience "opposite order" comparison
-inline const Rational operator<(Rational::int_t i, Rational R) { return !(R==i || R < i); }
+inline bool operator<(Rational::int_t i, Rational R) { return !(R == Rational(i) || R < Rational(i)); }
 /// absolute value of rational number
 inline const Rational rabs(Rational r) { r.positive = true; return r; }
 

@@ -149,7 +149,7 @@ static void gsl2vector(const gsl_vector* gv, Vec& v) {
 class SVDWorkspace {
 public:
     /// Constructor
-    SVDWorkspace(size_t n): V(n,n), S(n), w(n) { }
+    explicit SVDWorkspace(size_t n): V(n,n), S(n), w(n) { }
 
     /// Perform decomposition; outputs U in A
     int SVD(gsl_matrix* A) { return gsl_linalg_SV_decomp(A, V, S, w); }
@@ -168,7 +168,7 @@ protected:
 class EigSymmWorkspace {
 public:
     /// Constructor
-    EigSymmWorkspace(size_t n): _N(n) { }
+    explicit EigSymmWorkspace(size_t n): _N(n) { }
     /// Destructor
     ~EigSymmWorkspace() { if(evec) gsl_matrix_free(evec); if(W) gsl_eigen_symmv_free(W); }
     /// Assignment

@@ -30,7 +30,7 @@ public:
     /// evaluated datapoint for fit
     struct evalpt {
         /// constructor with dimensions
-        evalpt(size_t n): x(n), t(Quadratic::nterms(n)) { }
+        explicit evalpt(size_t n): x(n), t(Quadratic::nterms(n)) { }
         vec_t x;        ///< position
         vec_t t;        ///< fitter terms at x
         double f = 0;   ///< function evaluated at position
@@ -38,7 +38,7 @@ public:
     };
 
     /// Constructor, with number of dimensions
-    NoisyMin(size_t n);
+    explicit NoisyMin(size_t n);
 
     /// get number of terms
     size_t nTerms() const { return NTERMS; }

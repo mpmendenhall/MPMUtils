@@ -15,7 +15,7 @@
 class ConfigDB_Helper: public SQLite_Helper {
 public:
     /// Constructor
-    ConfigDB_Helper(const string& dbname): SQLite_Helper(dbname) { }
+    explicit ConfigDB_Helper(const string& dbname): SQLite_Helper(dbname) { }
 
     /// Get named configuration as Stringmap
     Stringmap getConfig(const string& family, const string& name);

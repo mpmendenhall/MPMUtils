@@ -384,11 +384,11 @@ public:
     /// default constructor
     AbstractPolynomial() { }
     /// Costructor for constant
-    AbstractPolynomial(const coeff_t& c) { (*this)[monomial_t{}] = c; }
+    explicit AbstractPolynomial(const coeff_t& c) { (*this)[monomial_t{}] = c; }
     /// Costructor for single-variable x_i
     AbstractPolynomial(const coeff_t& c, typename monomial_t::gen_t i) { (*this)[monomial_t(i,1)] = c; }
     template<class U>
-    AbstractPolynomial(const U& c) { (*this)[monomial_t{}] = R(c); }
+    explicit AbstractPolynomial(const U& c) { (*this)[monomial_t{}] = R(c); }
 
     //////////////////////////////////////
     // core "required" polyomial functions

@@ -7,6 +7,18 @@
 
 const auto int_t_max = std::numeric_limits<Rational::int_t>::max();
 
+Rational::Rational(int_t n) {
+    if(!n) {
+        emplace_back(0,1);
+        return;
+    }
+
+    auto& PS = theSieve();
+    *this = Rational(PS.factor(std::abs(n)));
+    positive = n >= 0;
+}
+
+
 Rational::Rational(int_t n, int_t d) {
     if(!d) throw std::domain_error("Divide-by-0 is bad!");
 

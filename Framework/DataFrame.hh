@@ -155,7 +155,7 @@ public:
         double t_start = 0;
         double t_receive = 0;
         double t_end = 0;
-        void operator+=(const profile_t p) { t_start += p.t_start; t_receive += p.t_receive; t_end += p.t_end; }
+        void operator+=(const profile_t& p) { t_start += p.t_start; t_receive += p.t_receive; t_end += p.t_end; }
         void display() const { printf("%.2f\t%.2f\t%.2f", t_start, t_receive, t_end); }
     } timeUse;
 

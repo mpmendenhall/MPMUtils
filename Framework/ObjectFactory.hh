@@ -36,7 +36,7 @@ constexpr size_t typehash() { return typeid(_args_t<T...>).hash_code(); }
 class _ObjectFactory {
 public:
     /// constructor with class name
-    _ObjectFactory(const string& cname): classname(cname) { }
+    explicit _ObjectFactory(const string& cname): classname(cname) { }
     /// make polymorphic
     virtual ~_ObjectFactory() { }
     /// name of class to be constructed
@@ -99,7 +99,7 @@ template<class B, class C, typename... Args>
 class ObjectFactory: public _ArgsBaseFactory<B, Args...> {
 public:
     /// Constructor, registering to list
-    ObjectFactory(const string& cname): _ArgsBaseFactory<B, Args...>(cname) {
+    explicit ObjectFactory(const string& cname): _ArgsBaseFactory<B, Args...>(cname) {
         FactoriesIndex::indexFor<B, Args...>().emplace(FactoriesIndex::hash(cname), *this);
     }
     /// Produce an object from arguments
