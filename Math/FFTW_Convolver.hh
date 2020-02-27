@@ -443,7 +443,7 @@ public:
 
     /// calculate (pre-normalized) k-space kernel
     template<typename V>
-    void kkern(const V& k) {
+    void calcKkern(const V& k) {
         if(k.size() != kernPlan.M) throw std::logic_error("Mismatched convolution kernel size");
         load(k);
         kernPlan.execute();
@@ -462,7 +462,7 @@ public:
     /// full convolution sequence
     template<typename V, typename U>
     void convolve(V& v, const U& k) {
-        kkern(k);
+        calcKkern(k);
         auto kk = this->v_k;
         load(v);
         convolve(kk);
@@ -549,7 +549,7 @@ protected:
     void prepareKernel(size_t i) {
         if(kdata.count(i)) return;
         auto& C = getConvolver(i);
-        C.kkern(this->calcKernel(i));
+        C.calcKkern(this->calcKernel(i));
         kdata[i].assign(C.v_k.begin(), C.v_k.begin() + C.kernPlan.M);
     }
 
@@ -567,8 +567,7 @@ public:
 protected:
     /// calculate convolution kernel for given size
     vector<T> calcKernel(size_t i) override {
-        if(i <= 2) return vector<T>(i);
-        vector<T> v(i-2);
+        vector<T> v(i);
         double nrm = 0;
         for(int n=0; n<(int)i; ++n) {
             v[n] = exp(-n*n/(2*r*r));

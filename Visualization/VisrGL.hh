@@ -55,6 +55,8 @@ public:
     int winwidth, winheight;    ///< pixel dimensions
 
 #ifdef WITH_OPENGL
+    static constexpr bool hasGL = true;
+
     /// Destructor
     ~GLVisDriver() { endGlutLoop(); }
 
@@ -107,6 +109,8 @@ protected:
     std::deque<VisCmd> commands;    ///< to-be-processed commands
     pthread_mutex_t commandLock;    ///< commands queue lock
     std::vector<GLuint> displaySegs;
+#else
+    static constexpr bool hasGL = false;
 #endif
 };
 

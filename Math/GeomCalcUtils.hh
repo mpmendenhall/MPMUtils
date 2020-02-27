@@ -92,7 +92,7 @@ inline array_contents_t<T> makeunit(T& v) {
 
 /// |a|^2 |b|^2 - |a.b|^2, parallelogram area^2 with edge vectors a,b
 template<typename V>
-inline auto dotmag2(const V& a, const V& b) -> decltype(mag2(a)) { auto ab = dot(ab); return mag2(a)*mag2(b) + ab*ab; }
+inline array_contents_t<V> dotmag2(const V& a, const V& b) { auto ab = dot(a,b); return mag2(a)*mag2(b) + ab*ab; }
 
 /// `distance^2' between vector directions in [0,2], no sqrt; casts to type of a
 template<typename U, typename V>

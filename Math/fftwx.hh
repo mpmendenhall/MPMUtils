@@ -6,7 +6,8 @@
 
 #include <complex>
 #include <fftw3.h>
-#include <limits>
+#include <limits>      // for std::numeric_limits
+#include <type_traits> // for std::is_same
 
 /// placeholder for various FFTW data type operations
 template<typename T>
@@ -119,10 +120,13 @@ struct fftwx_real_allocator {
 
     /// interchangeable copy constructable
     constexpr fftwx_real_allocator(const fftwx_real_allocator&) noexcept {}
-    /// interchangeable with any other instance
-    constexpr bool operator==(const fftwx_real_allocator&) const noexcept { return true; }
-    /// interchangeable with any other instance
-    constexpr bool operator!=(const fftwx_real_allocator&) const noexcept { return false; }
+    /// interchangeable only with same type
+    template<class U>
+    constexpr bool operator==(const fftwx_real_allocator<U>&) const noexcept { return std::is_same<T,U>::value; }
+    /// corresponding !=
+    template<class U>
+    constexpr bool operator!=(const fftwx_real_allocator<U>& o) const noexcept { return !(*this == o); }
+
 
     /// allocation, with bounds checks (required)
     value_type* allocate(std::size_t n) {
@@ -136,21 +140,27 @@ struct fftwx_real_allocator {
 };
 
 /// complex allocator wrapper for using FFTW allocate functions with std::vector
-template <typename Tcplx>
+template <typename T>
 struct fftwx_complex_allocator {
-    /// complex component
-    typedef typename Tcplx::value_type T;
     /// required for Allocator
-    typedef Tcplx value_type;
+    typedef typename fftwx<T>::scplx_t value_type;
+
+    /// necessary since T != allocated type; else, compiler tries to define fftwx_complex_allocator<std::complex<T>>
+    template <class U> struct rebind {
+        typedef fftwx_complex_allocator<typename U::value_type> other;
+    };
 
     /// default constuctor
-    fftwx_complex_allocator() = default;
+    fftwx_complex_allocator() { }
     /// interchangeable copy constructable
-    constexpr fftwx_complex_allocator(const fftwx_complex_allocator&) noexcept {}
-    /// interchangeable with any other instance
-    constexpr bool operator==(const fftwx_complex_allocator&) const noexcept { return true; }
-    /// interchangeable with any other instance
-    constexpr bool operator!=(const fftwx_complex_allocator&) const noexcept { return false; }
+    constexpr fftwx_complex_allocator(const fftwx_complex_allocator&) noexcept { }
+
+    /// interchangeable only with same type
+    template<class U>
+    constexpr bool operator==(const fftwx_complex_allocator<U>&) const noexcept { return std::is_same<T,U>::value; }
+    /// corresponding !=
+    template<class U>
+    constexpr bool operator!=(const fftwx_complex_allocator<U>& o) const noexcept { return !(*this == o); }
 
     /// allocation, with bounds checks (required)
     value_type* allocate(std::size_t n) {
@@ -169,6 +179,6 @@ using fftw_real_vec = vector<T, fftwx_real_allocator<T>>;
 
 /// FFTW-allocated complex data
 template <typename T>
-using fftw_cplx_vec = vector<typename fftwx<T>::scplx_t, fftwx_complex_allocator<typename fftwx<T>::scplx_t>>;
+using fftw_cplx_vec = vector<typename fftwx<T>::scplx_t, fftwx_complex_allocator<T>>;
 
 #endif
