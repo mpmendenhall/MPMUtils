@@ -35,7 +35,7 @@ class RefPoolItem: public RefCounter {
 friend class RefPool;
 public:
     /// Constructor
-    RefPoolItem(RefPool* P, bool rtn = false): RefCounter(rtn), myPool(P) { }
+    explicit RefPoolItem(RefPool* P, bool rtn = false): RefCounter(rtn), myPool(P) { }
     /// Decrement reference count
     void release() override;
     /// Re-set contents for re-use

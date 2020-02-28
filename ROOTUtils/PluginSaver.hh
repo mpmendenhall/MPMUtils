@@ -15,7 +15,7 @@ using namespace libconfig;
 class PluginSaver: public SegmentSaver {
 public:
     /// Constructor, optionally with input filename
-    PluginSaver(OutputManager* pnt, const string& nm = "PluginSaver", const string& inflName = "");
+    explicit PluginSaver(OutputManager* pnt, const string& nm = "PluginSaver", const string& inflName = "");
     /// Destructor
     ~PluginSaver() { for(auto p: myPlugins) delete p; }
 
@@ -59,8 +59,6 @@ public:
 
     /// write items to current directory or subdirectory of provided
     TDirectory* writeItems(TDirectory* d = nullptr) override;
-    /// clear (delete) items
-    void clearItems() override;
 
     /// Configure from libconfig object, dynamically loading plugins
     virtual void Configure(const Setting& cfg, bool skipUnknown = false);
@@ -84,7 +82,7 @@ template <class Plug, class Base>
 class ConfigPluginBuilder: public _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const Setting&> {
 public:
     /// Constructor, registering to list
-    ConfigPluginBuilder(const string& cname): _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const Setting&>(cname) {
+    explicit ConfigPluginBuilder(const string& cname): _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const Setting&>(cname) {
         FactoriesIndex::indexFor<SegmentSaver, SegmentSaver&, const Setting&>().emplace(FactoriesIndex::hash(cname), *this);
     }
 

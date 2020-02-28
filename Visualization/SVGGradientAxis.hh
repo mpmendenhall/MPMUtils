@@ -7,6 +7,8 @@
 #include "SVGBuilder.hh"
 #include <set>
 using std::set;
+#include <array>
+using std::array;
 
 /// D-dimensional plane equation
 template<size_t D, typename val_tp>
@@ -21,8 +23,8 @@ public:
         return s;
     }
 
-    val_tp x0[D];       ///< relative centerpoint
-    val_tp P[D+1];      ///< coefficients, y = P[0] + P[i+1]*x[i]
+    array<val_tp,D> x0{};   ///< relative centerpoint
+    array<val_tp,D+1> P{};  ///< coefficients, y = P[0] + P[i+1]*x[i]
 };
 
 /// Color axis

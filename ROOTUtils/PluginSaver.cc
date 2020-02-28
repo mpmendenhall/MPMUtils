@@ -229,8 +229,3 @@ TDirectory* PluginSaver::writeItems(TDirectory* d) {
     printf("\n");
     return d;
 }
-
-void PluginSaver::clearItems() {
-    SegmentSaver::clearItems();
-    for(auto P: myPlugins) P->clearItems();
-}

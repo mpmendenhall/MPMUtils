@@ -71,7 +71,7 @@ void SockIOServer::handle_connection(int csockfd) {
 }
 
 void* sockioserver_thread(void* p) {
-    auto& A = *(SockIOServer*)p;
+    auto& A = *reinterpret_cast<SockIOServer*>(p);
     auto isListening = A.process_connections();
     if(!isListening) exit(EXIT_FAILURE);
     return nullptr;
@@ -186,7 +186,7 @@ char* BlockHandler::alloc_block(int32_t bsize) {
 ////////////////////
 
 void* run_sockio_thread(void* p) {
-    auto h = (ConnHandler*)p;
+    auto h = reinterpret_cast<ConnHandler*>(p);
     h->handle();
     auto ts = dynamic_cast<ThreadedSockIOServer*>(h->myServer);
     if(ts) ts->handlerClosed(h);

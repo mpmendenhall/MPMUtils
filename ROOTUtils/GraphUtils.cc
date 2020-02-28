@@ -385,17 +385,17 @@ TGraphErrors* interpolate(TGraphErrors& tg, float dx) {
     vector<float> xnew;
     vector<float> ynew;
     vector<float> dynew;
-    double x0,x1,y,dy0,dy1;
 
     // sort input points by x value
     tg.Sort();
 
     // interpolate each interval of the original graph
     for(int i=0; i<tg.GetN()-1; i++) {
+        double x0,x1,y;
         tg.GetPoint(i,x0,y);
         tg.GetPoint(i+1,x1,y);
-        dy0 = tg.GetErrorY(i);
-        dy1 = tg.GetErrorY(i+1);
+        double dy0 = tg.GetErrorY(i);
+        double dy1 = tg.GetErrorY(i+1);
         // determine number of points for this interval
         int ninterp = (x1-x0>dx)?int((x1-x0)/dx):1;
         for(int n=0; n<ninterp; n++) {
@@ -446,7 +446,7 @@ void fixNaNs(TH1* h) {
     unsigned int nb = h->GetNbinsX();
     for(unsigned int i=0; i<=nb+1; i++) {
         if(!(h->GetBinContent(i)==h->GetBinContent(i))) {
-            printf("NaN found in bin %i/%i!\n",i,nb);
+            printf("NaN found in bin %u/%u!\n",i,nb);
             h->SetBinContent(i,0);
             h->SetBinError(i,0);
         }
@@ -586,7 +586,7 @@ TH1* histsep(const TH1& h1, const TH1& h2) {
     return hDiv;
 }
 
-void histoverlap(const TH1& h1, const TH1& h2, double& o, double& xdiv) {
+void histoverlap(const TH1& h1, const TH1& h2, double& xdiv, double& o) {
     int nb = h1.GetNbinsX();
     assert(nb==h2.GetNbinsX());
     double* csum = new double[nb+2];

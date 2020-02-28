@@ -208,5 +208,5 @@ add_subdirectory(doc)
 # run "cppcheck" static code analysis on project
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_custom_target(cppcheck
-    cppcheck --project=compile_commands.json --enable=all --quiet
+    cppcheck --project=compile_commands.json --enable=all --quiet -i${PROJECT_SOURCE_DIR}/External -i${PROJECT_BINARY_DIR}/
 )

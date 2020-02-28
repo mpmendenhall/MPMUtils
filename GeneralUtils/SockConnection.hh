@@ -13,7 +13,7 @@ using std::string;
 class SockConnection {
 public:
     /// Constructor
-    SockConnection(const string& host = "", int port = 0) { if(host.size() && port) open_socket(host,port); }
+    SockConnection() { }
     /// Destructor
     virtual ~SockConnection() { close_socket(); }
 

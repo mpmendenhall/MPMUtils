@@ -16,7 +16,7 @@ TDirectory* TObjCollector::writeItems(TDirectory* d) {
     return d;
 }
 
-void TObjCollector::clearItems() {
+void TObjCollector::deleteAll() {
     for(auto i: namedItems) delete i;
     namedItems.clear();
     for(auto const& kv: anonItems) delete kv.second;

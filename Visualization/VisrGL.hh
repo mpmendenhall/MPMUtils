@@ -28,6 +28,8 @@ public:
 /// OpenGL window visualization driver
 class GLVisDriver: public VisDriver {
 public:
+    /// Constructor
+    GLVisDriver() { }
 
     /// start interactive drawing loop thread
     void doGlutLoop();
@@ -46,12 +48,13 @@ public:
     //-///////////////////
     // viewing window info
 
-    float win_c[3];     ///< center of window view
-    float ar = 1.0;     ///< (x range)/(y range) window aspect ratio
-    float viewrange;    ///< half-height (y) range
-    float win_lo[3];    ///< Window lower range
-    float win_hi[3];    ///< Window upper range
-    int winwidth, winheight;    ///< pixel dimensions
+    float win_c[3] = {0,0,0};   ///< center of window view
+    float ar = 1.0;             ///< (x range)/(y range) window aspect ratio
+    float viewrange = 0;        ///< half-height (y) range
+    float win_lo[3] = {0,0,0};  ///< Window lower range
+    float win_hi[3] = {0,0,0};  ///< Window upper range
+    int winwidth = 0;           ///< window pixel width
+    int winheight = 0;          ///< window pixel height
 
 #ifdef WITH_OPENGL
     static constexpr bool hasGL = true;
@@ -105,8 +108,8 @@ protected:
     void* pause_args = nullptr;                             ///< callback arguments
 
     bool updated = true;        ///< flag to refresh updated drawing
-    int clickx0, clicky0;       ///< click (start) location
-    int modifier;               ///< modifier key
+    int clickx0 = 0, clicky0 = 0;   ///< click (start) location
+    int modifier = 0;           ///< modifier key
 
     std::deque<VisCmd> commands;    ///< to-be-processed commands
     pthread_mutex_t commandLock;    ///< commands queue lock

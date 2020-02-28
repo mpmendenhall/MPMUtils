@@ -19,9 +19,9 @@ public:
     /// Destructor
     virtual ~RefCounter() { assert(!nrefs); }
     /// Increment reference count
-    virtual void retain() { nrefs++; }
+    inline void retain() { ++nrefs; }
     /// Decrement reference count
-    virtual void release() { assert(nrefs); nrefs--; if(!nrefs) delete this; }
+    virtual void release() { assert(nrefs); if(!--nrefs) delete this; }
 
 protected:
     unsigned int nrefs = 0; ///< reference count

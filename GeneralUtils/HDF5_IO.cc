@@ -43,11 +43,6 @@ void HDF5_OutputFile::writeFile() {
     outfile_id = 0;
 }
 
-HDF5_OutputFile::~HDF5_OutputFile() {
-    assert(!outfile_id); // close file in derived class!
-    if(outfile_id) writeFile();
-}
-
 string HDF5_InputFile::getAttribute(const string& table, const string& attrname, const string& dflt) {
     assert(infile_id);
     string s = dflt;

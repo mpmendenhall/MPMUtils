@@ -13,8 +13,7 @@ using std::vector;
 class SockOutBuffer: public SockConnection, public LocklessCircleBuffer<vector<char>> {
 public:
     /// Constructor
-    SockOutBuffer(const string& host = "", int port = 0, size_t nbuff = 1000):
-    SockConnection(host,port), LocklessCircleBuffer(nbuff) { }
+    explicit SockOutBuffer(size_t nbuff = 1000): LocklessCircleBuffer(nbuff) { }
 
     // use SockIOData* LocklessCircleBuffer::get_writepoint() and finish_write()
     // to push new data onto sending queue

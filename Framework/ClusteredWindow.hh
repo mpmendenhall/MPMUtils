@@ -23,9 +23,7 @@ public:
     using super::push_back;
 
     /// Constructor
-    Cluster(ordering_t w = 0): dx(w) { }
-    /// Destructor
-    virtual ~Cluster() { clear(); }
+    explicit Cluster(ordering_t w = 0): dx(w) { }
 
     /// Get ordering parameter
     explicit operator ordering_t() const { return x_median; }
@@ -81,7 +79,7 @@ public:
     typedef typename cluster_t::ordering_t ordering_t;
 
     /// Constructor
-    ClusterBuilder(ordering_t cdx): cluster_dx(cdx) {  }
+    explicit ClusterBuilder(ordering_t cdx): cluster_dx(cdx) {  }
 
     /// accept data flow signal
     void signal(datastream_signal_t sig) override {
@@ -122,7 +120,7 @@ protected:
     /// examine and decide whether to include cluster
     virtual bool checkCluster(cluster_t&) { return true; }
 
-    cluster_t currentC; ///< cluster currently being built
+    cluster_t currentC{};   ///< cluster currently being built
     ordering_t t_prev = -std::numeric_limits<ordering_t>::max();    ///< previous item arrival
 };
 
@@ -142,7 +140,7 @@ public:
 
     /// Special-purpose constructor (specialize me, including CB::clustOut = this)
     template<typename... Args>
-    CBWindow(Args&&...) { throw std::logic_error("Unimplemented constructor"); }
+    explicit CBWindow(Args&&...) { throw std::logic_error("Unimplemented constructor"); }
 
     using CB::signal;
     /// special override for non-loopy signalling

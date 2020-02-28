@@ -10,8 +10,6 @@
 /// base class for HDF5 file input
 class HDF5_InputFile {
 public:
-    /// Constructor
-    HDF5_InputFile(const string& fname = "") { openInput(fname); }
     /// Destructor
     virtual ~HDF5_InputFile() { if(infile_id) H5Fclose(infile_id); }
     /// Open named input file; connect table readers in subclass!
@@ -32,7 +30,7 @@ template<class T>
 class HDF5_TableInput: public HDF5_InputFile, public HDF5_Table_Cache<T> {
 public:
     /// Constructor
-    HDF5_TableInput(const string& tname = "", int v = 0, int nch = 1024): HDF5_InputFile(""),
+    HDF5_TableInput(const string& tname = "", int v = 0, int nch = 1024):
     HDF5_Table_Cache<T>(HDF5_table_setup<T>(tname, v), nch) { }
 
     /// Open named input file
@@ -53,10 +51,8 @@ public:
 /// base class for HDF5 file output
 class HDF5_OutputFile {
 public:
-    /// Constructor
-    HDF5_OutputFile(const string& fname = "") { if(fname.size()) openOutput(fname); }
-    /// Destructor
-    virtual ~HDF5_OutputFile();
+    /// Destructor: please close file before destructing
+    virtual ~HDF5_OutputFile() { if(outfile_id) abort(); }
     /// Open named output file; connect table writers in subclass!
     virtual void openOutput(const string& filename);
     /// Finalize/close file output; close writers in subclass first!
@@ -78,7 +74,7 @@ template<class T>
 class HDF5_TableOutput: public HDF5_OutputFile, public HDF5_Table_Writer<T> {
 public:
     /// Constructor
-    HDF5_TableOutput(const string& tname = "", int v = 0, int nch = 1024): HDF5_OutputFile(""),
+    HDF5_TableOutput(const string& tname = "", int v = 0, int nch = 1024):
     HDF5_Table_Writer<T>(HDF5_table_setup<T>(tname, v),nch) { }
 
     /// Destructor

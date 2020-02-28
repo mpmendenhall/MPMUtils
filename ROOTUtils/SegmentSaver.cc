@@ -130,9 +130,9 @@ TObject* SegmentSaver::registerObject(const string& onm, const TObject& oTemplat
 }
 
 TCumulative* SegmentSaver::registerCumulative(const string& onm, const TCumulative& cTemplate) {
-    TCumulative* c = dynamic_cast<TCumulative*>(tryLoad(onm));
+    auto c = dynamic_cast<TCumulative*>(tryLoad(onm));
     if(!c) {
-        c = (TCumulative*)addObject((TNamed*)cTemplate.Clone(onm.c_str()));
+        c = static_cast<TCumulative*>(addObject((TNamed*)cTemplate.Clone(onm.c_str())));
         c->_Clear();
     }
     cumDat.emplace(onm,c);

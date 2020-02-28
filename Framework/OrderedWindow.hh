@@ -54,7 +54,7 @@ public:
     static ordering_t order(const U* o) { return ordering_t(*o); }
 
     /// Constructor
-    OrderedWindow(ordering_t dw): hwidth(dw) { }
+    explicit OrderedWindow(ordering_t dw): hwidth(dw) { }
     /// Destructor: must be cleared before reaching here!
     virtual ~OrderedWindow() {
         if(size()) {

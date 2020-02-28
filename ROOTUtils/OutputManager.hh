@@ -27,7 +27,7 @@
 class OutputManager: public TObjCollector {
 public:
     /// Constructor
-    OutputManager(const string& bp, OutputManager* pnt = nullptr);
+    explicit OutputManager(const string& bp, OutputManager* pnt = nullptr);
     /// Destructor
     ~OutputManager() { if(!parent) delete rootDir; }
 

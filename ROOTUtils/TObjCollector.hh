@@ -26,12 +26,12 @@ using std::map;
 class TObjCollector {
 public:
     /// destructor
-    virtual ~TObjCollector() { clearItems(); }
+    virtual ~TObjCollector() { deleteAll(); }
 
     /// write items to currently open directory, or specified; return directory written to
     virtual TDirectory* writeItems(TDirectory* d = nullptr);
     /// clear (delete) items
-    virtual void clearItems();
+    void deleteAll();
     /// register a named ROOT object for output (and eventual deletion)
     virtual TNamed* addObject(TNamed* o);
     /// register object to deletion list (not written to file)
