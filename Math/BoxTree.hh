@@ -127,8 +127,8 @@ public:
 
 
 protected:
-    int axis;                       ///< axis number for split
-    double split;                   ///< split position
+    int axis = 0;                   ///< axis number for split
+    double split = 0;               ///< split position
     BoxTreeNode* parent = nullptr;  ///< parent node; NULL at top level
     BoxTreeNode* cLo = nullptr;     ///< low-side child; NULL at bottom level
     BoxTreeNode* cHi = nullptr;     ///< high-side child; NULL at bottom level
@@ -147,7 +147,7 @@ protected:
 class KDBuilder {
 public:
     /// Constructor
-    KDBuilder(int N): N_DIM(N) { }
+    explicit KDBuilder(int N): N_DIM(N) { }
 
     const int N_DIM;                ///< number of dimensions
     unsigned int min_divide_points = 20;    ///< minimum number of points to continue subdividing

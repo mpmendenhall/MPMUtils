@@ -68,7 +68,7 @@ void scale_times_bin_center(TH1* f);
 TGraph* invertGraph(const TGraph* g);
 
 /// combine a list of TGraphs
-TGraph* combine_graphs(const vector<TGraph*> gs);
+TGraph* combine_graphs(const vector<TGraph*>& gs);
 
 /// merge a list of TGrapherrors into a larger TGraphError, offsetting x values by given offsets
 TGraphErrors* merge_plots(const vector<TGraphErrors*>& pin, const vector<int>& toffset);

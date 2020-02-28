@@ -21,70 +21,62 @@ namespace color {
 
     /// Color specified by rgb(a) components
     struct rgb {
-        double r;       ///< red component, in [0,1]
-        double g;       ///< green component, in [0,1]
-        double b;       ///< blue component, in [0,1]
-        double a;       ///< alpha channel, in [0,1]
+        double r;   ///< red component, in [0,1]
+        double g;   ///< green component, in [0,1]
+        double b;   ///< blue component, in [0,1]
+        double a;   ///< alpha channel, in [0,1]
 
-        /// Constructor
+        /// Default constructor
         rgb(): r(0), g(0), b(0), a(0) { }
         /// Constructor from rgb(a)
-        rgb(double R, double G, double B, double A=1): r(R), g(G), b(B), a(A) { }
-        /// Auto-convert to HSV
-        operator hsv() const;
-        /// Construct from 8-bit integer values
-        static rgb hex(int R, int G, int B, int A=255.) { return rgb(R/255.,G/255.,B/255.,A/255); }
+        rgb(double R, double G, double B, double A = 1): r(R), g(G), b(B), a(A) { }
 
-        /// Color as 0xRgGgBb 24-bit number
-        int32_t as24bit() const;
-        /// Color as RgGgBb hexadecimal string
-        string asHexString() const;
+        /// Auto-convert to HSV, H in [0, 2pi)
+        operator hsv() const;
+        /// Color as 24-bit integer 0xRrGgBb
+        int32_t as_rgb_i24() const;
+        /// Color as hexadecimal string "RrGgBb"
+        explicit operator string() const;
     };
+
+    /// Construct color with normalization to [0,1]
+    template<size_t n = 255>
+    rgb rgbn(double R, double G, double B, double A = n) { return rgb(R/n, G/n, B/n, A/n); }
 
     /// Color specified by hsv(a) components
     struct hsv {
-        double h;       ///< hue, in [0,2*pi)
+        double h;       ///< hue angle (radians; unnormalized angular range)
         double s;       ///< saturation, in [0,1]
         double v;       ///< value, in [0,1]
         double a;       ///< alpha channel, in [0,1]
 
-        /// Constructor
+        /// Default constructor
         hsv(): h(0), s(0), v(0), a(0) { }
         /// Constructor from hsv(a)
         hsv(double H, double S, double V, double A=1): h(H), s(S), v(V), a(A) { }
+
         /// Auto-convert to RGB
         operator rgb() const;
     };
 
     /// Color gradient generator, defined by color values at stops
-    class Gradient {
+    class Gradient: public map<double, pair<rgb,hsv>> {
     public:
-        /// Constructor
-        Gradient() { }
+        /// Inherit map constructors
+        using map<double, pair<rgb,hsv>>::map;
 
-        /// clear stops
-        void clearStops() { stops.clear(); }
         /// add rgb color stop
-        void addStop(double x, const rgb& c) { stops[x] = pair<rgb,hsv>(c, hsv(c)); }
+        void addStop(double x, const rgb& c) { (*this)[x] = {c, hsv(c)}; }
         /// add hsv color stop
-        void addStop(double x, const hsv& c) { stops[x] = pair<rgb,hsv>(rgb(c), c); }
+        void addStop(double x, const hsv& c) { (*this)[x] = {rgb(c), c}; }
 
         /// linear rgb component interpolation
         rgb rgbcolor(double x) const;
         /// linear hsv component interpolation
         hsv hsvcolor(double x) const;
 
-        /// Create a new gradient as a sub-range of this one
-        Gradient subGradient(double x0, double x1) const;
-
-        /// gradient stops map access
-        const map<double,pair<rgb,hsv> >& getStops() const { return stops; }
-
-    protected:
-        map<double,pair<rgb,hsv> > stops;       ///< gradient stops
-        typedef  map<double,pair<rgb,hsv> >::const_iterator stopit;
-        /// stop-locating utility function
-        double findPoint(double x, stopit& it0,  stopit& it1) const;
+        /// find relative position in [0,1] between stops bracketing point
+        double findPoint(double x, const_iterator& it0,  const_iterator& it1) const;
     };
 }
 

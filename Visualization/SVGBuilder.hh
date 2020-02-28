@@ -194,7 +194,7 @@ namespace SVG {
     public:
         gradstop(double l, color::rgb c): XMLTag("stop") {
             addAttr("offset",l);
-            attrs["stop-color"] = "#"+c.asHexString();
+            attrs["stop-color"] = "#" + string(c);
             if(c.a != 1) addAttr("stop-opacity",c.a);
         }
     };
@@ -207,7 +207,7 @@ namespace SVG {
             addAttr("y1",y1);
             addAttr("x2",x2);
             addAttr("y2",y2);
-            for(auto const& s: G.getStops()) addChild(new gradstop(s.first, s.second.first));
+            for(auto const& s: G) addChild(new gradstop(s.first, s.second.first));
         }
 
         string idstr() const { return "url(#" + attrs.find("id")->second + ")"; }
@@ -228,14 +228,14 @@ namespace SVG {
 
     /// set fill color
     inline void set_fill(map<string,string>& attrs, const color::rgb& c) {
-        attrs["fill"] = "#"+c.asHexString();
+        attrs["fill"] = "#" + string(c);
         if(c.a != 1) attrs["fill-opacity"] = to_str(c.a);
     }
     /// set fill color
     inline void set_fill(XMLTag& X, const color::rgb& c) { set_fill(X.attrs, c); }
     /// set stroke color
     inline void set_stroke(map<string,string>& attrs, const color::rgb& c) {
-        attrs["stroke"] = "#"+c.asHexString();
+        attrs["stroke"] = "#" + string(c);
         if(c.a != 1) attrs["stroke-opacity"] = to_str(c.a);
     }
     /// set stroke color

@@ -6,10 +6,9 @@
 // -- Michael P. Mendenhall, 2015
 
 #include "ColorSpec.hh"
-#include <algorithm>
 #include <cmath>
-#include <cassert>
 #include <stdio.h>
+#include <stdexcept>
 
 namespace color {
 
@@ -26,7 +25,7 @@ namespace color {
         return C;
     }
 
-    int32_t rgb::as24bit() const {
+    int32_t rgb::as_rgb_i24() const {
         int32_t rr = r <= 0? 0 : 256*r;
         if(rr > 255) rr = 255;
         int32_t gg = g <= 0? 0 : 256*g;
@@ -36,16 +35,16 @@ namespace color {
         return (rr << 16) + (gg << 8) + bb;
     }
 
-    string rgb::asHexString() const {
+    rgb::operator string() const {
         char c[7];
-        sprintf(c,"%06x",as24bit());
+        sprintf(c,"%06x", as_rgb_i24());
         return c;
     }
 
     hsv::operator rgb() const {
         if(s==0) return rgb(v,v,v,a);
 
-        double hh = h < 0? 2*M_PI-fmod(fabs(h),2*M_PI) : fmod(h, 2*M_PI);
+        double hh = (h < 0)? 2*M_PI - fmod(fabs(h), 2*M_PI) : fmod(h, 2*M_PI);
         double H = 3*hh/M_PI;
         int I = (int)floor(H);
         double X = v * ( 1 - s );
@@ -62,20 +61,17 @@ namespace color {
         }
     }
 
+    //-----------------------------------------
+    //-----------------------------------------
 
-    ///////////////////////////////////////////
+    double Gradient::findPoint(double x, const_iterator& it0,  const_iterator& it1) const {
+        if(!size()) throw std::runtime_error("Querying null gradient");
+        if(size() == 1) { it0 = it1 = begin(); return 0.5; }
 
-
-    double Gradient::findPoint(double x, stopit& it0,  stopit& it1) const {
-        if(!stops.size()) { it0 = it1 = stops.end(); return 0; }
-        if(stops.size()==1) { it0 = it1 = stops.begin(); return 0; }
-
-        it1 = stops.lower_bound(x);
-        if(it1 == stops.end()) it1--;
-        if(it1 == stops.begin()) it1++;
-
-        it0 = it1;
-        it0--;
+        it1 = lower_bound(x);
+        if(it1 == end()) --it1;
+        if(it1 == begin()) ++it1;
+        it0 = std::prev(it1);
 
         double x0 = it0->first;
         double x1 = it1->first;
@@ -83,34 +79,33 @@ namespace color {
     }
 
     rgb Gradient::rgbcolor(double x) const {
-        if(!stops.size()) return rgb();
+        if(!size()) return rgb();
 
-        stopit it0, it1;
+        const_iterator it0, it1;
         double l1 = findPoint(x, it0, it1);
         double l0 = 1-l1;
         const rgb& c0 = it0->second.first;
         const rgb& c1 = it1->second.first;
 
-        return rgb( l0*c0.r + l1*c1.r, l0*c0.g + l1*c1.g, l0*c0.b + l1*c1.b, l0*c0.a + l1*c1.a);
+        return rgb( l0*c0.r + l1*c1.r,
+                    l0*c0.g + l1*c1.g,
+                    l0*c0.b + l1*c1.b,
+                    l0*c0.a + l1*c1.a );
     }
 
     hsv Gradient::hsvcolor(double x) const {
-        if(!stops.size()) return hsv();
+        if(!size()) return hsv();
 
-        stopit it0, it1;
+        const_iterator it0, it1;
         double l1 = findPoint(x, it0, it1);
         double l0 = 1-l1;
         const hsv& c0 = it0->second.second;
         const hsv& c1 = it1->second.second;
 
-        return hsv( l0*c0.h + l1*c1.h, l0*c0.s + l1*c1.s, l0*c0.v + l1*c1.v, l0*c0.a + l1*c1.a);
-    }
-
-    Gradient Gradient::subGradient(double, double) const {
-        Gradient G;
-        if(!stops.size()) return G;
-        throw; /// \todo MPM implement this!
-        return G;
+        return hsv( l0*c0.h + l1*c1.h,
+                    l0*c0.s + l1*c1.s,
+                    l0*c0.v + l1*c1.v,
+                    l0*c0.a + l1*c1.a );
     }
 }
 

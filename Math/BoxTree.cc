@@ -346,6 +346,6 @@ BoxTreeNode* KDBuilder::buildKD(map<const BoxTreeNode*,double>& leafcounts, BoxT
     auto N = psorted[0].size();
     printf("Constructing KD Tree to partition %zu points...\n", N);
     T = buildKD(0, N, leafcounts, T);
-    printf("    built with %zu nodes, %zu leaves, depth %i\n", T->size(), T->nLeaves(), T->maxdepth());
+    printf("    built with %zu nodes, %zu leaves, depth %u\n", T->size(), T->nLeaves(), T->maxdepth());
     return T;
 }

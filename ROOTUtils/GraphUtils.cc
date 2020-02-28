@@ -215,7 +215,7 @@ TGraph* invertGraph(const TGraph* g) {
     return gi;
 }
 
-TGraph* combine_graphs(const vector<TGraph*> gs) {
+TGraph* combine_graphs(const vector<TGraph*>& gs) {
     unsigned int npts = 0;
     for(unsigned int n=0; n<gs.size(); n++)
         npts += gs[n]->GetN();
