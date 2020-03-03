@@ -47,8 +47,6 @@ public:
     int64_t loadEvent(vector<T>& v);
     /// load all data into map by event number
     void loadAll(multimap<int64_t, T>& dat);
-    /// list of event numbers in data
-    void loadIDs(vector<int64_t>& ids);
 
     HDF5_Table_Spec Tspec;      ///< configuration for table to read
 
@@ -253,15 +251,6 @@ template<typename T>
 void HDF5_Table_Cache<T>::loadAll(multimap<int64_t, T>& dat) {
     T val;
     while(next(val)) dat.emplace(getIdentifier(val),val);
-}
-
-template<typename T>
-void HDF5_Table_Cache<T>::loadIDs(vector<int64_t>& ids) {
-    vector<int64_t> v;
-    T val;
-    while(next(val)) v.push_back(getIdentifier(val));
-    std::sort(v.begin(), v.end());
-    for(auto i: v) if(!ids.size() || ids.back() != i) ids.push_back(i);
 }
 
 ///////////////////////////////////////////////

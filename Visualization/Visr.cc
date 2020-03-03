@@ -2,7 +2,7 @@
 // Michael P. Mendenhall, LLNL 2019
 
 #include "Visr.hh"
-#include "GeomCalcUtils.hh"
+#include "GeomCalcUtils.hh" // for ortho_frame
 
 VisDriver::vec3 operator*(const VisDriver::vec3& v, double s) { return VisDriver::vec3{v[0]*s,v[1]*s,v[2]*s}; }
 

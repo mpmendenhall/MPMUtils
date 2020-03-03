@@ -28,15 +28,10 @@ public:
 /// OpenGL window visualization driver
 class GLVisDriver: public VisDriver {
 public:
-    /// Constructor
-    GLVisDriver() { }
-
     /// start interactive drawing loop thread
     void doGlutLoop();
     /// stop interactive drawing loop thread
     void endGlutLoop();
-    /// initialize visualization window
-    void initWindow(const std::string& title = "OpenGL Viewer Window");
     /// pause for user interaction
     void pause() override { pause(nullptr); }
     /// pause for user interaction, with optional callbacks function
@@ -48,6 +43,7 @@ public:
     //-///////////////////
     // viewing window info
 
+    string windowTitle = "OpenGL Viewer Window";    ///< viewing window title
     float win_c[3] = {0,0,0};   ///< center of window view
     float ar = 1.0;             ///< (x range)/(y range) window aspect ratio
     float viewrange = 0;        ///< half-height (y) range
@@ -58,6 +54,9 @@ public:
 
 #ifdef WITH_OPENGL
     static constexpr bool hasGL = true;
+
+    /// Constructor
+    GLVisDriver();
 
     /// Destructor
     ~GLVisDriver() { endGlutLoop(); }
@@ -78,6 +77,8 @@ public:
     void specialKeypress(int key, int x, int y);
     void startMouseTracking(int button, int state, int x, int y);
     void mouseTrackingAction(int x, int y);
+    /// reset rotations/scale to default
+    void resetViewTransformation();
 
 protected:
 
@@ -99,17 +100,15 @@ protected:
     /// OpenGL teapot
     void _teapot(const vector<float>&) override;
 
-    /// reset rotations/scale to default
-    void resetViewTransformation();
     /// get current transformation matrix
     void getMatrix();
 
     void (*pause_callback)(void*, VGLCallback*) = nullptr;  ///< callback during pause
     void* pause_args = nullptr;                             ///< callback arguments
 
-    bool updated = true;        ///< flag to refresh updated drawing
+    bool updated = true;            ///< flag to refresh updated drawing
     int clickx0 = 0, clicky0 = 0;   ///< click (start) location
-    int modifier = 0;           ///< modifier key
+    int modifier = 0;               ///< modifier key
 
     std::deque<VisCmd> commands;    ///< to-be-processed commands
     pthread_mutex_t commandLock;    ///< commands queue lock

@@ -12,22 +12,26 @@
 
 namespace CodeVersion {
 
+    string strip_quotes(const string& s) {
+        return (s[0] != '"' || *s.rbegin() != '"')? s : s.substr(1, s.size()-2);
+    }
+
     const string compile_time = __DATE__ " " __TIME__;
 
 #ifdef REPO_NAME
-    const string repo_name = STRINGIFY(REPO_NAME);
+    const string repo_name = strip_quotes(STRINGIFY(REPO_NAME));
 #else
     const string repo_name = "Repo";
 #endif
 
 #ifdef REPO_VERSION
-    const string repo_version = STRINGIFY(REPO_VERSION);
+    const string repo_version = strip_quotes(STRINGIFY(REPO_VERSION));
 #else
     const string repo_version = "unknown";
 #endif
 
 #ifdef REPO_TAGNAME
-    const string repo_tagname = STRINGIFY(REPO_TAGNAME);
+    const string repo_tagname = strip_quotes(STRINGIFY(REPO_TAGNAME));
 #else
     const string repo_tagname = "unknown";
 #endif

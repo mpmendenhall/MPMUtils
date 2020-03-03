@@ -18,30 +18,30 @@ const string GLVisDriver::_pause_info =
 
 /// singleton registered OpenGL window
 GLVisDriver* GLDr = nullptr;
-
-void* visthread(void*) {
-    glutMainLoop();
-    return NULL;
-}
-
+/// whether glut_init is complete
+bool glutIsInitialized = false;
+/// indicator to kill visualization thread
 bool kill_flag = false;
+/// visualization main loop thread
 pthread_t vthread;
+/// glut version number
+int glutversion = -1;
+/// OpenGL version name
+string glversion = "[UNINITIALIZED]";
+
+GLVisDriver::GLVisDriver() {
+    pthread_mutexattr_t displayLockAttr;
+    pthread_mutexattr_init(&displayLockAttr);
+    pthread_mutexattr_settype(&displayLockAttr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&commandLock,&displayLockAttr);
+}
 
 void GLVisDriver::display() const {
-    auto glversion = glGetString(GL_VERSION);
-    auto glutversion = glutGet(0x01FC); // GLUT_VERSION in freeglut_ext.h header
 #ifdef FREEGLUT
-    printf("Visualizer using OpenGL '%s', freeGLUT %i\n", glversion, glutversion);
+    printf("Visualizer using OpenGL '%s', freeGLUT %i\n", glversion.c_str(), glutversion);
 #else
-    printf("Visualizer using OpenGL '%s', GLUT %i\n", glversion, glutversion);
+    printf("Visualizer using OpenGL '%s', GLUT %i\n", glversion.c_str(), glutversion);
 #endif
-}
-
-void GLVisDriver::doGlutLoop() {
-    if(GLDr) throw std::logic_error("Only one OpenGL visualizer can run at a time");
-    kill_flag = false;
-    GLDr = this;
-    pthread_create(&vthread, NULL, &visthread, nullptr);
 }
 
 void GLVisDriver::endGlutLoop() {
@@ -192,20 +192,6 @@ void GLVisDriver::redrawDisplay() {
     glutReshapeWindow(w0, h0);
 }
 
-void _tryFlush() {
-    if(kill_flag) exit(0);
-    if(GLDr) GLDr->tryFlush();
-    usleep(50000);
-}
-
-void _redrawDisplay() {
-    if(GLDr) GLDr->redrawDisplay();
-}
-
-void _reshapeWindow(int width, int height) {
-    if(GLDr) GLDr->reshapeWindow(width, height);
-}
-
 void GLVisDriver::reshapeWindow(int width, int height) {
     glViewport(0,0,width,height);
     winwidth = width; winheight = height;
@@ -277,12 +263,6 @@ void GLVisDriver::keypress(unsigned char key, int x, int y) {
     } else printf("Un-assigned keypress %u at %i,%i\n", key, x, y);
 }
 
-void _specialKeypress(int, int, int) { }
-
-void _startMouseTracking(int button, int state, int x, int y) {
-    if(GLDr) GLDr->startMouseTracking(button, state, x, y);
-}
-
 void GLVisDriver::startMouseTracking(int button, int state, int x, int y) {
     modifier = glutGetModifiers();
     if(state == GLUT_DOWN) {
@@ -299,10 +279,6 @@ void GLVisDriver::startMouseTracking(int button, int state, int x, int y) {
         C.reason = VGLCallback::STARTMOUSE;
         (*pause_callback)(pause_args, &C);
     }
-}
-
-void _mouseTrackingAction(int x, int y) {
-    if(GLDr) GLDr->mouseTrackingAction(x, y);
 }
 
 void GLVisDriver::mouseTrackingAction(int x, int y) {
@@ -351,66 +327,7 @@ void GLVisDriver::mouseTrackingAction(int x, int y) {
     }
 }
 
-void GLVisDriver::initWindow(const std::string& windowTitle) {
-    pthread_mutexattr_t displayLockAttr;
-    pthread_mutexattr_init(&displayLockAttr);
-    pthread_mutexattr_settype(&displayLockAttr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&commandLock,&displayLockAttr);
 
-    int a = 1;
-    char programname[] = "glviewer";
-    char* pnameptr = programname;
-    glutInit(&a,&pnameptr);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(600, 600);
-    glutInitWindowPosition(100, 100);
-    glutCreateWindow(windowTitle.c_str());
-
-    ar = 1.0;
-
-    glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
-    glEnable(GL_LINE_SMOOTH);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE_MINUS_DST_ALPHA,GL_DST_ALPHA);
-    glEnable(GL_DEPTH_TEST);
-
-    glEnable(GL_FOG);
-
-    // fade to dark
-    float fadecolor[4] = {0,0,0,1.0};
-    glFogfv(GL_FOG_COLOR,fadecolor);
-
-    GLint fog_mode = GL_LINEAR;
-    glFogiv(GL_FOG_MODE, &fog_mode);
-
-    float fog_start = 2;
-    float fog_end = -2;
-    glFogfv(GL_FOG_START, &fog_start);
-    glFogfv(GL_FOG_END, &fog_end);
-
-    //float fog_dens = 0.7;
-    //glFogfv(GL_FOG_DENSITY,&fog_dens);
-
-    //GLint fog_coord = GL_FRAGMENT_DEPTH; //GL_FOG_COORD;
-    //glFogiv(GL_FOG_COORD_SRC,&fog_coord);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glutDisplayFunc(&_redrawDisplay);
-    glutMouseFunc(&_startMouseTracking);
-    glutMotionFunc(&_mouseTrackingAction);
-    glutReshapeFunc(&_reshapeWindow);
-    glutKeyboardFunc(&_keypress);
-    glutSpecialFunc(&_specialKeypress);
-    glutIdleFunc(&_tryFlush);
-
-    resetViewTransformation();
-
-    startRecording(true);
-    setColor(0.7, 0, 1, 0.5);
-    teapot(0.5);
-    stopRecording();
-}
 
 
   /*
@@ -449,6 +366,99 @@ void GLVisDriver::initWindow(const std::string& windowTitle) {
         addCmd(c);
     }
     */
+
+void _tryFlush() {
+    if(kill_flag) exit(0);
+    if(GLDr) GLDr->tryFlush();
+    usleep(50000);
+}
+
+void _redrawDisplay() {
+    if(GLDr) GLDr->redrawDisplay();
+}
+
+void _reshapeWindow(int width, int height) {
+    if(GLDr) GLDr->reshapeWindow(width, height);
+}
+
+void _specialKeypress(int, int, int) { }
+
+void _startMouseTracking(int button, int state, int x, int y) {
+    if(GLDr) GLDr->startMouseTracking(button, state, x, y);
+}
+
+void _mouseTrackingAction(int x, int y) {
+    if(GLDr) GLDr->mouseTrackingAction(x, y);
+}
+
+
+void* visthread(void*) {
+    if(!GLDr) throw std::runtime_error("GLVisDriver uninitialized");
+
+    int argc = 0;
+    char* argv[] = {nullptr};
+    glutInit(&argc, argv);
+
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(600, 600);
+    glutInitWindowPosition(100, 100);
+    glutCreateWindow(GLDr->windowTitle.c_str());
+    glutDisplayFunc(&_redrawDisplay);
+    glutMouseFunc(&_startMouseTracking);
+    glutMotionFunc(&_mouseTrackingAction);
+    glutReshapeFunc(&_reshapeWindow);
+    glutKeyboardFunc(&_keypress);
+    glutSpecialFunc(&_specialKeypress);
+    glutIdleFunc(&_tryFlush);
+
+    glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+    glEnable(GL_LINE_SMOOTH);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE_MINUS_DST_ALPHA,GL_DST_ALPHA);
+    glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_FOG);
+
+    // fade to dark
+    float fadecolor[4] = {0,0,0,1.0};
+    glFogfv(GL_FOG_COLOR,fadecolor);
+
+    GLint fog_mode = GL_LINEAR;
+    glFogiv(GL_FOG_MODE, &fog_mode);
+
+    float fog_start = 2;
+    float fog_end = -2;
+    glFogfv(GL_FOG_START, &fog_start);
+    glFogfv(GL_FOG_END, &fog_end);
+
+    //float fog_dens = 0.7;
+    //glFogfv(GL_FOG_DENSITY,&fog_dens);
+
+    //GLint fog_coord = GL_FRAGMENT_DEPTH; //GL_FOG_COORD;
+    //glFogiv(GL_FOG_COORD_SRC,&fog_coord);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glversion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    glutversion = glutGet(0x01FC); // GLUT_VERSION in freeglut_ext.h header
+
+    GLDr->resetViewTransformation();
+    GLDr->startRecording(true);
+    GLDr->setColor(0.7, 0, 1, 0.5);
+    GLDr->teapot(0.5);
+    GLDr->stopRecording();
+
+    glutIsInitialized = true;
+    glutMainLoop();
+    return nullptr;
+}
+
+void GLVisDriver::doGlutLoop() {
+    if(GLDr) throw std::logic_error("Only one OpenGL visualizer can run at a time");
+    glutIsInitialized = kill_flag = false;
+    GLDr = this;
+    pthread_create(&vthread, nullptr, &visthread, nullptr);
+    while(!glutIsInitialized) usleep(10000);
+}
 
 #else
 

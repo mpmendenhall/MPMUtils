@@ -7,6 +7,7 @@
 #include <set>
 using std::set;
 #include <stdlib.h> // for size_t
+#include <numeric>  // for std::accumulate
 #include <limits>
 
     /// interval sorting by start point
@@ -108,9 +109,8 @@ public:
 
     /// total of all intervals
     T total() const {
-        T t = tSummary;
-        for(auto i: *this) t += i.second - i.first;
-        return t;
+        return std::accumulate(begin(), end(), tSummary,
+                               [](T a, interval b) { return a + b.second - b.first; });
     }
 };
 

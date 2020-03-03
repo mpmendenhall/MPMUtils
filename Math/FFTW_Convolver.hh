@@ -91,6 +91,7 @@ DST-IV [RODFT11] N = 4*n, odd around j=-0.5 and even around j=n-0.5
 #define FFTW_CONVOLVER_H
 
 #include "fftwx.hh"
+#include "VectorUtils.hh"
 #include <cmath>
 #include <mutex>
 #include <map>
@@ -387,7 +388,7 @@ public:
     /// execute reverse, with normalization
     void etucexe() {
         p_rev.execute();
-        for(auto& x: this->v_x) x /= this->Nlog;
+        divide(this->v_x, this->Nlog);
     }
 
     Plan p_rev; ///< reverse plan
@@ -447,7 +448,7 @@ public:
         if(k.size() != kernPlan.M) throw std::logic_error("Mismatched convolution kernel size");
         load(k);
         kernPlan.execute();
-        for(auto& x: this->v_k) x /= kernPlan.Nlog;
+        divide(this->v_k, kernPlan.Nlog);
     }
 
     /// fetch real-space result
@@ -573,7 +574,7 @@ protected:
             v[n] = exp(-n*n/(2*r*r));
             nrm += (n? 2 : 1)*v[n];
         }
-        for(auto& x: v) x /= nrm;
+        divide(v, nrm);
         return v;
     }
 };
