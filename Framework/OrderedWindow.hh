@@ -177,30 +177,27 @@ public:
     size_t abs_count(ordering_t dx0, ordering_t dx1) const { return abs_range(dx0,dx1).size(); }
 
     /// add next newer object; process older as they pass through window.
-    void push(const T& oo) override {
-        T o = oo; // copy to permit modification/disposal
+    void push(const T& o) override {
         if(verbose >= 4) { printf("Adding new "); display(o); }
 
         auto x = order(o);
-
         if(!(x==x)) {
             printf("*** NaN warning at item %i! Skipping!\n ***", nProcessed);
             display(o);
-            dispose(o);
         } else if(hwidth && x < window_Lo && size()) {
             processDisordered(o);
         } else {
             if(!hwidth) while(size()) nextmid();
             else flushHi(x);
-            processNew(o);
             deque<T>::push_back(o);
+            processNew(back());
         }
-        nProcessed++;
+
+        ++nProcessed;
     }
 
     ordering_t window_Lo = {};  ///< newest discarded (start of available range)
     ordering_t window_Hi = {};  ///< newest added/flushed (end of available range)
-    bool skip_disordered = true;///< skip over disordered events
 
 protected:
 
@@ -213,26 +210,17 @@ protected:
     // Subclass me to do the interesting stuff!
 
     /// handle acceptance of out-of-order items
-    virtual void processDisordered(T& o) {
+    virtual void processDisordered(const T& o) {
         printf("Out-of-order (< %g (%g)) window entry: ", window_Hi, hwidth);
         display(o);
-        if(skip_disordered) {
-            dispose(o);
-        } else {
-            throw std::runtime_error("Disordered window event");
-            //flush();
-            //processNew(o);
-            //deque<T>::push_back(o);
-        }
+        throw std::runtime_error("Disordered window event");
     }
     /// processing hook for each object as it first enters window
     virtual void processNew(T&) { }
     /// processing hook for each object as it passes through middle of window
     virtual void processMid(T&) { }
     /// processing hook for objects leaving the window
-    virtual void processOld(T&) { }
-    /// disposal/deletion for objects outside window
-    virtual void dispose(T&) { }
+    virtual void processOld(T& o) { if(verbose >= 4) { printf("Removing old "); display(o); } }
     /// display object
     virtual void display(const T& o) const { dispObj(o); }
 
@@ -240,28 +228,21 @@ protected:
 
     /// analyze current "mid" object with processMid() and increment to next; flush if no next available
     void nextmid() {
-        assert(imid < size());
-        processMid((*this)[imid]);
+        processMid(this->at(imid));
         window_Lo = order((*this)[imid]) - hwidth;
         ++imid;
 
         if(imid < size()) {
-            while(order(front()) <= window_Lo) disposeLo();
-        } else {
-            while(size()) disposeLo();
-            assert(!imid);
-        }
+            while(size() && order(front()) <= window_Lo) disposeLo();
+        } else while(size()) disposeLo();
     }
 
-    /// delete oldest object off "older" queue, calling dispose(); decrement imid to point to same item
+    /// delete oldest object off "older" queue; decrement imid to point to same item
     void disposeLo() {
         assert(imid); // never dispose of mid!
-        auto& o = front();
-        processOld(o);
-        if(verbose >= 4) { printf("Deleting old "); display(o); }
+        processOld(front());
         pop_front();
-        imid--;       // move imid to continue pointing to same object
-        dispose(o);
+        --imid; // move imid to continue pointing to same object
     }
 };
 
