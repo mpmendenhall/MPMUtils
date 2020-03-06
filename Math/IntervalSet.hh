@@ -10,21 +10,33 @@ using std::set;
 #include <numeric>  // for std::accumulate
 #include <limits>
 
-    /// interval sorting by start point
-template<typename T>
-class CompareFirst {
+/// An interval
+template<typename T = double>
+class Interval: public std::pair<T,T> {
 public:
-    bool operator()(const T& a, const T& b) const { return a.first < b.first; }
+    /// Inherit constructors
+    using std::pair<T,T>::pair;
+
+    /// intersection of intervals
+    const Interval& operator&=(Interval b) {
+        if(this->second <= b.first || this->first >= b.second) *this = {};
+        else *this = {std::max(this->first, b.first), std::min(this->second, b.second)};
+        return *this;
+    }
+    /// intersection of intervals
+    Interval operator&(Interval b) const { return b &= *this; }
+    /// interval length
+    operator T() const { return this->second - this->first; }
 };
 
 /// Collection of disjoint intervals
 template<typename T = double>
-class IntervalSet: protected set<std::pair<T,T>, CompareFirst<std::pair<T,T>>> {
+class IntervalSet: protected set<Interval<T>> {
 public:
     /// interval specified by (start, end)
-    typedef std::pair<T,T> interval;
+    typedef Interval<T> interval_t;
     /// parent type
-    typedef set<interval, CompareFirst<interval>> super;
+    typedef set<interval_t> super;
     // expose useful functions
     using super::size;
     using super::begin;
@@ -36,7 +48,7 @@ public:
     using super::upper_bound;
 
     /// add interval to set, merging with any overlapping intervals
-    void operator+=(interval i) {
+    void operator+=(interval_t i) {
         if(i.second < i.first) std::swap(i.first, i.second); // assure end >= start
         ++nIndividual;
         tIndividual += i.second - i.first;
@@ -110,7 +122,7 @@ public:
     /// total of all intervals
     T total() const {
         return std::accumulate(begin(), end(), tSummary,
-                               [](T a, interval b) { return a + b.second - b.first; });
+                               [](T a, interval_t b) { return a + b.second - b.first; });
     }
 };
 

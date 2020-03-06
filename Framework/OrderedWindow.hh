@@ -32,7 +32,7 @@ public:
 };
 
 /// Flow-through analysis on a ``window'' of ordered objects
-template<typename T, typename _ordering_t = typename T::ordering_t>
+template<typename T, typename _ordering_t = typename std::remove_pointer<T>::type::ordering_t>
 class OrderedWindow: protected deque<T>, public DataSink<T> {
 public:
     /// ordering type
