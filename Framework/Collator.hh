@@ -125,7 +125,7 @@ protected:
     void pop() {
         auto& o = PQ.top();
         if(!--input_n[o.first].first) ++inputs_waiting;
-        if(this->nextSink) this->nextSink->push(o.second);
+        if(nextSink) nextSink->push(o.second);
         PQ.pop();
     }
 

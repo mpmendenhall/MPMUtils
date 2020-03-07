@@ -1,5 +1,5 @@
 /// \file ClusteredWindow.hh Short-range clustering organization
-// Michael P. Mendenhall, LLNL 2019
+// Michael P. Mendenhall, LLNL 2020
 
 #ifndef CLUSTEREDWINDOW_HH
 #define CLUSTEREDWINDOW_HH
@@ -23,7 +23,9 @@ public:
     using super::push_back;
 
     /// Constructor
-    explicit Cluster(ordering_t w = 0): dx(w) { }
+    explicit Cluster(ordering_t w = {}): dx(w) { }
+    /// forbid direct assignment
+    const Cluster& operator=(const Cluster& C) = delete;
 
     /// Get ordering parameter
     explicit operator ordering_t() const { return x_median; }
@@ -90,21 +92,19 @@ public:
     /// push currentC into window
     void completeCluster() {
         currentC.close();
-        if(currentC.size() && checkCluster(currentC) && clustOut) clustOut->push(currentC);
+        if(checkCluster(currentC) && clustOut) clustOut->push(currentC);
         currentC.clear();
     }
 
     /// add object to newest cluster (or start newer cluster), assuming responsibility for deletion
-    void push(const T& oo) override {
-        ordering_t t(oo);
+    void push(const T& o) override {
+        ordering_t t(o);
         if(!(t_prev <= t)) {
-            dispObj(oo);
+            dispObj(o);
             throw std::runtime_error("Out-of-order item received for clustering");
         }
         t_prev = t;
         currentC.dx = cluster_dx;
-        auto o = oo;
-        processSingle(o);
         if(!currentC.tryAdd(o)) {
             completeCluster();
             if(!currentC.tryAdd(o)) throw;
@@ -115,10 +115,8 @@ public:
     DataSink<cluster_t>* clustOut = nullptr;    ///< clustered objects recipient
 
 protected:
-    /// process new single element before adding to clustering sequence --- Subclass me!
-    virtual void processSingle(T&) { }
     /// examine and decide whether to include cluster
-    virtual bool checkCluster(cluster_t&) { return true; }
+    virtual bool checkCluster(cluster_t& o) { return o.size(); }
 
     cluster_t currentC{};   ///< cluster currently being built
     ordering_t t_prev = -std::numeric_limits<ordering_t>::max();    ///< previous item arrival
@@ -151,6 +149,9 @@ public:
 
     using CB::push; // push T
     using OrderedWindow<cluster_t, ordering_t>::push; // push cluster_t
+
+protected:
+    using OrderedWindow<cluster_t, ordering_t>::signal; // hide from direct calls
 };
 
 /// OrderedWindow of "clustered" objects

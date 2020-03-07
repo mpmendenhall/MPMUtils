@@ -56,12 +56,21 @@ public:
     /// generate or restore from file a saved TH2F histogram
     TH2* registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax);
     /// generate or restore from file a saved histogram from a template
-    TH1* registerSavedHist(const string& hname, const TH1& hTemplate);
+    TH1* _registerSavedHist(const string& hname, const TH1& hTemplate);
+    /// generate or restore from file a saved histogram from a template
+    template<class T>
+    T* registerSavedHist(const string& hname, const T& hTemplate) {
+        return static_cast<T*>(_registerSavedHist(hname, hTemplate));
+    }
     /// display list of saved histograms and cumulatives
     void displaySavedHists() const;
 
     /// clone or restore from file a cumulative object
-    TCumulative* registerCumulative(const string& onm, const TCumulative& cTemplate);
+    TCumulative* _registerCumulative(const string& onm, const TCumulative& cTemplate);
+    template<class T>
+    T* registerCumulative(const string& onm, const T& cTemplate) {
+        return static_cast<T*>(registerCumulative(onm, cTemplate));
+    }
     /// generate or restore from file a named TVectorD
     TVectorD* registerNamedVector(const string& vname, size_t nels = 0);
     /// generate or restore from file a named attribute string

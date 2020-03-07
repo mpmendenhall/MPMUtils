@@ -102,7 +102,7 @@ TH2* SegmentSaver::registerSavedHist2(const string& hname, const string& title,u
     return h;
 }
 
-TH1* SegmentSaver::registerSavedHist(const string& hname, const TH1& hTemplate) {
+TH1* SegmentSaver::_registerSavedHist(const string& hname, const TH1& hTemplate) {
     if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
     auto h = dynamic_cast<TH1*>(tryLoad(hname));
     if(h) resetZaxis(h);
@@ -129,7 +129,7 @@ TObject* SegmentSaver::registerObject(const string& onm, const TObject& oTemplat
     return o? o : addWithName(oTemplate.Clone(onm.c_str()), onm);
 }
 
-TCumulative* SegmentSaver::registerCumulative(const string& onm, const TCumulative& cTemplate) {
+TCumulative* SegmentSaver::_registerCumulative(const string& onm, const TCumulative& cTemplate) {
     auto c = dynamic_cast<TCumulative*>(tryLoad(onm));
     if(!c) {
         c = static_cast<TCumulative*>(addObject((TNamed*)cTemplate.Clone(onm.c_str())));

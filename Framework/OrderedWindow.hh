@@ -1,28 +1,27 @@
 /// \file OrderedWindow.hh Base class for "window" ordered items flow-through analysis
-// Michael P. Mendenhall, 2019
+// Michael P. Mendenhall, LLNL 2020
 
 #ifndef ORDEREDWINDOW_HH
 #define ORDEREDWINDOW_HH
 
-#include "SFINAEFuncs.hh" // for dispObj
 #include "DataSink.hh"
-#include <cassert>
-#include <cmath>
-#include <algorithm> // for std::lower_bound
-#include <type_traits> // for std::remove_pointer
-#include <iterator> // for std::distance
+#include "SFINAEFuncs.hh" // for dispObj
+
+#include <cmath>        // for std::fabs
+#include <algorithm>    // for std::lower_bound
+#include <type_traits>  // for std::remove_pointer
+#include <iterator>     // for std::distance
+#include <utility>      // for std::pair
 #include <stdexcept>
 #include <deque>
 using std::deque;
-#include <utility>
-using std::pair;
 
 /// `for(auto& x: ItRange(start, end))`
 template<class iterator>
-class ItRange: public pair<iterator, const iterator> {
+class ItRange: public std::pair<iterator, const iterator> {
 public:
     /// Constructor
-    ItRange(const iterator& i0, const iterator& i1): pair<iterator, const iterator>(i0,i1) { assert(i0 <= i1); }
+    ItRange(const iterator& i0, const iterator& i1): std::pair<iterator, const iterator>(i0,i1) { }
     /// range start
     iterator& begin() { return this->first; }
     /// range end
@@ -32,7 +31,7 @@ public:
 };
 
 /// Flow-through analysis on a ``window'' of ordered objects
-template<typename T, typename _ordering_t = typename std::remove_pointer<T>::type::ordering_t>
+template<class T, typename _ordering_t = typename std::remove_pointer<T>::type::ordering_t>
 class OrderedWindow: protected deque<T>, public DataSink<T> {
 public:
     /// ordering type
@@ -98,7 +97,7 @@ public:
     /// get current middle element
     const T& getMid() const { return this->at(imid); }
     /// get ordering position of middle object
-    ordering_t xMid() const { if(!size()) return {}; assert(imid < size()); return order((*this)[imid]); }
+    ordering_t xMid() const { if(!size()) return {}; return order(this->at(imid)); }
 
     /// print window information
     virtual void display() const {
@@ -150,15 +149,16 @@ public:
     /// count items in relative range
     size_t rel_count(ordering_t dx0, ordering_t dx1) const { return rel_range(dx0,dx1).size(); }
 
-    static constexpr bool PARANOID_BOUNDS = false;
-    bool enforceClear = true;
+    static constexpr bool PARANOID_BOUNDS = false;  ///< global paranoid bounds checking
+    bool enforceClear = true;                       ///< fail if window not clear on destruction
+    bool enforceBounds = false;                     ///< local paranoid bounds checking
 
     /// get window position range for absolute range (no bounds checking)
     itrange_t _abs_range(ordering_t x0, ordering_t x1) { return {abs_position(x0), abs_position(x1)}; }
     /// get window position range for absolute range
     itrange_t abs_range(ordering_t x0, ordering_t x1) {
         if(!(x0 <= x1)) throw std::runtime_error("Invalid reverse-order abs_range requested");
-        if(PARANOID_BOUNDS && (!in_range(x0) || !in_range(x1)))
+        if((PARANOID_BOUNDS || enforceBounds) && (!in_range(x0) || !in_range(x1)))
             throw std::runtime_error("abs_range outside window requested");
         return _abs_range(x0,x1);
     }
@@ -168,7 +168,7 @@ public:
     /// get (const) window position range for absolute range
     const_itrange_t abs_range(ordering_t x0, ordering_t x1) const {
         if(!(x0 <= x1)) throw std::runtime_error("Invalid reverse-order abs_range requested");
-        if(PARANOID_BOUNDS && (!in_range(x0) || !in_range(x1)))
+        if((PARANOID_BOUNDS || enforceBounds) && (!in_range(x0) || !in_range(x1)))
             throw std::runtime_error("abs_range outside window requested");
         return _abs_range(x0,x1);
     }
@@ -239,7 +239,6 @@ protected:
 
     /// delete oldest object off "older" queue; decrement imid to point to same item
     void disposeLo() {
-        assert(imid); // never dispose of mid!
         processOld(front());
         pop_front();
         --imid; // move imid to continue pointing to same object
