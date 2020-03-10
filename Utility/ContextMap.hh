@@ -160,5 +160,7 @@ size_t numGlobalArg(const std::string& argname);
 const std::string& requiredGlobalArg(const std::string& argname);
 /// get optional argument with default
 const std::string& optionalGlobalArg(const std::string& argname, const std::string& dflt = "");
+/// debugging printout of global args
+void displayGlobalArgs();
 
 #endif

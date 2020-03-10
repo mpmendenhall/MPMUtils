@@ -4,11 +4,12 @@
 #ifndef DATASOURCE_HH
 #define DATASOURCE_HH
 
+#include "DataSink.hh"
 #include <limits>
 #include <vector>
 using std::vector;
 
-/// Virtual base class for accepting a stream of objects
+/// Virtual base class for loading a stream of objects
 template<class C>
 class DataSource {
 public:
@@ -17,7 +18,7 @@ public:
     /// maximum "infinite" entries
     static constexpr size_t max_entries = std::numeric_limits<size_t>::max();
 
-    /// Virtual destructor
+    /// Polymorphic destructor
     virtual ~DataSource() { }
 
     /// Fill supplied item with next object; return whether item has been updated
@@ -37,6 +38,9 @@ public:
     bool doLoop = false;
     /// next with optional looping
     bool next_optloop(val_t& o) { return doLoop? next_loop(o) : next(o); }
+
+    /// Feed data sink
+    void fillSink(DataSink<val_t>& S) { val_t o{}; while(next(o)) S.push(o); }
 };
 
 /// Sequence of D ~ DataSource

@@ -69,7 +69,7 @@ public:
     TCumulative* _registerCumulative(const string& onm, const TCumulative& cTemplate);
     template<class T>
     T* registerCumulative(const string& onm, const T& cTemplate) {
-        return static_cast<T*>(registerCumulative(onm, cTemplate));
+        return static_cast<T*>(_registerCumulative(onm, cTemplate));
     }
     /// generate or restore from file a named TVectorD
     TVectorD* registerNamedVector(const string& vname, size_t nels = 0);

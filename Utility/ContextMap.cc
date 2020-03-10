@@ -73,3 +73,11 @@ const std::string& optionalGlobalArg(const std::string& argname, const std::stri
     if(it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
     return it->second[0];
 }
+
+void displayGlobalArgs() {
+    printf("Global Arguments:\n");
+    for(auto& kv: GlobalArgs()) {
+        printf("'%s':\n", kv.first.c_str());
+        for(auto& s: kv.second) printf("\t* '%s'\n", s.c_str());
+    }
+}

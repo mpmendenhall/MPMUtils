@@ -36,8 +36,6 @@ public:
     /// set printCanvas suffix (filetype)
     virtual void setPrintSuffix(const string& sfx) { printsfx = sfx; }
 
-    /// open output ROOT file
-    void openROOT(OutputManager* base=nullptr);
     /// write output ROOT file (or directory within parent)
     string writeROOT();
 
