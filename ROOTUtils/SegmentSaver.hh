@@ -1,23 +1,5 @@
 /// \file SegmentSaver.hh Mechanism for loading pre-defined histograms from file
-/*
- * SegmentSaver.hh, part of the MPMUtils package.
- * Copyright (c) 2014 Michael P. Mendenhall
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
+// Michael P. Mendenhall, LLNL 2020
 
 #ifndef SEGMENTSAVER_HH
 #define SEGMENTSAVER_HH
@@ -50,11 +32,9 @@ public:
     double getInflAge() const { return inflAge; }
     /// change name, and subpaths if in parent
     virtual void rename(const string& nm);
+    /// write items to current directory or subdirectory of provided
+    TDirectory* writeItems(TDirectory* d = nullptr) override;
 
-    /// generate or restore from file a saved TH1F histogram
-    TH1* registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax);
-    /// generate or restore from file a saved TH2F histogram
-    TH2* registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax);
     /// generate or restore from file a saved histogram from a template
     TH1* _registerSavedHist(const string& hname, const TH1& hTemplate);
     /// generate or restore from file a saved histogram from a template
@@ -62,6 +42,15 @@ public:
     T* registerSavedHist(const string& hname, const T& hTemplate) {
         return static_cast<T*>(_registerSavedHist(hname, hTemplate));
     }
+    /// construct or retrieve saved TH1-derived class
+    template<class T, typename... Args>
+    void registerSaved(T*& o, const string& hname, Args&&... a) {
+        if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+        o = dynamic_cast<T*>(tryLoad(hname));
+        if(!o) o = addObject(new T(hname.c_str(), std::forward<Args>(a)...));
+        saveHists.emplace(hname, o);
+    }
+
     /// display list of saved histograms and cumulatives
     void displaySavedHists() const;
 
@@ -71,19 +60,34 @@ public:
     T* registerCumulative(const string& onm, const T& cTemplate) {
         return static_cast<T*>(_registerCumulative(onm, cTemplate));
     }
-    /// generate or restore from file a named TVectorD
-    TVectorD* registerNamedVector(const string& vname, size_t nels = 0);
-    /// generate or restore from file a named attribute string
-    TObjString* registerAttrString(const string& nm, const string& val);
-    /// clone or restore from file a template TObject
-    TObject* registerObject(const string& onm, const TObject& oTemplate);
+    /// construct or retrieve named cumulative from file
+    template<class CUMDAT, typename... Args>
+    void registerAccumulable(CUMDAT*& o, const string& onm, Args&&... a) {
+        if(cumDat.count(onm)) throw std::runtime_error("Duplicate cumulative name '" + onm + "'");
+        cumDat[onm] = o = dirIn? new CUMDAT(onm, *dirIn) : new CUMDAT(onm, std::forward<Args>(a)...);
+    }
+
+    /// construct or restore non-cumulative by name
+    template<class T, typename... Args>
+    void registerWithName(T*& o, const string& onm, Args&&... a) {
+        o = dynamic_cast<T*>(tryLoad(onm));
+        if(!o) addWithName(o = new T(std::forward<Args>(a)...), onm);
+    }
+    /// copy from template or restore non-cumulative by name
+    template<class T>
+    T* registerWithName(const string& onm, const T& oTemplate) {
+        auto o = dynamic_cast<T*>(tryLoad(onm));
+        return o? o : addWithName(oTemplate.Clone(onm.c_str()), onm);
+    }
 
     /// get core histogram by name
     TH1* getSavedHist(const string& hname);
     /// get saved histogram by name, const version
     const TH1* getSavedHist(const string& hname) const;
     /// get cumulative data by name, const
-    const TCumulative* getCumulative(const string& cname) const;
+    const CumulativeData* getCumulative(const string& cname) const;
+    /// get cumulative data by name, const
+    const TCumulative* getTCumulative(const string& cname) const;
     /// get full histograms listing
     const map<string,TH1*>& getHists() const { return saveHists; }
     /// zero out all saved histograms
@@ -147,8 +151,9 @@ protected:
     TObject* tryLoad(const string& oname);
 
     map<string,TH1*> saveHists;         ///< saved cumulative histograms
-    set<TObject*> doNotScale;           ///< items not to rescale
-    map<string,TCumulative*> cumDat;    ///< non-TH1-derived cumulative datatypes
+    set<void*> doNotScale;              ///< items not to rescale
+    map<string, CumulativeData*> cumDat;    ///< non-TObject cumulative types
+    map<string, TCumulative*> tCumDat;      ///< non-TH1-derived cumulative datatypes
     double inflAge = 0;                 ///< age of input file [s]; 0 for brand-new files
 };
 

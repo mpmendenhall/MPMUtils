@@ -8,7 +8,7 @@
 
 PluginSaver::PluginSaver(OutputManager* pnt, const string& nm, const string& inflName):
 SegmentSaver(pnt, nm, inflName) {
-    configstr = registerAttrString("configstr", "");
+    registerWithName(configstr, "configstr");
 }
 
 void PluginSaver::LoadConfig(const string& fname) {

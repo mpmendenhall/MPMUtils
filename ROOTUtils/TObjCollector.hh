@@ -33,18 +33,18 @@ public:
     /// clear (delete) items
     void deleteAll();
     /// register a named ROOT object for output (and eventual deletion)
-    virtual TNamed* addObject(TNamed* o);
+    virtual void addNamedObject(TNamed* o) { namedItems.push_back(o); }
+    /// convenience pass-through wrapper
+    template<class T>
+    T* addObject(T* o) { addNamedObject(o); return o; }
+
     /// register object to deletion list (not written to file)
     virtual TObject* addDeletable(TObject* o);
     /// register an anonymous ROOT object under the specified name
-    virtual TObject* addWithName(TObject* o, const string& name);
-
-    /// generate a TH1F registered with output objects list
-    TH1F* registeredTH1F(string hname, string htitle, unsigned int nbins, float x0, float x1);
-    /// generate a TH1D registered with output objects list
-    TH1D* registeredTH1D(string hname, string htitle, unsigned int nbins, float x0, float x1);
-    /// generate a TH2F registered with output objects list
-    TH2F* registeredTH2F(string hname, string htitle, unsigned int nbinsx, float x0, float x1, unsigned int nbinsy, float y0, float y1);
+    virtual TObject* addAnonymous(TObject* o, const string& name);
+    /// convenience pass-through wrapper
+    template<class T>
+    T* addWithName(T* o, const string& name) { addAnonymous(o, name); return o; }
 
     vector<TNamed*> namedItems;         ///< objects with their own names; held until deleted
     map<string,TObject*> anonItems;     ///< objects assigned a name; held until deleted.

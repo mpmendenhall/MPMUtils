@@ -1,23 +1,4 @@
 /// \file SegmentSaver.cc
-/*
- * SegmentSaver.cc, part of the MPMUtils package.
- * Copyright (c) 2014 Michael P. Mendenhall
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
 
 #include "SegmentSaver.hh"
 #include "PathUtils.hh"
@@ -42,13 +23,21 @@ SegmentSaver::~SegmentSaver() {
         fIn->Close();
         delete fIn;
     }
+    for(auto& kv: cumDat) delete kv.second;
+}
+
+TDirectory* SegmentSaver::writeItems(TDirectory* d) {
+    d = OutputManager::writeItems(d);
+    if(d) d->cd();
+    for(auto& kv: cumDat) kv.second->Write();
+    return d;
 }
 
 bool SegmentSaver::isNormalized() {
     if(!normalization) {
         auto im0 = ignoreMissingHistos;
         ignoreMissingHistos = true;
-        normalization = registerNamedVector("normalization", 0);
+        registerWithName(normalization, "normalization");
         ignoreMissingHistos = im0;
     }
     return normalization->GetNrows();
@@ -85,48 +74,16 @@ TObject* SegmentSaver::tryLoad(const string& oname) {
     return o;
 }
 
-TH1* SegmentSaver::registerSavedHist(const string& hname, const string& title,unsigned int nbins, float xmin, float xmax) {
-    if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
-    auto h = dynamic_cast<TH1*>(tryLoad(hname));
-    if(!h) h = registeredTH1F(hname,title,nbins,xmin,xmax);
-    saveHists.emplace(hname,h);
-    return h;
-}
-
-TH2* SegmentSaver::registerSavedHist2(const string& hname, const string& title,unsigned int nbinsx, float xmin, float xmax, float nbinsy, float ymin, float ymax) {
-    if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
-    auto h = dynamic_cast<TH2*>(tryLoad(hname));
-    if(h) resetZaxis(h);
-    else h = registeredTH2F(hname,title,nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-    saveHists.emplace(hname,h);
-    return h;
-}
-
 TH1* SegmentSaver::_registerSavedHist(const string& hname, const TH1& hTemplate) {
     if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
     auto h = dynamic_cast<TH1*>(tryLoad(hname));
     if(h) resetZaxis(h);
     else {
-        h = (TH1*)addObject((TH1*)hTemplate.Clone(hname.c_str()));
+        h = addObject((TH1*)hTemplate.Clone(hname.c_str()));
         h->Reset();
     }
     saveHists.emplace(hname,h);
     return h;
-}
-
-TVectorD* SegmentSaver::registerNamedVector(const string& vname, size_t nels) {
-    TVectorD* V = dynamic_cast<TVectorD*>(tryLoad(vname));
-    return V? V : (TVectorD*)addWithName(new TVectorD(nels), vname);
-}
-
-TObjString* SegmentSaver::registerAttrString(const string& nm, const string& val) {
-    TObjString* s = dynamic_cast<TObjString*>(tryLoad(nm));
-    return s? s : (TObjString*)addWithName(new TObjString(val.c_str()), nm);
-}
-
-TObject* SegmentSaver::registerObject(const string& onm, const TObject& oTemplate) {
-    TObject* o = tryLoad(onm);
-    return o? o : addWithName(oTemplate.Clone(onm.c_str()), onm);
 }
 
 TCumulative* SegmentSaver::_registerCumulative(const string& onm, const TCumulative& cTemplate) {
@@ -135,7 +92,7 @@ TCumulative* SegmentSaver::_registerCumulative(const string& onm, const TCumulat
         c = static_cast<TCumulative*>(addObject((TNamed*)cTemplate.Clone(onm.c_str())));
         c->Clear();
     }
-    cumDat.emplace(onm,c);
+    tCumDat.emplace(onm,c);
     return c;
 }
 
@@ -151,15 +108,22 @@ const TH1* SegmentSaver::getSavedHist(const string& hname) const {
     return it->second;
 }
 
-const TCumulative* SegmentSaver::getCumulative(const string& cname) const {
+const TCumulative* SegmentSaver::getTCumulative(const string& cname) const {
+    auto it = tCumDat.find(cname);
+    if(it == tCumDat.end()) throw std::runtime_error("Missing TCumulative '"+cname+"'");
+    return it->second;
+}
+
+const CumulativeData* SegmentSaver::getCumulative(const string& cname) const {
     auto it = cumDat.find(cname);
-    if(it == cumDat.end()) throw std::runtime_error("Missing cumulative '"+cname+"'");
+    if(it == cumDat.end()) throw std::runtime_error("Missing Cumulative '"+cname+"'");
     return it->second;
 }
 
 void SegmentSaver::zeroSavedHists() {
     for(auto& kv: saveHists) kv.second->Reset();
-    for(auto& kv: cumDat) kv.second->Clear();
+    for(auto& kv: cumDat) kv.second->Scale(0);
+    for(auto& kv: tCumDat) kv.second->Clear();
 }
 
 void SegmentSaver::scaleData(double s) {
@@ -172,6 +136,7 @@ void SegmentSaver::scaleData(double s) {
         }
     }
     for(auto& kv: cumDat) if(!doNotScale.count(kv.second)) kv.second->Scale(s);
+    for(auto& kv: tCumDat) if(!doNotScale.count(kv.second)) kv.second->Scale(s);
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
@@ -181,8 +146,8 @@ bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
             return false;
         }
     }
-    for(auto& kv: cumDat) {
-        if(!S.cumDat.count(kv.first)) {
+    for(auto& kv: tCumDat) {
+        if(!S.tCumDat.count(kv.first)) {
             if(throwit) throw std::runtime_error("Mismatched cumulative '"+kv.first+"' in '"+path+"'");
             return false;
         }
@@ -204,7 +169,14 @@ map<string,float> SegmentSaver::compareKolmogorov(const SegmentSaver& S) const {
 void SegmentSaver::addSegment(const SegmentSaver& S, double sc) {
     isEquivalent(S, true);
     for(auto& kv: saveHists) kv.second->Add(S.getSavedHist(kv.first), sc);
-    for(auto& kv: cumDat) kv.second->Add(*S.getCumulative(kv.first), sc);
+    for(auto& kv: tCumDat) {
+        auto o = S.getTCumulative(kv.first);
+        if(o) kv.second->Add(*o, sc);
+    }
+    for(auto& kv: cumDat) {
+        auto o = S.getCumulative(kv.first);
+        if(o) kv.second->Add(*o, sc);
+    }
 }
 
 size_t SegmentSaver::addFiles(const vector<string>& inflnames) {
@@ -221,6 +193,7 @@ size_t SegmentSaver::addFiles(const vector<string>& inflnames) {
 
 void SegmentSaver::displaySavedHists() const {
     for(auto& kv: saveHists) printf("\thistogram '%s'\n", kv.first.c_str());
-    for(auto& kv: cumDat) printf("\tcumulative '%s'\n", kv.first.c_str());
+    for(auto& kv: cumDat) printf("\tCumulative '%s'\n", kv.first.c_str());
+    for(auto& kv: tCumDat) printf("\tTCumulative '%s'\n", kv.first.c_str());
 }
 
