@@ -1,35 +1,35 @@
-/// \file CumulativeData.hh Virtual base class for objects that can be scaled/summed
-// This file was produced under the employ of the United States Government,
-// and is consequently in the PUBLIC DOMAIN, free from all provisions of
-// US Copyright Law (per USC Title 17, Section 105).
-//
-// -- Michael P. Mendenhall, 2016
+/// \file CumulativeData.hh Base class for objects that can be scaled/summed
+// -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef CUMULATIVEDATA_HH
 #define CUMULATIVEDATA_HH
 
-#include <Rtypes.h>
+#include <string>
+using std::string;
 
-/// Virtual base class for objects that can be scaled/summed
+/// Base class for objects that can be scaled/summed
 class CumulativeData {
 public:
     /// Constructor
-    CumulativeData() { }
-    /// Destructor
+    CumulativeData(const string& _name): name(_name) { }
+    /// Polymorphic Destructor
     virtual ~CumulativeData() { }
 
     /// Scale contents by factor
-    virtual void _Scale(Double_t s) = 0;
-    /// add another histogram, assuming same binning convention or re-calculating bins
-    virtual void _Add(const CumulativeData* CD, Double_t s = 1.) = 0;
-    /// clear data contents
-    virtual void _Clear() { _Scale(0); }
-    /// inline sum
-    CumulativeData& operator+=(const CumulativeData& rhs) { _Add(&rhs); return *this; }
-    /// inline product
-    CumulativeData& operator*=(Double_t s) { _Scale(s); return *this; }
+    virtual void Scale(double s) = 0;
+    /// Add another of same type, with scale factor
+    virtual void Add(const CumulativeData& CD, double s = 1.) = 0;
+    /// End-of-fill notification
+    virtual void endFill() { }
+    /// Store state
+    virtual void Write() { }
 
-    ClassDef(CumulativeData,1);
+    /// inline sum
+    CumulativeData& operator+=(const CumulativeData& rhs) { Add(rhs); return *this; }
+    /// inline product
+    CumulativeData& operator*=(double s) { Scale(s); return *this; }
+
+    const string name;  ///< savefile name
 };
 
 #endif

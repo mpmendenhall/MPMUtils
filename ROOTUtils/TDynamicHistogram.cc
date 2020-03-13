@@ -56,8 +56,3 @@ TGraphErrors* TDynamicHistogram::MakeGraph() const {
     }
     return g;
 }
-
-void TDynamicHistogram::_Add(const CumulativeData* CD, Double_t s) {
-    auto TDH = dynamic_cast<const TDynamicHistogram*>(CD);
-    if(TDH) Add(*TDH,s);
-}

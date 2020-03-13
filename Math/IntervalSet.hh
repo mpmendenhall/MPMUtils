@@ -14,8 +14,8 @@ using std::set;
 template<typename T = double>
 class Interval: public std::pair<T,T> {
 public:
-    /// Inherit constructors
-    using std::pair<T,T>::pair;
+    /// Default constructor
+    Interval(T a = {}, T b = {}): std::pair<T,T>(a,b) { }
 
     /// intersection of intervals
     const Interval& operator&=(Interval b) {

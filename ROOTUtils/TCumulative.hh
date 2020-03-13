@@ -15,11 +15,13 @@
 class TCumulative: public TNamed, public CumulativeData {
 public:
     /// Constructor
-    TCumulative(const TString& nme = "", const TString& ttl = ""): TNamed(nme,ttl) { }
+    TCumulative(const TString& nme = "", const TString& ttl = ""): TNamed(nme,ttl), CumulativeData((const char*)(nme)) { }
     /// Destructor
     virtual ~TCumulative() { }
+    /// Clear contents
+    void Clear(const char* o = 0) override { TNamed::Clear(o); Scale(0); }
 
-    ClassDefOverride(TCumulative,1);
+    ClassDefOverride(TCumulative, 2);
 };
 
 #endif

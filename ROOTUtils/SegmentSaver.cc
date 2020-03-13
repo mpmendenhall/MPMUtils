@@ -133,7 +133,7 @@ TCumulative* SegmentSaver::_registerCumulative(const string& onm, const TCumulat
     auto c = dynamic_cast<TCumulative*>(tryLoad(onm));
     if(!c) {
         c = static_cast<TCumulative*>(addObject((TNamed*)cTemplate.Clone(onm.c_str())));
-        c->_Clear();
+        c->Clear();
     }
     cumDat.emplace(onm,c);
     return c;
@@ -159,7 +159,7 @@ const TCumulative* SegmentSaver::getCumulative(const string& cname) const {
 
 void SegmentSaver::zeroSavedHists() {
     for(auto& kv: saveHists) kv.second->Reset();
-    for(auto& kv: cumDat) kv.second->_Clear();
+    for(auto& kv: cumDat) kv.second->Clear();
 }
 
 void SegmentSaver::scaleData(double s) {
@@ -171,7 +171,7 @@ void SegmentSaver::scaleData(double s) {
             kv.second->Scale(s);
         }
     }
-    for(auto& kv: cumDat) if(!doNotScale.count(kv.second)) kv.second->_Scale(s);
+    for(auto& kv: cumDat) if(!doNotScale.count(kv.second)) kv.second->Scale(s);
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
@@ -204,7 +204,7 @@ map<string,float> SegmentSaver::compareKolmogorov(const SegmentSaver& S) const {
 void SegmentSaver::addSegment(const SegmentSaver& S, double sc) {
     isEquivalent(S, true);
     for(auto& kv: saveHists) kv.second->Add(S.getSavedHist(kv.first), sc);
-    for(auto& kv: cumDat) kv.second->_Add(S.getCumulative(kv.first), sc);
+    for(auto& kv: cumDat) kv.second->Add(*S.getCumulative(kv.first), sc);
 }
 
 size_t SegmentSaver::addFiles(const vector<string>& inflnames) {

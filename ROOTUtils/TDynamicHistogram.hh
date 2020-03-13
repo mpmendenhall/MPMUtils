@@ -32,7 +32,7 @@ public:
     /// fill new data point
     void Fill(Double_t x, Double_t w=1.);
     /// scale all bin contents
-    void Scale(Double_t s);
+    void Scale(Double_t s) override;
     /// add another histogram, assuming same binning convention or re-calculating bins
     void Add(const TDynamicHistogram& h, Double_t s = 1., Bool_t rebin = false);
     /// get data
@@ -48,10 +48,8 @@ public:
     /// divide bins by width and optional additional scaling
     virtual void normalize_to_bin_width(Double_t sc = 1.);
 
-    /// Scale contents by factor
-    void _Scale(Double_t s) override { Scale(s); }
     /// add another histogram, assuming same binning convention or re-calculating bins
-    void _Add(const CumulativeData* CD, Double_t s = 1.) override;
+    void Add(const CumulativeData& CD, Double_t s = 1.) override { Add(dynamic_cast<const TDynamicHistogram&>(CD), s); }
 
 protected:
 

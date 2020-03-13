@@ -22,23 +22,20 @@ public:
     TCumulativeMap(const TString& nme = "", const TString& ttl = ""): TCumulative(nme,ttl) { }
 
     /// Scale contents by factor
-    void _Scale(Double_t s) override { for(auto& kv: *this) kv.second *= s; }
+    void Scale(Double_t s) override { for(auto& kv: *this) kv.second *= s; }
     /// Add another object of the same type
-    void _Add(const CumulativeData* CD, Double_t s = 1.) override {
-        if(!CD) return;
-        auto m2 = dynamic_cast<const TCumulativeMap<K_,V_>*>(CD);
-        if(!m2) throw std::logic_error("Requires another TCumulativeMap to add");
-        for(auto& kv: *m2) Insert(kv.first, kv.second*s);
+    void Add(const CumulativeData& CD, Double_t s = 1.) override {
+        for(auto& kv: dynamic_cast<const TCumulativeMap<K_,V_>&>(CD)) Insert(kv.first, kv.second*s);
     }
     /// clear data contents
-    void _Clear() override { this->clear(); }
+    void Clear(const char* = nullptr) override { this->clear(); }
     /// Insert/add contents
     void Insert(const K_& k, const V_& v) { (*this)[k] += v; }
 
     /// Get sum total of all contents
     V_ GetTotal() const { V_ sm = {}; for(auto& kv: *this) sm += kv.second; return sm; }
 
-    ClassDefOverride(TCumulativeMap, 2)
+    ClassDefOverride(TCumulativeMap, 3)
 };
 
 #endif
