@@ -135,6 +135,7 @@ public:
     typedef typename CB::cluster_t cluster_t;
     typedef typename cluster_t::T T;
     typedef typename cluster_t::ordering_t ordering_t;
+    typedef T sink_t;
 
     /// Basic constructor
     CBWindow(ordering_t cdx, ordering_t dw):

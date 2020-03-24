@@ -20,8 +20,10 @@ struct fftwx<double> {
     typedef fftw_complex fcplx_t;
     typedef std::complex<real_t> scplx_t;
 
-    static real_t* alloc_real(size_t i) { return fftw_alloc_real(i); }
-    static fcplx_t* alloc_complex(size_t i) { return fftw_alloc_complex(i); }
+    static real_t* alloc_real(size_t i) { return static_cast<real_t*>(fftw_malloc(i*sizeof(real_t))); }
+    static fcplx_t* alloc_complex(size_t i) { return static_cast<fcplx_t*>(fftw_malloc(i*sizeof(fcplx_t))); }
+    //static real_t* alloc_real(size_t i) { return fftw_alloc_real(i); }
+    //static fcplx_t* alloc_complex(size_t i) { return fftw_alloc_complex(i); }
     static void free(void* p) { fftw_free(p); }
     static void execute(plan_t& p) { fftw_execute(p); }
 
@@ -42,8 +44,10 @@ struct fftwx<float> {
     typedef fftwf_complex fcplx_t;
     typedef std::complex<real_t> scplx_t;
 
-    static real_t* alloc_real(size_t i) { return fftwf_alloc_real(i); }
-    static fcplx_t* alloc_complex(size_t i) { return fftwf_alloc_complex(i); }
+    static real_t* alloc_real(size_t i) { return static_cast<real_t*>(fftwf_malloc(i*sizeof(real_t))); }
+    static fcplx_t* alloc_complex(size_t i) { return static_cast<fcplx_t*>(fftwf_malloc(i*sizeof(fcplx_t))); }
+    //static real_t* alloc_real(size_t i) { return fftwf_alloc_real(i); }
+    //static fcplx_t* alloc_complex(size_t i) { return fftwf_alloc_complex(i); }
     static void free(void* p) { fftwf_free(p); }
     static void execute(plan_t& p) { fftwf_execute(p); }
 
@@ -64,8 +68,10 @@ struct fftwx<long double> {
     typedef fftwl_complex fcplx_t;
     typedef std::complex<real_t> scplx_t;
 
-    static real_t* alloc_real(size_t i) { return fftwl_alloc_real(i); }
-    static fcplx_t* alloc_complex(size_t i) { return fftwl_alloc_complex(i); }
+    static real_t* alloc_real(size_t i) { return static_cast<real_t*>(fftwl_malloc(i*sizeof(real_t))); }
+    static fcplx_t* alloc_complex(size_t i) { return static_cast<fcplx_t*>(fftwl_malloc(i*sizeof(fcplx_t))); }
+    //static real_t* alloc_real(size_t i) { return fftwl_alloc_real(i); }
+    //static fcplx_t* alloc_complex(size_t i) { return fftwl_alloc_complex(i); }
     static void free(void* p) { fftwl_free(p); }
     static void execute(plan_t& p) { fftwl_execute(p); }
 

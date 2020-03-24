@@ -23,7 +23,7 @@ public:
     void tFill(double t, double x, double y) { OQ.push({t, h->FindBin(x,y)}); }
 
     /// end-of-data operations
-    void endFill() override { OQ.flush(); MultiFill::endFill(); }
+    void endFill() override { OQ.signal(DATASTREAM_END); MultiFill::endFill(); }
 
 
 protected:
@@ -32,7 +32,7 @@ protected:
     typedef ClusterBuilder<cluster_t> super;
 
     /// pre-ordering buffer
-    InlineOrderingQueue<ordbin_t> OQ;
+    InlineOrderingQueue<DataSink<ordbin_t>> OQ;
 
     /// fill from cluster
     bool checkCluster(cluster_t& o) override {
