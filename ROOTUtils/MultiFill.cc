@@ -9,11 +9,9 @@ using std::vector;
 MultiFill::MultiFill(const string& _name, TH1& H):
 CumulativeData(_name), h(&H), M(new TMatrixD(H.GetNcells(), H.GetNcells())) { }
 
-MultiFill::MultiFill(const string& _name, TDirectory& d):
-CumulativeData(_name),
-h(dynamic_cast<TH1*>(d.Get(name.c_str()))),
+MultiFill::MultiFill(const string& _name, TDirectory& d, TH1& H):
+CumulativeData(_name), h(&H),
 M(dynamic_cast<TMatrixD*>(d.Get((name + "_Cov").c_str()))) {
-    if(!h) throw std::runtime_error("Missing MultiFill histogram '"+name+"'");
     if(!M) throw std::runtime_error("Missing MultiFill covariance '"+name+"_Cov'");
 }
 

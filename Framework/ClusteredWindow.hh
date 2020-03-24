@@ -21,6 +21,9 @@ public:
     using super::begin;
     using super::end;
     using super::push_back;
+    /// max value for ordering operator
+    static constexpr ordering_t order_max = std::numeric_limits<ordering_t>::max();
+
 
     /// Constructor
     explicit Cluster(ordering_t w = {}): dx(w) { }
@@ -85,7 +88,10 @@ public:
 
     /// accept data flow signal
     void signal(datastream_signal_t sig) override {
-        if(sig >= DATASTREAM_FLUSH) completeCluster();
+        if(sig >= DATASTREAM_FLUSH) {
+            completeCluster();
+            t_prev = -C::order_max;
+        }
         if(clustOut) clustOut->signal(sig);
     }
 
@@ -118,8 +124,8 @@ protected:
     /// examine and decide whether to include cluster
     virtual bool checkCluster(cluster_t& o) { return o.size(); }
 
-    cluster_t currentC{};   ///< cluster currently being built
-    ordering_t t_prev = -std::numeric_limits<ordering_t>::max();    ///< previous item arrival
+    cluster_t currentC{};               ///< cluster currently being built
+    ordering_t t_prev = -C::order_max;  ///< previous item arrival
 };
 
 /// Wrap ClusterBuilder in OrderedWindow

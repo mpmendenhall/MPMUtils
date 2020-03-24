@@ -15,7 +15,7 @@ public:
     /// Constructor, corresponding to histogram
     BurstFill(const string& _name, TH1& H): MultiFill(_name, H), ClusterBuilder(500e3), OQ(this, 1e9) { }
     /// Constructor, loaded from file
-    BurstFill(const string& _name, TDirectory& d): MultiFill(_name, d), ClusterBuilder(500e3), OQ(this, 1e9) { }
+    BurstFill(const string& _name, TDirectory& d, TH1& H): MultiFill(_name, d, H), ClusterBuilder(500e3), OQ(this, 1e9) { }
 
     /// fill (1D) with event time
     void tFill(double t, double x) { OQ.push({t, h->FindBin(x)}); }

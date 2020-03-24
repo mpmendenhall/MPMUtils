@@ -20,12 +20,12 @@ string ADBfile() {
     string dbfile;
     auto& v = GlobalArgs()["AnaDB"];
     if(v.size() == 1) dbfile = v[0];
-    else dbfile = getEnv("DAFT_ANADB");
+    else dbfile = getEnv(PROJ_ENV_PFX+"_ANADB");
 
     if(!fileExists(dbfile)) {
         printf("Initializing new AnaDB at '%s'\n", dbfile.c_str());
         makePath(dbfile, true);
-        string cmd = "sqlite3 '" + dbfile + "' < "+getEnv("DAFT_CODE",true)+"/GeneralUtils/AnalysisDB_Schema.sql";
+        string cmd = "sqlite3 '" + dbfile + "' < "+getEnv(PROJ_ENV_PFX+"_CODE",true)+"/GeneralUtils/AnalysisDB_Schema.sql";
         int err = system(cmd.c_str());
         if(err) throw std::runtime_error("Bad AnaDB path '"+dbfile+"'");
     }

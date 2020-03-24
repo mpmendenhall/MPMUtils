@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <stdexcept>
 
+const string PROJ_ENV_PFX = "DAFT";
+
 bool getEnv(const string& name, string& val, bool fail_if_missing) {
     const char* envv = getenv(name.c_str());
     if(envv) {

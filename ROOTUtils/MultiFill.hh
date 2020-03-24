@@ -19,7 +19,7 @@ public:
     /// Constructor, corresponding to histogram
     MultiFill(const string& _name, TH1& H);
     /// Constructor, loaded from file
-    MultiFill(const string& _name, TDirectory& d);
+    MultiFill(const string& _name, TDirectory& d, TH1& H);
     /// Destructor
     ~MultiFill() { delete M; }
 
