@@ -35,20 +35,26 @@ public:
     /// write items to current directory or subdirectory of provided
     TDirectory* writeItems(TDirectory* d = nullptr) override;
 
-    /// generate or restore from file a saved histogram from a template
-    TH1* _registerSavedHist(const string& hname, const TH1& hTemplate);
-    /// generate or restore from file a saved histogram from a template
-    template<class T>
-    T* registerSavedHist(const string& hname, const T& hTemplate) {
-        return static_cast<T*>(_registerSavedHist(hname, hTemplate));
-    }
     /// construct or retrieve saved TH1-derived class
     template<class T, typename... Args>
     void registerSaved(T*& o, const string& hname, Args&&... a) {
         if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
-        o = dynamic_cast<T*>(tryLoad(hname));
+        o = tryLoad<T>(hname);
         if(!o) o = addObject(new T(hname.c_str(), std::forward<Args>(a)...));
         saveHists.emplace(hname, o);
+    }
+
+    /// clone from template or restore from file a saved TH1-derived class
+    template<class T, class U>
+    void registerSavedClone(T*& h, const string& hname, const U& hTemplate) {
+        if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+        h = tryLoad<U>(hname);
+        if(h) resetZaxis(h);
+        else {
+            h = addObject((U*)hTemplate.Clone(hname.c_str()));
+            h->Reset();
+        }
+        saveHists.emplace(hname, h);
     }
 
     /// display list of saved histograms and cumulatives
@@ -56,6 +62,7 @@ public:
 
     /// clone or restore from file a cumulative object
     TCumulative* _registerCumulative(const string& onm, const TCumulative& cTemplate);
+    /// register cumulative with useful type return
     template<class T>
     T* registerCumulative(const string& onm, const T& cTemplate) {
         return static_cast<T*>(_registerCumulative(onm, cTemplate));
@@ -64,19 +71,19 @@ public:
     template<class CUMDAT, typename... Args>
     void registerAccumulable(CUMDAT*& o, const string& onm, Args&&... a) {
         if(cumDat.count(onm)) throw std::runtime_error("Duplicate cumulative name '" + onm + "'");
-        cumDat[onm] = o = dirIn? new CUMDAT(onm, *dirIn) : new CUMDAT(onm, std::forward<Args>(a)...);
+        cumDat[onm] = o = dirIn? new CUMDAT(onm, *dirIn, std::forward<Args>(a)...) : new CUMDAT(onm, std::forward<Args>(a)...);
     }
 
     /// construct or restore non-cumulative by name
     template<class T, typename... Args>
     void registerWithName(T*& o, const string& onm, Args&&... a) {
-        o = dynamic_cast<T*>(tryLoad(onm));
+        o = tryLoad<T>(onm);
         if(!o) addWithName(o = new T(std::forward<Args>(a)...), onm);
     }
     /// copy from template or restore non-cumulative by name
     template<class T>
     T* registerWithName(const string& onm, const T& oTemplate) {
-        auto o = dynamic_cast<T*>(tryLoad(onm));
+        auto o = tryLoad<T>(onm);
         return o? o : addWithName(oTemplate.Clone(onm.c_str()), onm);
     }
 
@@ -121,7 +128,7 @@ public:
     /// optional mid-processing status check calculations/results/plots
     virtual void checkStatus() { }
     /// cleanup at end of data loading; set final = false to indicate more data yet to come
-    virtual void finishData(bool /*final*/ = true) { }
+    virtual void finishData(bool /*final*/ = true) { for(auto& kv: cumDat) kv.second->endFill(); }
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
     virtual void normalize() { if(!isNormalized()) { normalization->ResizeTo(1); (*normalization)(0) = 1; }  }
     /// virtual routine for generating calculated hists
@@ -148,7 +155,16 @@ public:
 protected:
 
     /// attempt to load named object from file, registering and returning if successful
-    TObject* tryLoad(const string& oname);
+    TObject* _tryLoad(const string& oname);
+    /// auto-recasting version
+    template<class T>
+    T* tryLoad(const string& oname) {
+        auto o = _tryLoad(oname);
+        if(!o) return nullptr;
+        auto oo = dynamic_cast<T*>(o);
+        if(!oo) throw std::runtime_error("Mismatched object type for "+oname);
+        return oo;
+    }
 
     map<string,TH1*> saveHists;         ///< saved cumulative histograms
     set<void*> doNotScale;              ///< items not to rescale

@@ -36,7 +36,7 @@ public:
     /// set printCanvas suffix (filetype)
     virtual void setPrintSuffix(const string& sfx) { printsfx = sfx; }
 
-    /// write output ROOT file (or directory within parent)
+    /// write output ROOT file fullpath().root (or directory within parent)
     string writeROOT();
 
     TCanvas defaultCanvas;              ///< canvas for drawing plots

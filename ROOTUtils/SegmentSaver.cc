@@ -56,7 +56,7 @@ void resetZaxis(TH1* o) {
     if(a) o->GetListOfFunctions()->Remove(a);
 }
 
-TObject* SegmentSaver::tryLoad(const string& oname) {
+TObject* SegmentSaver::_tryLoad(const string& oname) {
     if(!fIn && !dirIn) return nullptr;
     TObject* o = nullptr;
     if(dirIn) dirIn->GetObject(oname.c_str(),o);   // first try in my directory
@@ -74,20 +74,8 @@ TObject* SegmentSaver::tryLoad(const string& oname) {
     return o;
 }
 
-TH1* SegmentSaver::_registerSavedHist(const string& hname, const TH1& hTemplate) {
-    if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
-    auto h = dynamic_cast<TH1*>(tryLoad(hname));
-    if(h) resetZaxis(h);
-    else {
-        h = addObject((TH1*)hTemplate.Clone(hname.c_str()));
-        h->Reset();
-    }
-    saveHists.emplace(hname,h);
-    return h;
-}
-
 TCumulative* SegmentSaver::_registerCumulative(const string& onm, const TCumulative& cTemplate) {
-    auto c = dynamic_cast<TCumulative*>(tryLoad(onm));
+    auto c = tryLoad<TCumulative>(onm);
     if(!c) {
         c = static_cast<TCumulative*>(addObject((TNamed*)cTemplate.Clone(onm.c_str())));
         c->Clear();

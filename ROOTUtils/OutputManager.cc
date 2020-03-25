@@ -21,7 +21,7 @@ TDirectory* OutputManager::getRootOut() {
     if(!rootDir) {
         if(parent) rootDir = parent->getRootOut()->mkdir(path.c_str());
         else {
-            auto fname = path + ".root";
+            auto fname = fullPath() + ".root";
             makePath(fname, true);
             printf("Writing to '%s'\n", fname.c_str());
             rootDir = new TFile(fname.c_str(), "RECREATE");
