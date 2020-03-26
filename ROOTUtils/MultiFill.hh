@@ -8,14 +8,18 @@
 #include <TDirectory.h>
 #include <TH1.h>
 #include <TMatrixD.h>
-#include <stdexcept>
 #include <TH2F.h>
+
+#include <stdexcept>
+#include <cmath>
 #include <vector>
 using std::vector;
 
 /// Covariance matrix paired to histogram for correlated-bin fills
 class MultiFill: public CumulativeData {
 public:
+    /// Default constructor -- set M, h externally
+    MultiFill() { }
     /// Constructor, corresponding to histogram
     MultiFill(const string& _name, TH1& H);
     /// Constructor, loaded from file
@@ -40,6 +44,23 @@ public:
         fillBins(vb);
     }
 
+    /// sum + error of specified bins
+    template<class V>
+    double binSum(const V& v, double& err) const {
+        checkInit();
+        err = 0;
+        double s = 0;
+        for(auto& b1: v) {
+            s += h->GetBinContent(b1);
+            for(auto& b2: v) err += (*M)(b1,b2);
+        }
+        err = sqrt(err);
+        return s;
+    }
+
+    /// bin range sum over [b0,b1)
+    double binSum(int b0, int b1, double& err) const;
+
     /// scaling of M only --- assumes h is managed externally
     void Scale(double s) override { *M *= s*s; }
     /// scaling, including h
@@ -59,6 +80,7 @@ public:
 
     TH1* h = nullptr;       ///< the histogram (assumed to be managed externally)
     TMatrixD* M = nullptr;  ///< covariance matrix (owned by this)
+
 protected:
     /// initialization/usability check
     virtual void checkInit() const { if(!h || !M) throw std::logic_error("MultiFill uninitialized"); };

@@ -2,9 +2,7 @@
 
 #include "MultiFill.hh"
 #include <TAxis.h>
-#include <cmath>
-#include <vector>
-using std::vector;
+#include <numeric> // for std::iota
 
 MultiFill::MultiFill(const string& _name, TH1& H):
 CumulativeData(_name), h(&H), M(new TMatrixD(H.GetNcells(), H.GetNcells())) { }
@@ -13,6 +11,14 @@ MultiFill::MultiFill(const string& _name, TDirectory& d, TH1& H):
 CumulativeData(_name), h(&H),
 M(dynamic_cast<TMatrixD*>(d.Get((name + "_Cov").c_str()))) {
     if(!M) throw std::runtime_error("Missing MultiFill covariance '"+name+"_Cov'");
+}
+
+double MultiFill::binSum(int b0, int b1, double& err) const {
+    auto rev = b1 < b0;
+    if(rev) std::swap(b1,b0);
+    vector<int> v(b1 - b0);
+    std::iota(v.begin(), v.end(), b0);
+    return rev? -binSum(v,err) : binSum(v,err);
 }
 
 void MultiFill::normalize_to_bin_width(double xscale, const string& ytitle) {

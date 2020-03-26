@@ -11,7 +11,7 @@ using std::string;
 class CumulativeData {
 public:
     /// Constructor
-    CumulativeData(const string& _name): name(_name) { }
+    explicit CumulativeData(const string& _name = ""): name(_name) { }
     /// Polymorphic Destructor
     virtual ~CumulativeData() { }
 
