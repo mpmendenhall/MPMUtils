@@ -1,5 +1,5 @@
 /// \file XMLTag.hh Simple XML output class
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef XMLTAG_HH
 #define XMLTAG_HH

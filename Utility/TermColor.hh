@@ -1,5 +1,5 @@
 /// \file TermColor.hh Defines for terminal text color control codes
-// Michael P. Mendenhall, 2017
+// -- Michael P. Mendenhall, 2017
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"

@@ -1,5 +1,5 @@
 /// \file PermutationGroup.hh Group of fixed-size permutations
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef PERMUTATIONGROUP_HH
 #define PERMUTATIONGROUP_HH

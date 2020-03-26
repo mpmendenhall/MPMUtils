@@ -1,5 +1,5 @@
 /// \file Icosahedral.hh Icosahedral symmetry manipulations
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 
 #ifndef ICOSAHEDRAL_HH

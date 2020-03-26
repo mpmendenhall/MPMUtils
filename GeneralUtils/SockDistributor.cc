@@ -1,5 +1,5 @@
 /// \file SockDistributor.cc
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #include "SockDistributor.hh"
 #include <cassert>

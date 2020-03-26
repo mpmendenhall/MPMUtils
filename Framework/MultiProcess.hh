@@ -1,5 +1,5 @@
 /// \file MultiProcess.hh Parallel-processing pipeline manager
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef MultiProcess_HH
 #define MultiProcess_HH

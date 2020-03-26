@@ -1,5 +1,5 @@
 /// \file KTAccumJob.cc
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #include "KTAccumJob.hh"
 

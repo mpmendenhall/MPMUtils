@@ -13,12 +13,12 @@ M(dynamic_cast<TMatrixD*>(d.Get((name + "_Cov").c_str()))) {
     if(!M) throw std::runtime_error("Missing MultiFill covariance '"+name+"_Cov'");
 }
 
-double MultiFill::binSum(int b0, int b1, double& err) const {
+double MultiFill::binSum(int b0, int b1, double& err, bool width) const {
     auto rev = b1 < b0;
     if(rev) std::swap(b1,b0);
     vector<int> v(b1 - b0);
     std::iota(v.begin(), v.end(), b0);
-    return rev? -binSum(v,err) : binSum(v,err);
+    return rev? -binSum(v,err,width) : binSum(v,err,width);
 }
 
 void MultiFill::normalize_to_bin_width(double xscale, const string& ytitle) {
@@ -47,6 +47,17 @@ void MultiFill::normalize_to_bin_width(double xscale, const string& ytitle) {
 void MultiFill::diagErrors() {
     checkInit();
     for(int i=0; i<h->GetNcells(); ++i) h->SetBinError(i, sqrt((*M)(i,i)));
+}
+
+void MultiFill::diagCov() {
+    if(!h) throw std::logic_error("Undefined input histogram");
+    if(!M) M = new TMatrixD(h->GetNcells(), h->GetNcells());
+    else (*M) *= 0;
+
+    for(int i=0; i<h->GetNcells(); ++i) {
+        auto e = h->GetBinError(i);
+        (*M)(i,i) = e*e;
+    }
 }
 
 TH2F* MultiFill::covHist() const {

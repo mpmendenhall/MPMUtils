@@ -1,5 +1,5 @@
 /// \file DataFrame.hh Manage lifecycle of generic data objects
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef DATAFRAME
 #define DATAFRAME

@@ -1,5 +1,5 @@
 /// \file ClusteredWindow.hh Short-range clustering organization
-// Michael P. Mendenhall, LLNL 2020
+// -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef CLUSTEREDWINDOW_HH
 #define CLUSTEREDWINDOW_HH

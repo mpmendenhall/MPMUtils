@@ -1,5 +1,5 @@
 /// \file PolarizedBetaAsym.hh Polarized nucleus beta decay spectrum/corrections
-// Michael P. Mendenhall
+// -- Michael P. Mendenhall
 
 #ifndef POLARIZEDBETAASYM_HH
 #define POLARIZEDBETAASYM_HH

@@ -1,5 +1,5 @@
 /// \file CyclicGroup.hh Cyclic groups
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef CYCLICGROUP_HH
 #define CYCLICGROUP_HH

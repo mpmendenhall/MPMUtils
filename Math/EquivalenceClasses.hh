@@ -1,5 +1,5 @@
 /// \file "EquivalenceClasses.hh" Helper for assembling equivalence classes
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef EQUIVALENCECLASSES_HH
 #define EQUIVALENCECLASSES_HH

@@ -1,5 +1,5 @@
 /// \file MultiWindow.hh Manager for multiple simulatneous window analyses
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef MULTIWINDOW_HH
 #define MUTLIWINDOW_HH

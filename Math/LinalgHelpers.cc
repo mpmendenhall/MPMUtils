@@ -1,5 +1,5 @@
 /// \file LinalgHelpers.cc
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #include "LinalgHelpers.hh"
 

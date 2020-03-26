@@ -1,5 +1,5 @@
 /// \file VisrSVG.hh SVG 3D visualization driver
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef VISRSVG_HH
 #define VISRSVG_HH

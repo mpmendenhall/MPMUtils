@@ -1,5 +1,5 @@
 /// \file SVGBuilder.hh Scalable Vector Graphics XML tags
-// Michael P. Mendenhall, 2017
+// -- Michael P. Mendenhall, 2017
 
 #ifndef SVGBUILDER_HH
 #define SVGBUILDER_HH

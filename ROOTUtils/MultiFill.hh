@@ -1,5 +1,5 @@
 /// \file MultiFill.hh Histogram + covariance matrix for correlated multiple-bin fills
-// Michael P. Mendenhall, LLNL 2020
+// -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef MULTIFILL_HH
 #define MULTIFILL_HH
@@ -44,22 +44,26 @@ public:
         fillBins(vb);
     }
 
-    /// sum + error of specified bins
+    /// sum + error of specified bins; optional multiply-by-bindwidth
     template<class V>
-    double binSum(const V& v, double& err) const {
+    double binSum(const V& v, double& err, bool width=false) const {
         checkInit();
         err = 0;
         double s = 0;
         for(auto& b1: v) {
-            s += h->GetBinContent(b1);
-            for(auto& b2: v) err += (*M)(b1,b2);
+            double w1 = width? h->GetBinWidth(b1) : 1.;
+            s += w1 * h->GetBinContent(b1);
+            for(auto& b2: v) {
+                double w2 = width? h->GetBinWidth(b2) : 1.;
+                err += w1 * w2 * (*M)(b1,b2);
+            }
         }
         err = sqrt(err);
         return s;
     }
 
     /// bin range sum over [b0,b1)
-    double binSum(int b0, int b1, double& err) const;
+    double binSum(int b0, int b1, double& err, bool width=false) const;
 
     /// scaling of M only --- assumes h is managed externally
     void Scale(double s) override { *M *= s*s; }
@@ -75,6 +79,8 @@ public:
     void normalize_to_bin_width(double xscale = 1., const string& ytitle = "");
     /// Overwrite histogram errorbars from covariance diagonal
     void diagErrors();
+    /// Generate diagonal M from h
+    void diagCov();
     /// Plottable covariance matrix as TH2F (caller accepts memory management responsibility)
     TH2F* covHist() const;
 

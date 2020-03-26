@@ -1,5 +1,5 @@
 /// \file IntervalSet.hh Collection of disjoint intervals
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef INTERVALSET_HH
 #define INTERVALSET_HH

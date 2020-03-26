@@ -1,5 +1,5 @@
 /// \file KTAccumJob.hh KeyTable-based accumulate protocol communicator
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef KTACCUMJOB_HH
 #define KTACCUMJOB_HH

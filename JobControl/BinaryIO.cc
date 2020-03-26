@@ -1,5 +1,5 @@
 /// \file BinaryIO.cc
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #include "BinaryIO.hh"
 #include <cstring> // for std::memcpy

@@ -1,5 +1,5 @@
 /// \file JobQueue.hh Parallel-processing pipeline management
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef JOBQUEUE_HH
 #define JOBQUEUE_HH

@@ -1,5 +1,5 @@
 /// \file ConfigProcess.hh Base for constructing a data processing tree from a libconfig input file
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef CONFIGPROCESS_HH
 #define CONFIGPROCESS_HH

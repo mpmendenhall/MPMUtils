@@ -1,5 +1,5 @@
 /// \file ThreadDataSerializer.hh FIFO processing queue for serializing data from multiple threads
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef THREADDATASERIALIZER_HH
 #define THREADDATASERIALIZER_HH

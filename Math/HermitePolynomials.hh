@@ -1,5 +1,5 @@
 /// \file HermitePolynomials.hh Hermite Polynomials (orthogonal polynomial basis on [-infty,infty] weighted by e^{-x^2})
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef HERMITEPOLYNOMIALS_HH
 #define HERMITEPOLYNOMIALS_HH

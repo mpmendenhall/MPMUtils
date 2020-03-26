@@ -1,5 +1,5 @@
 /// \file AllocPool.hh Pool of re-usable allocated objects
-// Michael P. Mendenhall 2018
+// -- Michael P. Mendenhall 2018
 
 #ifndef ALLOCPOOL_HH
 #define ALLOCPOOL_HH

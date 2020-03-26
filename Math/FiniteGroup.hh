@@ -1,5 +1,5 @@
 /// \file "FiniteGroup.hh" Base classes for finite groups
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 /*
  * Simple group G: only normal subgroups are {e} and G

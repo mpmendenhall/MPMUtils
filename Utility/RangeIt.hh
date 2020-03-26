@@ -1,5 +1,5 @@
 /// \file RangeIt.hh Templatized convenience class for compile-time range generation
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef RANGEIT_HH
 #define RANGEIT_HH

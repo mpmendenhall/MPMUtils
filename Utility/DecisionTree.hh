@@ -1,5 +1,5 @@
 /// \file "DecisionTree.hh" Binary decision tree construction and application
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef DECISIONTREE_HH
 #define DECISIONTREE_HH

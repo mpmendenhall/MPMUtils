@@ -1,5 +1,5 @@
 /// \file "Polynomial.hh" Algebraic polynomial manipulation
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef POLYNOMIAL_HH
 #define POLYNOMIAL_HH

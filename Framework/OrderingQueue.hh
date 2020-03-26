@@ -1,5 +1,5 @@
 /// \file OrderingQueue.hh Sort slightly-out-of-order events into proper order
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef ORDERINGQUEUE_HH
 #define ORDERINGQUEUE_HH

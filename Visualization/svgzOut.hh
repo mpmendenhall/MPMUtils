@@ -1,5 +1,5 @@
 /// \file svgzOut.hh Helper to write .svgz compressed svg, if available at compile
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef SVGZOUT_HH
 #define SVGZOUT_HH

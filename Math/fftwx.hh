@@ -1,5 +1,5 @@
 /// \file fftwx.hh FFTW3 templated types helper
-// Michael P. Mendenhall, LLNL 2020
+// -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef FFTWX_HH
 #define FFTWX_HH

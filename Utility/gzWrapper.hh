@@ -1,5 +1,5 @@
 /// \file gzWrapper.hh Wrapper for transparently reading .gz files using boost::iostreams
-// Michael P. Mendenhall, 2017
+// -- Michael P. Mendenhall, 2017
 
 #ifndef GZWRAPPER_HH
 #define GZWRAPPER_HH

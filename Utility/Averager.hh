@@ -1,5 +1,5 @@
 /// \file Averager.hh Simple statistics accumulation
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef AVERAGER_HH
 #define AVERAGER_HH

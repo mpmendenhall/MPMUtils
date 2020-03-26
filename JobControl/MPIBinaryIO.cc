@@ -1,5 +1,5 @@
 /// \file MPIBinaryIO.cc
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifdef WITH_MPI
 #include <mpi.h>

@@ -1,5 +1,5 @@
 /// \file SockDistributor.hh One-to-many sockets binary data push distribution
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef SOCKDISTRIBUTOR_HH
 #define SOCKDISTRIBUTOR_HH

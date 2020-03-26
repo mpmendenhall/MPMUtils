@@ -1,5 +1,5 @@
 /// \file Quadratic.hh Multivariate quadratic polynomial calculations
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef QUADRATIC_HH
 #define QUADRATIC_HH

@@ -1,5 +1,5 @@
 /// \file VisrGL.hh OpenGL visualization window driver
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef VISRGL_HH
 #define VISRGL_HH

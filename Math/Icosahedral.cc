@@ -1,5 +1,5 @@
 /// \file Icosahedral.cc
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 /*
 #include "Icosahedral.hh"
 #include <algorithm>

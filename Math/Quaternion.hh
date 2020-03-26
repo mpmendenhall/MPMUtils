@@ -1,5 +1,5 @@
 /// \file Quaternion.hh Quaternion operations
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef QUATERNION_HH
 #define QUATERNION_HH

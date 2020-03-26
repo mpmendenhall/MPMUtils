@@ -1,5 +1,5 @@
 /// \file LaguerrePolynomials.hh Laguerre Polynomials (orthonogonal basis on [0,infty] with weight e^{-x})
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef LAGUERREPOLYNOMIALS_HH
 #define LAGUERREPOLYNOMIALS_HH

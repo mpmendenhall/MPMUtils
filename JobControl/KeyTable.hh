@@ -1,5 +1,5 @@
 /// \file KeyTable.hh (string) key : (poymorphic) value table, wrapped with TMessage for serialized transfer
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef KEY_TABLE_H
 #define KEY_TABLE_H

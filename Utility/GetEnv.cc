@@ -1,5 +1,5 @@
 /// \file GetEnv.cc
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #include "GetEnv.hh"
 #include <unistd.h>

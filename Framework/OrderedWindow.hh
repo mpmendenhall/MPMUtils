@@ -1,5 +1,5 @@
 /// \file OrderedWindow.hh Base class for "window" ordered items flow-through analysis
-// Michael P. Mendenhall, LLNL 2020
+// -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef ORDEREDWINDOW_HH
 #define ORDEREDWINDOW_HH

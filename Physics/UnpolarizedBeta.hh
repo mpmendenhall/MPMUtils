@@ -1,5 +1,5 @@
 /// \file UnpolarizedBeta.hh Unpolarized nucleus beta decay spectrum/corrections
-// Michael P. Mendenhall, LLNL 2020
+// -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef UNPOLARIZEDBETA_HH
 #define UNPOLARIZEDBETA_HH

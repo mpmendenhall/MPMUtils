@@ -1,5 +1,5 @@
 /// \file GeomCalcUtils.hh Geometry calculation utilities
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef GEOMCALCUTILS_HH
 #define GEOMCALCUTILS_HH

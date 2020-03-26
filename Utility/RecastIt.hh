@@ -1,5 +1,5 @@
 /// \file RecastIt.hh re-casting iterator wrapper
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef RECASTIT_HH
 #define RECASTIT_HH

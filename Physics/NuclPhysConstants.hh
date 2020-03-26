@@ -1,5 +1,5 @@
 /// \file NuclPhysConstants.hh Nuclear physics constants
-// Michael P. Mendenhall
+// -- Michael P. Mendenhall
 
 #ifndef NUCLPHYSCONSTANTS_HH
 #define NUCLPHYSCONSTANTS_HH

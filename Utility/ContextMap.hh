@@ -1,5 +1,5 @@
 /// \file ContextMap.hh Utility for (context-scoped) cascading variables lookup
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef CONTEXTMAP_HH
 #define CONTEXTMAP_HH

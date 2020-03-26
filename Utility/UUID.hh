@@ -1,5 +1,5 @@
 /// \file UUID.hh Generate unique identifier numbers
-// Michael P. Mendenhall, LLNL
+// -- Michael P. Mendenhall, LLNL
 
 #ifndef UUID_HH
 #define UUID_HH

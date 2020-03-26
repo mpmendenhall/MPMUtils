@@ -1,5 +1,5 @@
 /// \file ConfigAssembler.hh Helper pattern for dynamic object instantiation
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 ////////////////////////////////
 ////////////////////////////////

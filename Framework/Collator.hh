@@ -1,5 +1,5 @@
 /// \file Collator.hh Combine ordered items received from multiple "push" sources
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef COLLATOR_HH
 #define COLLATOR_HH

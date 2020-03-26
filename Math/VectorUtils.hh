@@ -1,5 +1,5 @@
 /// \file VectorUtils.hh Templatized vector arithmetic utilities
-// Michael P. Mendenhall, LLNL 2020
+// -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef VECTORUTILS_HH
 #define VECTORUTILS_HH

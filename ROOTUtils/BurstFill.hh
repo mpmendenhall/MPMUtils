@@ -1,5 +1,5 @@
 /// \file BurstFill.hh Correlated burst histogram fill
-// Michael P. Mendenhall, LLNL 2020
+// -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef BURSTFILL_HH
 #define BURSTFILL_HH

@@ -1,5 +1,5 @@
 /// \file ElectronBindingEnergy.hh Atomic shell binding energy tables
-// Michael P. Mendenhall
+// -- Michael P. Mendenhall
 
 #ifndef ELECTRONBINDINGENERGY_HH
 #define ELECTRONBINDINGENERGY_HH

@@ -1,5 +1,5 @@
 /// \file testFiber.cc Demonstration of boost::fiber
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #include <stdlib.h>
 #include <stdio.h>

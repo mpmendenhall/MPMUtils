@@ -1,5 +1,5 @@
 /// \file DataSink.hh Base class for accepting a stream of objects
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef DATASINK_HH
 #define DATASINK_HH

@@ -1,5 +1,5 @@
 /// \file Renumerate.hh Utility for swapping numbers/names
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef RENUMERATE_HH
 #define RENUMERATE_HH

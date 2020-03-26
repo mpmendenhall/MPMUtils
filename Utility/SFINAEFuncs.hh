@@ -1,5 +1,5 @@
 /// \file SFINAEFuncs.hh
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef SFINAEFUNCS_HH
 #define SFINAEFUNCS_HH

@@ -1,5 +1,5 @@
 /// \file OutDirProcess.hh ConfigProcess associated with a TObject output directory
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef OUTDIRPROCESS_HH
 #define OUTDIRPROCESS_HH

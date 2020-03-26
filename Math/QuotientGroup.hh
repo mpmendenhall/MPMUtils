@@ -1,5 +1,5 @@
 /// \file QuotientGroup.hh Quotient group constructions
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 /*
  * ---- Cosets. ----

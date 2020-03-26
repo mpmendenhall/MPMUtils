@@ -1,5 +1,5 @@
 /// \file DataSource.hh Base class for providing a stream of objects
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef DATASOURCE_HH
 #define DATASOURCE_HH

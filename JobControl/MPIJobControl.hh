@@ -1,5 +1,5 @@
 /// \file MPIJobControl.hh MultiJobControl communicating via MPI
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef MPIJOBCONTROL_HH
 #define MPIJOBCONTROL_HH

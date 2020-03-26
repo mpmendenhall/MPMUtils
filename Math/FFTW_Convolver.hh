@@ -1,5 +1,5 @@
 /// \file FFTW_Convolver.hh Fast convolution utilities using FFTW3
-// Michael P. Mendenhall, LLNL 2020
+// -- Michael P. Mendenhall, LLNL 2020
 
 /* ***********************************************************************
 

@@ -1,5 +1,5 @@
 /// \file LineFit.hh Simple least-squares y = a+b*x fitter
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #include <utility> // for std::pair
 

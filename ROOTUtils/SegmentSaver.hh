@@ -1,5 +1,5 @@
 /// \file SegmentSaver.hh Mechanism for loading pre-defined histograms from file
-// Michael P. Mendenhall, LLNL 2020
+// -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef SEGMENTSAVER_HH
 #define SEGMENTSAVER_HH

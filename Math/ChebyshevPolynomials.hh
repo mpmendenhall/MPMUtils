@@ -1,5 +1,5 @@
 /// \file ChebyshevPolynomials.hh Chebyshev Polynomials
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef CHEBYSHEVPOLYNOMIALS_HH
 #define CHEBYSHEVPOLYNOMIALS_HH

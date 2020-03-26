@@ -1,5 +1,5 @@
 /// \file NuclEvtGen.hh Nuclear decay scheme event generator
-// Michael P. Mendenhall
+// -- Michael P. Mendenhall
 
 #ifndef NUCLEVTGEN_HH
 #define NUCLEVTGEN_HH

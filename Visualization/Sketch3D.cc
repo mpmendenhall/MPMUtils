@@ -1,5 +1,5 @@
 /// \file Sketch3D.cc
-// Michael P. Mendenhall, LLNL 2017
+// -- Michael P. Mendenhall, LLNL 2017
 
 #include "Sketch3D.hh"
 #include <algorithm>

@@ -1,5 +1,5 @@
 /// \file SurdField.hh Field of sums of square roots of rational numbers
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef SURDFIELD_HH
 #define SURDFIELD_HH

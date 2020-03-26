@@ -1,5 +1,5 @@
 /// \file StepsIntegrator.hh Integration of step functions
-// Michael P. Mendenhall, 2019
+// -- Michael P. Mendenhall, 2019
 
 #include "coerced_lower_bound.hh"
 #include <iterator>

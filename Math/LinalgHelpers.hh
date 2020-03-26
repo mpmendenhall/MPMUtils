@@ -1,5 +1,5 @@
 /// \file LinalgHelpers.hh Utility routines using GSL linear algebra
-// Michael P. Mendenhall, 2018
+// -- Michael P. Mendenhall, 2018
 
 #ifndef LINALGHELPERS_HH
 #define LINALGHELPERS_HH

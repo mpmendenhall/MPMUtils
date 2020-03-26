@@ -1,5 +1,5 @@
 /// \file ObjectFactory.hh ``Factory'' pattern for dynamic instantiation of objects by name
-// Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef OBJECTFACTORY_HH
 #define OBJECTFACTORY_HH
