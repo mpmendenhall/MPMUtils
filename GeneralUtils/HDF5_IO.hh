@@ -18,9 +18,9 @@ public:
     /// get number of records in input table
     hsize_t getTableEntries(const string& table, hsize_t* nfields = nullptr);
     /// read double-valued attribute
-    double getAttributeD(const string& table, const string& attrname, double dflt = 0);
+    double getAttributeD(const string& table, const string& attrname, double dflt);
     /// read string-valued attribute
-    string getAttribute(const string& table, const string& attrname, const string& dflt = "");
+    string getAttribute(const string& table, const string& attrname, const string& dflt);
 
     hid_t infile_id = 0;    ///< input HDF5 file ID
     string infile_name = "";///< input HDF5 file name
@@ -43,9 +43,13 @@ public:
     /// get number of records in input table
     hsize_t getEntries() { return getTableEntries(this->Tspec.table_name); }
     /// read double-valued attribute
-    double getAttributeD(const string& attrname, double dflt = 0) { return HDF5_InputFile::getAttributeD(this->Tspec.table_name, attrname, dflt); }
+    double getAttributeD(const string& attrname, double dflt = 0) {
+        return HDF5_InputFile::getAttributeD(this->Tspec.table_name, attrname, dflt);
+    }
     /// read string-valued attribute
-    string getAttribute(const string& attrname, const string& dflt = "") { return HDF5_InputFile::getAttribute(this->Tspec.table_name, attrname, dflt); }
+    string getAttribute(const string& attrname, const string& dflt = "") {
+        return HDF5_InputFile::getAttribute(this->Tspec.table_name, attrname, dflt);
+    }
 };
 
 
@@ -78,8 +82,10 @@ public:
     HDF5_TableOutput(const string& tname = "", int v = 0, int nch = 1024):
     HDF5_Table_Writer<T>(HDF5_table_setup<T>(tname, v),nch) { }
 
-    /// Destructor
-    ~HDF5_TableOutput() { if(outfile_id) writeFile(); }
+    /// write double-valued attribute
+    void writeAttribute(const string& attrname, double value) { HDF5_OutputFile::writeAttribute(this->Tspec.table_name, attrname, value); }
+    /// write string-valued attrivute
+    void writeAttribute(const string& attrname, const string& value) { HDF5_OutputFile::writeAttribute(this->Tspec.table_name, attrname, value); }
 
     /// Open named output file
     void openOutput(const string& filename) override {
@@ -91,6 +97,11 @@ public:
     void writeFile() override {
         this->setFile(0);
         HDF5_OutputFile::writeFile();
+    }
+    /// Handle datastream signals
+    void signal(datastream_signal_t sig) override {
+        HDF5_Table_Writer<T>::signal(sig);
+        if(sig == DATASTREAM_END) writeFile();
     }
 };
 

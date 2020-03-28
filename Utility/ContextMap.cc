@@ -29,11 +29,13 @@ bool ContextMap::popContext() {
     return false;
 }
 
-ContextMap::ContextMap(const ContextMap& M) {
+ContextMap& ContextMap::operator=(const ContextMap& M) {
+    if(&M == this) return *this;
     for(auto& kv: M.dat) {
         if(kv.second.second) dat[kv.first] = {kv.second.second->clone(kv.second.first), kv.second.second->clowner()};
         else dat.emplace(kv);
     }
+    return *this;
 }
 
 void ContextMap::disown(tp_t x) {

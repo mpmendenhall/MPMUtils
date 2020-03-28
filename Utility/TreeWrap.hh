@@ -23,7 +23,7 @@ public:
     class top_iterator_t {
     public:
         /// constructor starting at node
-        top_iterator_t(ptr_t n = nullptr): N(n) { if(n) position.push_back(0); }
+        explicit top_iterator_t(ptr_t n = nullptr): N(n) { if(n) position.push_back(0); }
         /// dereference to get node
         ptr_t operator*() { return N; }
         /// crawl to next node

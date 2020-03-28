@@ -19,7 +19,7 @@ using std::ostream;
 class _XMLTag {
 public:
     /// Constructor
-    _XMLTag(const string& nm = ""): name(nm) { }
+    explicit _XMLTag(const string& nm = ""): name(nm) { }
     /// Destructor
     virtual ~_XMLTag() { }
 
@@ -46,7 +46,7 @@ protected:
 class XMLTag: public TreeWrap<_XMLTag> {
 public:
     /// Constructor
-    XMLTag(const string& nm = "") { name = nm; }
+    explicit XMLTag(const string& nm = "") { name = nm; }
     /// Write output
     void write(ostream& o, unsigned int ndeep = 0, const string& indent = "    ") override;
 };
@@ -65,7 +65,7 @@ public:
 class _XMLProvider {
 public:
     /// Constructor
-    _XMLProvider(const string& name = "UNKNOWN"): tagname(name) { }
+    explicit _XMLProvider(const string& name = "UNKNOWN"): tagname(name) { }
     /// build XML output
     virtual XMLTag* makeXML();
     /// Add a tag attribute

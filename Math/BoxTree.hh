@@ -21,7 +21,7 @@ public:
     class iterator_t {
     public:
         /// constructor ending at node
-        iterator_t(ptr_t n = nullptr): N(n) { }
+        explicit iterator_t(ptr_t n = nullptr): N(n) { }
         /// dereference to get node
         ptr_t operator*() { return N; }
         /// crawl to next node

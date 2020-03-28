@@ -20,7 +20,7 @@ struct OrderedData {
     /// helper to strip ordering from contents
     struct val_extractor {
         /// converting constructor
-        val_extractor(const OrderedData& d): x(d.o) { }
+        explicit val_extractor(const OrderedData& d): x(d.o) { }
         /// auto-convert to extracted contents
         operator val_t() const { return x; }
         val_t x; ///< extracted contents

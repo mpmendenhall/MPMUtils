@@ -108,9 +108,7 @@ protected:
 template<
     class TNext,
     typename T0 = typename TNext::sink_t,
-    typename ordering_t = typename T0::ordering_t,
-    decltype(&TNext::push) FPUSH = &TNext::push,
-    decltype(&TNext::signal) FSIGNAL = &TNext::signal
+    typename ordering_t = typename T0::ordering_t
 >
 class InlineOrderingQueue: public OrderingQueue<T0, ordering_t> {
 public:
@@ -127,12 +125,12 @@ public:
     /// clear remaining objects through window
     void signal(datastream_signal_t sig) override {
         super::signal(sig);
-        if(this->nextSink) (this->nextSink->*FSIGNAL)(sig);
+        if(this->nextSink) this->nextSink->signal(sig);
     }
 
 protected:
     /// pass down chain
-    void processOrdered(T& o) override { if(this->nextSink) (this->nextSink->*FPUSH)(o); }
+    void processOrdered(T& o) override { if(this->nextSink) this->nextSink->push(o); }
 };
 
 #endif

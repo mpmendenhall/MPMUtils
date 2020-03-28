@@ -15,9 +15,11 @@
 class ContextMap {
 public:
     /// Default constructor
-    ContextMap(ContextMap* _parent = nullptr): parent(_parent) { }
+    explicit ContextMap(ContextMap* _parent = nullptr): parent(_parent) { }
     /// Copy constructor
-    ContextMap(const ContextMap& M);
+    ContextMap(const ContextMap& M) { *this = M; }
+    /// Copy Assignment
+    ContextMap& operator=(const ContextMap& o);
     /// Destructor
     ~ContextMap() { for(auto& kv: dat) if(kv.second.second) kv.second.second->deletep(kv.second.first); }
 
@@ -139,7 +141,7 @@ protected:
     /// Register on construction
     s_context_singleton_ptr() {
         if(ContextMap::getContext().get<s_context_singleton_ptr,T>() != nullptr) throw std::runtime_error("Duplicate singleton instantiation");
-        ContextMap::getContext().setPtr<s_context_singleton_ptr,T>((T*)this);
+        ContextMap::getContext().setPtr<s_context_singleton_ptr,T>(static_cast<T*>(this));
     }
     /// Deregister on destruction
     virtual ~s_context_singleton_ptr() { ContextMap::getContext().unset<s_context_singleton_ptr,T>(); }

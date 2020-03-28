@@ -167,7 +167,7 @@ namespace SVG {
 
     class polyline: public BBXML {
     public:
-        polyline(const string& style = ""): BBXML("polyline") { if(style.size()) attrs["style"] = style; }
+        explicit polyline(const string& style = ""): BBXML("polyline") { if(style.size()) attrs["style"] = style; }
         void addpt(double x, double y) { pts.push_back({{x,y}}); }
         vector<xypoint> pts;
         /// Calculate bounding box from contents
@@ -186,7 +186,7 @@ namespace SVG {
 
     class polygon: public polyline {
     public:
-        polygon(const string& style = ""): polyline(style) { name = "polygon"; }
+        explicit polygon(const string& style = ""): polyline(style) { name = "polygon"; }
     };
 
 

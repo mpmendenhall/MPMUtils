@@ -15,7 +15,7 @@
 class RefCounter {
 public:
     /// Constructor
-    RefCounter(bool rtn = false) { if(rtn) retain(); }
+    explicit RefCounter(bool rtn = false) { if(rtn) retain(); }
     /// Destructor
     virtual ~RefCounter() { assert(!nrefs); }
     /// Increment reference count

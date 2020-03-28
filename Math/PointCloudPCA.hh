@@ -23,7 +23,7 @@ struct weightedpt {
     typedef array<T,N> coord_t;
 
     /// Weights-only constructor
-    weightedpt(double ww = 1): x{{}}, w(ww) { }
+    explicit weightedpt(double ww = 1): x{{}}, w(ww) { }
 
     /// Constructor with array value
     explicit weightedpt(T* xx, double ww = 1): w(ww) {

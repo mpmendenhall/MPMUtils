@@ -16,7 +16,7 @@ template<typename T>
 class HDF5_CfgLoader: public Configurable, public HDF5_TableInput<T>, virtual public XMLProvider {
 public:
     /// Constructor
-    explicit HDF5_CfgLoader(const Setting& S, const string& farg = ""):
+    explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", bool doMakeNext = true):
     XMLProvider("HDF5_CfgLoader"), Configurable(S) {
         S.lookupValue("nLoad", nLoad);
         auto snl = optionalGlobalArg("nload");
@@ -27,9 +27,7 @@ public:
             this->openInput(fn);
         }
 
-        if(S.exists("next")) nextSink = constructCfgObj<DataSink<T>>(S["next"]);
-        auto x = dynamic_cast<XMLProvider*>(nextSink);
-        if(x) addChild(x);
+        if(doMakeNext) makeNext(S);
     }
 
     /// Destructor
@@ -45,9 +43,11 @@ public:
         if(AS) AS->infiles.push_back(this->infile_name);
 
         fRows = this->getNRows();
-        ProgressBar PB(nLoad >= 0? nLoad : fRows);
-        T P;
-        while(this->next(P) && !++PB) { nextSink->push(P); }
+        {
+            T P;
+            ProgressBar PB(nLoad >= 0? nLoad : fRows);
+            while(this->next(P) && !++PB) { nextSink->push(P); }
+        }
         nextSink->signal(DATASTREAM_FLUSH);
         nextSink->signal(DATASTREAM_END);
     }
@@ -57,6 +57,12 @@ public:
     hsize_t fRows = 0;                  ///< number of rows in input file
 
 protected:
+    /// configure nextSink
+    void makeNext(const Setting& S) {
+        if(S.exists("next")) nextSink = constructCfgObj<DataSink<T>>(S["next"]);
+        auto x = dynamic_cast<XMLProvider*>(nextSink);
+        if(x) addChild(x);
+    }
     /// build XML output data
     void _makeXML(XMLTag& X) override {
         X.addAttr("nRows", fRows);
