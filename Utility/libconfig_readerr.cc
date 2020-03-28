@@ -3,6 +3,9 @@
 #include "libconfig_readerr.hh"
 #include <stdio.h>
 
+const Config NullConfig;
+const Setting& NullSetting = NullConfig.getRoot();
+
 void readConfigFile(Config& cfg, const string& cfgfile, bool autoconvert) {
     cfg.setAutoConvert(autoconvert);
 
