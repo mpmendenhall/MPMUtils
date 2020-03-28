@@ -1,0 +1,88 @@
+/// \file HDF5_CfgLoader.hh Base for configurable HDF5 data table input/output
+
+#ifndef HDF5_CFGLOADER_HH
+#define HDF5_CFGLOADER_HH
+
+#include "HDF5_IO.hh"
+#include "DataSink.hh"
+#include "ContextMap.hh"
+#include "ConfigFactory.hh"
+#include "AnalysisStep.hh"
+#include "ProgressBar.hh"
+#include "XMLTag.hh"
+
+/// Scan generic data from HDF5 file
+template<typename T>
+class HDF5_CfgLoader: public Configurable, public HDF5_TableInput<T>, virtual public XMLProvider {
+public:
+    /// Constructor
+    explicit HDF5_CfgLoader(const Setting& S, const string& farg = ""):
+    XMLProvider("HDF5_CfgLoader"), Configurable(S) {
+        S.lookupValue("nLoad", nLoad);
+        auto snl = optionalGlobalArg("nload");
+        if(snl.size()) nLoad = atoi(snl.c_str());
+
+        if(farg.size()){
+            auto& fn = requiredGlobalArg(farg);
+            this->openInput(fn);
+        }
+
+        if(S.exists("next")) nextSink = constructCfgObj<DataSink<T>>(S["next"]);
+        auto x = dynamic_cast<XMLProvider*>(nextSink);
+        if(x) addChild(x);
+    }
+
+    /// Destructor
+    ~HDF5_CfgLoader() { delete nextSink; }
+
+    /// Push input file contents to nextSink
+    void run() override {
+        if(!nextSink) throw std::runtime_error("HDF5 scanner 'next' output not configured.");
+        if(!this->infile_id) throw std::runtime_error("HDF5 scanner run without opening input file.");
+        nextSink->signal(DATASTREAM_INIT);
+
+        auto AS = AnalysisStep::instance();
+        if(AS) AS->infiles.push_back(this->infile_name);
+
+        fRows = this->getNRows();
+        ProgressBar PB(nLoad >= 0? nLoad : fRows);
+        T P;
+        while(this->next(P) && !++PB) { nextSink->push(P); }
+        nextSink->signal(DATASTREAM_FLUSH);
+        nextSink->signal(DATASTREAM_END);
+    }
+
+    DataSink<T>* nextSink = nullptr;    ///< next step in chain --- owned by this
+    int nLoad = -1;                     ///< maximum events to load
+    hsize_t fRows = 0;                  ///< number of rows in input file
+
+protected:
+    /// build XML output data
+    void _makeXML(XMLTag& X) override {
+        X.addAttr("nRows", fRows);
+        if(nLoad >= 0) X.addAttr("nLoad", nLoad);
+    }
+};
+
+/// Write generic data to HDF5 file
+template<typename T>
+class HDF5_CfgWriter: public HDF5_TableOutput<T>, virtual public XMLProvider {
+public:
+    /// Constructor
+    explicit HDF5_CfgWriter(const Setting&, const string& farg = ""): XMLProvider("HDF5_CfgWriter") {
+        if(!farg.size()) return;
+        auto& fn = requiredGlobalArg(farg);
+        this->openOutput(fn);
+
+        auto AS = AnalysisStep::instance();
+        if(AS) AS->outfilename = fn;
+    }
+
+protected:
+    /// build XML output data
+    void _makeXML(XMLTag& X) override {
+        X.addAttr("nWritten", this->getNWrite());
+    }
+};
+
+#endif

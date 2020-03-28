@@ -12,7 +12,9 @@ void HDF5_InputFile::openInput(const string& filename) {
         printf("Closing previous input file.\n");
         H5Fclose(infile_id);
         infile_id = 0;
+        infile_name = "";
     }
+    infile_name = filename;
     if(!filename.size()) return;
     printf("Opening HDF5 input file '%s'\n",filename.c_str());
     infile_id = H5Fopen(filename.c_str(), // file name

@@ -23,6 +23,7 @@ public:
     string getAttribute(const string& table, const string& attrname, const string& dflt = "");
 
     hid_t infile_id = 0;    ///< input HDF5 file ID
+    string infile_name = "";///< input HDF5 file name
 };
 
 /// HDF5_InputFile with specific table
