@@ -7,7 +7,6 @@
 
 #include "ColorSpec.hh"
 #include <cmath>
-#include <stdio.h>
 #include <stdexcept>
 
 namespace color {
@@ -25,20 +24,16 @@ namespace color {
         return C;
     }
 
-    int32_t rgb::as_rgb_i24() const {
-        int32_t rr = r <= 0? 0 : 256*r;
+    rgb::operator rgb32() const {
+        int rr = r <= 0? 0 : 256*r;
         if(rr > 255) rr = 255;
-        int32_t gg = g <= 0? 0 : 256*g;
+        int gg = g <= 0? 0 : 256*g;
         if(gg > 255) gg = 255;
-        int32_t bb = b <= 0? 0 : 256*b;
+        int bb = b <= 0? 0 : 256*b;
         if(bb > 255) bb = 255;
-        return (rr << 16) + (gg << 8) + bb;
-    }
-
-    rgb::operator string() const {
-        char c[7];
-        sprintf(c,"%06x", as_rgb_i24());
-        return c;
+        int aa = a <= 0? 0 : 256*a;
+        if(aa > 255) aa = 255;
+        return rgb32(rr,gg,bb,aa);
     }
 
     hsv::operator rgb() const {

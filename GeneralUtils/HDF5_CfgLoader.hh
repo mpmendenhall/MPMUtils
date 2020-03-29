@@ -37,7 +37,6 @@ public:
     void run() override {
         if(!nextSink) throw std::runtime_error("HDF5 scanner 'next' output not configured.");
         if(!this->infile_id) throw std::runtime_error("HDF5 scanner run without opening input file.");
-        nextSink->signal(DATASTREAM_INIT);
 
         auto AS = AnalysisStep::instance();
         if(AS) AS->infiles.push_back(this->infile_name);
@@ -46,6 +45,7 @@ public:
         {
             T P;
             ProgressBar PB(nLoad >= 0? nLoad : fRows);
+            nextSink->signal(DATASTREAM_INIT);
             while(this->next(P) && !++PB) { nextSink->push(P); }
         }
         nextSink->signal(DATASTREAM_FLUSH);
