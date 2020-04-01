@@ -10,6 +10,16 @@ void pixel_t::set(const color::rgb32& crgb, bool fg) {
     C.color = crgb.as_rgb_i24();
 }
 
+void pixel_t::set(unsigned char col, bool fg) {
+    auto& C = fg? s.FG : s.BG;
+    C.mode = SGRColor::COLOR_8;
+    C.color = col;
+}
+
+void pixel_t::set256(const color::rgb& crgb, bool fg) {
+    set(16 + 36*int(5.99*crgb.r) + 6*int(5.99*crgb.g) + int(5.99*crgb.b), fg);
+}
+
 TermPic::TermPic(const string& s) {
     p_default.c = ' ';
 

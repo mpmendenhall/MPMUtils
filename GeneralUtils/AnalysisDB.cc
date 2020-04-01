@@ -23,7 +23,7 @@ string ADBfile() {
     if(!fileExists(dbfile)) {
         printf("Initializing new AnaDB at '%s'\n", dbfile.c_str());
         makePath(dbfile, true);
-        string cmd = "sqlite3 '" + dbfile + "' < "+getEnv(PROJ_ENV_PFX+"_CODE",true)+"/GeneralUtils/AnalysisDB_Schema.sql";
+        string cmd = "sqlite3 '" + dbfile + "' < "+getEnv(PROJ_ENV_PFX+"_CODE",true)+"/Utility/AnalysisDB_Schema.sql";
         int err = system(cmd.c_str());
         if(err) throw std::runtime_error("Bad AnaDB path '"+dbfile+"'");
     }

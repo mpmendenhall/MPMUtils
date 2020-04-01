@@ -48,13 +48,14 @@ void ContextMap::disown(tp_t x) {
 void loadGlobalArgs(int argc, char** argv) {
     auto& GA = GlobalArgs();
 
-    for(int c = 0; c < argc - 1; ++c) {
+    for(int c = 0; c < argc; ++c) {
         if(argv[c][0] == '+') {
             GA[argv[c] + 1].push_back("y");
             continue;
         }
 
         if(argv[c][0] != '-') throw std::runtime_error("Arguments syntax glitch at '" + std::string(argv[c]) +"'");
+        if(c == argc-1) throw std::runtime_error("Missing value for final argument '" + std::string(argv[c]) +"'");
 
         auto& v = GA[argv[c] + 1];
         do { v.emplace_back(argv[++c]); }

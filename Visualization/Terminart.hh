@@ -20,8 +20,12 @@ namespace Terminart {
         /// constructor
         pixel_t(char _c = 0): c(_c) { }
 
-        /// set color
+        /// set 24-bit color
         void set(const color::rgb32& crgb, bool fg = true);
+        /// set enumerated 256-bit color
+        void set(unsigned char col, bool fg = true);
+        /// set 8-bit (256 color) approximant
+        void set256(const color::rgb& crgb, bool fg = true);
 
         char c;     ///< character to display (0 for "blank" default)
         TermSGR s;  ///< display style

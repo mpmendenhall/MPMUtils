@@ -142,7 +142,7 @@ void HDF5_Table_Writer<T>::signal(datastream_signal_t sig) {
     if(_outfile_id && cached.size()) {
         herr_t err = H5TBappend_records(_outfile_id,  Tspec.table_name.c_str(), cached.size(),
                                         sizeof(T),  Tspec.offsets, Tspec.field_sizes, cached.data());
-        if(err < 0) throw std::exception();
+        if(err < 0) throw std::runtime_error("Failed to append records to HDF5 table '" + Tspec.table_name + "'");
     }
     cached.clear();
 }

@@ -79,7 +79,7 @@ public:
                 printf("Warning: out-of-order queue event at %g < %g (%g)!\n", t, t0, t0-t);
                 dispObj(deref_if_ptr(o));
                 ndis = warn_ndis;
-                throw;
+                throw std::logic_error("OrderingQueue input before minimum");
             }
 
             if(skip_disordered) return;
