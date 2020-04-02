@@ -36,8 +36,8 @@
 #include <lapacke.h>
 #include "BinaryOutputObject.hh"
 #include <algorithm>
-#include <cassert>
 #include <gsl/gsl_cblas.h>
+#include <stdexcept>
 
 using std::cout;
 
@@ -78,9 +78,9 @@ public:
         const size_t opB_rows = B.nDim(opB == CblasNoTrans);
         const size_t opB_cols = B.nDim(opB != CblasNoTrans);
 
-        assert(opA_cols == opB_rows);
+        if(opA_cols != opB_rows) throw std::logic_error("Matrix multiply input dimensions mismatch");
         if(!C) C = new VarMat<T>(opA_rows, opB_cols);
-        assert(C->nRows() == opA_rows && C->nCols() == opB_cols);
+        if(C->nRows() != opA_rows || C->nCols() != opB_cols) throw std::logic_error("Matrix multiply output dimensions mismatch");
 
         (*f_gemm)(CblasColMajor, // data order, CblasColMajor or CblasRowMajor
                   opA,           // op(A) = CblasNoTrans, CblasTrans, CblasConjTrans
@@ -125,9 +125,9 @@ public:
         const size_t opB_rows = B.nDim(opB == CblasNoTrans);
         const size_t opB_cols = B.nDim(opB != CblasNoTrans);
 
-        assert(opA_cols == opB_rows);
+        if(opA_cols != opB_rows) throw std::logic_error("Matrix multiply input dimensions mismatch");
         if(!C) C = new VarMat<CT>(opA_rows, opB_cols);
-        assert(C->nRows() == opA_rows && C->nCols() == opB_cols);
+        if(C->nRows() != opA_rows || C->nCols() != opB_cols) throw std::logic_error("Matrix multiply output dimensions mismatch");
 
         (*f_gemm)(CblasColMajor,        // data order, CblasColMajor or CblasRowMajor
                   opA,                  // op(A) = CblasNoTrans, CblasTrans, CblasConjTrans
@@ -184,7 +184,7 @@ public:
         tauQ,                 // array with extra into on Q, dimension >= max(1, min(m, n))
         tauP                  // array with extra info on P, dimension >= max(1, min(m, n))
         );
-        assert(!info);
+        if(info) throw std::runtime_error("f_gebrd failed");
 
         if(verbose) {
             cout << "Bi-diagonalizing A:\n\n";
@@ -205,7 +205,7 @@ public:
                           U.nRows(),            // leading dimension of "A"
                           tauQ                  // extra return array tauQ or tauP from ?gebrd
         );
-        assert(!info);
+        if(info) throw std::runtime_error("f_orgbr failed");
 
         info = (*f_orgbr)(LAPACK_COL_MAJOR,     // LAPACK_COL_MAJOR or LAPACK_ROW_MAJOR data ordering,
                           'P',                  // extract 'Q' or 'P' (P^T)
@@ -216,7 +216,7 @@ public:
                           VT.nRows(),           // leading dimension of "A"
                           tauP                  // extra return array tauQ or tauP from ?gebrd
         );
-        assert(!info);
+        if(info) throw std::runtime_error("f_orgbr failed");
 
         // trim U, VT to useful content
         U.resize(A.nRows(),S.nRows());
@@ -249,7 +249,7 @@ public:
         nullptr,                 // matrix for calculating Q^H*C; second dimension >= max(1,ncc); unused if ncc = 0
                           1                     // leading dimension of C; >= max(1,n) if ncc>0; >=1 otherwise
         );
-        assert(!info);
+        if(info) throw std::runtime_error("f_bdsqr failed");
 
         if(verbose) {
             cout << "Left singular vectors:\n" << U << "\n";

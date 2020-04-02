@@ -56,7 +56,7 @@ if(GLUT_FOUND AND OPENGL_FOUND AND NOT NO_GL)
     LIST(APPEND LINKLIBS ${OPENGL_LIBRARIES})
     LIST(APPEND LINKLIBS ${GLUT_LIBRARIES})
 else()
-    message("OpenGL dependencies disabled.")
+    message(STATUS "OpenGL dependencies disabled.")
 endif()
 
 #######
@@ -77,7 +77,7 @@ LIST(APPEND LINKLIBS ${GSL_LIBRARIES})
 #######
 find_library(FFTW_LIBS fftw3)
 if(FFTW_LIBS-NOTFOUND OR NO_FFTW)
-    message("Disabling FFTW3 dependency")
+    message(STATUS "Disabling FFTW3 dependency")
     add_compile_options("-DWITHOUT_FFTW")
 else()
     add_compile_options("-DWITH_FFTW_FLOAT128")
@@ -94,7 +94,7 @@ if(MPI_FOUND AND NOT NO_MPI)
     LIST(APPEND LINKLIBS ${MPI_LIBRARIES})
     add_compile_options(${MPI_COMPILE_FLAGS})
 else()
-    message("MPI dependencies disabled.")
+    message(STATUS "MPI dependencies disabled.")
 endif()
 
 ######
@@ -112,7 +112,7 @@ list(APPEND SOURCE_FILES "mpmu_Dict.cxx")
 # HDF5
 ######
 find_package(HDF5 REQUIRED COMPONENTS C HL)
-message("Including HDF5 paths '${HDF5_INCLUDE_DIRS}' and libraries '${HDF5_LIBRARIES}' in '${HDF5_LIBRARY_DIRS}'")
+message(STATUS "Including HDF5 paths '${HDF5_INCLUDE_DIRS}' and libraries '${HDF5_LIBRARIES}' in '${HDF5_LIBRARY_DIRS}'")
 include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
 LIST(APPEND LINKLIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
@@ -130,7 +130,7 @@ else()
   find_package(Geant4 REQUIRED)
 endif()
 include(${Geant4_USE_FILE})
-Message("Geant4_USE_FILE = ${Geant4_USE_FILE}")
+Message(STATUS "Geant4_USE_FILE = ${Geant4_USE_FILE}")
 LIST(APPEND LINKLIBS ${Geant4_LIBRARIES})
 
 
@@ -149,13 +149,17 @@ file(GLOB DIRSRC ${dir}/*.c*)
 LIST(APPEND SOURCE_FILES ${DIRSRC})
 endforeach(dir)
 
-# skip broken misc crud
-foreach(RM IN ITEMS Utils/Sketch3D.cc Matrix/TLS_Solver.cc)
-LIST(REMOVE_ITEM SOURCE_FILES ${PROJECT_SOURCE_DIR}/${RM})
-endforeach()
-
 # additional required libraries
 LIST(APPEND LINKLIBS -lpthread)
+
+find_library(LAPACKE_LIBS lapacke)
+if(LAPACKE_LIBS)
+    MESSAGE(STATUS "lapacke library ${LAPACKE_LIBS}")
+    add_compile_options("-DWITH_LAPACKE")
+    LIST(APPEND LINKLIBS ${LAPACKE_LIBS})
+else()
+    LIST(REMOVE_ITEM SOURCE_FILES ${PROJECT_SOURCE_DIR}/Matrix/TLS_Solver.cc)
+endif()
 
 
 ################
@@ -171,7 +175,7 @@ exec_program("git" ${PROJECT_SOURCE_DIR}
 exec_program("basename" ${PROJECT_SOURCE_DIR}
     ARGS "`git rev-parse --show-toplevel`"
     OUTPUT_VARIABLE REPO_NAME)
-message("git repo ${REPO_NAME} '${GIT_TAGNAME}' (${GIT_SHA})")
+message(STATUS "git repo ${REPO_NAME} '${GIT_TAGNAME}' (${GIT_SHA})")
 SET_SOURCE_FILES_PROPERTIES(
     Utility/CodeVersion.cc PROPERTIES COMPILE_FLAGS
     "-DREPO_NAME=\"${REPO_NAME}\" -DREPO_VERSION=\"${GIT_SHA}\" -DREPO_TAGNAME=\"${GIT_TAGNAME}\""
