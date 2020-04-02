@@ -166,16 +166,18 @@ endif()
 # git SHA tag
 ################
 
-exec_program("git" ${PROJECT_SOURCE_DIR}
-    ARGS "rev-parse -q HEAD"
-    OUTPUT_VARIABLE GIT_SHA )
-exec_program("git" ${PROJECT_SOURCE_DIR}
-    ARGS "describe --tags HEAD"
-    OUTPUT_VARIABLE GIT_TAGNAME )
+execute_process(COMMAND "git" "rev-parse" "-q" "HEAD"
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_SHA
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "git" "describe" "--tags" "HEAD"
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_TAGNAME
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 exec_program("basename" ${PROJECT_SOURCE_DIR}
     ARGS "`git rev-parse --show-toplevel`"
     OUTPUT_VARIABLE REPO_NAME)
-message(STATUS "git repo ${REPO_NAME} '${GIT_TAGNAME}' (${GIT_SHA})")
+message(STATUS "git repo \"${REPO_NAME}\" '${GIT_TAGNAME}' (${GIT_SHA})")
 SET_SOURCE_FILES_PROPERTIES(
     Framework/CodeVersion.cc PROPERTIES COMPILE_DEFINITIONS
     "REPO_NAME=\"${REPO_NAME}\";REPO_VERSION=\"${GIT_SHA}\";REPO_TAGNAME=\"${GIT_TAGNAME}\""
