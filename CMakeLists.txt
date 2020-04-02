@@ -137,20 +137,20 @@ LIST(APPEND LINKLIBS ${Geant4_LIBRARIES})
 ##############################
 # force rebuild of CodeVersion
 #add_custom_command(OUTPUT always_rebuild COMMAND cmake -E echo)
-add_custom_command(OUTPUT codeversion COMMAND touch ${PROJECT_SOURCE_DIR}/Utility/CodeVersion.cc)
+add_custom_command(OUTPUT codeversion COMMAND touch ${PROJECT_SOURCE_DIR}/Framework/CodeVersion.cc)
 add_custom_target(update_codeversion DEPENDS codeversion)
 
 #########################
 # Choose objects to build
 
-foreach(dir IN ITEMS External Framework GeneralUtils JobControl Math Matrix Physics ROOTUtils Utility Visualization )
+foreach(dir IN ITEMS External Framework JobControl Math Matrix Physics ROOTUtils Utility Visualization )
 include_directories(${PROJECT_SOURCE_DIR}/${dir})
 file(GLOB DIRSRC ${dir}/*.c*)
 LIST(APPEND SOURCE_FILES ${DIRSRC})
 endforeach(dir)
 
 # skip broken misc crud
-foreach(RM IN ITEMS GeneralUtils/Sketch3D.cc Matrix/TLS_Solver.cc)
+foreach(RM IN ITEMS Utils/Sketch3D.cc Matrix/TLS_Solver.cc)
 LIST(REMOVE_ITEM SOURCE_FILES ${PROJECT_SOURCE_DIR}/${RM})
 endforeach()
 

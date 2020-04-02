@@ -24,29 +24,18 @@
  */
 
 #include "MultiGaus.hh"
-#include "SMExcept.hh"
 
-MultiGaus::~MultiGaus() {
-    delete myTF1;
-}
+MultiGaus::~MultiGaus() { delete myTF1; }
 
 void MultiGaus::setParameter(unsigned int n, double p) {
-    smassert(n<3*npks);
-    if(n%3==2)
-        p = fabs(p);
-    iguess[n] = p;
+    if(n%3==2) p = fabs(p);
+    iguess.at(n) = p;
     myTF1->SetParameter(n,p);
 }
 
-double MultiGaus::getParameter(unsigned int n) const {
-    smassert(n<3*npks);
-    return myTF1->GetParameter(n);
-}
+double MultiGaus::getParameter(unsigned int n) const { return myTF1->GetParameter(n); }
 
-double MultiGaus::getParError(unsigned int n) const {
-    smassert(n<3*npks);
-    return myTF1->GetParError(n);
-}
+double MultiGaus::getParError(unsigned int n) const { return myTF1->GetParError(n); }
 
 float_err MultiGaus::getPar(unsigned int n) const {
     return float_err(getParameter(n),getParError(n));
@@ -109,7 +98,6 @@ void MultiGaus::display() const {
 }
 
 void MultiGaus::addCorrelated(unsigned int n, double relCenter, double relHeight, double relWidth) {
-    smassert(n<npks);
     corrPeak p;
     p.mainPeak = n;
     p.relCenter = relCenter;

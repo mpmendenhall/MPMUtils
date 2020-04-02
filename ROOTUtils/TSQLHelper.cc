@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "StringManip.hh"
-#include "SMExcept.hh"
+#include <stdexcept>
 #include <map>
 using std::map;
 
@@ -52,20 +52,13 @@ TSQLHelper::TSQLHelper(const std::string& dbnm,
             return;
         }
     }
-    SMExcept e("DBConnectFail");
-    e.insert("dbAddress",dbAddressFull);
-    e.insert("dbUser",dbUser);
-    throw(e);
+    throw std::runtime_error("Failed to connect to DB " + dbUser +"@" + dbAddressFull);
 }
 
 void TSQLHelper::execute() {
     delete res;
     res = nullptr;
-    if(!db->Exec(query)) {
-        SMExcept e("DBExecFail");
-        e.insert("query",query);
-        throw(e);
-    }
+    if(!db->Exec(query)) throw std::runtime_error("DB Exec Failed: " + string(query));
 }
 
 void TSQLHelper::Query() {
@@ -74,20 +67,14 @@ void TSQLHelper::Query() {
     } else {
         delete res;
         res = db->Query(query);
-        if(db->GetErrorCode()) {
-            SMExcept e("DBQueryFail");
-            e.insert("query",query);
-            throw(e);
-        }
+        if(db->GetErrorCode()) throw std::runtime_error("DB Query Failed: " + string(query));
     }
 }
 
 string TSQLHelper::fieldAsString(TSQLRow* row, unsigned int fieldnum, const std::string& dflt) {
-    smassert(row);
     const char* s = row->GetField(fieldnum);
     isNullResult = !s;
-    if(isNullResult)
-        return dflt;
+    if(isNullResult) return dflt;
     return std::string(s);
 }
 
@@ -109,12 +96,10 @@ int TSQLHelper::getInsertID() {
     sprintf(query,"SELECT LAST_INSERT_ID()");
     Query();
     TSQLRow* r = getFirst();
-    if(!r)
-        throw(SMExcept("failedInsert"));
+    if(!r) throw std::runtime_error("Failed query " + string(query));
     int rid = fieldAsInt(r,0);
     delete r;
-    if(!rid)
-        throw(SMExcept("failedInsert"));
+    if(!rid) throw std::runtime_error("Insertion failed " + string(query));
     return rid;
 }
 

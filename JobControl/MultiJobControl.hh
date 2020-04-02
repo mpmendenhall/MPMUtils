@@ -65,7 +65,7 @@ public:
     virtual ~JobWorker() { }
 
     /// run specified job, talking to JobComm::startJob and endJob through B
-    virtual void run(JobSpec J, BinaryIO& B);
+    virtual void run(const JobSpec& J, BinaryIO& B);
 
     /// check if state data available (and make available if possible) for hash
     virtual bool checkState(const string& h);

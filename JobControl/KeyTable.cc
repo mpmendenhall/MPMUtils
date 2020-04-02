@@ -64,7 +64,7 @@ bool KeyTable::Unset(const string& k) {
     return true;
 }
 
-const KeyTable& KeyTable::operator=(const KeyTable& k) {
+KeyTable& KeyTable::operator=(const KeyTable& k) {
     if(&k == this) return *this;
     Clear();
     (map<string, KeyData*>&)(*this) = k;

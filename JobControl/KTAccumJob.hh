@@ -39,7 +39,7 @@ protected:
 class KTAccumJob: public JobWorker {
 public:
     /// run job
-    void run(JobSpec J, BinaryIO& B) override;
+    void run(const JobSpec& J, BinaryIO& B) override;
 
 protected:
     /// subclass me with calculation on kt, J!

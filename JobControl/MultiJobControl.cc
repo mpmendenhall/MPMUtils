@@ -29,7 +29,7 @@ REGISTER_FACTORYOBJECT(JobWorker, JobWorker)
 
 string JobWorker::stateDir = "";
 
-void JobWorker::run(JobSpec JS, BinaryIO&) {
+void JobWorker::run(const JobSpec& JS, BinaryIO&) {
     printf("JobWorker does nothing for ");
     JS.display();
     MultiJobWorker::JW->signalDone();
@@ -51,7 +51,7 @@ bool JobWorker::checkState(const string& h) {
     FDBinaryReader b(f);
     if(!b.inIsOpen()) return false;
     //if(verbose > 3) printf("Loading persisted data from '%s'\n", f.c_str());
-    stateData.emplace(h, b.receive<KeyData>());
+    b.receive(stateData[h]);
     return true;
 }
 

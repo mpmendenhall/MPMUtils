@@ -135,7 +135,7 @@ JobQueue::jthread* JobQueue::getIdle() {
 }
 
 void* JobQueue::jqcontrolthread(void* vJQ) {
-    ((JobQueue*)vJQ)->runController();
+    reinterpret_cast<JobQueue*>(vJQ)->runController();
     return nullptr;
 }
 

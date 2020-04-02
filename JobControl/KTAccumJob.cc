@@ -59,7 +59,7 @@ void KTAccumJobComm::launchAccumulate(int uid) {
 
 REGISTER_FACTORYOBJECT(KTAccumJob, JobWorker)
 
-void KTAccumJob::run(JobSpec J, BinaryIO& B) {
+void KTAccumJob::run(const JobSpec& J, BinaryIO& B) {
     JS = J;
     B.receive(kt);
     runAccum();

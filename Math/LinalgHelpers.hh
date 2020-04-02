@@ -169,6 +169,8 @@ class EigSymmWorkspace {
 public:
     /// Constructor
     explicit EigSymmWorkspace(size_t n): _N(n) { }
+    /// Copy constructor
+    EigSymmWorkspace(const EigSymmWorkspace& E): _N(E._N) { }
     /// Destructor
     ~EigSymmWorkspace() { if(evec) gsl_matrix_free(evec); if(W) gsl_eigen_symmv_free(W); }
     /// Assignment

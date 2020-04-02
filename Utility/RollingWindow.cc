@@ -1,6 +1,6 @@
 /// \file RollingWindow.cc
+
 #include "RollingWindow.hh"
-#include "SMExcept.hh"
 
 void RollingWindow::addCount(double t, double w) {
     itms.push_front(pair<double,double>(t,w));
@@ -17,11 +17,9 @@ void RollingWindow::moveTimeLimit(double t) {
 }
 
 void RollingWindow::popExcess() {
-    smassert(itms.size());
     double w = itms.back().second;
     sw -= w;
     sww -= w*w;
     itms.pop_back();
-    if(!itms.size())
-        sw=sww=0;
+    if(!itms.size()) sw = sww = 0;
 }

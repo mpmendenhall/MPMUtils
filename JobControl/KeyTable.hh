@@ -48,15 +48,15 @@ public:
     /// Constructor, with 'what' and data size
     KeyData(int what, size_t n);
     /// Copy Constructor
-    KeyData(const KeyData& d): TMessage(d.What(), d.wSize()-2*sizeof(UInt_t)) { *this = d; }
+    explicit KeyData(const KeyData& d): TMessage(d.What(), d.wSize()-2*sizeof(UInt_t)) { *this = d; }
     /// Constructor for string
-    KeyData(const string& s): TMessage(typeID<unsigned char>(kMESS_ARRAY), 0) { setData(s); }
+    explicit KeyData(const string& s): TMessage(typeID<unsigned char>(kMESS_ARRAY), 0) { setData(s); }
     /// Copy operator
     KeyData& operator=(const KeyData& d);
 
     /// Constructor from TObject-derived classes
     template<typename T, typename std::enable_if<std::is_base_of<TObject, T>::value>::type* = nullptr>
-    KeyData(const T& o): TMessage(kMESS_OBJECT) {
+    explicit KeyData(const T& o): TMessage(kMESS_OBJECT) {
         Reset();
         WriteObject(&o);
         wsize = fBufCur - Buffer();
@@ -66,11 +66,11 @@ public:
 
     /// Constructor, writing generic (non-TObject) object
     template<typename T, typename std::enable_if<!std::is_base_of<TObject, T>::value>::type* = nullptr>
-    KeyData(const T& x): TMessage(typeID<T>(kMESS_BINARY),0) { setData(x); }
+    explicit KeyData(const T& x): TMessage(typeID<T>(kMESS_BINARY),0) { setData(x); }
 
     /// Array types, with flags for numerical
     template<typename T>
-    KeyData(const vector<T>& v): TMessage(typeID<T>(kMESS_ARRAY), 0) { setData(v); }
+    explicit KeyData(const vector<T>& v): TMessage(typeID<T>(kMESS_ARRAY), 0) { setData(v); }
 
     /// TObject-derived class value extraction (caller responsible for memory management of returned object)
     template<class C>
@@ -95,17 +95,17 @@ public:
         if(w == typeID<T>(kMESS_BINARY)) x = *(T*)data();
         else {
             w -= kMESS_BINARY;
-            /* */if(w == typeID<  int8_t>()) x = T(*(int8_t*)data());
-            else if(w == typeID< int16_t>()) x = T(*(int16_t*)data());
-            else if(w == typeID< int32_t>()) x = T(*(int32_t*)data());
-            else if(w == typeID< int64_t>()) x = T(*(int64_t*)data());
-            else if(w == typeID< uint8_t>()) x = T(*(uint8_t*)data());
-            else if(w == typeID<uint16_t>()) x = T(*(uint16_t*)data());
-            else if(w == typeID<uint32_t>()) x = T(*(uint32_t*)data());
-            else if(w == typeID<uint64_t>()) x = T(*(uint64_t*)data());
-            else if(w == typeID<   float>()) x = T(*(float*)data());
-            else if(w == typeID<  double>()) x = T(*(double*)data());
-            else if(w == typeID<long double>()) x = T(*(long double*)data());
+            /* */if(w == typeID<  int8_t>()) x = T(*reinterpret_cast<const int8_t*>(data()));
+            else if(w == typeID< int16_t>()) x = T(*reinterpret_cast<const int16_t*>(data()));
+            else if(w == typeID< int32_t>()) x = T(*reinterpret_cast<const int32_t*>(data()));
+            else if(w == typeID< int64_t>()) x = T(*reinterpret_cast<const int64_t*>(data()));
+            else if(w == typeID< uint8_t>()) x = T(*reinterpret_cast<const uint8_t*>(data()));
+            else if(w == typeID<uint16_t>()) x = T(*reinterpret_cast<const uint16_t*>(data()));
+            else if(w == typeID<uint32_t>()) x = T(*reinterpret_cast<const uint32_t*>(data()));
+            else if(w == typeID<uint64_t>()) x = T(*reinterpret_cast<const uint64_t*>(data()));
+            else if(w == typeID<   float>()) x = T(*reinterpret_cast<const float*>(data()));
+            else if(w == typeID<  double>()) x = T(*reinterpret_cast<const double*>(data()));
+            else if(w == typeID<long double>()) x = T(*reinterpret_cast<const long double*>(data()));
             else {
                 std::stringstream ss;
                 ss << "Unidentified numeric type " << w + kMESS_BINARY;
@@ -219,7 +219,7 @@ public:
     /// Copy constructor
     KeyTable(const KeyTable& other): map<string, KeyData*>() { *this = other; }
     /// Assignment operator
-    const KeyTable& operator=(const KeyTable& k);
+    KeyTable& operator=(const KeyTable& k);
     /// Destructor
     ~KeyTable() { Clear(); }
 

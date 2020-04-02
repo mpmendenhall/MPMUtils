@@ -20,9 +20,9 @@
  */
 
 #include "TChainScanner.hh"
-#include "SMExcept.hh"
 #include <stdlib.h>
 #include <time.h>
+#include <stdexcept>
 
 TChainScanner::TChainScanner(const string& treeName): nEvents(0), nFiles(0), noEmpty(false), Tch(new TChain(treeName.c_str())),
 currentEvent(0), noffset(0), nLocalEvents(0) {
@@ -33,21 +33,12 @@ currentEvent(0), noffset(0), nLocalEvents(0) {
 int TChainScanner::addFile(const string& filename) {
     unsigned int oldEvents = nEvents;
     int nfAdded = Tch->Add(filename.c_str(),0);
-    if(!nfAdded) {
-        SMExcept e("missingFiles");
-        e.insert("fileName",filename);
-        throw e;
-    }
+    if(!nfAdded) throw std::runtime_error("Missing file " + filename);
+
     nEvents = Tch->GetEntries();
     nnEvents.push_back(nEvents-oldEvents);
-    if(!nnEvents.back() && noEmpty) {
-        SMExcept e("noEventsInFile");
-        e.insert("fileName",filename);
-        e.insert("nFiles",nfAdded);
-        throw e;
-    }
-    if(!nFiles)
-        setReadpoints(Tch);
+    if(!nnEvents.back() && noEmpty) throw std::runtime_error("No events in file " + filename);
+    if(!nFiles) setReadpoints(Tch);
     nFiles+=nfAdded;
     return nfAdded;
 }
@@ -55,7 +46,6 @@ int TChainScanner::addFile(const string& filename) {
 void TChainScanner::gotoEvent(unsigned int e) {
     currentEvent = e;
     Tch->GetEvent(currentEvent);
-    smassert(Tch->GetTree());
     nLocalEvents = noffset = 0;
 }
 
@@ -82,15 +72,8 @@ void TChainScanner::startScan(bool startRandom) {
 }
 
 void TChainScanner::SetBranchAddress(TTree* T, const string& bname, void* bdata) {
-    smassert(bdata);
-    smassert(T);
     Int_t err = T->SetBranchAddress(bname.c_str(),bdata);
-    if(err && err != TTree::kNoCheck) {
-        SMExcept e("TTreeBranchError");
-        e.insert("branchName", bname);
-        e.insert("errCode",err);
-        throw e;
-    }
+    if(err && err != TTree::kNoCheck) throw std::runtime_error("TTree Branch " + bname + " Error");
 }
 
 void TChainScanner::speedload(unsigned int e) {

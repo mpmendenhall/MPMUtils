@@ -45,7 +45,7 @@ public:
     /// Face definition: points to one (arbitrary) edge of face
     struct face_t {
         /// constructor from reference
-        face_t(edge_t& e): edge(&e) { }
+        explicit face_t(edge_t& e): edge(&e) { }
         edge_t* edge;   ///< one face edge
 
         /// print debugging info to stdout
@@ -53,7 +53,7 @@ public:
     };
 
     /// Constructor, for one n-gon separating two faces (or none for n=0)
-    HalfedgeDS(size_t n = 1);
+    explicit HalfedgeDS(size_t n = 1);
 
     /// add new unconnected vertex
     vertex_t& new_vertex();

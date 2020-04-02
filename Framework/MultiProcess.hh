@@ -35,7 +35,7 @@ protected:
     class MPJob: public Job {
     public:
         /// Constructor
-        MPJob(MultiProcess* P): MP(P) { }
+        explicit MPJob(MultiProcess* P): MP(P) { }
         /// perform processing step
         void run() override;
         MultiProcess* MP;           ///< MultiProcessor

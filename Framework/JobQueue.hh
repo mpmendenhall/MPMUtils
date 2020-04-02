@@ -28,7 +28,7 @@ public:
         /// Destructor
         virtual ~Job() { }
         /// Constructor
-        Job(int n = 0): qn(n) { }
+        explicit Job(int n = 0): qn(n) { }
         /// run job (subclass me!)
         virtual void run() { printf("Hello, I'm a sleepy job on queue %i!\n", qn); usleep(1000000); }
         int qn; ///< queue category identifier, for multiple independent queues

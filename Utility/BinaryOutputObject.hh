@@ -26,7 +26,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
-#include "SMExcept.hh"
+#include <stdexcept>
 
 using std::string;
 
@@ -47,12 +47,7 @@ public:
     static bool checkString(const string& s, std::istream& i, bool throwIfMismatch = true) {
         string s2(s.size(),'x');
         i.read(&s2[0],s2.size());
-        if(throwIfMismatch && s2!=s) {
-            SMExcept e("mismatched_file_string");
-            e.insert("expected",s);
-            e.insert("got",s2);
-            throw e;
-        }
+        if(throwIfMismatch && s2!=s) throw std::runtime_error("Mismatched_file_string; expected '" + s + "'; got '" + s2 + "'");
         return s2==s;
     }
 };

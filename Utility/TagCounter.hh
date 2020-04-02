@@ -38,7 +38,7 @@ public:
     /// constructor
     TagCounter() { }
     /// constructor from stringmap
-    TagCounter(Stringmap m);
+    explicit TagCounter(Stringmap m);
     /// add another counter
     void operator+=(const map<T,double>& c);
     /// scale contents

@@ -93,7 +93,7 @@ public:
 class Stringmap: public xmultimapS<string> {
 public:
     /// constructor from a string
-    Stringmap(const string& str = "");
+    explicit Stringmap(const string& str = "");
     /// convert to string
     string toString() const;
     /// display to stdout

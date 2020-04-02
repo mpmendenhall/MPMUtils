@@ -13,7 +13,7 @@
 class IOStreamBWrite: virtual public BinaryWriter {
 public:
     /// Constructor
-    IOStreamBWrite(std::ostream& o): fOut(o) { }
+    explicit IOStreamBWrite(std::ostream& o): fOut(o) { }
 
 protected:
     std::ostream& fOut;   ///< output stream
@@ -26,7 +26,7 @@ protected:
 class IOStreamBRead: virtual public BinaryReader {
 public:
     /// Constructor
-    IOStreamBRead(std::istream& i): fIn(i) { }
+    explicit IOStreamBRead(std::istream& i): fIn(i) { }
 
 protected:
     std::istream& fIn;  ///< input stream
@@ -39,9 +39,9 @@ protected:
 class FDBinaryWriter: virtual public BinaryWriter {
 public:
     /// Constructor
-    FDBinaryWriter(int fdOut = -1): fOut(fdOut) { }
+    explicit FDBinaryWriter(int fdOut = -1): fOut(fdOut) { }
     /// Constructor with filenames
-    FDBinaryWriter(const string& nOut) { openOut(nOut); }
+    explicit FDBinaryWriter(const string& nOut) { openOut(nOut); }
     /// Destructor
     ~FDBinaryWriter() { flush(); closeOut(); }
 
@@ -66,9 +66,9 @@ protected:
 class FDBinaryReader: virtual public BinaryReader {
 public:
     /// Constructor
-    FDBinaryReader(int fdIn = -1): fIn(fdIn) { }
+    explicit FDBinaryReader(int fdIn = -1): fIn(fdIn) { }
     /// Constructor with filenames
-    FDBinaryReader(const string& nIn) { openIn(nIn); }
+    explicit FDBinaryReader(const string& nIn) { openIn(nIn); }
     /// Destructor
     ~FDBinaryReader() { closeIn(); }
 

@@ -213,7 +213,7 @@ void NameSelector::doIt() {
 
                 // find soft matches
                 vector<map<string,unsigned int>::iterator> matches;
-                for(map<string,unsigned int>::iterator i = nameMap.begin(); i != nameMap.end(); i++) {
+                for(auto i = nameMap.begin(); i != nameMap.end(); ++i) {
                     if(!(oflags[i->second] & SELECTOR_DISABLED) && softmatch(myArg,i->first)) matches.push_back(i);
                 }
 
