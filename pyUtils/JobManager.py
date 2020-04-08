@@ -31,18 +31,20 @@ def run_commandline():
     parser.add_argument("--trickle",  type=float, help="time delay [s] between nominal run starts")
     parser.add_argument("--db",       help="jobs database", default=dbfile)
 
+    parser.add_argument("--name",     help="name for job(s)")
+    parser.add_argument("--jobfile",  help="run one-liners in file")
+    parser.add_argument("--script",   action="store_true", help="supply script on stdin")
+    parser.add_argument("--walltime", type=int, help="wall time for 1-liner jobs in seconds", default = 1800)
+    parser.add_argument("--cores",    type=int, default=1, help="cores for 1-liner jobs or rebundle")
+
     parser.add_argument("--launch",   action="store_true", help="update and launch")
     parser.add_argument("--cycle",    type=float, help="continuously re-check/launch jobs at specified interval")
     parser.add_argument("--status",   action="store_true", help="update and display status")
+
     parser.add_argument("--cancel",   action="store_true", help="cancel queued jobs")
     parser.add_argument("--kill",     action="store_true", help="kill running jobs")
     parser.add_argument("--clear",    action="store_true", help="clear completed jobs")
-    parser.add_argument("--jobfile",  help="run one-liners in file")
-    parser.add_argument("--name",     help="name for job(s)")
-    parser.add_argument("--script",   action="store_true", help="supply script on stdin")
-    parser.add_argument("--walltime", type=int, help="wall time for 1-liner jobs in seconds", default = 1800)
-    parser.add_argument("--nodes",    type=int, default=1, help="nodes for 1-liner jobs or rebundle")
-    parser.add_argument("--bundle",   help="bundle job name; specify bundled walltime and nodes")
+    parser.add_argument("--bundle",   help="bundle job name; specify bundled walltime and cores")
     parser.add_argument("--test",     type=int, help="run test idle jobs")
 
     # Special commands to allow locally-running jobs to report back on completion
@@ -89,7 +91,7 @@ def run_commandline():
     display_resource_use(curs)
     summarize_DB_runstatus(curs)
 
-    rsrc = [("walltime", options.walltime), ("local_cores" if options.queue == "local" else "cores", options.nodes)]
+    rsrc = [("walltime", options.walltime), ("local_cores" if options.queue == "local" else "cores", options.cores)]
     jcmds = []
     jname = options.name
     if options.jobfile:
@@ -106,11 +108,11 @@ def run_commandline():
     if options.clear: clear_completed(conn)
 
     if options.test:
-        make_test_jobs(curs, options.test, options.queue, options.account);
+        make_test_jobs(curs, options.test, options.queue, options.account, options.name);
         conn.commit()
 
     if options.bundle and options.walltime:
-        rebundle(conn.cursor(), options.bundle, options.walltime, options.nodes)
+        rebundle(conn.cursor(), options.bundle, options.walltime, options.cores)
         conn.commit()
 
     # requires batch system interface

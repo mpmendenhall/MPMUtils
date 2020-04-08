@@ -143,7 +143,7 @@ add_custom_target(update_codeversion DEPENDS codeversion)
 #########################
 # Choose objects to build
 
-foreach(dir IN ITEMS External Framework JobControl Math Matrix Physics ROOTUtils Utility Visualization )
+foreach(dir IN ITEMS External Exegete Framework JobControl Math Matrix Physics ROOTUtils Utility Visualization )
 include_directories(${PROJECT_SOURCE_DIR}/${dir})
 file(GLOB DIRSRC ${dir}/*.c*)
 LIST(APPEND SOURCE_FILES ${DIRSRC})

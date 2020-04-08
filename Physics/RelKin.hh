@@ -61,13 +61,15 @@ public:
 
     //----- define boost -----//
 
+    /// Default identity boost constructor
+    Lorentz_boost() { }
     /// construct from beta
-    static Lorentz_boost from_beta(double b) { return Lorentz_boost{beta_to_gammaM1(b), b}; }
+    static Lorentz_boost from_beta(double b) { return Lorentz_boost(beta_to_gammaM1(b), b); }
     /// construct from gamma - 1
-    static Lorentz_boost from_gammaM1(double gm1) { return Lorentz_boost{gm1, gammaM1_to_beta(gm1)}; }
+    static Lorentz_boost from_gammaM1(double gm1) { return Lorentz_boost(gm1, gammaM1_to_beta(gm1)); }
 
     /// inverse boost
-    Lorentz_boost inverse() const { return Lorentz_boost{gammaM1, -beta}; }
+    Lorentz_boost inverse() const { return Lorentz_boost(gammaM1, -beta); }
 
     /// set value from beta
     void setBeta(double b) { beta = b; gammaM1 = beta_to_gammaM1(b); }
@@ -104,6 +106,10 @@ public:
 
     /// print desciption to stdout
     void display() const;
+
+protected:
+    /// Constructor with gammaM1, beta
+    Lorentz_boost(double gm1, double b): gammaM1(gm1), beta(b) { }
 };
 
 /// display test calculation

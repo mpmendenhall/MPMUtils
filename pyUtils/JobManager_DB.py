@@ -218,10 +218,11 @@ def make_upload_jobs(curs, jname, q, acct, jcmds, res_use):
 
     return [Job(name=jname, q=q, acct=acct, script=jc, res_list=res_use, logfile=jobdir+"/log_%i.txt"%n).upload(curs) for (n,jc) in enumerate(jcmds)]
 
-def make_test_jobs(curs, njobs, q, acct):
+def make_test_jobs(curs, njobs, q, acct, jname = None):
     """Generate test run batch"""
     jcmds = ['echo "Hello world %i!"\nsleep 5\necho "Goodbye!"'%i + ("\nexit -99" if not (i+1)%5 else "") for i in range(njobs)]
-    make_upload_jobs(curs, "test", q, acct, jcmds, [("walltime", 300), ("local_cores" if q == 'local' else "cores",1)])
+    make_upload_jobs(curs, "test" if jname is None else jname,
+                     q, acct, jcmds, [("walltime", 300), ("local_cores" if q == 'local' else "cores",1)])
 
 def combined_time(jtimes, nnodes):
     """Estimate combined run times for serial/parallel jobs"""
