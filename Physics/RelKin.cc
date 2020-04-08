@@ -3,64 +3,52 @@
 #include "RelKin.hh"
 #include <stdio.h>
 
-void Lorentz_boost::display() const {
-    printf("Lorentz boost with gamma = %g, beta = %g\n", gamma, beta);
-}
-
-double p22ke(double p2, double m) {
-    double KE = sqrt(p2 + m*m) - m;
-    return (p2 - KE*KE)/(2*m); // numerically stable for KE,p << m
-}
-
 double p_2body(double m1, double m2, double KE) {
-    double x = KE*(KE+2*(m1+m2));
-    return sqrt(x*(x+4*m1*m2))/(2*(m1+m2+KE));
+    double x = KE * (KE + 2*(m1 + m2));
+    return sqrt(x*(x + 4*m1*m2)) / (2*(m1 + m2 + KE));
 }
 
-double Lorentz_boost::boost(double v0, double& v3) const {
-    //  g   -bg
-    //    1
-    //      1
-    // -bg    g
-    const double vv0 = v0;
-    const double vv3 = v3;
-    v0 =  gamma*vv0 - beta*gamma*vv3;
-    v3 = -beta*gamma*vv0 + gamma*vv3;
-    return v0;
+void Lorentz_boost::display() const {
+    printf("Lorentz boost with gamma = 1 + %g, beta = %g", gammaM1, beta);
+    double dgamma = gammaM1 - beta_to_gammaM1(beta);
+    if(dgamma) printf(" ** Accumulated inconsistency gamma - gamma(beta) = %g", dgamma);
+    printf("\n");
+}
+
+void Lorentz_boost::boost(double& v0, double& v3) const {
+    double vv0 = v0;
+    double gamma = gammaM1 + 1;
+    v0 =  gamma*vv0 - beta*gamma*v3;
+    v3 = -beta*gamma*vv0 + gamma*v3;
+}
+
+void Lorentz_boost::unboost(double& v0, double& v3) const {
+    double vv0 = v0;
+    double gamma = gammaM1 + 1;
+    v0 =  gamma*vv0 + beta*gamma*v3;
+    v3 =  beta*gamma*vv0 + gamma*v3;
 }
 
 void Lorentz_boost::operator*=(const Lorentz_boost& b) {
-    double gnew = gamma*b.gamma + beta * gamma * b.beta * b.gamma;
-    beta = (beta*gamma + (beta+b.beta)*gamma*b.gamma)/gnew;
-    gamma = gnew;
+    double gm1 = (gammaM1*b.gammaM1 + gammaM1 + b.gammaM1)*(1 + beta * b.beta) + beta * b.beta;
+    beta = (beta + b.beta)*(b.gammaM1 + 1)*(gammaM1 + 1)/(gm1 + 1);
+    gammaM1 = gm1;
 }
 
 void Lorentz_boost::operator/=(const Lorentz_boost& b) {
-    double gnew = gamma*b.gamma - beta * gamma * b.beta * b.gamma;
-    beta = (beta*gamma + (beta-b.beta)*gamma*b.gamma)/gnew;
-    gamma = gnew;
+    double gm1 = (gammaM1*b.gammaM1 + gammaM1 + b.gammaM1)*(1 - beta * b.beta) - beta * b.beta;
+    beta = (beta - b.beta)*(b.gammaM1 + 1)*(gammaM1 + 1)/(gm1 + 1);
+    gammaM1 = gm1;
 }
 
-double Lorentz_boost::unboost(double v0, double& v3) const {
-    const double vv0 = v0;
-    const double vv3 = v3;
-    v0 =  gamma*vv0 + beta*gamma*vv3;
-    v3 =  beta*gamma*vv0 + gamma*vv3;
-    return v0;
-}
-
-double Lorentz_boost::projectileCM(double KE, double mProj, double mTarg, bool forward) {
+Lorentz_boost Lorentz_boost::to_projectile_CM(double& KE, double mProj, double mTarg, bool forward) {
     double M = mProj + mTarg;       // total rest mass
-    double pL = ke2p(KE, mProj);    // lab-frame projectile momentum
+    double pL = KE_to_p(KE, mProj); // lab-frame projectile momentum
     if(!forward) pL *= -1;
-    beta = pL/(KE + M);             // cm velocity in lab frame
-    gamma = b2gamma(beta);
-    return gamma*KE + (gamma - 1)*M - beta*gamma*pL;
-}
-
-void Lorentz_boost::particleCM(double KE, double m) {
-    gamma = 1 + KE/m;
-    beta = g2beta(gamma);
+    auto L = from_beta(pL/(KE + M));// boost to CM velocity in lab frame
+    double gamma = L.gammaM1 + 1;
+    KE = gamma*KE + L.gammaM1*M - L.beta*gamma*pL;
+    return L;
 }
 
 void testRelKin() {
@@ -71,22 +59,22 @@ void testRelKin() {
     printf("2-body decay into %g MeV/c^2, %g MeV/c^2 with %g MeV total KE\n", m0, m1, TKE);
     double p = p_2body(m0, m1, TKE);
     printf("Each has momentum %g MeV/c, ", p);
-    double E0 = p2ke(p, m0);
-    double E1 = p2ke(p, m1);
+    double E0 = p_to_KE(p, m0);
+    double E1 = p_to_KE(p, m1);
     printf("and kinetic energies %g + %g = %g MeV\n", E0, E1, E0+E1);
 
-    Lorentz_boost LB;
-    double KEcm = LB.projectileCM(TKE, m0, m1);
-    double p0Lab = ke2p(TKE, m0);
-    TKE = p2ke(p0Lab, m0);
+    double KEcm = TKE;
+    auto LB = Lorentz_boost::to_projectile_CM(KEcm, m0, m1);
+    double p0Lab = KE_to_p(TKE, m0);
+    TKE = p_to_KE(p0Lab, m0);
     printf("\nFor a %g MeV/c^2 projectile at at %g MeV KE (p = %g MeV/c) incident on a %g MeV/c^2 target,\n", m0, TKE, p0Lab, m1);
-    printf("The CM frame is boosted by beta = %g, gamma = %g, with %g MeV total kinetic energy.\n", LB.beta, LB.gamma, KEcm);
+    printf("The CM frame is boosted by beta = %g, gamma = 1 + %g, with %g MeV total kinetic energy.\n", LB.beta, LB.gammaM1, KEcm);
 
     double p0 = LB.boost_p(m0, p0Lab, p0Lab*p0Lab);
     double p1 = LB.boost_p(m1, 0, 0);
     printf("In the CM frame, momenta are %g and %g, ", p0, p1);
-    double E0cm = p2ke(p0, m0);
-    double E1cm = p2ke(p1, m1);
+    double E0cm = p_to_KE(p0, m0);
+    double E1cm = p_to_KE(p1, m1);
     printf("with energies %g + %g = %g.\n", E0cm, E1cm, E0cm + E1cm);
 }
 
