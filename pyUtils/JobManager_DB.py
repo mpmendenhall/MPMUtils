@@ -1,6 +1,6 @@
 #! /bin/env python3
 ## @file JobManager_DB.py JobsDB interface
-# Michael P. Mendenhall, LLNL 2019
+# Michael P. Mendenhall, LLNL 2020
 
 import sqlite3
 import time
@@ -10,7 +10,7 @@ import bisect
 import heapq
 
 # Job state identifiers and corresponding names
-statenames = {-1:"hold", 0:"waiting", 1:"sumitted", 2:"queued", 3:"running", 4: "done", 5:"???", 6:"removed", 7:"bundled", 8:"unbundled" }
+statenames = {-1:"hold", 0:"waiting", 1:"submitted", 2:"queued", 3:"running", 4: "done", 5:"???", 6:"removed", 7:"bundled", 8:"unbundled" }
 def statename(i): return statenames.get(i,"status %i"%i)
 
 # directory for job scripts
@@ -20,35 +20,147 @@ dbfile = jobscript_dir+"/jdb.sql"
 # cached resource IDs by name
 resource_ids = { }
 
-class Job:
-    """Description of a job to run"""
 
-    def __init__(self, name=None, q=None, acct=None, script=None, logfile=None, jid=None, qid=None, res_list=[]):
+######################
+######################
+
+class Job:
+    """Description of a shell-script job to run"""
+
+    def __init__(self, name="anon", q=None, acct=None, script="", jid=None, qid=None, res_list = {}):
         self.name = name            # job name
         self.q = q                  # submission queue
         self.acct = acct            # submission account
-        self.script = script        # job script file
-        self.logfile = logfile      # output logfile
+        self.script = script        # job script
         self.res_list = res_list    # resource requirements
         self.jid = jid              # JobsDB unique identifier
         self.qid = qid              # Queue system unique identifier
 
     def upload(self, curs):
         """upload to JobsDB"""
-        curs.execute("INSERT INTO jobs(name,q_name,q_acct,jobscript,outlog,status) VALUES (?,?,?,?,?,0)",
-                     (self.name, self.q, self.acct, self.script, self.logfile))
+        curs.execute("INSERT INTO jobs(jtype, name, q_name, q_acct, jobscript, status) VALUES (?,?,?,?,?,0)",
+                     (self.jtype, self.name, self.q, self.acct, self.script))
         self.jid = curs.lastrowid
-        for rs in self.res_list: set_job_resource(curs, self.jid, rs[0], rs[1])
-        try: os.remove(logfile)
-        except: pass
+        for rs in self.res_list.items(): set_job_resource(curs, self.jid, rs[0], rs[1])
         return self.jid
 
+    def getpath(self):
+        """path to job info directory"""
+        return jobscript_dir + "/" + (self.name if self.name else "anon") + "/%i/"%self.jid
+
+    def prerun_setup(self, curs):
+        """Set up necessary scripts, files before run"""
+        os.makedirs(self.getpath(), exist_ok = True)
+
+    def check_done(self, curs):
+        """check job completion and update DB"""
+
+        p = self.getpath()
+        if not os.path.exists(p + "/exit.txt"): return False
+
+        s = int(open(p + "/start.txt", "r").read().split()[0])
+        e = open(p + "/exit.txt", "r").read().split()
+        curs.execute("UPDATE jobs SET status = 4, return_code = ?, t_submit = ?, use_walltime = ?, associated = NULL WHERE job_id = ?",
+                    (int(e[0]), s, int(e[1])-s, self.jid))
+
+        return True
+
+    def prerun_script(self):
+        """script before main run"""
+        return 'echo `date +"%%s"` $HOSTNAME > %s/start.txt\n'%self.getpath()
+
+    def make_wrapper(self):
+        """generate wrapper shell script"""
+        d = self.getpath()
+        open(d + "/wrapper.sh", "w").write("#!/bin/bash\n" + self.prerun_script()
+                                           + "\n" + " ".join(self.get_run_command())
+                                           + "\n" + self.postrun_script())
+        os.chmod(d + "/wrapper.sh", 0o744)
+
+    def postrun_script(self):
+        """script after main run"""
+        s  = 'excd=$?\n'
+        s += 'echo $excd `date +"%%s"` > %s/exit.txt\n'%self.getpath()
+        s += 'exit $excd\n'
+        return s
+
     def __str__(self):
-        return "Job " + self.name + " [" + self.q + "," + str(self.acct) + "]"
+        return "Job " + self.name + ": %s"%str(self.jid) + " [" + str(self.q) + "," + str(self.acct) + "] " + str(self.res_list)
+
+class ShellJob(Job):
+    """Job defined by shell script"""
+
+    def __init__(self, **kwargs):
+        Job.__init__(self, **kwargs)
+        self.jtype = 0
+
+    def prerun_setup(self, curs):
+        super().prerun_setup(curs)
+        d = self.getpath()
+        open(d + "/script.sh", "w").write(self.script + "\n")
+        os.chmod(d + "/script.sh", 0o744)
+
+    def get_run_command(self):
+        """Get command to run to execute job"""
+        return ["bash", self.getpath() + "/script.sh"]
+
+
+class BundleJob(Job):
+    """Serial/parallel bundle of jobs"""
+
+    def __init__(self, **kwargs):
+        Job.__init__(self, **kwargs)
+        self.jtype = 1
+        self.runorder = [int(j) for j in self.script.split()]
+
+    def linear_order(self, ts, nslots, tmax):
+        """Choose linear job ordering to efficiently fill available slots in parallel
+        extracts from input sorted ts = [(t, id),...]"""
+
+        h = [0.]*nslots # times used in each slot (heap format)
+        self.runorder = []   # job run order to fill bundle
+        while len(ts):
+            m = heapq.heappop(h) # contents of least-used slot (next available to run in)
+            i = bisect.bisect_left(ts, (tmax + 0.01 - m,)) # biggest item that will fit
+            if not i: break # will not fit in least-used slot?
+            heapq.heappush(h, m + ts[i-1][0]) # fill into slot
+            self.runorder.append(ts.pop(i-1)[1]) # append to ordering
+
+        self.script = " ".join([str(r) for r in self.runorder])
+        self.res_list["walltime"] = max(h)
+        self.res_list["cores"] = min(nslots, len(self.runorder))
+
+    def prerun_setup(self, curs):
+        """Set up necessary scripts/paths before running"""
+        super().prerun_setup(curs)
+        s = ""
+        for J in [get_job(curs, r) for r in self.runorder]:
+            J.prerun_setup(curs)
+            J.make_wrapper()
+            d = J.getpath()
+            s += "bash " + d + "/wrapper.sh > " + d + "/log.txt 2>&1\n"
+        open(self.getpath() + "/jobs.txt", "w").write(s)
+
+    def get_run_command(self):
+        """Get command to run to execute job"""
+        nc = int(self.res_list["cores"])
+        if nc == 1: return ["bash", self.getpath() + "/jobs.txt"]
+        return ["parallel", "-j", str(nc), "::::", self.getpath() + "/jobs.txt"]
+
+    def check_done(self, curs):
+        """check job completion and update DB"""
+
+        if not super().check_done(curs): return False
+
+        for jj in self.runorder:
+            if not get_job(curs, jj).check_done(curs):
+                print("Bundled sub-job did not cleanly exit:", jj)
+                curs.execute("UPDATE jobs SET status = 5 WHERE job_id = ?", (jj,))
+
+        return True
 
 def connect_JobsDB(fname, remake = True):
     """Get connection to Jobs DB"""
-
     global dbfile
     if fname is None: fname = dbfile
     remake &= not os.path.exists(fname)
@@ -58,22 +170,33 @@ def connect_JobsDB(fname, remake = True):
         os.system("sqlite3 " + fname + " < " + os.path.dirname(os.path.abspath(__file__)) + "/JobsDB_Schema.sql")
     conn = sqlite3.connect(fname, timeout = 60, isolation_level = "DEFERRED")
     conn.cursor().execute("PRAGMA foreign_keys = ON")
-    if remake: conn.cursor().execute("PRAGMA journal_mode = WAL")
+    #if remake: conn.cursor().execute("PRAGMA journal_mode = WAL")
     dbfile = fname
     return conn
 
-def set_job_status(curs, jid, status = None, ret = None, walltime = None):
-    """Set job status information"""
-    info = []
-    qs = []
-    if status is not None: info.append(status); qs.append("status = ?")
-    if ret is not None: info.append(ret); qs.append("return_code = ?")
-    if walltime is not None:
-        if walltime == "auto": info.append(time.time()); qs.append("use_walltime = ? - t_submit")
-        else: info.append(walltime); qs.append("use_walltime = ?")
-    if not info: return
-    info.append(jid)
-    curs.execute("UPDATE jobs SET "+", ".join(qs)+" WHERE job_id = ?", info)
+def get_job(curs, jid):
+    """Retrieve job object by database ID"""
+    curs.execute("SELECT status, queue_id, name, q_name, q_acct, jobscript, jtype FROM jobs WHERE job_id = ?", (jid,))
+    j = curs.fetchone()
+    assert j and j[-1] in (0,1)
+
+    if j[-1] == 0: J = ShellJob()
+    elif j[-1] == 1:
+        J = BundleJob()
+        J.runorder = [int(j) for j in j[5].split()]
+
+    J.jid   = jid
+    J.qid   = j[1]
+    J.name  = j[2]
+    J.q     = j[3]
+    J.acct  = j[4]
+    J.script= j[5]
+    J.res_list = dict([(r[1], r[2]) for r in get_job_resources(curs, jid)])
+
+    return J
+
+######################
+######################
 
 def summarize_DB_runstatus(curs):
     """Print summary counts by run status in DB"""
@@ -83,23 +206,36 @@ def summarize_DB_runstatus(curs):
         n = curs.fetchone()[0]
         if n: print("\t%s: %i jobs"%(statename(i),n))
 
-def clear_job(curs, jid):
-    """Remove job entry from DB, and associated logfile"""
-    curs.execute("SELECT outlog FROM jobs WHERE job_id = ?", (jid,))
-    try: os.remove(curs.fetchone()[0])
-    except: pass
-    curs.execute("DELETE FROM jobs WHERE job_id = ?", (jid,))
+def completed_runstats(curs, name):
+    """Display stats on completed runs by grouping name"""
+
+    curs.execute("SELECT use_walltime FROM jobs WHERE name=? AND status=4", (name,))
+    rt = [r[0] for r in curs.fetchall()]
+    n = len(rt)
+    if not n:
+        print("No completed jobs found named", name)
+        return
+    rt.sort()
+    print("----- Completion time quantiles for %i jobs '%s'"%(n, name))
+    print("0\t",    rt[0])
+    print("25\t",   rt[n//4])
+    print("50\t",   rt[n//2])
+    print("75\t",   rt[(3*n)//4])
+    print("100\t",  rt[-1])
+    print("Mean", sum(rt)/n);
 
 def clear_completed(conn, clearlogs = True):
     curs = conn.cursor()
     if clearlogs:
-        curs.execute("SELECT outlog FROM jobs WHERE status=4 OR status=6")
+        curs.execute("SELECT jid FROM jobs WHERE status=4 OR status=6")
         for r in curs.fetchall():
-            try: os.remove(r[0])
+            try: os.remove(get_job(r[0]).getpath())
             except: pass
     curs.execute("DELETE FROM jobs WHERE status=4 OR status=6")
     conn.commit()
 
+######################
+######################
 ##
 ## resource management
 ##
@@ -163,12 +299,12 @@ def display_resource_use(curs):
 
 def set_job_resource(curs, jid, rid, qty):
     """Set resource use for a job"""
-    if type(rid)==type(""): rid = get_resource_id(curs,rid,rid)
+    if type(rid) == type(""): rid = get_resource_id(curs,rid,rid)
     curs.execute("INSERT INTO resource_use(job_id, resource_id, quantity) VALUES (?,?,?)", (jid, rid, qty))
 
 def get_job_resources(curs, jid):
     """Get list of resources requested by a job"""
-    curs.execute("SELECT resource_id,quantity FROM resource_use WHERE job_id = ?", (jid,))
+    curs.execute("SELECT resource_id,name,quantity FROM resource_use NATURAL JOIN resources WHERE job_id = ?", (jid,))
     return curs.fetchall()
 
 def get_possible_submissions(curs, nmax = 10000, lifo = True):
@@ -177,145 +313,47 @@ def get_possible_submissions(curs, nmax = 10000, lifo = True):
     resuse = {}
     if lifo: curs.execute("SELECT job_id FROM jobs WHERE status = 0 ORDER BY -job_id LIMIT ?",(nmax,))
     else: curs.execute("SELECT job_id FROM jobs WHERE status = 0 LIMIT ?",(nmax,))
+
     for jid in [r[0] for r in curs.fetchall()]:
         res_ok = True
         job_rs = get_job_resources(curs, jid)
+
+        # check OK use
         for rs in job_rs:
-            if rs[0] not in resuse: resuse[rs[0]] = check_resource_use(curs,rs[0])
-            if resuse[rs[0]][0] < resuse[rs[0]][1] + rs[1]:
+            if rs[0] not in resuse: resuse[rs[0]] = check_resource_use(curs, rs[0])
+            if resuse[rs[0]][0] < resuse[rs[0]][1] + rs[2]:
                 res_ok = False
                 break
         if not res_ok: continue
-        for rs in job_rs: resuse[rs[0]][1] += rs[1]
+
+        for rs in job_rs: resuse[rs[0]][1] += rs[2]
         jout.append((jid, job_rs))
+
     return jout
 
 ###########
 ###########
 
-def get_job_info(curs, jid):
-    """Get basic information on job"""
-    curs.execute("SELECT status, queue_id, name, q_name, q_acct, jobscript, outlog FROM jobs WHERE job_id = ?", (jid,))
-    j = curs.fetchone()
-    if not j: return
+def make_upload_shelljobs(curs, jname, q, acct, jcmds, res_use):
+    """Upload set of shell script jobs with same requirements to DB; return IDs"""
+    return [ShellJob(name=jname, q=q, acct=acct, script=jc, res_list = res_use).upload(curs) for jc in jcmds]
 
-    J = Job(jid=jid, qid=j[1], name=j[2], q=j[3], acct=j[4], script=j[5], logfile=j[6])
-    J.wtreq = get_walltime_requested(curs, jid)
-    if J.wtreq is None: J.wtreq = 1800
-    J.ncores = get_cores_requested(curs, jid)
-    if J.ncores is None: J.ncores = 1
-
-    return J
-
-def make_upload_jobs(curs, jname, q, acct, jcmds, res_use):
-    """Generate jobfiles for "one liners" and upload to DB"""
-
-    jobdir = jobscript_dir + "/" + jname
-    os.makedirs(jobdir, exist_ok=True)
-
-    # look up named resources to DB IDs
-    for rs in res_use: rs = (get_resource_id(curs,rs[0],rs[0]), rs[1])
-
-    return [Job(name=jname, q=q, acct=acct, script=jc, res_list=res_use, logfile=jobdir+"/log_%i.txt"%n).upload(curs) for (n,jc) in enumerate(jcmds)]
-
-def make_test_jobs(curs, njobs, q, acct, jname = None):
-    """Generate test run batch"""
-    jcmds = ['echo "Hello world %i!"\nsleep 5\necho "Goodbye!"'%i + ("\nexit -99" if not (i+1)%5 else "") for i in range(njobs)]
-    make_upload_jobs(curs, "test" if jname is None else jname,
-                     q, acct, jcmds, [("walltime", 300), ("local_cores" if q == 'local' else "cores",1)])
-
-def combined_time(jtimes, nnodes):
-    """Estimate combined run times for serial/parallel jobs"""
-    if nnodes < 2: return sum(jtimes)
-    if len(jtimes) <= nnodes: return max(jtimes)
-
-    h = [0.]*nnodes
-    for j in jtimes: heapq.heappush(h, heappop(h) + j)
-    return max(h)
-
-def create_bundle(curs, jids, tbundle, bname, blog, nnodes):
-    """Create combined bundle of [job_id, ...]"""
-
-    J = get_job_info(curs, jids[0])
-    J.status = 0
-    J.name = bname
-    J.logfile = blog
-    J.script = os.path.dirname(os.path.abspath(__file__)) + '/JobManager_Worker.py --db ' + shlex.quote(dbfile)
-    if nnodes is not None: J.script += " --n %i "%nnodes
-    J.script += " --tmax %g"%tbundle + " --jlist " + ",".join(str(j) for j in jids)
-    J.res_list = [("walltime", tbundle), ("cores", nnodes)]
-
-    print(J.script)
-    J.upload(curs)
-
-    curs.executemany("UPDATE jobs SET status=7, associated=? WHERE job_id=?",[(J.jid, j) for j in jids])
-
-def choose_bundles(ts, tmax, nslots):
-    """Determine how to pack items [(t, id),...] into bundles with n slots, max tmax"""
-    ts.sort()
-    bout = []
-    bnew = []
-    h = [0.]*nslots
-
-    while len(ts):
-        m = heapq.heappop(h) # least-used slot
-        i = bisect.bisect_left(ts, (tmax - m,))
-        if not i: # no room left?
-            if not bnew: break # nothing fits any bundles
-            bout.append(bnew)
-            bnew = []
-            h = [0.]*nslots
-        heapq.heappush(h, m + ts[i-1][0])
-        bnew.append(ts.pop(i-1))
-
-    if bnew: bout.append(bnew)
-    return bout
-
-def rebundle(curs, jname, tmax, nslots):
+def rebundle(curs, tmax, nslots):
     """Bundle small jobs together into longer-time units"""
 
     curs.execute("SELECT quantity, job_id FROM jobs NATURAL JOIN resource_use \
-        WHERE (status = 0 OR status = 8) AND name = ? AND resource_id = ? AND quantity < ?", (jname, find_resource_id(curs, "walltime"), tmax))
+        WHERE (status = 0 OR status = 8) AND jtype = 0 AND resource_id = ? AND quantity < ?", (find_resource_id(curs, "walltime"), tmax))
     js = list(curs.fetchall())
     if not js: return
 
-    logdir = jobscript_dir + "/" + jname
-    os.makedirs(logdir, exist_ok=True)
-
-    njobs = len(js)
-    bundles = choose_bundles(js, tmax, nslots)
-    print("Bundling %i jobs into %i (%g s)x(%i slot) groups..."%(njobs, len(bundles), tmax, nslots))
-    for jb in bundles:
-        create_bundle(curs, [j[1] for j in jb], tmax, "bundled_"+jname,
-                        logdir + "/bundle_log_%i.txt"%jb[0][1], nslots)
-
-def post_completion(curs, jid):
-    """Post-completion wrap-up"""
-
-    # bundled jobs check
-    curs.execute("SELECT job_id FROM jobs WHERE associated = ?", (jid,))
-    bundled = [r[0] for r in curs.fetchall()]
-    if not bundled: return
-    print("Unbundling", len(bundled), "jobs.")
-
-    # read bundle output log
-    curs.execute("SELECT outlog FROM jobs WHERE job_id = ?", (jid,))
-    try: ls = open(curs.fetchone()[0], "r").readlines()
-    except: ls = []
-    newstats = []
-    for l in ls:
-        l = l.split()
-        if l[0] != "BundleJob" or len(l) != 5: continue
-        newstats.append((int(l[2]), float(l[3]), float(l[4]), int(l[1])))
-    curs.executemany("UPDATE jobs SET status = 4, return_code = ?, t_submit = ?, use_walltime = ?, associated = Null WHERE job_id = ?", newstats)
-
-    # completion of successfully unbundled jobs...
-    jdone = [n[-1] for n in newstats]
-    for j in jdone: post_completion(curs, j)
-
-    # bundle jobs missing results?
-    incomplete = [(j,) for j in bundled if j not in jdone]
-    if len(incomplete):
-        print(len(incomplete), "bundled jobs uncompleted!")
-        curs.executemany("UPDATE jobs SET status = 8, associated = Null WHERE job_id = ?", incomplete)
-    else: clear_job(curs, jid)
+    js.sort()
+    j0 = get_job(curs, js[0][1])
+    while True:
+        B = BundleJob(name = "bundle")
+        B.linear_order(js, nslots, tmax)
+        if not B.runorder: break
+        B.q = j0.q
+        B.acct = j0.acct
+        B.upload(curs)
+        curs.executemany("UPDATE jobs SET status=7, associated=? WHERE job_id=?",[(B.jid, j) for j in B.runorder])
+        print(B)

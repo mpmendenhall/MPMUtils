@@ -16,8 +16,8 @@ template<typename T>
 class HDF5_CfgLoader: public Configurable, public HDF5_TableInput<T>, virtual public XMLProvider {
 public:
     /// Constructor
-    explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", bool doMakeNext = true):
-    XMLProvider("HDF5_CfgLoader"), Configurable(S) {
+    explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", bool doMakeNext = true, const string& tname = "", int v = 0):
+    XMLProvider("HDF5_CfgLoader"), Configurable(S), HDF5_TableInput<T>(tname, v) {
         S.lookupValue("nLoad", nLoad);
         auto snl = optionalGlobalArg("nload");
         if(snl.size()) nLoad = atoi(snl.c_str());

@@ -61,8 +61,8 @@ public:
     TDirectory* writeItems(TDirectory* d = nullptr) override;
 
     /// Configure from libconfig object, dynamically loading plugins
-    virtual void Configure(const Setting& cfg, bool skipUnknown = false);
-    /// Configure from named .cfg file
+    virtual void Configure(const Setting& S, bool skipUnknown = false);
+    /// Load configuration from named .cfg file
     void LoadConfig(const string& fname);
     /// Configure, loading from input file
     void Reconfigure();
@@ -75,6 +75,7 @@ protected:
     map<string, SegmentSaver*> byName;      ///< available named plugins list
     vector<SegmentSaver*> myPlugins;        ///< plugins in run order
     TObjString* configstr;                  ///< configuration file contents
+    TObjString* settingname;                ///< configuration file setting path
 };
 
 /// Base class for constructing configuration-based plugins, with parent-class recast

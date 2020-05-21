@@ -2,19 +2,19 @@
 -- sqlite3 Jobs.db < $MPMUTILS/pyUtils/JobManager/JobsDB.sql
 
 PRAGMA foreign_keys = ON;
-PRAGMA journal_mode = WAL; -- for local jobs to report back
+--PRAGMA journal_mode = WAL; -- for local jobs to report back
 
 CREATE TABLE jobs (
     job_id INTEGER PRIMARY KEY, -- unique internal job ID number
-    status INTEGER,             -- processing status. -1: hold; 0: waiting; 1: sumitted; 2: queued; 3: running; 4: done; >= 5: special/undefined
+    jtype  INTEGER,             -- type, 0: shell script, 1: bundle of sub-jobs
+    status INTEGER,             -- processing status. -1: hold; 0: waiting; 1: submitted; 2: queued; 3: running; 4: done; >= 5: special/undefined
     queue_id INTEGER,           -- submission queue identifier
-    name TEXT,                  -- user-assigned (group) name
+    name TEXT,                  -- user-assigned grouping name
     q_name TEXT,                -- job queue name
     q_acct TEXT,                -- submission account
-    jobscript TEXT,             -- script to run for job
-    outlog TEXT,                -- output logfile path
+    jobscript TEXT,             -- job script or other data
     associated INTEGER,         -- associated job for bundling
-    t_submit REAL,              -- submission time
+    t_submit REAL,              -- submission timestamp
     use_walltime REAL,          -- actual used wall time [s]
     return_code INTEGER,        -- job system return code
     FOREIGN KEY(associated) REFERENCES jobs(job_id) ON DELETE CASCADE

@@ -1,6 +1,6 @@
 #! /bin/env python3
 ## @file JobManager_LSF.py job submission interface to LSF/bsub/jsrun job control
-# Michael P. Mendenhall, LLNL 2019
+# Michael P. Mendenhall, LLNL 2020
 
 from JobManager_Interface import *
 import subprocess
@@ -11,6 +11,10 @@ class LSFInterface(BatchQueueInterface):
 
     def __init__(self, conn):
         super().__init__(conn)
+
+    def nbundle(self):
+        """Recommended bundling parallelism"""
+        return 40
 
     def check_queued_status(self):
         """Get status on all queue items: [(QID, job state number)]"""
@@ -25,34 +29,33 @@ class LSFInterface(BatchQueueInterface):
             jstatus.append((int(l[0]), self.jobstates.get(l[2],5)))
         return jstatus
 
-    def checkjob(self, qid):
-        """Create job info dictionary for specified queue ID"""
-        jinfo = subprocess.check_output(["bjobs","-l",str(qid)]).decode()
-        print(jinfo)
-        ldat = {"status": 5}
-        for l in jinfo.split('\n'):
-            if "Done successfully." in l:
-                ldat["status"] = 4
-                ldat["ret_code"] = 0
-            if "Exited with exit code" in l:
-                ldat["status"] = 6
-                ldat["ret_code"] = int(l.split("exit code ")[1].split(".")[0])
-        return ldat
-
     def _submit_job(self, J):
         """Submit job via bsub"""
 
-        mcmds = ["-nnodes 1",
-                 "-ln_slots %i"%J.ncores,
-                 "-W %i"%(1.+J.wtreq/60.)]
+        #J.make_wrapper()
+        p = J.getpath()
+        nn = (1 + (int(J.res_list["cores"]) - 1)//40)
+        assert nn == 1
+        mcmds = ["-nnodes %i"%nn, "-env all",
+                 "-W %i"%(5. + J.res_list["walltime"]/60.),
+                 "-o " + p + "/log.txt"]
+        if J.name: mcmds.append("-J " + J.name)
         if J.acct: mcmds.append("-G "+J.acct)
-        if J.logfile: mcmds.append("-o "+J.logfile)
-        if J.name: mcmds.append("-J "+J.name)
-        if J.q: mcmds.append("-q "+J.q)
+        if J.q: mcmds.append("-q " + J.q)
 
-        cmd = '\n'.join(["#BSUB "+m for m in mcmds]+['\n', J.script])
+        bscript = '\n'.join(["#!/bin/bash",] + ["#BSUB " + m for m in mcmds]) + '\n\n'
+
+        bscript += J.prerun_script() + "\n"
+        bscript += " ".join(J.get_run_command()) + '\n\n'
+        #bscript += "lrun -1 " + " ".join(J.get_run_command()) + '\n\n'
+        #bscript += "jsrun -p%i "%J.res_list["cores"] + shlex.quote(" ".join(J.get_run_command())) + '\n\n'
+        bscript += J.postrun_script() + '\n'
+
+        #bscript += "jsrun -p%i "%J.res_list["cores"] + " %s/wrapper.sh"%p
+
         bsub = subprocess.Popen(["bsub"], stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
-        bsub.stdin.write(cmd.encode())
+        bsub.stdin.write(bscript.encode())
+
         ou,er = bsub.communicate()
         o = ou.decode().strip()
         e = er.decode().strip()
@@ -63,7 +66,3 @@ class LSFInterface(BatchQueueInterface):
             qid = int(o.split()[1][1:-1])
             return qid
         except: return None
-
-    def kill_jobs(self, usr = None, account = None):
-        """Force kill all running jobs"""
-        assert False

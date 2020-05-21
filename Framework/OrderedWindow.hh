@@ -83,7 +83,7 @@ public:
     /// Flush until lowest > x (or queue empty)
     void flushLo(ordering_t x) {
         window_Hi = std::max(window_Hi, x + 2*hwidth);
-        while(size() && order(front()) < x) {
+        while(size() && order(front()) <= x) {
             if(!imid) nextmid();
             else disposeLo();
         }

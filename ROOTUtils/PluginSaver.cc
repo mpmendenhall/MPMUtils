@@ -5,23 +5,30 @@
 #include "libconfig_readerr.hh"
 #include "StringManip.hh"
 #include <cassert>
+#include <sstream>
 
 PluginSaver::PluginSaver(OutputManager* pnt, const string& nm, const string& inflName):
 SegmentSaver(pnt, nm, inflName) {
     registerWithName(configstr, "configstr");
+    registerWithName(settingname, "settingname");
 }
 
 void PluginSaver::LoadConfig(const string& fname) {
+    printf("Loading configuration file '%s'\n", fname.c_str());
     Config cfg;
     readConfigFile(cfg, fname);
-    Configure(cfg.getRoot(), false);
+    Configure(registerConfig(cfg), false);
 }
 
 void PluginSaver::Reconfigure() {
     Config cfg;
     cfg.setAutoConvert(true);
-    cfg.readString(configstr->String().Data());
-    Configure(cfg.getRoot(), true);
+    printf("Reconfiguring from saved setting '%s'\n", settingname->String().Data());
+    //printf("Reconfiguring from '%s' in:\n%s\n",
+    //       settingname->String().Data(), configstr->String().Data());
+    cfg.readString(configstr->String());
+    registerConfig(cfg);
+    Configure(cfg.lookup(settingname->String()), true);
 }
 
 void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown) {
@@ -48,14 +55,17 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& 
     if(rn0 == _rename) ++copynum;
 }
 
-void PluginSaver::Configure(const Setting& cfg, bool skipUnknown) {
-    // save copy of config to output
-    auto srcfl = cfg.getSourceFile();
-    if(srcfl) configstr->SetString(loadFileString(srcfl).c_str());
+void PluginSaver::Configure(const Setting& S, bool skipUnknown) {
+    if(myPlugins.size()) throw std::runtime_error("Multiple calls to PluginSaver::Configure");
+
+    settingname->SetString(S.getPath().c_str());
+    configstr->SetString(cfgString(lookupConfig(S)).c_str());
+    //printf("Saved configuration '%s' in:\n%s\n",
+    //       settingname->String().Data(), configstr->String().Data());
 
     // configure plugins
-    if(cfg.exists("plugins")) {
-        auto& plugs = cfg["plugins"];
+    if(S.exists("plugins")) {
+        auto& plugs = S["plugins"];
         auto nplugs = plugs.getLength();
         for(int i=0; i<nplugs; i++) {
             string pname = plugs[i].getName();
@@ -213,7 +223,7 @@ double PluginSaver::displayTimeUse() const {
     printf("----- Total ------\n\t%.2f\t%.2f\t%.2f\t%.2f\t\t%.2f s\n",
            p_tSetup, p_tProcess, p_tCalc, p_tPlot, tall);
 
-    double tFramework = std::chrono::duration<double>(steady_clock::now()-ana_t0).count();
+    double tFramework = std::chrono::duration<double>(steady_clock::now() - ana_t0).count();
     printf("Framework time use: %.2f s\n\n", tFramework - tall);
 
     return tall;

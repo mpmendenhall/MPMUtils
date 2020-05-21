@@ -16,6 +16,8 @@ OutputManager(nm, pnt), inflname(inflName) {
         auto PSS = dynamic_cast<SegmentSaver*>(parent);
         if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(nm.c_str());
     }
+
+    registerWithName(normalization, "normalization", 0);
 }
 
 SegmentSaver::~SegmentSaver() {
@@ -33,15 +35,7 @@ TDirectory* SegmentSaver::writeItems(TDirectory* d) {
     return d;
 }
 
-bool SegmentSaver::isNormalized() {
-    if(!normalization) {
-        auto im0 = ignoreMissingHistos;
-        ignoreMissingHistos = true;
-        registerWithName(normalization, "normalization");
-        ignoreMissingHistos = im0;
-    }
-    return normalization->GetNrows();
-}
+bool SegmentSaver::isNormalized() { return normalization->GetNrows(); }
 
 void SegmentSaver::rename(const string& nm) {
     path = nm;

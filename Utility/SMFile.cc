@@ -29,7 +29,7 @@ SMFile::SMFile(const string& fname, bool readit) {
             vals += '\t';
         vals += s;
         }
-        emplace(key, vals);
+        insert({key, Stringmap(vals)});
     }
     fin.close();
 }

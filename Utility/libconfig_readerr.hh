@@ -16,5 +16,15 @@ extern const Setting& NullSetting;
 /// Read configuration file into config
 void readConfigFile(Config& cfg, const string& cfgfile, bool autoconvert = true);
 
+/// Get configuration contents as string
+string cfgString(const Config& cfg);
+
+/// Register configuration for lookup by setting; return root setting
+const Setting& registerConfig(const Config& cfg);
+/// Look up configuration for setting
+const Config& lookupConfig(const Setting& S);
+/// Look up configuration for setting (nullptr if not registered)
+const Config* lookupConfig(const Setting* S);
+
 #endif
 
