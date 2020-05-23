@@ -117,12 +117,14 @@ class BundleJob(Job):
         """Choose linear job ordering to efficiently fill available slots in parallel
         extracts from input sorted ts = [(t, id),...]"""
 
-        h = [0.]*nslots # times used in each slot (heap format)
+        h = [0.]*nslots      # times used in each slot (heap format)
         self.runorder = []   # job run order to fill bundle
         while len(ts):
             m = heapq.heappop(h) # contents of least-used slot (next available to run in)
             i = bisect.bisect_left(ts, (tmax + 0.01 - m,)) # biggest item that will fit
-            if not i: break # will not fit in least-used slot?
+            if not i: # will not fit in least-used slot?
+                heapq.heappush(h, m)
+                break
             heapq.heappush(h, m + ts[i-1][0]) # fill into slot
             self.runorder.append(ts.pop(i-1)[1]) # append to ordering
 
@@ -209,7 +211,7 @@ def summarize_DB_runstatus(curs):
 def completed_runstats(curs, name):
     """Display stats on completed runs by grouping name"""
 
-    curs.execute("SELECT use_walltime FROM jobs WHERE name=? AND status=4", (name,))
+    curs.execute("SELECT use_walltime FROM jobs WHERE name LIKE ? AND status=4", (name,))
     rt = [r[0] for r in curs.fetchall()]
     n = len(rt)
     if not n:
@@ -221,6 +223,8 @@ def completed_runstats(curs, name):
     print("25\t",   rt[n//4])
     print("50\t",   rt[n//2])
     print("75\t",   rt[(3*n)//4])
+    if n >= 100:  print("95\t",   rt[(95*n)//100])
+    if n >= 1000: print("99\t",   rt[(99*n)//100])
     print("100\t",  rt[-1])
     print("Mean", sum(rt)/n);
 

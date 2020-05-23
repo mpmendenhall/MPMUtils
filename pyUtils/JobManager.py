@@ -84,7 +84,7 @@ def run_commandline():
     jcmds = []
     jname = options.name
     if options.jobfile:
-        if not jname: jname = options.jobfile
+        if not jname: jname = options.jobfile.split("/")[-1]
         jcmds = [l.strip() for l in open(options.jobfile,"r").readlines() if l[0]!='#']
     if options.script:
         print("Input job script on stdin; end with ctrl-D:")
@@ -118,8 +118,9 @@ def run_commandline():
 rm -r ~/jobs/; ./JobManager.py --test 10 --limit 4 --cycle 5
 
 rm -r ~/jobs/
-./JobManager.py --test 300 --queue pbatch
-./JobManager.py --bundle --walltime 300 --cycle 5 --limit 100
+./JobManager.py --test 300 --queue pbatch --account nuphys
+./JobManager.py --bundle --walltime 300
+./JobManager.py --cycle 5 --limit 100
 """
 
 if __name__ == "__main__": run_commandline()

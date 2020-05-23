@@ -32,7 +32,6 @@ class LSFInterface(BatchQueueInterface):
     def _submit_job(self, J):
         """Submit job via bsub"""
 
-        #J.make_wrapper()
         p = J.getpath()
         nn = (1 + (int(J.res_list["cores"]) - 1)//40)
         assert nn == 1
@@ -47,11 +46,8 @@ class LSFInterface(BatchQueueInterface):
 
         bscript += J.prerun_script() + "\n"
         bscript += " ".join(J.get_run_command()) + '\n\n'
-        #bscript += "lrun -1 " + " ".join(J.get_run_command()) + '\n\n'
-        #bscript += "jsrun -p%i "%J.res_list["cores"] + shlex.quote(" ".join(J.get_run_command())) + '\n\n'
         bscript += J.postrun_script() + '\n'
-
-        #bscript += "jsrun -p%i "%J.res_list["cores"] + " %s/wrapper.sh"%p
+        open(p+"/bsub.txt", "w").write(bscript)
 
         bsub = subprocess.Popen(["bsub"], stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
         bsub.stdin.write(bscript.encode())

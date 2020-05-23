@@ -14,7 +14,7 @@ class SlurmInterface(BatchQueueInterface):
 
     def nbundle(self):
         """Recommended bundling parallelism"""
-        return 1
+        return 36 if "boraxo" in os.uname()[1] else 1
 
     def check_queued_status(self):
         """Get status on all queue items: [(QID, job state number)]"""
@@ -32,7 +32,6 @@ class SlurmInterface(BatchQueueInterface):
     def _submit_job(self, J):
         """Submit job via msub"""
 
-        J.make_wrapper()
         p = J.getpath()
         mcmds =["-j oe", "-V",
                 "-l ttc=%i"%J.res_list["cores"],
@@ -42,8 +41,13 @@ class SlurmInterface(BatchQueueInterface):
         if J.q: mcmds.append("-q "+ J.q)
         if J.acct: mcmds.append("-A " + J.acct)
 
-        mscript = '\n'.join(["#!/bin/bash",] + ["#MSUB " + m for m in mcmds]
-                            + ["\nsrun -n%i bash %s/wrapper.sh\n"%(J.res_list["cores"], p)])
+        mscript = '\n'.join(["#!/bin/bash",] + ["#MSUB " + m for m in mcmds]) + '\n\n'
+
+        mscript += J.prerun_script() + "\n"
+        mscript += " ".join(J.get_run_command()) + '\n\n'
+        mscript += J.postrun_script() + '\n'
+        open(p+"/msub.txt", "w").write(mscript)
+
         msub = subprocess.Popen(["msub"], stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
         msub.stdin.write(mscript.encode())
         ou,er = msub.communicate()
