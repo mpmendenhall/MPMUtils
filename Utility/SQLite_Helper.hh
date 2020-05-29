@@ -22,6 +22,8 @@ class SQLite_Helper {
 public:
     /// Constructor
     explicit SQLite_Helper(const string& dbname, bool readonly = false, bool create = true);
+    /// Constructor, adopting an open DB
+    explicit SQLite_Helper(sqlite3* _db);
     /// Destructor
     virtual ~SQLite_Helper();
 
@@ -46,13 +48,24 @@ public:
     /// bind a vector<double> as a blob to a statement parameter
     int bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v);
 
+    /// get databse file page size (bytes)
+    int page_size();
+    /// get databse file number of pages
+    int page_count();
+    /// get database file contents size (bytes)
+    int db_size() { return page_size() * page_count(); }
+    /// dump DB file to binary blob
+    vector<char> toBlob();
+    /// load contents from binary blob
+    void fromBlob(const void* dat, size_t sz);
+
+    /// use online backup calls to clone DB from other (or vice-versa)
+    int backupTo(sqlite3* dbOut, bool toOther = true);
+
 protected:
     int txdepth = 0;                        ///< depth of transaction calls
     sqlite3* db = nullptr;                  ///< database connection
     map<string, sqlite3_stmt*> statements;  ///< prepared statements awaiting deletion
-
-private:
-    static bool errlog_configured;          ///< whether error log output has been configured
 };
 
 #endif

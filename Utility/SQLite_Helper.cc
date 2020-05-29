@@ -18,24 +18,29 @@ using std::pair;
 
 /// callback function to display SQLite3 errors
 void errorLogCallback(void*, int iErrCode, const char* zMsg){
-    fprintf(stderr, "SQL error (%d): %s\n", iErrCode, zMsg);
+    printf("SQL error (%d): %s\n", iErrCode, zMsg);
 }
 
-bool SQLite_Helper::errlog_configured = false;
+
+extern "C" {
+    int sqlite3_memvfs_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_routines *pApi);
+}
+//const int errlog_is_configured = sqlite3_config(SQLITE_CONFIG_LOG, &errorLogCallback, nullptr);
+//if(errlog_is_configured != SQLITE_OK) throw std::logic_error("sqlite error logging misconfigured");
+
+
+static int memvfs_init = sqlite3_auto_extension((void(*)(void)) &sqlite3_memvfs_init);
 
 SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create) {
-    if(create && !readonly) {
-        int fd = open(dbname.c_str(), O_WRONLY|O_CREAT|O_NOCTTY|O_NONBLOCK, 0666);
-        close(fd);
-    }
+    if(memvfs_init != SQLITE_OK)
+        throw std::logic_error("failed initialization of sqlite3 memvfs: "
+        + string(sqlite3_errstr(memvfs_init)));
 
-    if(!errlog_configured) {
-        sqlite3_config(SQLITE_CONFIG_LOG, &errorLogCallback, nullptr);
-        errlog_configured = true;
-    }
-    printf("Opening SQLite3 DB '%s'...\n",dbname.c_str());
+    printf("Opening SQLite3 DB '%s'...\n", dbname.c_str());
     int err = sqlite3_open_v2(dbname.c_str(), &db,
-                              readonly? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE, nullptr);
+                              readonly? SQLITE_OPEN_READONLY :
+                              SQLITE_OPEN_READWRITE | (create? SQLITE_OPEN_CREATE : 0),
+                              nullptr);
     if(err) {
         std::runtime_error e("Failed to open DB " + dbname + " error " + sqlite3_errmsg(db));
         sqlite3_close(db);
@@ -43,6 +48,11 @@ SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create) {
         throw e;
     }
 
+    sqlite3_busy_timeout(db, 100);
+}
+
+SQLite_Helper::SQLite_Helper(sqlite3* _db): db(_db) {
+    if(!db) throw std::logic_error("SQLite_Helper initialized with nullptr DB");
     sqlite3_busy_timeout(db, 100);
 }
 
@@ -110,4 +120,64 @@ bool SQLite_Helper::get_string(sqlite3_stmt* stmt, unsigned int i, string& rslt)
     const unsigned char* s = sqlite3_column_text(stmt, i);
     if(s) rslt = string((const char*)s);
     return s;
+}
+
+int SQLite_Helper::page_size() {
+    auto stmt = loadStatement("PRAGMA page_size");
+    busyRetry(stmt);
+    auto r = sqlite3_column_int(stmt, 0);
+    sqlite3_reset(stmt);
+    return r;
+}
+
+int SQLite_Helper::page_count() {
+    auto stmt = loadStatement("PRAGMA page_count");
+    busyRetry(stmt);
+    auto r = sqlite3_column_int(stmt, 0);
+    sqlite3_reset(stmt);
+    return r;
+}
+
+int SQLite_Helper::backupTo(sqlite3* dbOut, bool toOther) {
+    sqlite3_backup* pBackup = sqlite3_backup_init(toOther? dbOut : db, "main", toOther? db : dbOut, "main");
+    if(pBackup) {
+        (void)sqlite3_backup_step(pBackup, -1); // performs backup operation
+        (void)sqlite3_backup_finish(pBackup);   // releases pBackup
+    }
+    return sqlite3_errcode(toOther? dbOut : db);
+}
+
+vector<char> SQLite_Helper::toBlob() {
+    vector<char> v(db_size());
+
+    sqlite3* dbb = nullptr;
+    char memname[1024];
+    sprintf(memname, "file:/whatever?ptr=%p&sz=0&max=%zu&freeonclose=0", v.data(), v.size());
+    int err = sqlite3_open_v2(memname, &dbb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_URI, "memvfs");
+    if(err != SQLITE_OK) {
+        std::runtime_error e("Failed to open memdb '" + string(memname) + "', error " + sqlite3_errmsg(dbb));
+        sqlite3_close(dbb);
+        throw e;
+    }
+    SQLite_Helper H(dbb);
+    H.exec("PRAGMA journal_mode=OFF", false);
+    backupTo(dbb);
+    if(H.db_size() != (int)v.size()) throw std::logic_error("Unexpected database binary size");
+    return v;
+}
+
+void SQLite_Helper::fromBlob(const void* dat, size_t sz) {
+    sqlite3* dbb = nullptr;
+    char memname[1024];
+    sprintf(memname, "file:/whatever?ptr=%p&sz=%zu&max=%zu&freeonclose=0", dat, sz, sz);
+    int err = sqlite3_open_v2(memname, &dbb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_URI, "memvfs");
+    if(err != SQLITE_OK) {
+        std::runtime_error e("Failed to open memdb '" + string(memname) + "', error " + sqlite3_errmsg(dbb));
+        sqlite3_close(dbb);
+        throw e;
+    }
+    SQLite_Helper H(dbb);
+    if(H.db_size() != (int)sz) throw std::logic_error("Unexpected database binary size");
+
+    backupTo(dbb, false);
 }
