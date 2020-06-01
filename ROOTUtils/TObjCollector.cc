@@ -6,13 +6,24 @@
 // -- Michael P. Mendenhall, 2015
 
 #include "TObjCollector.hh"
+#include "StringManip.hh"
 #include <stdexcept>
 
 TDirectory* TObjCollector::writeItems(TDirectory* d) {
     if(!d) d = gDirectory;
+
+    for(auto const& kv: anonItems) {
+        auto pp = splitLast(kv.first, "/");
+        if(pp.first.size()) {
+            if(!d->GetDirectory(pp.first.c_str())) d->mkdir(pp.first.c_str());
+            d->cd(pp.first.c_str());
+        } else d->cd();
+        kv.second->Write(pp.second.c_str());
+    }
+
     d->cd();
     for(auto i: namedItems) i->Write();
-    for(auto const& kv: anonItems) kv.second->Write(kv.first.c_str());
+
     return d;
 }
 

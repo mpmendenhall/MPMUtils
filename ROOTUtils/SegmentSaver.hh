@@ -8,7 +8,6 @@
 #include "TCumulative.hh"
 #include <TH1.h>
 #include <TVectorT.h>
-#include <TObjString.h>
 #include <TFile.h>
 #include <map>
 #include <string>
@@ -26,14 +25,18 @@ public:
     explicit SegmentSaver(OutputManager* pnt, const string& nm = "SegmentSaver", const string& inflName = "");
     /// destructor
     virtual ~SegmentSaver();
-    /// get location of this analyzer's input file
-    const string& getInflName() const { return inflname; }
-    /// get age of analyzer's input file
-    double getInflAge() const { return inflAge; }
+
     /// change name, and subpaths if in parent
     virtual void rename(const string& nm);
     /// write items to current directory or subdirectory of provided
     TDirectory* writeItems(TDirectory* d = nullptr) override;
+
+
+    /// get metadata string
+    const string& getMeta(const string& k);
+
+    /// set metadata string
+    void setMeta(const string& k, const string& v) { xmeta[k] = v; }
 
     /// construct or retrieve saved TH1-derived class
     template<class T, typename... Args>
@@ -56,9 +59,6 @@ public:
         }
         saveHists.emplace(hname, h);
     }
-
-    /// display list of saved histograms and cumulatives
-    void displaySavedHists() const;
 
     /// clone or restore from file a cumulative object
     TCumulative* _registerCumulative(const string& onm, const TCumulative& cTemplate);
@@ -108,18 +108,22 @@ public:
     virtual void addSegment(const SegmentSaver& S, double sc = 1.);
     /// check if this is equivalent layout to another SegmentSaver
     virtual bool isEquivalent(const SegmentSaver& S, bool throwit = false) const;
-    /// load and add a list of segment files; return number loaded
-    virtual size_t addFiles(const vector<string>& inflnames);
     /// statistical test of histogram similarity
     virtual map<string,float> compareKolmogorov(const SegmentSaver& S) const;
 
     bool ignoreMissingHistos = true;    ///< whether to quietly ignore missing histograms in input file
+    TFile* fIn = nullptr;               ///< input file to read in histograms from
+    TDirectory* dirIn = nullptr;        ///< particular sub-directory for reading histograms
+    TVectorD* normalization = nullptr;  ///< normalization information; meaning defined in subclasses
+
+    double tSetup = 0;          ///< performance profiling: time to run constructor
+    double tProcess = 0;        ///< permormance profiling: time to process data
+    double tCalc = 0;           ///< performance profiling: time for calculateResults
+    double tPlot = 0;           ///< performance profiling: time for makePlots
+    double order = 0;           ///< run sort ordering number
 
 
     // ----- Subclass me! ----- //
-
-    /// create a new instance of this object(nm,inflname) (cloning self settings) for given directory
-    virtual SegmentSaver* makeAnalyzer(const string&, const string&) { throw std::runtime_error("Unimplemented!"); }
 
     /// optional setup at start of data loading
     virtual void startData() { }
@@ -132,7 +136,7 @@ public:
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
     virtual void normalize() { if(!isNormalized()) { normalization->ResizeTo(1); (*normalization)(0) = 1; }  }
     /// virtual routine for generating calculated hists
-    virtual void calculateResults() { isCalculated = true; }
+    virtual void calculateResults() { }
     /// virtual routine for generating output plots
     virtual void makePlots() {}
     /// virtual routine for comparing to other analyzers (of this type or nullptr; meaning implementation-dependent)
@@ -140,17 +144,6 @@ public:
     /// virtual routine to calculate incremental changes from preceding timestep
     virtual void checkpoint(const SegmentSaver&) { }
 
-    TFile* fIn = nullptr;               ///< input file to read in histograms from
-    TDirectory* dirIn = nullptr;        ///< particular sub-directory for reading histograms
-    string inflname;                    ///< where to look for input file
-    bool isCalculated = false;          ///< flag for whether calculation step has been completed
-    TVectorD* normalization = nullptr;  ///< normalization information; meaning defined in subclasses
-
-    double tSetup = 0;          ///< performance profiling: time to run constructor
-    double tProcess = 0;        ///< permormance profiling: time to process data
-    double tCalc = 0;           ///< performance profiling: time for calculateResults
-    double tPlot = 0;           ///< performance profiling: time for makePlots
-    double order = 0;           ///< run sort ordering number
 
 protected:
 
@@ -170,7 +163,7 @@ protected:
     set<void*> doNotScale;              ///< items not to rescale
     map<string, CumulativeData*> cumDat;    ///< non-TObject cumulative types
     map<string, TCumulative*> tCumDat;      ///< non-TH1-derived cumulative datatypes
-    double inflAge = 0;                 ///< age of input file [s]; 0 for brand-new files
+    map<string, string> xmeta;          ///< extra metadata
 };
 
 /// utility function to remove color axis data, to force re-draw with current dimensions

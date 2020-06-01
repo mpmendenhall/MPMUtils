@@ -136,6 +136,12 @@ string dropLast(const string& str, const string splitchars) {
     return str.substr(0, str.find_last_of(splitchars));
 }
 
+std::pair<string,string> splitLast(const string& str, const string splitchars) {
+    auto i = str.find_last_of(splitchars);
+    if(i == string::npos) return {"", str};
+    return { str.substr(0, str.find_last_of(splitchars)), str.substr(i+1, string::npos) };
+}
+
 string loadFileString(const string& fname) {
     std::ifstream in(fname.c_str(), std::ios::in | std::ios::binary);
     if (in) {

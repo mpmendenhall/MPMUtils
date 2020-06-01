@@ -3,15 +3,15 @@
 #include "SegmentSaver.hh"
 #include "PathUtils.hh"
 #include <TString.h>
+#include <TObjString.h>
 
-SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflName):
-OutputManager(nm, pnt), inflname(inflName) {
+SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflname):
+OutputManager(nm, pnt) {
     // open file to load existing data
     fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : nullptr;
     if(fIn) {
         dirIn = fIn->GetDirectory("");
-        inflAge = fileAge(inflname);
-        printf("Loading data from %s [%.1f hours old]...\n",inflname.c_str(),inflAge/3600.);
+        printf("Loading data from %s [%.1f hours old]...\n", inflname.c_str(), fileAge(inflname)/3600.);
     } else { // try sub-directory of parent if file not specified
         auto PSS = dynamic_cast<SegmentSaver*>(parent);
         if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(nm.c_str());
@@ -28,7 +28,22 @@ SegmentSaver::~SegmentSaver() {
     for(auto& kv: cumDat) delete kv.second;
 }
 
+const string& SegmentSaver::getMeta(const string& k) {
+    auto it = xmeta.find(k);
+    if(it != xmeta.end()) return it->second;
+
+    TObject* o = nullptr;
+    if(dirIn) dirIn->GetObject(("meta/"+k).c_str(), o);
+    auto oo = dynamic_cast<TObjString*>(o);
+    auto& s = (xmeta[k] = oo? oo->GetString() : "");
+    delete o;
+    return s;
+}
+
 TDirectory* SegmentSaver::writeItems(TDirectory* d) {
+    TObjString* s = nullptr;
+    for(auto& kv: xmeta) registerWithName(s, "meta/"+kv.first, kv.second.data());
+
     d = OutputManager::writeItems(d);
     if(d) d->cd();
     for(auto& kv: cumDat) kv.second->Write();
@@ -45,20 +60,14 @@ void SegmentSaver::rename(const string& nm) {
     }
 }
 
-void resetZaxis(TH1* o) {
-    TObject* a = o->GetListOfFunctions()->FindObject("palette");
-    if(a) o->GetListOfFunctions()->Remove(a);
-}
-
 TObject* SegmentSaver::_tryLoad(const string& oname) {
-    if(!fIn && !dirIn) return nullptr;
+    if(!dirIn) return nullptr;
     TObject* o = nullptr;
-    if(dirIn) dirIn->GetObject(oname.c_str(),o);   // first try in my directory
-    if(!o && fIn) fIn->GetObject(oname.c_str(),o); // fall back to file base for backwards compatibility
+    dirIn->GetObject(oname.c_str(), o);
     if(!o) {
         if(ignoreMissingHistos) {
             printf("Warning: missing object '%s' in '%s'\n",
-                   oname.c_str(), dirIn? dirIn->GetName() : fIn? fIn->GetName() : inflname.c_str());
+                   oname.c_str(), dirIn? dirIn->GetName() : fIn? fIn->GetName() : "Unknown");
         } else {
             throw std::runtime_error("File structure mismatch: missing '"+oname+"'");
         }
@@ -161,21 +170,7 @@ void SegmentSaver::addSegment(const SegmentSaver& S, double sc) {
     }
 }
 
-size_t SegmentSaver::addFiles(const vector<string>& inflnames) {
-    size_t nMerged = 0;
-    for(auto f: inflnames) {
-        if(!fileExists(f)) continue;
-        SegmentSaver* subRA = makeAnalyzer("", f);
-        addSegment(*subRA);
-        delete subRA;
-        nMerged++;
-    }
-    return nMerged;
+void resetZaxis(TH1* o) {
+    TObject* a = o->GetListOfFunctions()->FindObject("palette");
+    if(a) o->GetListOfFunctions()->Remove(a);
 }
-
-void SegmentSaver::displaySavedHists() const {
-    for(auto& kv: saveHists) printf("\thistogram '%s'\n", kv.first.c_str());
-    for(auto& kv: cumDat) printf("\tCumulative '%s'\n", kv.first.c_str());
-    for(auto& kv: tCumDat) printf("\tTCumulative '%s'\n", kv.first.c_str());
-}
-

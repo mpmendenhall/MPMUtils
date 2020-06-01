@@ -8,10 +8,7 @@
 #include <sstream>
 
 PluginSaver::PluginSaver(OutputManager* pnt, const string& nm, const string& inflName):
-SegmentSaver(pnt, nm, inflName) {
-    registerWithName(configstr, "configstr");
-    registerWithName(settingname, "settingname");
-}
+SegmentSaver(pnt, nm, inflName) { }
 
 void PluginSaver::LoadConfig(const string& fname) {
     printf("Loading configuration file '%s'\n", fname.c_str());
@@ -23,12 +20,11 @@ void PluginSaver::LoadConfig(const string& fname) {
 void PluginSaver::Reconfigure() {
     Config cfg;
     cfg.setAutoConvert(true);
-    printf("Reconfiguring from saved setting '%s'\n", settingname->String().Data());
-    //printf("Reconfiguring from '%s' in:\n%s\n",
-    //       settingname->String().Data(), configstr->String().Data());
-    cfg.readString(configstr->String());
+    auto snm = getMeta("settingname");
+    printf("Reconfiguring from saved setting '%s'\n", snm.c_str());
+    cfg.readString(getMeta("configstr"));
     registerConfig(cfg);
-    Configure(cfg.lookup(settingname->String()), true);
+    Configure(cfg.lookup(snm), true);
 }
 
 void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown) {
@@ -58,10 +54,8 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& 
 void PluginSaver::Configure(const Setting& S, bool skipUnknown) {
     if(myPlugins.size()) throw std::runtime_error("Multiple calls to PluginSaver::Configure");
 
-    settingname->SetString(S.getPath().c_str());
-    configstr->SetString(cfgString(lookupConfig(S)).c_str());
-    //printf("Saved configuration '%s' in:\n%s\n",
-    //       settingname->String().Data(), configstr->String().Data());
+    setMeta("settingname", S.getPath());
+    setMeta("configstr", cfgString(lookupConfig(S)));
 
     // configure plugins
     if(S.exists("plugins")) {

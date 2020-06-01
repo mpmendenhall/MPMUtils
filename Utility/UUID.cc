@@ -4,8 +4,11 @@
 #include "UUID.hh"
 #include <uuid/uuid.h>
 
+template<typename T>
+int64_t* uuid_reparse(T u) { return (int64_t*)(void*)u; }
+
 int64_t uuid_64() {
     uuid_t out;
     uuid_generate(out);
-    return (*(int64_t*)out) ^ (*((int64_t*)out + 1));
+    return (*uuid_reparse(out)) ^ (*(uuid_reparse(out) + 1));
 }
