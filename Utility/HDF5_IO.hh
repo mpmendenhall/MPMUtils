@@ -95,13 +95,16 @@ public:
     }
     /// Finalize/close file output
     void writeFile() override {
-        this->setFile(0);
+        HDF5_Table_Writer<T>::_outfile_id = 0;
         HDF5_OutputFile::writeFile();
     }
     /// Handle datastream signals
     void signal(datastream_signal_t sig) override {
         HDF5_Table_Writer<T>::signal(sig);
-        if(sig == DATASTREAM_END) writeFile();
+        if(sig == DATASTREAM_END) {
+            printf("writeFile() at DATASTREAM_END\n");
+            writeFile();
+        }
     }
 };
 

@@ -40,6 +40,8 @@ struct weightedpt {
 template<int N, typename T = double>
 class PointCloudPCA {
 public:
+    /// coordinate units type
+    typedef T units_t;
     /// associated weighted-point type
     typedef weightedpt<N,T> wpt_t;
 

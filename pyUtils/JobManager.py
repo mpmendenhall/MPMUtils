@@ -48,10 +48,10 @@ def run_commandline():
     parser.add_argument("--status",   action="store_true", help="update and display status")
     parser.add_argument("--rtimes",   help="display run times stats for named batch")
 
-    parser.add_argument("--cancel",   action="store_true", help="cancel queued jobs")
+    #parser.add_argument("--cancel",   action="store_true", help="cancel queued jobs")
     parser.add_argument("--kill",     action="store_true", help="kill running jobs")
     parser.add_argument("--clear",    action="store_true", help="clear completed jobs")
-    parser.add_argument("--bundle",   action="store_true", help="bundle jobs together; --walltime allowed in combination")
+    parser.add_argument("--bundle",   type=int, help="bundle jobs together into group of this walltime")
     parser.add_argument("--test",     type=int, help="run test idle jobs")
 
     parser.add_argument("--hold",     action="store_true",    help="place all waiting jobs on hold status")
@@ -102,12 +102,12 @@ def run_commandline():
         conn.commit()
 
     # requires batch system interface
-    if options.launch or options.status or options.cancel or options.kill or options.cycle or options.bundle:
+    if options.launch or options.status or options.kill or options.cycle or options.bundle:
         BI = choose_interface(conn)
-        if options.bundle: rebundle(conn.cursor(), options.walltime, BI.nbundle()); conn.commit()
+        if options.bundle: rebundle(conn.cursor(), options.bundle, BI.nbundle()); conn.commit()
         if options.launch: BI.update_and_launch(options.trickle)
         if options.status: BI.update_qstatus()
-        if options.cancel: BI.cancel_queued_jobs()
+        #if options.cancel: BI.cancel_queued_jobs()
         if options.kill: BI.kill_jobs()
         if options.cycle: BI.cycle_launch(trickle=options.trickle, twait=options.cycle)
 
@@ -118,8 +118,7 @@ def run_commandline():
 rm -r ~/jobs/; ./JobManager.py --test 10 --limit 4 --cycle 5
 
 rm -r ~/jobs/
-./JobManager.py --test 300 --queue pbatch --account nuphys
-./JobManager.py --bundle --walltime 300
+./JobManager.py --test 300 --queue pbatch --account nuphys --bundle 300
 ./JobManager.py --cycle 5 --limit 100
 """
 

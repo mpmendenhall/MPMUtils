@@ -62,3 +62,7 @@ class LSFInterface(BatchQueueInterface):
             qid = int(o.split()[1][1:-1])
             return qid
         except: return None
+
+    def kill_jobs(self):
+        """Force kill all jobs"""
+        os.system("bkill 0")

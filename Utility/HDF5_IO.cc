@@ -3,7 +3,6 @@
 
 #include "HDF5_IO.hh"
 #include "PathUtils.hh" // for makePath
-#include <cassert>
 #include <climits>
 #include <stdexcept>
 
@@ -24,7 +23,7 @@ void HDF5_InputFile::openInput(const string& filename) {
 }
 
 void HDF5_OutputFile::openOutput(const string& filename) {
-    assert(!outfile_id);
+    if(outfile_id) throw std::logic_error("Output already open");
     makePath(filename, true);
     printf("Opening HDF5 output file '%s'.\n", filename.c_str());
     outfile_name = filename;
@@ -40,13 +39,13 @@ void HDF5_OutputFile::writeFile() {
         printf("No HDF5 output file opened! Data not saved!\n");
         return;
     }
-    printf("Writing events to HDF5 file '%s' and closing...\n", outfile_name.c_str());
+    printf("Writing data to HDF5 file '%s' and closing...\n", outfile_name.c_str());
     H5Fclose(outfile_id);
     outfile_id = 0;
 }
 
 string HDF5_InputFile::getAttribute(const string& table, const string& attrname, const string& dflt) {
-    assert(infile_id);
+    if(!infile_id) throw std::runtime_error("Cannot read attribute without file");
     string s = dflt;
 
     hsize_t dims;
@@ -64,7 +63,7 @@ string HDF5_InputFile::getAttribute(const string& table, const string& attrname,
 }
 
 double HDF5_InputFile::getAttributeD(const string& table, const string& attrname, double dflt) {
-    assert(infile_id);
+    if(!infile_id) throw std::runtime_error("Cannot read attribute without file");
     double d = dflt;
     herr_t err = H5LTget_attribute_double(infile_id, table.c_str(), attrname.c_str(),  &d);
     if(err < 0) return dflt;
@@ -81,13 +80,13 @@ hsize_t HDF5_InputFile::getTableEntries(const string& table, hsize_t* nfields) {
 }
 
 void HDF5_OutputFile::writeAttribute(const string& table, const string& attrname, double value) {
-    assert(outfile_id);
+    if(!outfile_id) throw std::logic_error("Cannot write attribute " + table + ":" + attrname + " without file");
     herr_t err = H5LTset_attribute_double(outfile_id, table.c_str(), attrname.c_str(), &value, 1);
-    if(err < 0) throw std::runtime_error("H5LTset_attribute_double error");
+    if(err < 0) throw std::runtime_error("H5LTset_attribute_double error setting attribute " + table + ":" + attrname);
 }
 
 void HDF5_OutputFile::writeAttribute(const string& table, const string& attrname, const string& value) {
-    assert(outfile_id);
+    if(!outfile_id) throw std::logic_error("Cannot write attribute " + table + ":" + attrname + " without file");
     herr_t err = H5LTset_attribute_string(outfile_id, table.c_str(), attrname.c_str(), value.c_str());
-    if(err < 0) throw std::runtime_error("H5LTset_attribute_string error");
+    if(err < 0) throw std::runtime_error("H5LTset_attribute_string error " + table + ":" + attrname);
 }

@@ -346,13 +346,12 @@ def rebundle(curs, tmax, nslots):
     """Bundle small jobs together into longer-time units"""
 
     curs.execute("SELECT quantity, job_id FROM jobs NATURAL JOIN resource_use \
-        WHERE (status = 0 OR status = 8) AND jtype = 0 AND resource_id = ? AND quantity < ?", (find_resource_id(curs, "walltime"), tmax))
+        WHERE (status = 0 OR status = 8) AND jtype = 0 AND resource_id = ? AND quantity <= ? ORDER BY quantity",
+        (find_resource_id(curs, "walltime"), tmax))
     js = list(curs.fetchall())
-    if not js: return
 
-    js.sort()
-    j0 = get_job(curs, js[0][1])
-    while True:
+    while js:
+        j0 = get_job(curs, js[0][1])
         B = BundleJob(name = "bundle")
         B.linear_order(js, nslots, tmax)
         if not B.runorder: break
