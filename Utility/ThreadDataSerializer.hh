@@ -20,6 +20,9 @@ void* queueprocess_thread(void* p) {
 template<typename T>
 class ThreadDataSerializer {
 public:
+    /// Data type being serialized
+    typedef T data_t;
+
     /// Constructor
     ThreadDataSerializer() { }
     /// Destructor

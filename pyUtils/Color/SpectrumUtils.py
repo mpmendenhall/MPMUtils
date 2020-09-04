@@ -30,7 +30,7 @@ class cubterpolator:
         self.xpts = [x[0] for x in xydat]
         self.ypts = [x[1] for x in xydat]
         self.support = (xydat[0][0], xydat[-1][0])
-    
+
     def __call__(self,x):
         b = bisect(self.xpts,x)
         if b<1 or b>=len(self.xpts):
@@ -38,7 +38,7 @@ class cubterpolator:
         l = (x-self.xpts[b-1])/(self.xpts[b]-self.xpts[b-1])
         if b<2 or b>=len(self.xpts)-1:
             return self.ypts[b-1]*(1-l)+self.ypts[b]*l
-        
+
         A = -0.5
         p0 = self.ypts[b-2]
         p1 = self.ypts[b-1]
@@ -106,7 +106,7 @@ class nd_spectrum:
 
 class gaussbump_spectrum:
     """Gaussian 'bump' spectrum with center, width, and height"""
-    def __init__(self,l0,w,h=1.0):
+    def __init__(self,l0, w, h=1.0):
         self.l0 = l0
         self.w = w
         self.h = h
@@ -164,10 +164,10 @@ class rescale_spectrum:
             self.name = s.name
         if hasattr(s,"plotcolor"):
             self.plotcolor = s.plotcolor
-                
+
     def __call__(self,l):
         return self.s(l)*self.c
-    
+
 def load_specfile(fname,fDir=None):
     """Load text columns file; first column for wavelength, spectra in each other column"""
     if fDir is None:
@@ -185,7 +185,7 @@ class CIE_D_Illum:
         #D50,55,65,75 series, correction for improved Planck constant
         if T<300:
             T = 100*T*1.4388/1.438
-        
+
         self.T = T
         if T<7000:
             self.x = 0.244063 + 0.09911e3/T + 2.9678e6/T**2 - 4.6070e9/T**3
@@ -198,7 +198,7 @@ class CIE_D_Illum:
         self.M2 = (0.0300 - 31.4424*self.x + 30.0717*self.y)/self.M
         self.nrm = 1.0
         self.nrm = 1.0/self(560)
-    
+
     def __call__(self,l):
         return (self.SD[0](l) + self.M1*self.SD[1](l) + self.M2*self.SD[2](l))*self.nrm
 
@@ -209,3 +209,43 @@ class CIE_D_Illum:
 
 cieXYZ_spectra = load_specfile("CIE_1931_2deg_XYZ_1nm.txt")
 cieLMS_spectra = load_specfile("CIE2006_LMS.txt")
+
+###############
+# spectrum extraction helpers
+###############
+
+def extract_svg_path(t):
+
+    if type(t) == type(""): t = t.split()
+
+    x = [0., 0.]
+    curves = []
+    mode = None
+    pendown = None
+
+    for tok in t:
+        #print("---", tok, "---")
+        if tok in ['m','M','h','H','l','L','v','V','z','Z','c','C']:
+            mode = tok
+            if mode in ['m','M']: pendown = None
+            elif pendown is None:
+                curves.append([])
+                pendown = x
+            if mode in ['z','Z']: x = pendown
+            if mode in ['c','C']: cnum = 0
+        elif mode in ['m','l','c']: x = [x[n] + float(c) for n,c in enumerate(tok.split(','))]
+        elif mode in ['M','L','C']: x = [float(c) for c in tok.split(',')]
+        elif mode == 'h': x[0] += float(tok)
+        elif mode == 'H': x[0] = float(tok)
+        elif mode == 'v': x[1] += float(tok)
+        elif mode == 'V': x[1] = float(tok)
+        elif mode == 'c':
+            cnum += 1
+            if cnum%4 not in (0,3): continue
+        else:
+            print(x, mode, tok)
+            assert False
+
+        if pendown and ((not curves[-1]) or curves[-1][-1] != x): curves[-1].append(x)
+
+    return curves

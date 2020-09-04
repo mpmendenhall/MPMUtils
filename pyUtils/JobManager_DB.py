@@ -14,7 +14,7 @@ statenames = {-1:"hold", 0:"waiting", 1:"submitted", 2:"queued", 3:"running", 4:
 def statename(i): return statenames.get(i,"status %i"%i)
 
 # directory for job scripts
-jobscript_dir = os.environ["HOME"]+"/jobs/"
+jobscript_dir = os.environ["HOME"] + "/" + os.environ["HOSTNAME"] + "_jobs/"
 # path to database file
 dbfile = jobscript_dir+"/jdb.sql"
 # cached resource IDs by name

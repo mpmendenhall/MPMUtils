@@ -14,6 +14,8 @@ using std::priority_queue;
 #include <stdio.h>  // for printf
 #include <cassert>
 #include <limits>
+#include <cmath> // for std::isfinite
+#include <stdexcept>
 
 /// Sort slightly-out-of-order items into proper order
 template<class T0, typename ordering_t = typename T0::ordering_t>
