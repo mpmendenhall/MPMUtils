@@ -162,6 +162,7 @@ void PluginSaver::startData() {
 void PluginSaver::processEvent() { for(auto P: myPlugins) P->processEvent(); }
 
 void PluginSaver::finishData(bool f) {
+    SegmentSaver::finishData(f);
     for(auto P: myPlugins) {
         auto t0 = steady_clock::now();
         P->finishData(f);

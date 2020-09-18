@@ -37,11 +37,11 @@ public:
     double& operator()(size_t i, size_t j) { return *gsl_matrix_ptr(M,i,j); }
 
     /// treat like gsl_matrix*
-    operator gsl_matrix*() const { return M; }
+    operator const gsl_matrix*() const { return M; }
     /// treat like gsl_matrix*
     operator gsl_matrix*&() { return M; }
     /// treat like gsl_matrix*
-    gsl_matrix* operator->() { return M; }
+    //gsl_matrix* operator->() { return M; }
     /// treat like gsl_matrix*
     const gsl_matrix* operator->() const { return M; }
 
@@ -79,11 +79,11 @@ public:
     double& operator()(size_t i) { return *gsl_vector_ptr(v,i); }
 
     /// treat like gsl_vector*
-    operator gsl_vector*() const { return v; }
+    operator const gsl_vector*() const { return v; }
     /// treat like gsl_vector*
     operator gsl_vector*&() { return v; }
     /// treat like gsl_vector*
-    gsl_vector* operator->() { return v; }
+    //gsl_vector* operator->() { return v; }
     /// treat like gsl_vector*
     const gsl_vector* operator->() const { return v; }
 

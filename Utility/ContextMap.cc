@@ -74,6 +74,14 @@ const std::string& requiredGlobalArg(const std::string& argname) {
     return v[0];
 }
 
+std::string popGlobalArg(const std::string& argname) {
+    auto& v = GlobalArgs()[argname];
+    if(!v.size()) throw std::runtime_error("Missing expected '-"+argname+"' argument");
+    auto s = v.back();
+    v.pop_back();
+    return s;
+}
+
 const std::string& optionalGlobalArg(const std::string& argname, const std::string& dflt) {
     auto& GA = GlobalArgs();
     auto it = GA.find(argname);

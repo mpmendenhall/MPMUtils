@@ -15,6 +15,7 @@ class DataSource {
 public:
     /// retrieved value type
     typedef C val_t;
+
     /// maximum "infinite" entries
     static constexpr size_t max_entries = std::numeric_limits<size_t>::max();
 
@@ -43,17 +44,17 @@ public:
     void fillSink(DataSink<val_t>& S) { val_t o{}; while(next(o)) S.push(o); }
 };
 
-/// Sequence of D ~ DataSource
-template<class D>
-class DataSourceSeq: public D {
+/// Sequence of DS ~ DataSource
+template<class DS>
+class DataSourceSeq: public DS {
 public:
     /// Underlying datasource type
-    typedef D dsrc_t;
+    typedef DS dsrc_t;
     /// Underlying data type
     typedef typename dsrc_t::val_t val_t;
 
     /// Constructor inheritance
-    using D::D;
+    using dsrc_t::dsrc_t;
 
     /// Add stream
     virtual void addStream(dsrc_t& S) { v.push_back(&S); }
@@ -72,7 +73,7 @@ public:
         size_t e = 0;
         for(auto j = i; j < v.size(); ++j) {
             auto ee = v[j]->entries();
-            if(ee == D::max_entries) return D::max_entries;
+            if(ee == dsrc_t::max_entries) return dsrc_t::max_entries;
             e += ee;
         }
         return e;

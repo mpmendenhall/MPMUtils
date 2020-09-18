@@ -160,6 +160,8 @@ void loadGlobalArgs(int argc, char** argv);
 size_t numGlobalArg(const std::string& argname);
 /// get required single-valued command line argument or throw error
 const std::string& requiredGlobalArg(const std::string& argname);
+/// pop one of multi-valued global arg (throw if none)
+std::string popGlobalArg(const std::string& argname);
 /// get optional argument with default
 const std::string& optionalGlobalArg(const std::string& argname, const std::string& dflt = "");
 /// debugging printout of global args

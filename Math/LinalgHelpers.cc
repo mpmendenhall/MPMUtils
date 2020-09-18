@@ -48,7 +48,7 @@ gsl_vector_wrapper& gsl_vector_wrapper::operator=(gsl_vector_wrapper&& other) {
 }
 
 std::ostream& operator<< (std::ostream &o, const gsl_matrix_wrapper& M) {
-    if(!(gsl_matrix*)M) {
+    if(!(const gsl_matrix*)M) {
         o << "0\t0\n";
         return o;
     }
@@ -71,7 +71,7 @@ std::istream& operator>> (std::istream &i, gsl_matrix_wrapper& M) {
 }
 
 std::ostream& operator<< (std::ostream &o, const gsl_vector_wrapper& v) {
-    if(!(gsl_vector*)v) {
+    if(!(const gsl_vector*)v) {
         o << "0\n";
         return o;
     }
