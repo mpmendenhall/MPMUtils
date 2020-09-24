@@ -10,7 +10,6 @@
 #include "AnalysisStep.hh"
 #include "ProgressBar.hh"
 #include "XMLTag.hh"
-#include "AnalysisStep.hh"
 
 /// Scan generic data from HDF5 file
 template<typename T>
@@ -23,11 +22,9 @@ public:
         auto snl = optionalGlobalArg("nload");
         if(snl.size()) nLoad = atoi(snl.c_str());
 
-        if(farg.size()) {
-            this->openInput(popGlobalArg(farg));
-            auto AS = AnalysisStep::instance();
-            if(AS) AS->infiles.push_back(this->infile_name);
-            fRows = this->getNRows();
+        if(farg.size()){
+            auto& fn = requiredGlobalArg(farg);
+            this->openInput(fn);
         }
 
         if(doMakeNext) makeNext(S);
@@ -41,12 +38,10 @@ public:
         if(!nextSink) throw std::runtime_error("HDF5 scanner 'next' output not configured.");
         if(!this->infile_id) throw std::runtime_error("HDF5 scanner run without opening input file.");
 
-        if(!fRows) {
-            auto AS = AnalysisStep::instance();
-            if(AS) AS->infiles.push_back(this->infile_name);
-            fRows = this->getNRows();
-        }
+        auto AS = AnalysisStep::instance();
+        if(AS) AS->infiles.push_back(this->infile_name);
 
+        fRows = this->getNRows();
         {
             T P;
             ProgressBar PB(nLoad >= 0? nLoad : fRows);
@@ -68,11 +63,9 @@ protected:
         auto x = dynamic_cast<XMLProvider*>(nextSink);
         if(x) addChild(x);
     }
-
     /// build XML output data
     void _makeXML(XMLTag& X) override {
         X.addAttr("nRows", fRows);
-        X.addAttr("file", this->infile_name);
         if(nLoad >= 0) X.addAttr("nLoad", nLoad);
     }
 };

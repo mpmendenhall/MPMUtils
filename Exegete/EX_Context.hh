@@ -19,6 +19,9 @@
  *
  */
 
+#ifndef EX_CONTEXT_HH
+#define EX_CONTEXT_HH
+
 #include "EX_Note.hh"
 #include "EX_Scope.hh"
 
@@ -44,7 +47,7 @@ namespace EX {
         /// print bracket levels to this Subcontext
         void dispbracket(bool edge = false) const;
         /// print chain of scopes through this Subcontext
-        void displayScope() const;
+        void displayScope(int d = 3) const;
         /// make visible, if not already
         void makeVisible();
 
@@ -66,8 +69,8 @@ namespace EX {
         /// Clear/delete all context information
         static void DeleteContext();
 
-        /// Polymorphic Destructor
-        virtual ~Context() { delete current; for(auto& kv: scopes) delete kv.second; }
+        /// Destructor
+        ~Context() { delete current; for(auto& kv: scopes) delete kv.second; }
 
         /// Get current scope
         Scope& currentScope() { return *current->S; }
@@ -81,7 +84,7 @@ namespace EX {
         /// Exit current scope (optional consistency check)
         void exitScope(Scope::ID id = Scope::ID(nullptr,nullptr,-1));
         /// Trigger enumerated note for current context
-        virtual void addNote(int l);
+        void addNote(int l);
 
         /// Display current scope information
         void displayScope();
@@ -95,6 +98,6 @@ namespace EX {
         map<Scope::ID, Scope*> scopes;  ///< index to known scopes
         Subcontext* current;            ///< current position in call chain
     };
-
 }
 
+#endif

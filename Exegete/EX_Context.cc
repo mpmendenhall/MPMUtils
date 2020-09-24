@@ -20,10 +20,14 @@
  */
 
 #include "EX_Context.hh"
-using namespace EX;
+#include "Exegete.hh"
+#include "TermColor.hh"
+
 #include <cmath>
 #include <string.h>
-#include "TermColor.hh"
+#include <stdexcept>
+
+using namespace EX;
 
 Subcontext::Subcontext(Scope* s, int d, Subcontext* p): S(s), depth(d), parent(p) {
     if(depth % 2) dpfx = TERMFG_YELLOW "|" TERMSGR_RESET;
@@ -39,6 +43,7 @@ Subcontext* Subcontext::enterScope(Scope* SS) {
 void Subcontext::dispbracket(bool edge) const {
     if(parent) {
         parent->dispbracket();
+        printf(" ");
         if(edge) {
             if(depth % 2) printf(TERMFG_YELLOW "+--" TERMSGR_RESET);
             else printf(TERMFG_RED "+--" TERMSGR_RESET);
@@ -46,16 +51,22 @@ void Subcontext::dispbracket(bool edge) const {
     }
 }
 
-void Subcontext::displayScope() const {
-    if(!parent) return;
-    if(parent->parent) { parent->displayScope(); printf(" > "); }
-    else printf(TERMFG_CYAN);
-    printf("%s", S->getName().c_str());
+void Subcontext::displayScope(int d) const {
+    if(!parent || !d) {
+        printf(TERMFG_CYAN);
+        if(parent) printf("[...]");
+        return;
+    }
+
+    parent->displayScope(d-1);
+    printf(" > %s", S->getName().c_str());
 }
 
 void Subcontext::makeVisible() {
     if(visible || !S) return;
     visible = true;
+    if(parent) parent->dispbracket();
+    printf("\n");
     dispbracket(true);
     printf(" ");
     displayScope();
@@ -66,7 +77,7 @@ void Subcontext::makeVisible() {
 //-----------------------
 
 Context::Context() {
-     current = new Subcontext(&getScope(Scope::ID("cosmos","being",0)), -1, nullptr);
+     current = new Subcontext(&getScope(Scope::ID("cosmos", "being", 0)), -1, nullptr);
      current->visible = true;
 }
 
@@ -93,7 +104,7 @@ void Context::exitScope(Scope::ID id) {
     if(current->visible) { current->dispbracket(true); printf("\n"); }
     current->visible = false;
     current = current->parent;
-    assert(current);
+    if(!current) throw std::logic_error("Exiting context without parent");
 }
 
 Context*& Context::_TheContext() {
@@ -108,8 +119,9 @@ Context& Context::TheContext() {
 }
 
 void Context::DeleteContext() {
+    _EXPLAIN("Deleting Exegete global context.");
     auto& C = _TheContext();
-    assert(!C->current->parent);
+    if(C && C->current->parent) throw std::logic_error("Tried to delete root context within non-root subcontext");
     delete C;
     C = nullptr;
 }
@@ -121,12 +133,11 @@ inline bool doDisplay(int i) {
 
 void Context::addNote(int l) {
     auto n = current->S->getNote(l);
-    assert(n);
     int nrpt = ++current->notecounts[l];
     if(doDisplay(nrpt)) {
         current->makeVisible();
         current->dispbracket();
-        printf(TERMFG_BLUE " [%s:%i", get<0>(current->S->id), l);
+        printf(TERMFG_BLUE " [%s:%i", basename(get<0>(current->S->id)), l);
         if(nrpt > 1) printf(" #%i", nrpt);
         printf("] " TERMFG_GREEN "%s\n" TERMSGR_RESET, n->getText().c_str());
     }

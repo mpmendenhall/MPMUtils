@@ -92,6 +92,8 @@ DST-IV [RODFT11] N = 4*n, odd around j=-0.5 and even around j=n-0.5
 
 #include "fftwx.hh"
 #include "VectorUtils.hh"
+#include "Exegete.hh"
+
 #include <cmath>
 #include <mutex>
 #include <map>
@@ -126,17 +128,25 @@ std::mutex& fftw_planner_mutex<__float128>();
 template<typename T>
 class TransformPlan: public fftwx<T> {
 public:
+    typedef T real_data_t;
     typedef typename fftwx<T>::plan_t plan_t;
 
     /// Constructor
     TransformPlan(size_t m, size_t nl, size_t k):
-    M(m), Nlog(nl), K(k) { }
+    M(m), Nlog(nl), K(k) {
+        _EXPLAINVAR("Initializing transform plan for input array size", M);
+        _EXPLAINVAR("... logical size", Nlog);
+        _EXPLAINVAR("... output size", K);
+    }
 
     /// Polymorphic Destructor
     virtual ~TransformPlan() { }
 
-    /// execute plan (optional round-trip normalization)
-    void execute() { fftwx<T>::execute(p); }
+    /// execute plan
+    void execute() {
+        _EXPLAIN("Executing FFT");
+        fftwx<T>::execute(p);
+    }
 
     plan_t p;           ///< plan
 
@@ -407,10 +417,14 @@ public:
 template<class DP, class KP, class RP>
 class ConvolvePlan: public FFTWorkspace<DP> {
 public:
-    typedef FFTWorkspace<DP> WS;
+    typedef DP FwdPlan_t;
+    typedef KP KernPlan_t;
+    typedef RP RevPlan_t;
+    typedef FFTWorkspace<FwdPlan_t> WS;
     typedef typename WS::xspace_t xspace_t;
     typedef typename WS::kspace_t kspace_t;
     typedef typename WS::kvec_t kvec_t;
+
 
     /// Constructor
     explicit ConvolvePlan(size_t m, size_t _km = 0, size_t _rm = 0):
@@ -419,17 +433,20 @@ public:
         revPlan.makePlan(false, (xspace_t*)this->v_x.data(), (kspace_t*)this->v_k.data());
     }
 
-    KP kernPlan;    ///< kernel transform v_x -> v_k
-    RP revPlan;     ///< reverse transform v_k * kernel -> v_x
+    KernPlan_t kernPlan;    ///< kernel transform v_x -> v_k
+    RevPlan_t revPlan;      ///< reverse transform v_k * kernel -> v_x
 
     /// multiply k-space kernel (with any appropriate shifts) --- specialize as needed
     virtual void kmul(const kvec_t& k) {
-        if(k.size() != this->v_k.size()) throw std::logic_error("Mismatched k-space kernel size");
-        for(size_t i=0; i<this->M; i++) this->v_k[i] *= k[i];
+        _EXPLAIN("Multiplying k-space kernel");
+        if(k.size() != this->v_k.size() || k.size() != this->K) throw std::logic_error("Mismatched k-space kernel size");
+        auto it = this->v_k.begin();
+        for(auto x: k) *(it++) *= x;
     }
 
     /// perform convolution using pre-calculated k-space kernel
-    void convolve(const kvec_t& kkern) {
+    void kconvolve(const kvec_t& kkern) {
+        _EXPLAIN("Convolving with k-space kernel");
         this->execute();
         kmul(kkern);
         revPlan.execute();
@@ -445,6 +462,7 @@ public:
     /// calculate (pre-normalized) k-space kernel
     template<typename V>
     void calcKkern(const V& k) {
+        _EXPLAIN("Calculating k-space kernel from real input");
         if(k.size() != kernPlan.M) throw std::logic_error("Mismatched convolution kernel size");
         load(k);
         kernPlan.execute();
@@ -463,10 +481,11 @@ public:
     /// full convolution sequence
     template<typename V, typename U>
     void convolve(V& v, const U& k) {
+        _EXPLAIN("Convolving vector pair");
         calcKkern(k);
         auto kk = this->v_k;
         load(v);
-        convolve(kk);
+        kconvolve(kk);
         fetch(v);
     }
 };
@@ -528,7 +547,7 @@ public:
         prepareKernel(v.size());
         auto& C = getConvolver(v.size());
         C.load(v);
-        C.convolve(kdata.at(v.size()));
+        C.kconvolve(kdata.at(v.size()));
         C.fetch(v, kshift(v.size()));
     }
 

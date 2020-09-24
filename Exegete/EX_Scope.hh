@@ -31,6 +31,7 @@ using std::tuple;
 using std::get;
 #include <stdio.h>
 #include <sstream>
+#include <string.h>
 
 namespace EX {
 
@@ -40,6 +41,8 @@ namespace EX {
         ss << x;
         return ss.str();
     }
+
+    inline const char* basename(const char* s) { return strrchr(s, '/')? strrchr(s, '/') + 1 : s; }
 
     /// Scope for annotation (file, function, line)
     class Scope: protected NoCopy {
@@ -53,7 +56,7 @@ namespace EX {
         virtual ~Scope() { for(auto& kv: notes) delete kv.second; }
 
         /// get name in string format
-        virtual string getName() const { return string("[") + get<0>(id) + ":" +to_str(get<2>(id)) + "] " + get<1>(id); }
+        virtual string getName() const { return string("[") + basename(get<0>(id)) + ":" +to_str(get<2>(id)) + "] " + get<1>(id); }
         /// display to stdout
         virtual void display() const { printf("Scope %s\n", getName().c_str()); }
         /// get note by line number

@@ -61,16 +61,16 @@
 /// Do something only if Exegete is ENABLED
 #define _EXONLY(x) x
 /// Do something only if Exegete is DISABLED
-#define _EXNOPE(x)
+#define _EXNOPE(x) (void)0
 
 #else
 
-#define _EXSCOPE(S)
-#define _EXPLAIN(S)
-#define _EXPLAINVAR(S,v)
-#define _EXPLAINVAL(S,v)
-#define _EXEXIT()
-#define _EXONLY(x)
+#define _EXSCOPE(S) (void)0
+#define _EXPLAIN(S) (void)0
+#define _EXPLAINVAR(S,v) (void)0
+#define _EXPLAINVAL(S,v) (void)0
+#define _EXEXIT() (void)0
+#define _EXONLY(x) (void)0
 #define _EXNOPE(x) x
 
 #endif
