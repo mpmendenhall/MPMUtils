@@ -1,5 +1,5 @@
 /// \file Sketch3D.cc
-// -- Michael P. Mendenhall, LLNL 2017
+// -- Michael P. Mendenhall, 2017
 
 #include "Sketch3D.hh"
 #include <algorithm>
@@ -21,7 +21,7 @@ void Perspective::project(const double xyz[3], double xyzs[4]) const {
 void Perspective::clearRotation() {
     for(auto i: {0,1,2})
         for(auto j: {0,1,2})
-            M[i][j] = i==j;
+            M[i][j] = double(i==j);
 }
 
 void Perspective::projectPoly(const vector<xyzpt>& vIn, vector<SVG::xypoint>& vOut, double& s, double& z) const {

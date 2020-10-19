@@ -42,6 +42,7 @@ public:
     template<class T, typename... Args>
     void registerSaved(T*& o, const string& hname, Args&&... a) {
         if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+        if(o) throw std::logic_error("Registration of '" + hname + "' would overwrite non-null pointer");
         o = tryLoad<T>(hname);
         if(!o) o = addObject(new T(hname.c_str(), std::forward<Args>(a)...));
         saveHists.emplace(hname, o);
@@ -51,6 +52,7 @@ public:
     template<class T, class U>
     void registerSavedClone(T*& h, const string& hname, const U& hTemplate) {
         if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+        if(h) throw std::logic_error("Registration of '" + hname + "' would overwrite non-null pointer");
         h = tryLoad<U>(hname);
         if(h) resetZaxis(h);
         else {

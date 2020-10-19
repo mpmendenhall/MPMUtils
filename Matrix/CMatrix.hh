@@ -41,14 +41,12 @@ class cmatrix_fft {
 public:
     /// constructor
     explicit cmatrix_fft(size_t m);
-    /// destructor
-    ~cmatrix_fft() { delete[] realspace; delete[] kspace; }
 
     const size_t M;             ///< number of elements
     fftw_plan forwardplan;      ///< FFTW data for forward Fourier Transforms of this size
     fftw_plan reverseplan;      ///< FFTW data for inverse Fourier Transforms of this size
-    double* realspace;          ///< array for holding real-space side of transform data
-    complex<double>* kspace;    ///< array for holding kspace-side of transform data
+    vector<double> realspace;   ///< array for holding real-space side of transform data
+    vector<complex<double>> kspace; ///< array for holding kspace-side of transform data
 
     /// get FFTer for dimension m
     static cmatrix_fft& get_ffter(size_t m);

@@ -164,6 +164,10 @@ const std::string& requiredGlobalArg(const std::string& argname);
 std::string popGlobalArg(const std::string& argname);
 /// get optional argument with default
 const std::string& optionalGlobalArg(const std::string& argname, const std::string& dflt = "");
+/// update value with optional global floating-point argument
+bool optionalGlobalArg(const std::string& argname, double& v);
+/// update value with optional global floating-point argument
+bool optionalGlobalArg(const std::string& argname, int& v);
 /// debugging printout of global args
 void displayGlobalArgs();
 

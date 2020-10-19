@@ -1,5 +1,5 @@
 /// \file VisrSVG.cc
-// -- Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, 2019
 
 #include "VisrSVG.hh"
 

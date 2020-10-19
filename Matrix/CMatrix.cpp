@@ -34,7 +34,7 @@ using std::cout;
 
 map<size_t,cmatrix_fft*> cmatrix_fft::ffters;
 
-cmatrix_fft::cmatrix_fft(size_t m): M(m), realspace(new double[M]), kspace(new complex<double>[M/2+1]) {
+cmatrix_fft::cmatrix_fft(size_t m): M(m), realspace(M), kspace(M/2+1) {
     FILE* fin = fopen("fftw_wisdom","r");
     if(fin) {
         fftw_import_wisdom_from_file(fin);
@@ -42,12 +42,12 @@ cmatrix_fft::cmatrix_fft(size_t m): M(m), realspace(new double[M]), kspace(new c
     }
 
     forwardplan = fftw_plan_dft_r2c_1d(M,
-                                       realspace,
-                                       (fftw_complex*)kspace,
+                                       realspace.data(),
+                                       (fftw_complex*)kspace.data(),
                                        FFTW_EXHAUSTIVE);
     reverseplan = fftw_plan_dft_c2r_1d(M,
-                                       (fftw_complex*)kspace,
-                                       realspace,
+                                       (fftw_complex*)kspace.data(),
+                                       realspace.data(),
                                        FFTW_EXHAUSTIVE);
 
     FILE* fout = fopen("fftw_wisdom","w");
@@ -128,16 +128,16 @@ void CMatrix::zero() const {
 void CMatrix::calculateKData() const {
     assert(has_realspace);
     cmatrix_fft& ffter = cmatrix_fft::get_ffter(M);
-    std::copy(data.begin(), data.end(), ffter.realspace);
+    std::copy(data.begin(), data.end(), ffter.realspace.begin());
     fftw_execute(ffter.forwardplan);
-    std::copy(ffter.kspace, ffter.kspace+M/2+1, kdata.begin());
+    std::copy(ffter.kspace.begin(), ffter.kspace.end(), kdata.begin());
     has_kspace = true;
 }
 
 void CMatrix::calculateRealData() const {
     assert(has_kspace);
     cmatrix_fft& ffter = cmatrix_fft::get_ffter(M);
-    std::copy(kdata.begin(), kdata.end(), ffter.kspace);
+    std::copy(kdata.begin(), kdata.end(), ffter.kspace.begin());
     fftw_execute(ffter.reverseplan);
     for(size_t n=0; n<M; n++) data[n] = ffter.realspace[n]/double(M);
     has_realspace = true;
@@ -362,7 +362,6 @@ const CMatrix CMatrix::operator*(const CMatrix& m) const {
 
 
 const VarVec<double> CMatrix::operator*(const VarVec<double>& v) const {
-
     assert(M>0 && v.size()==M);
     const vector< complex<double> >& kd = getKData(); // make sure to do this first, since we need ffter's storage space after
 
@@ -374,7 +373,8 @@ const VarVec<double> CMatrix::operator*(const VarVec<double>& v) const {
     for(size_t i=0; i<kd.size(); i++) ffter.kspace[i] *= kd[i];
     fftw_execute(ffter.reverseplan);
 
-    VarVec<double> out = VarVec<double>(M);
+    VarVec<double> out(M);
+    if(!M) return out;
     out[0] = ffter.realspace[0];
     for(size_t i=1; i<M; i++) out[i] = ffter.realspace[M-i];
     out /= double(M);

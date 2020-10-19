@@ -1,5 +1,5 @@
 /// \file Visr.cc
-// -- Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, 2019
 
 #include "Visr.hh"
 #include "GeomCalcUtils.hh" // for ortho_frame

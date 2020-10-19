@@ -90,6 +90,20 @@ const std::string& optionalGlobalArg(const std::string& argname, const std::stri
     return it->second[0];
 }
 
+bool optionalGlobalArg(const std::string& argname, double& v) {
+    auto s = optionalGlobalArg(argname);
+    if(!s.size()) return false;
+    v = atof(s.c_str());
+    return true;
+}
+
+bool optionalGlobalArg(const std::string& argname, int& v) {
+    auto s = optionalGlobalArg(argname);
+    if(!s.size()) return false;
+    v = atoi(s.c_str());
+    return true;
+}
+
 void displayGlobalArgs() {
     printf("Global Arguments:\n");
     for(auto& kv: GlobalArgs()) {

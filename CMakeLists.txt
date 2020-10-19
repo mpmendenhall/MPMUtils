@@ -9,26 +9,14 @@ set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 ## how to require compile standards:
 set(CMAKE_C_STANDARD 99) # sqlite3.c complains under c90 about 'long long' type
 set(CMAKE_C_STANDARD_REQUIRED ON)
+
 #set(CMAKE_CXX_STANDARD 17) # 'constexpr' getting usable
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# c++11 is "minimum" standard for codebase; ROOT may specify newer below.
-LIST(APPEND CXXOPTS "-fPIC" "-std=c++11" "-Wall" "-Wextra" "-Werror")
+INCLUDE(CXXWarnings.cmake)
+INCLUDE(DefaultBuildType.cmake)
 
-IF(CMAKE_COMPILER_IS_GNUCC)
-    LIST(APPEND CXXOPTS "-Wpedantic" "-Wlogical-op" "-Wshadow" "-Wformat=2" "-pedantic-errors" "-Wuseless-cast")
-
-    if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0")
-        LIST(APPEND CXXOPTS "-Wduplicated-cond" "-Wmissing-include-dirs" "-Wredundant-decls"
-        "-Wnull-dereference" "-Wsuggest-override")
-    endif()
-    if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0")
-        LIST(APPEND CXXOPTS "-Wduplicated-branches" "-Woverloaded-virtual")
-    endif()
-endif()
-
-
-# cmake -DCMAKE_BUILD_TYPE=Release
 string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
 
 #####################
@@ -38,25 +26,24 @@ string(APPEND CMAKE_CXX_FLAGS_RELEASE " -O3")
 # libconfig
 ###########
 find_library(CONFIG_LIBS config++)
-LIST(APPEND LINKLIBS ${CONFIG_LIBS})
+LIST(APPEND EXTLIBS ${CONFIG_LIBS})
 
 #########
 # libuuid
 #########
 find_library(UUID_LIBS uuid)
-LIST(APPEND LINKLIBS ${UUID_LIBS})
+LIST(APPEND EXTLIBS ${UUID_LIBS})
 
 ########
 # OpenGL
 ########
-find_package(OpenGL)
+set(OpenGL_GL_PREFERENCE "GLVND" CACHE STRING "OpenGL version option, LEGACY or GLVND" FORCE)
 find_package(GLUT)
-if(GLUT_FOUND AND OPENGL_FOUND AND NOT NO_GL)
-    add_compile_options("-DWITH_OPENGL")
-    LIST(APPEND LINKLIBS ${OPENGL_LIBRARIES})
-    LIST(APPEND LINKLIBS ${GLUT_LIBRARIES})
-else()
-    message(STATUS "OpenGL dependencies disabled.")
+find_package(OpenGL)
+if(${GLUT_FOUND} AND ${OPENGL_FOUND})
+    include_directories(SYSTEM ${GLUT_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR})
+    list(APPEND EXTLIBS ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES})
+    list(APPEND CXXOPTS "-DWITH_OPENGL")
 endif()
 
 #######
@@ -64,13 +51,13 @@ endif()
 #######
 find_package(Boost REQUIRED COMPONENTS fiber)
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
-LIST(APPEND LINKLIBS ${Boost_LIBRARIES})
+LIST(APPEND EXTLIBS ${Boost_LIBRARIES})
 
 #####
 # GSL
 #####
 find_package(GSL REQUIRED)
-LIST(APPEND LINKLIBS ${GSL_LIBRARIES})
+LIST(APPEND EXTLIBS ${GSL_LIBRARIES})
 
 #######
 # FFTW3
@@ -81,7 +68,7 @@ if(FFTW_LIBS-NOTFOUND OR NO_FFTW)
     add_compile_options("-DWITHOUT_FFTW")
 else()
     add_compile_options("-DWITH_FFTW_FLOAT128")
-    LIST(APPEND LINKLIBS ${FFTW_LIBS} fftw3f fftw3l fftw3q quadmath m)
+    LIST(APPEND EXTLIBS ${FFTW_LIBS} fftw3f fftw3l fftw3q quadmath m)
 endif()
 
 #####
@@ -91,7 +78,7 @@ find_package(MPI)
 if(MPI_FOUND AND NOT NO_MPI)
     add_compile_options("-DWITH_MPI")
     include_directories(SYSTEM ${MPI_INCLUDE_PATH})
-    LIST(APPEND LINKLIBS ${MPI_LIBRARIES})
+    LIST(APPEND EXTLIBS ${MPI_LIBRARIES})
     add_compile_options(${MPI_COMPILE_FLAGS})
 else()
     message(STATUS "MPI dependencies disabled.")
@@ -101,7 +88,7 @@ endif()
 # ROOT
 ######
 find_package(ROOT REQUIRED COMPONENTS MathCore MathMore Core RIO Hist Tree Minuit)
-LIST(APPEND LINKLIBS ${ROOT_LIBRARIES})
+LIST(APPEND EXTLIBS ${ROOT_LIBRARIES})
 include_directories(SYSTEM ${ROOT_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/ROOTUtils/)
 include("${ROOT_USE_FILE}")
@@ -114,7 +101,7 @@ list(APPEND SOURCE_FILES "mpmu_Dict.cxx")
 find_package(HDF5 REQUIRED COMPONENTS C HL)
 message(STATUS "Including HDF5 paths '${HDF5_INCLUDE_DIRS}' and libraries '${HDF5_LIBRARIES}' in '${HDF5_LIBRARY_DIRS}'")
 include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
-LIST(APPEND LINKLIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
+LIST(APPEND EXTLIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
 
 ########
@@ -131,14 +118,7 @@ else()
 endif()
 include(${Geant4_USE_FILE})
 Message(STATUS "Geant4_USE_FILE = ${Geant4_USE_FILE}")
-LIST(APPEND LINKLIBS ${Geant4_LIBRARIES})
-
-
-##############################
-# force rebuild of CodeVersion
-#add_custom_command(OUTPUT always_rebuild COMMAND cmake -E echo)
-add_custom_command(OUTPUT codeversion COMMAND touch ${PROJECT_SOURCE_DIR}/Framework/CodeVersion.cc)
-add_custom_target(update_codeversion DEPENDS codeversion)
+LIST(APPEND EXTLIBS ${Geant4_LIBRARIES})
 
 #########################
 # Choose objects to build
@@ -150,13 +130,14 @@ LIST(APPEND SOURCE_FILES ${DIRSRC})
 endforeach(dir)
 
 # additional required libraries
-LIST(APPEND LINKLIBS -lpthread)
+find_library(LIB_PTHREAD pthread REQUIRED)
+list(APPEND EXTLIBS ${LIB_PTHREAD})
 
 find_library(LAPACKE_LIBS lapacke)
 if(LAPACKE_LIBS)
     MESSAGE(STATUS "lapacke library ${LAPACKE_LIBS}")
     add_compile_options("-DWITH_LAPACKE")
-    LIST(APPEND LINKLIBS ${LAPACKE_LIBS})
+    LIST(APPEND EXTLIBS ${LAPACKE_LIBS})
 else()
     LIST(REMOVE_ITEM SOURCE_FILES ${PROJECT_SOURCE_DIR}/Matrix/TLS_Solver.cc)
 endif()
@@ -166,39 +147,31 @@ endif()
 # git SHA tag
 ################
 
-execute_process(COMMAND "git" "rev-parse" "-q" "HEAD"
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_SHA
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "git" "describe" "--tags" "HEAD"
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_TAGNAME
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-exec_program("basename" ${PROJECT_SOURCE_DIR}
-    ARGS "`git rev-parse --show-toplevel`"
-    OUTPUT_VARIABLE REPO_NAME)
-message(STATUS "git repo \"${REPO_NAME}\" '${GIT_TAGNAME}' (${GIT_SHA})")
-SET_SOURCE_FILES_PROPERTIES(
-    Framework/CodeVersion.cc PROPERTIES COMPILE_DEFINITIONS
-    "REPO_NAME=\"${REPO_NAME}\";REPO_VERSION=\"${GIT_SHA}\";REPO_TAGNAME=\"${GIT_TAGNAME}\""
-)
+INCLUDE(GitRepoTag.cmake)
+SET_SOURCE_FILES_PROPERTIES(Framework/CodeVersion.cc PROPERTIES COMPILE_FLAGS ${CODEVERSION_COMPILE_FLAGS})
+# force rebuild of CodeVersion
+add_custom_command(OUTPUT codeversion COMMAND touch ${PROJECT_SOURCE_DIR}/Framework/CodeVersion.cc)
+add_custom_target(update_codeversion DEPENDS codeversion)
 
 ################
 # build targets
 ################
 
 # CXXFLAGS compile options, for c++ only.
+message(STATUS "c++ compiler flags:")
 FOREACH(CXXOPT ${CXXOPTS})
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${CXXOPT}>)
+    message(STATUS "\t${CXXOPT}")
 ENDFOREACH()
 
-if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    add_compile_options("-O")
-endif()
+message(STATUS "Link libraries:")
+foreach(l ${EXTLIBS})
+    message(STATUS "\t${l}")
+endforeach(l)
 
 # libMPM omnibus
 add_library(MPM SHARED ${SOURCE_FILES})
-target_link_libraries(MPM ${LINKLIBS})
+target_link_libraries(MPM ${EXTLIBS})
 add_dependencies(MPM update_codeversion)
 
 # test programs
@@ -206,13 +179,8 @@ file(GLOB TESTEXEC Test/*.cc)
 foreach(E ${TESTEXEC})
 get_filename_component(EXN ${E} NAME_WE)
     add_executable(${EXN} ${E})
-    target_link_libraries(${EXN} MPM ${LINKLIBS})
+    target_link_libraries(${EXN} MPM ${EXTLIBS})
 endforeach(E)
 
-add_subdirectory(doc)
-
-# run "cppcheck" static code analysis on project
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_custom_target(cppcheck
-    cppcheck --project=compile_commands.json --enable=all --quiet -i${PROJECT_SOURCE_DIR}/External -i${PROJECT_BINARY_DIR}/
-)
+add_subdirectory(Doc)

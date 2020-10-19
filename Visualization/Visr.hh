@@ -1,5 +1,5 @@
 /// \file Visr.hh Base class for minimalist 3D visualization interface
-// -- Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, 2019
 
 #ifndef VISR_HH
 #define VISR_HH
