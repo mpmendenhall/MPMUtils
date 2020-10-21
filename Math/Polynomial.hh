@@ -18,7 +18,7 @@ public:
     /// inherit constructors
     using AbstractPolynomial<R,M>::AbstractPolynomial;
     /// constructor from a monomial term
-    Polynomial(const M& m, const coeff_t& c = 0) { (*this)[m] = c; }
+    explicit Polynomial(const monomial_t& m, const coeff_t& c = 0) { (*this)[m] = c; }
 
     /// generate polynomial with all terms of order <= o in each variable
     static Polynomial allTerms(unsigned int o, coeff_t c = 0) {

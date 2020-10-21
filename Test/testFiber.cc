@@ -68,7 +68,7 @@ int main(int, char**) {
     string foo = "foo";
     auto ff5 = [&foo, &cond, &mtx](unsigned int j, const string& s) {
         while(j--) {
-            printf("%i\t%s\n", j, foo.c_str());
+            printf("%u\t%s\n", j, foo.c_str());
             {
                 // don't need to lock if fibers using 'foo' running in same thread
                 std::unique_lock<boost::fibers::mutex> lk(mtx);

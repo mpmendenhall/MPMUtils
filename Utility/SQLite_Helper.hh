@@ -37,16 +37,16 @@ public:
     /// load a cached statement
     sqlite3_stmt* loadStatement(const string& qry);
     /// retry a query until DB is available
-    int busyRetry(sqlite3_stmt*& stmt);
+    int busyRetry(sqlite3_stmt* stmt);
     /// run a statement expecting no return values (using busyRetry); optionally, throw error if not SQLITE_OK
     int exec(const string& qry, bool checkOK = true);
     /// put column i string into rslt, or leave unchanged if null; return whether non-nullptr
     static bool get_string(sqlite3_stmt* stmt, unsigned int i, string& rslt);
 
     /// extract a vector<double> from a blob column
-    void getVecBlob(vector<double>& v, sqlite3_stmt*& stmt, int col);
+    void getVecBlob(vector<double>& v, sqlite3_stmt* stmt, int col);
     /// bind a vector<double> as a blob to a statement parameter
-    int bindVecBlob(sqlite3_stmt*& stmt, int i, const vector<double>& v);
+    int bindVecBlob(sqlite3_stmt* stmt, int i, const vector<double>& v);
 
     /// get databse file page size (bytes)
     int page_size();

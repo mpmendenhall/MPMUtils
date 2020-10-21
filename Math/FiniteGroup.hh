@@ -232,7 +232,7 @@ template<class G>
 class esg_iterator: public std::iterator<std::forward_iterator_tag, const typename G::elem_t> {
 public:
     /// Constructor from grid dimensions
-    esg_iterator(const G& g, size_t i = 0): GG(g), c(i) { }
+    explicit esg_iterator(const G& g, size_t i = 0): GG(g), c(i) { }
     /// increment
     esg_iterator& operator++() { c++; return *this; }
     /// comparison

@@ -124,7 +124,7 @@ int main(int, char**) {
     //PM_t p({ { {{ {0,3} }}, 4.}, { {{ {1,2} }}, 6.} });
 
     PolyEval<precision_t> PE;
-    int ntrials = 100;
+    const int ntrials = 100;
     vector<PolyEval<precision_t>::coord_t<3>> vc(1000000/ntrials);
     for(size_t i=0; i<vc.size(); i++) {
         vc[i] = {0.5*i*1e-5, sqrt(i/1e4), i*1.e-10*i};

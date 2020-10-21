@@ -31,7 +31,7 @@ public:
     /// Default constructor for identity permutation
     constexpr Permutation(): super{} { for(idx_t i{}; i<N; i++) (*this)[i] = i; }
     /// Permutation from array, with optional index offset (for cut-and-paste from Fortran-style indices)
-    constexpr Permutation(const super& a, int i=0): super(a) { if(i) for(auto& c: *this) c -= i; assert(validate()); }
+    explicit constexpr Permutation(const super& a, int i=0): super(a) { if(i) for(auto& c: *this) c -= i; assert(validate()); }
 
     /// element access
     constexpr idx_t operator[](size_t i) const { return ((super&)*this)[i]; }
@@ -79,7 +79,7 @@ public:
             c = e[i++];
             if(c == N-1) j = c = e[N-1];
         }
-        return Permutation<N-1>::idx(e0) + (j < N? j+1 : 0)*factorial(N-1);
+        return Permutation<N-1, idx_t>(e0).idx() + (j < N? j+1 : 0)*factorial(N-1);
     }
     /// index of permutation object
     constexpr enum_t idx() const { return idx(*this); }
@@ -214,7 +214,7 @@ public:
     /// Default constructor for identity permutation
     constexpr SignedPermutation(): super(_id()) { }
     /// Permutation from array
-    constexpr SignedPermutation(const super& a): super(a) { assert(validate()); }
+    explicit constexpr SignedPermutation(const super& a): super(a) { assert(validate()); }
 
     /// extract permutation component
     operator Permutation<N>() const {

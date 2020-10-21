@@ -52,7 +52,7 @@ int main(int, char**) {
     }
     summary(PS);
 
-    auto& primes = PS.getPrimes();
+    const auto& primes = PS.getPrimes();
     auto& pdivs  = PS.getPDivs();
     size_t nd0 = 0, nd1 = 0;
     {

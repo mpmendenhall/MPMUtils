@@ -11,7 +11,6 @@ void HDF5_InputFile::openInput(const string& filename) {
         printf("Closing previous input file.\n");
         H5Fclose(infile_id);
         infile_id = 0;
-        infile_name = "";
     }
     infile_name = filename;
     if(!filename.size()) return;
@@ -46,7 +45,6 @@ void HDF5_OutputFile::writeFile() {
 
 string HDF5_InputFile::getAttribute(const string& table, const string& attrname, const string& dflt) {
     if(!infile_id) throw std::runtime_error("Cannot read attribute without file");
-    string s = dflt;
 
     hsize_t dims;
     H5T_class_t type_class;
@@ -57,9 +55,7 @@ string HDF5_InputFile::getAttribute(const string& table, const string& attrname,
     vector<char> sdata(type_size);
     err = H5LTget_attribute_string(infile_id, table.c_str(), attrname.c_str(),  &sdata[0]);
     if(err < 0) throw std::runtime_error("H5LTget_attribute_string error");
-    s = string(&sdata[0]);
-
-    return s;
+    return string(&sdata[0]);
 }
 
 double HDF5_InputFile::getAttributeD(const string& table, const string& attrname, double dflt) {

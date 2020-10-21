@@ -25,7 +25,7 @@ public:
     /// inequality
     bool operator!=(const Quaternion& Q) const { return !(*this == Q); }
     /// mag^2 norm
-    R mag2() const { auto& X = *this; return X[0]*X[0] + X[1]*X[1] + X[2]*X[2] + X[3]*X[3]; }
+    R mag2() const { const auto& X = *this; return X[0]*X[0] + X[1]*X[1] + X[2]*X[2] + X[3]*X[3]; }
 
     /// unary minus
     const Quaternion operator-() const { return {-(*this)[0], -(*this)[1], -(*this)[2], -(*this)[3]}; }
@@ -52,7 +52,7 @@ public:
 
     /// inplace multiplication by Quaternion: P *= Q -> PQ
     Quaternion& operator*=(const Quaternion& Q) {
-        auto& P = *this;
+        const auto& P = *this;
         return *this = { P[0]*Q[0] - P[1]*Q[1] - P[2]*Q[2] - P[3]*Q[3],
                          P[0]*Q[1] + P[1]*Q[0] + P[2]*Q[3] - P[3]*Q[2],
                          P[0]*Q[2] - P[1]*Q[3] + P[2]*Q[0] + P[3]*Q[1],

@@ -50,7 +50,7 @@ template<typename val_t = size_t>
 class VRangeIt: public std::iterator<std::forward_iterator_tag, const val_t> {
 public:
     /// Constructor from total size, starting point
-    VRangeIt(val_t n, val_t i = {}): N(n), c(i) { }
+    explicit VRangeIt(val_t n, val_t i = {}): N(n), c(i) { }
     /// increment
     VRangeIt& operator++() { ++c; return *this; }
     /// comparison

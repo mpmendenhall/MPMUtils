@@ -47,7 +47,7 @@ class SockDistribClient: public SockConnection, public BlockHandler {
 public:
     /// Constructor
     SockDistribClient(const string& host = "", int port = 0):
-    BlockHandler(0,nullptr) { if(host.size() && port) open_socket(host,port); }
+    BlockHandler(0,nullptr) { if(host.size() && port) SockDistribClient::open_socket(host,port); }
 
     /// Open connection and receive block response
     bool open_socket(const string& host, int port) override;

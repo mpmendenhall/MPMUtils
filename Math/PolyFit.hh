@@ -33,7 +33,7 @@ public:
     /// Default constructor
     PolyFit() { }
     /// Constructor with fit polynomial
-    PolyFit(const Poly& PP): P(PP) { }
+    explicit PolyFit(const Poly& PP): P(PP) { }
 
     /// set coordinate grid for evaulation
     using PolyEval<>::setX;

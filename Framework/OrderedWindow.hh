@@ -149,7 +149,6 @@ public:
     /// count items in relative range
     size_t rel_count(ordering_t dx0, ordering_t dx1) const { return rel_range(dx0,dx1).size(); }
 
-    static constexpr bool PARANOID_BOUNDS = false;  ///< global paranoid bounds checking
     bool enforceClear = true;                       ///< fail if window not clear on destruction
     bool enforceBounds = false;                     ///< local paranoid bounds checking
 
@@ -158,7 +157,7 @@ public:
     /// get window position range for absolute range
     itrange_t abs_range(ordering_t x0, ordering_t x1) {
         if(!(x0 <= x1)) throw std::runtime_error("Invalid reverse-order abs_range requested");
-        if((PARANOID_BOUNDS || enforceBounds) && (!in_range(x0) || !in_range(x1)))
+        if(enforceBounds && (!in_range(x0) || !in_range(x1)))
             throw std::runtime_error("abs_range outside window requested");
         return _abs_range(x0,x1);
     }
@@ -168,7 +167,7 @@ public:
     /// get (const) window position range for absolute range
     const_itrange_t abs_range(ordering_t x0, ordering_t x1) const {
         if(!(x0 <= x1)) throw std::runtime_error("Invalid reverse-order abs_range requested");
-        if((PARANOID_BOUNDS || enforceBounds) && (!in_range(x0) || !in_range(x1)))
+        if(enforceBounds && (!in_range(x0) || !in_range(x1)))
             throw std::runtime_error("abs_range outside window requested");
         return _abs_range(x0,x1);
     }

@@ -73,7 +73,7 @@ public:
     /// add new item to sorted queue; optionally flush
     void push(T0 o, bool doFlush) {
 
-        auto t = order(o);
+        ordering_t t = order(o);
 
         if(!std::isfinite(t)) {
             printf("Passing through un-orderable object!\n");
@@ -85,7 +85,8 @@ public:
 
         if(t < t0) {
             if(!--ndis) {
-                printf("Warning: out-of-order queue event at %g < %g (%g)!\n", t, t0, t0-t);
+                printf("Warning: out-of-order queue event at %g < %g (%g)!\n",
+                       double(t), double(t0), double(t0-t));
                 dispObj(deref_if_ptr(o));
                 ndis = warn_ndis;
                 throw std::logic_error("OrderingQueue input before minimum");
