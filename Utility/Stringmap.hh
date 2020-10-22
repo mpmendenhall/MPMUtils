@@ -94,8 +94,6 @@ class Stringmap: public xmultimapS<string> {
 public:
     /// constructor from a string
     explicit Stringmap(const string& str = "");
-    /// convert to string
-    string toString() const;
     /// display to stdout
     void display(const string& linepfx = "") const;
 };

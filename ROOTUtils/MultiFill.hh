@@ -5,6 +5,8 @@
 #define MULTIFILL_HH
 
 #include "CumulativeData.hh"
+#include "NoCopy.hh"
+
 #include <TDirectory.h>
 #include <TH1.h>
 #include <TMatrixD.h>
@@ -16,7 +18,7 @@
 using std::vector;
 
 /// Covariance matrix paired to histogram for correlated-bin fills
-class MultiFill: public CumulativeData {
+class MultiFill: public CumulativeData, protected NoCopy {
 public:
     /// Default constructor -- set M, h externally
     MultiFill() { }

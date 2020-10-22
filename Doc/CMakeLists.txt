@@ -16,7 +16,7 @@ endif(DOXYGEN_FOUND)
 # run "cppcheck" static code analysis on project
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
     add_custom_target(cppcheck
-        cppcheck --project=compile_commands.json --enable=all --quiet --suppress=missingIncludeSystem
+        cppcheck --project=compile_commands.json --enable=all --quiet --suppress=missingIncludeSystem --suppress=useStlAlgorithm
             -i ${CMAKE_BINARY_DIR} -i ${CMAKE_SOURCE_DIR}/External/
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )

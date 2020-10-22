@@ -30,12 +30,6 @@ Stringmap::Stringmap(const string& str) {
     }
 }
 
-string Stringmap::toString() const {
-    string s;
-    for(auto const& kv: *this) s += "\t" + kv.first + " = " + kv.second;
-    return s;
-}
-
 void Stringmap::display(const string& linepfx) const {
     for(auto const& kv: *this) std::cout << linepfx << kv.first << ": " << kv.second << "\n";
 }

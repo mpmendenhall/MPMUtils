@@ -8,6 +8,7 @@
 #include <fstream>
 #include <string>
 #include <utility> // for std::move
+#include <stdexcept>
 
 #ifdef WITH_BOOST
 
@@ -20,6 +21,7 @@ public:
     /// Constructor
     explicit gzWrapper(const std::string& fname, bool isGZ = true): isZipped(isGZ),
     fgz(fname.c_str(), std::ios_base::in | std::ios_base::binary), f(&fsb) {
+        if(!fgz.good()) throw std::runtime_error("Failed to open file '" + fname + "' for reading.");
         if(isZipped) fsb.push(boost::iostreams::gzip_decompressor());
         fsb.push(fgz);
     }
@@ -69,6 +71,7 @@ public:
     /// Constructor
     gzWrapper(const std::string& fname, bool isZipped = true):
     f(fname.c_str(), std::ios_base::in | std::ios_base::binary) {
+        if(!f.good()) throw std::runtime_error("Failed to open file '" + fname + "' for reading.");
         if(isZipped) {
             printf("Must compile WITH_BOOST to read .gz files!\n");
             throw;

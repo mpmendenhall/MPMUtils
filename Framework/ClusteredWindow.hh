@@ -84,7 +84,7 @@ public:
     typedef typename cluster_t::ordering_t ordering_t;
 
     /// Constructor
-    explicit ClusterBuilder(ordering_t cdx): cluster_dx(cdx) {  }
+    explicit ClusterBuilder(ordering_t cdx): cluster_dx(cdx), clustOut(nullptr) {  }
 
     /// accept data flow signal
     void signal(datastream_signal_t sig) override {
@@ -117,8 +117,8 @@ public:
         }
     }
 
-    ordering_t cluster_dx;                      ///< time spread for cluster identification
-    DataSink<cluster_t>* clustOut = nullptr;    ///< clustered objects recipient
+    ordering_t cluster_dx;              ///< time spread for cluster identification
+    DataSink<cluster_t>* clustOut;      ///< clustered objects recipient
 
 protected:
     /// examine and decide whether to include cluster
