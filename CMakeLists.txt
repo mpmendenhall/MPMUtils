@@ -31,8 +31,15 @@ LIST(APPEND EXTLIBS ${CONFIG_LIBS})
 #########
 # libuuid
 #########
-find_library(UUID_LIBS uuid)
-LIST(APPEND EXTLIBS ${UUID_LIBS})
+find_library(UUID_LIB uuid)
+find_path(UUID_INCLUDE uuid/uuid.h)
+message(STATUS "uuid/uuid.h headers in " ${UUID_INCLUDE} ", library " ${UUID_LIB})
+if(UUID_INCLUDE AND UUID_LIB)
+    include_directories(${UUID_INCLUDE})
+    list(APPEND EXTLIBS ${UUID_LIB})
+else()
+    message(FATAL_ERROR "libuuid library or headers not found --- maybe install libuuid-devel package?")
+endif()
 
 ########
 # OpenGL
