@@ -17,8 +17,9 @@
 AnalysisDB* AnalysisDB::myDB = nullptr;
 
 string ADBfile() {
-    auto dbfile = optionalGlobalArg("AnaDB");
-    if(!dbfile.size()) dbfile = getEnv(PROJ_ENV_PFX+"_ANADB");
+    string dbvar = PROJ_ENV_PFX+"_ANADB";
+    auto s = optionalGlobalArg("AnaDB", "$"+dbvar, "CalDB file");
+    auto dbfile = (s == "$"+dbvar? getEnv(dbvar) : s);
 
     if(!fileExists(dbfile)) {
         printf("Initializing new AnaDB at '%s'\n", dbfile.c_str());

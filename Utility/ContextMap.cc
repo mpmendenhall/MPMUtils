@@ -1,6 +1,7 @@
 /// \file ContextMap.cc
 
 #include "ContextMap.hh"
+#include "to_str.hh"
 
 std::vector<ContextMap*>& ContextMap::getContextStack() {
     static thread_local std::vector<ContextMap*> v;
@@ -68,9 +69,14 @@ size_t numGlobalArg(const std::string& argname) {
     return it == GlobalArgs().end()? 0 : it->second.size();
 }
 
-const std::string& requiredGlobalArg(const std::string& argname) {
+const std::string& requiredGlobalArg(const std::string& argname, const std::string& help) {
+    printf("* Required argument '-%s <%s>' ", argname.c_str(), help.c_str());
     auto& v = GlobalArgs()[argname];
-    if(v.size() != 1) throw std::runtime_error("Expected one '-"+argname+"' argument");
+    if(v.size() != 1) {
+        printf("MISSING!\n");
+        throw std::runtime_error("Expected one '-"+argname+"' argument");
+    }
+    printf("-> '%s'\n", v[0].c_str());
     return v[0];
 }
 
@@ -82,23 +88,31 @@ std::string popGlobalArg(const std::string& argname) {
     return s;
 }
 
-const std::string& optionalGlobalArg(const std::string& argname, const std::string& dflt) {
+const std::string& optionalGlobalArg(const std::string& argname, const std::string& dflt, const std::string& help) {
+    printf("* Optional argument '-%s <%s>' ", argname.c_str(), help.c_str());
     auto& GA = GlobalArgs();
     auto it = GA.find(argname);
-    if(it == GA.end() || !it->second.size()) return dflt;
-    if(it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
+    if(it == GA.end() || !it->second.size()) {
+        printf("defaulted to '%s'\n", dflt.c_str());
+        return dflt;
+    }
+    if(it->second.size() > 1) {
+        printf(" specified too many times!\n");
+        throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
+    }
+    printf("-> '%s'\n", it->second[0].c_str());
     return it->second[0];
 }
 
-bool optionalGlobalArg(const std::string& argname, double& v) {
-    auto s = optionalGlobalArg(argname);
+bool optionalGlobalArg(const std::string& argname, double& v, const string& help) {
+    auto s = optionalGlobalArg(argname, to_str(v), help);
     if(!s.size()) return false;
     v = atof(s.c_str());
     return true;
 }
 
-bool optionalGlobalArg(const std::string& argname, int& v) {
-    auto s = optionalGlobalArg(argname);
+bool optionalGlobalArg(const std::string& argname, int& v, const string& help) {
+    auto s = optionalGlobalArg(argname, to_str(v), help);
     if(!s.size()) return false;
     v = atoi(s.c_str());
     return true;

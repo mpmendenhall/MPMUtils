@@ -19,8 +19,7 @@ public:
     explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", bool doMakeNext = true, const string& tname = "", int v = 0):
     XMLProvider("HDF5_CfgLoader"), Configurable(S), HDF5_TableInput<T>(tname, v) {
         S.lookupValue("nLoad", nLoad);
-        auto snl = optionalGlobalArg("nload");
-        if(snl.size()) nLoad = atoi(snl.c_str());
+        optionalGlobalArg("nload", nLoad, "entry loading limit");
 
         if(farg.size()){
             auto& fn = requiredGlobalArg(farg);
