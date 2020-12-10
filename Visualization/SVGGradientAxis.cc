@@ -14,13 +14,13 @@ SVGGradientAxis::SVGGradientAxis() {
 }
 
 double SVGGradientAxis::axisUnits(double x) const {
-    if(logscale) return x > 0? log(x/range.lo[0]) / log(range.hi[0]/range.lo[0]) : -100;
-    return (x-range.lo[0])/range.dl(0);
+    if(logscale) return x > 0? log(x/range.lo) / log(range.hi/range.lo) : -100;
+    return (x-range.lo)/range.dl();
 }
 
 double SVGGradientAxis::dAxisUnits(double) const {
     assert(!logscale);
-    return 1./range.dl(0);
+    return 1./range.dl();
 }
 
 void SVGGradientAxis::finalize() {
@@ -43,12 +43,12 @@ void SVGGradientAxis::finalize() {
     axisGroup->attrs["font-size"] = "0.07";
 
     if(logscale) {
-        if(range.lo[0] < 1e-6*range.hi[0]) range.lo[0] = 1e-6*range.hi[0];
+        if(range.lo < 1e-6*range.hi) range.lo = 1e-6*range.hi;
     }
 
     if(!axticks.size()) {
-        addtick(range.lo[0]);
-        addtick(range.hi[0]);
+        addtick(range.lo);
+        addtick(range.hi);
     }
 
     for(auto const& t: axticks) {

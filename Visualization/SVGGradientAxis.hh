@@ -5,6 +5,7 @@
 #define SVGGRADIENTAXIS_HH
 
 #include "SVGBuilder.hh"
+#include "Interval.hh"
 #include <set>
 using std::set;
 #include <array>
@@ -51,7 +52,7 @@ public:
     };
 
     bool logscale = false;                      ///< log scale setting
-    BBox<1,double> range;                       ///< axis range
+    Interval<> range;                           ///< axis range
     set<tick> axticks;                          ///< axis tick locations
     SVG::group* axisGroup = new SVG::group;     ///< group containing axis information
     SVG::lingradient* base_gradient = nullptr;  ///< SVG gradient specification

@@ -464,6 +464,7 @@ void GLVisDriver::doGlutLoop() {
 
 void GLVisDriver::doGlutLoop() { }
 void GLVisDriver::endGlutLoop() { }
+void GLVisDriver::initWindow(const std::string&) { }
 void GLVisDriver::pause(void (*)(void*, VGLCallback*), void*) { }
 
 #endif

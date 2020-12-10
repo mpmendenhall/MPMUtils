@@ -18,7 +18,7 @@ AnalysisDB* AnalysisDB::myDB = nullptr;
 
 string ADBfile() {
     string dbvar = PROJ_ENV_PFX+"_ANADB";
-    auto s = optionalGlobalArg("AnaDB", "$"+dbvar, "CalDB file");
+    auto s = optionalGlobalArg("AnaDB", "$"+dbvar, "Analysis DB file");
     auto dbfile = (s == "$"+dbvar? getEnv(dbvar) : s);
 
     if(!fileExists(dbfile)) {

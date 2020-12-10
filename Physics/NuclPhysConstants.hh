@@ -17,6 +17,7 @@ namespace physconst {
     const double m_helion = 2808.391586;            ///< +-(17), helion (3He) mass       [MeV/c^2] CODATA 2014
     const double m_triton = 2808.921112;            ///< +-(17), triton (3H) mass        [MeV/c^2] CODATA 2014
     const double m_alpha = 3727.379378;             ///< +-(23), alpha (4He) mass        [MeV/c^2] CODATA 2014
+    const double m_6Li   = 5603.0509;               ///< +-(5),  6Li mass                [MeV/c^2] warning, needs cited reference!
 
     const double delta_mn_mp = 1.29333217;          ///< +-(42), m_n-m_p mass difference [MeV/c^2] PDG 2014 = CODATA 2010
     const double m_n = m_p + delta_mn_mp;           ///< neutron mass                    [MeV/c^2]

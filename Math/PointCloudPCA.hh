@@ -96,14 +96,20 @@ public:
     /// rms spread along principal components direction
     inline double sigma(int a) const { return sqrt(sigma2(a)); }
     /// transverse width^2 from principal axis
-    inline double wT2() const { double s = 0; for(int i = 1; i<N; i++) s += width2[i]; return s; }
+    inline double wT2() const { double s = 0; for(int i = 1; i<N; ++i) s += width2[i]; return s; }
     /// transverse spread^2 from principal axis
     inline double sigmaT2() const { return sw? wT2()/sw : 0.; }
     /// transverse spread from principal axis
     inline double sigmaT() const { return sqrt(sigmaT2()); }
+    /// coordinate along principal axis
+    inline typename wpt_t::coord_t principal_coord(double u) const {
+        auto x = mu;
+        for(int i = 0; i<N; ++i) x[i] += PCA[0][i] * u;
+        return x;
+    }
 
     /// reverse direction
-    void flip() {for(int i = 0; i<N-1; i++) for(int j = 0; j<N; j++) PCA[i][j] *= -1; }
+    void flip() {for(int i = 0; i<N-1; ++i) for(int j = 0; j<N; ++j) PCA[i][j] *= -1; }
 
     void operator+=(const PointCloudPCA& P) {
         if(!sw) {

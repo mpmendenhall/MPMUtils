@@ -76,7 +76,7 @@ public:
     /// Constructor
     explicit HDF5_CfgWriter(const Setting&, const string& farg = ""): XMLProvider("HDF5_CfgWriter") {
         if(!farg.size()) return;
-        auto& fn = requiredGlobalArg(farg);
+        auto& fn = requiredGlobalArg(farg, "output .h5 file");
         this->openOutput(fn);
 
         auto AS = AnalysisStep::instance();
