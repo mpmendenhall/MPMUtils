@@ -5,7 +5,6 @@
 #define SKETCH3D_HH
 
 #include "SVGBuilder.hh"
-#include <cassert>
 #include <memory>
 using std::unique_ptr;
 

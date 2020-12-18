@@ -81,4 +81,8 @@ protected:
     virtual void _teapot(const vector<float>&) { }
 };
 
+/// Convenience helper for setting visualization vectors
+template<class V>
+void operator<<(VisDriver::vec3& x, const V& v) { for(auto j: {0,1,2}) x[j] = v[j]; }
+
 #endif

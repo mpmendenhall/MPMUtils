@@ -46,7 +46,7 @@ void NoisyMin::initMinStep() {
 }
 
 NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
-    assert(Ntot <= N);
+    if(Ntot > N) throw;
     if(Ntot < N) addPart(N-Ntot, Quadratic::nterms(N-Ntot));
 
     vec_t p0 = next();

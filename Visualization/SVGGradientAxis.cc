@@ -1,7 +1,6 @@
 /// \file SVGGradientAxis.cc
 
 #include "SVGGradientAxis.hh"
-#include <cassert>
 using namespace SVG;
 
 SVGGradientAxis::SVGGradientAxis() {
@@ -19,7 +18,7 @@ double SVGGradientAxis::axisUnits(double x) const {
 }
 
 double SVGGradientAxis::dAxisUnits(double) const {
-    assert(!logscale);
+    if(logscale) throw;
     return 1./range.dl();
 }
 

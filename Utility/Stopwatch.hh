@@ -7,7 +7,6 @@
 #include <string>
 #include <chrono>
 #include <stdio.h>
-#include <cassert>
 
 /// Stopwatch from construction to deletion
 class Stopwatch {
@@ -19,7 +18,7 @@ public:
 
     /// start counting
     void start() {
-        assert(!running);
+        if(running) throw;
         printf("Starting stopwatch...\n");
         running = true;
         t0 = std::chrono::steady_clock::now();
@@ -27,7 +26,7 @@ public:
 
     /// stop counting
     void stop() {
-        assert(running);
+        if(!running) throw;
         running = false;
         auto t1 = std::chrono::steady_clock::now();
         auto dt = std::chrono::duration<double>(t1-t0).count();

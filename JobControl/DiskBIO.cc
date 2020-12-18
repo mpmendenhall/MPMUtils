@@ -16,7 +16,7 @@ int runSysCmd(const string& cmd) {
 }
 
 void FDBinaryWriter::_send(void* vptr, int size) {
-    assert(vptr && fOut >= 0 && size != -1);
+    if(!vptr || fOut < 0 || size == -1) throw;
     if(fOut >= 0 && size != write(fOut, vptr, size))
         throw std::runtime_error("Can't write file!");
 }

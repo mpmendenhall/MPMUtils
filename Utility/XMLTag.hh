@@ -11,7 +11,6 @@
 using std::map;
 #include <vector>
 using std::vector;
-#include <cassert>
 #include <iostream>
 using std::ostream;
 

@@ -243,7 +243,7 @@ public:
 
     /// Get generic type out-of-place (required to exist)
     template<typename T>
-    T Get(const string& k) const { T t{}; auto v = FindKey(k,true); if(v) v->Get(t); else assert(false); return t; }
+    T Get(const string& k) const { T t{}; auto v = FindKey(k,true); if(v) v->Get(t); else throw; return t; }
 
     /// Get value with default
     template<typename T>

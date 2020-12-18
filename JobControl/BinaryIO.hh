@@ -4,7 +4,6 @@
 #ifndef BINARYIO_HH
 #define BINARYIO_HH
 
-#include <cassert>
 #include <type_traits>
 
 #include <string>
@@ -14,7 +13,6 @@ using std::vector;
 #include <map>
 using std::map;
 #include <cstring> // for std::memcpy
-#include <cassert>
 #include <deque>
 using std::deque;
 
@@ -41,7 +39,7 @@ public:
 
     /// Dereference pointers by default
     template<typename T>
-    void send(const T* p) { assert(p); send(*p); }
+    void send(const T* p) { send(*p); }
 
     /// data block send
     void send(const void* vptr, int size) {
@@ -176,7 +174,7 @@ template<>
 void BinaryReader::receive<string>(string& s);
 /// treat const char* as string
 template<>
-inline void BinaryWriter::send(const char* x) { assert(x); send(string(x)); }
+inline void BinaryWriter::send(const char* x) { send(string(x)); }
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
@@ -191,7 +189,11 @@ public:
 
 protected:
     /// blocking data receive
-    void _receive(void* vptr, int size) override { assert((const char*)pR + size <= eR); std::memcpy(vptr,pR,size); (const char*&)pR += size; }
+    void _receive(void* vptr, int size) override {
+        if((const char*)pR + size > eR) throw;
+        std::memcpy(vptr,pR,size);
+        (const char*&)pR += size;
+    }
 
     const void* dR; ///< read data buffer
     const void* pR; ///< read position
@@ -206,7 +208,11 @@ public:
 
 protected:
     /// blocking data send
-    void _send(void* vptr, int size) override { assert((char*)pW + size <= eW); std::memcpy(pW,vptr,size); (char*&)pW += size; }
+    void _send(void* vptr, int size) override {
+        if((char*)pW + size > eW) throw;
+        std::memcpy(pW,vptr,size);
+        (char*&)pW += size;
+    }
 
     void* dW;   ///< write data buffer
     void* pW;   ///< write position

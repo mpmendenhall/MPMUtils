@@ -9,7 +9,6 @@
 #include <gsl/gsl_eigen.h>
 #include <gsl/gsl_blas.h>
 #include <utility>
-#include <cassert>
 #include <vector>
 #include <iostream>
 using std::vector;

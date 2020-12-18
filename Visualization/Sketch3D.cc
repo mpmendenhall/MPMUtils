@@ -110,13 +110,12 @@ void MultiLayer::drawInto(XMLTag& X, const Perspective& P) {
 //////////////////////////////////////
 
 bool compare_projectables(const unique_ptr<ProjectablePrimitive>& lhs,
-                          const unique_ptr<ProjectablePrimitive>& rhs) { assert(lhs && rhs); return lhs->z + lhs->z0 < rhs->z + rhs->z0; }
+                          const unique_ptr<ProjectablePrimitive>& rhs) { return lhs->z + lhs->z0 < rhs->z + rhs->z0; }
 
 void PrimitivesLayer::drawInto(XMLTag& X, const Perspective& P) {
-    for(auto& o: myObjs) { assert(o); o->setPerspective(P); }
+    for(auto& o: myObjs) o->setPerspective(P);
     std::sort(myObjs.begin(), myObjs.end(), &compare_projectables);
     for(auto& o: myObjs) {
-        assert(o->myXML);
         X.addChild(o->myXML);
         o->myXML = nullptr;
     }

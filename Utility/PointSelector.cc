@@ -14,13 +14,13 @@ void PointSelector::addPart(size_t N, size_t npts) {
     parts.emplace_back(N,npts);
     v0.resize(v0.size() + N);
     Ntot += N;
-    assert(Ntot == v0.size());
+    if(Ntot != v0.size()) throw;
 }
 
 void PointSelector::skipTo(size_t i) {
     for(auto it = parts.rbegin(); it != parts.rend(); ++it) {
         auto j = i / it->Nsub;
-        assert(j <= it->QRNGn);
+        //assert(j <= it->QRNGn);
         it->QRNG.Skip(j - it->QRNGn);
     }
 }

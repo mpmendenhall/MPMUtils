@@ -21,7 +21,6 @@
 
 #include "LinMin.hh"
 #include "LinalgHelpers.hh"
-#include <cassert>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
 
