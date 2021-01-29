@@ -58,16 +58,17 @@ void readConfigFile(Config& cfg, const string& cfgfile, bool autoconvert) {
 }
 
 string cfgString(const Config& cfg) {
-    char* buf = nullptr;
-    size_t bsize = 1 << 15;
-    FILE* f = open_memstream(&buf, &bsize);
-    if(!f) throw std::runtime_error("open_memstream FAIL");
+    const size_t bsize = 1 << 15;
+    char buf[bsize];
+    FILE* f = fmemopen(buf, bsize, "r+");
+    if(!f) throw std::runtime_error("fmemopen FAIL");
+
     cfg.write(f);
     auto n = ftell(f);
     rewind(f);
     string s(n, ' ');
     if(fread((void*)s.data(), 1, n, f) != size_t(n)) throw std::runtime_error("fread FAIL");
     fclose(f);
-    free(buf);
+
     return s;
 }
