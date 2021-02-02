@@ -102,9 +102,8 @@ public:
     /// collapse all intervals ending before specified value into summary
     void summarize(T t0) {
         auto it = lower_bound({t0,t0});
-        if(it != end() && std::prev(it)->second > t0) it--;
-        for(auto i = begin(); i != it; i++) {
-            nSummary++;
+        for(auto i = begin(); i != it; ++i) {
+            ++nSummary;
             tSummary += i->second - i->first;
         }
         erase(begin(), it);
