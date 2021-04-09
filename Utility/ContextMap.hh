@@ -160,6 +160,10 @@ void loadGlobalArgs(int argc, char** argv);
 size_t numGlobalArg(const std::string& argname);
 /// get required single-valued command line argument or throw error
 const std::string& requiredGlobalArg(const std::string& argname, const std::string& help = "");
+/// get required single-valued command line argument or throw error
+inline void requiredGlobalArg(const std::string& argname, double& v, const std::string& help = "") { v = atof(requiredGlobalArg(argname,help).c_str()); }
+/// get required single-valued command line argument or throw error
+inline void requiredGlobalArg(const std::string& argname, int& v, const std::string& help = "") { v = atoi(requiredGlobalArg(argname,help).c_str()); }
 /// pop one of multi-valued global arg (throw if none)
 std::string popGlobalArg(const std::string& argname);
 /// get optional argument with default

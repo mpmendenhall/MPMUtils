@@ -14,7 +14,7 @@ public:
     typedef T value_t;
 
     value_t lo = std::numeric_limits<T>::max();     /// lower bound
-    value_t hi = -std::numeric_limits<T>::max();    /// upper bound
+    value_t hi{-std::numeric_limits<T>::max()};     /// upper bound
 
     /// expand to include point
     void expand(T x) {

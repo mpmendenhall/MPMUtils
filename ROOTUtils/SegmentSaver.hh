@@ -42,7 +42,7 @@ public:
     template<class T, typename... Args>
     void registerSaved(T*& o, const string& hname, Args&&... a) {
         if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
-        if(o) throw std::logic_error("Registration of '" + hname + "' would overwrite non-null pointer");
+        if(o) throw std::logic_error("Registration of '" + path + "/" + hname + "' would overwrite non-null pointer");
         o = tryLoad<T>(hname);
         if(!o) o = addObject(new T(hname.c_str(), std::forward<Args>(a)...));
         saveHists.emplace(hname, o);
@@ -52,7 +52,7 @@ public:
     template<class T, class U>
     void registerSavedClone(T*& h, const string& hname, const U& hTemplate) {
         if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
-        if(h) throw std::logic_error("Registration of '" + hname + "' would overwrite non-null pointer");
+        if(h) throw std::logic_error("Registration of '" + path + "/" + hname + "' would overwrite non-null pointer");
         h = tryLoad<U>(hname);
         if(h) resetZaxis(h);
         else {
@@ -73,6 +73,7 @@ public:
     template<class CUMDAT, typename... Args>
     void registerAccumulable(CUMDAT*& o, const string& onm, Args&&... a) {
         if(cumDat.count(onm)) throw std::runtime_error("Duplicate cumulative name '" + onm + "'");
+        if(o) throw std::logic_error("Registration of '" + path + "/" + onm + "' would overwrite non-null pointer");
         cumDat[onm] = o = dirIn? new CUMDAT(onm, *dirIn, std::forward<Args>(a)...) : new CUMDAT(onm, std::forward<Args>(a)...);
     }
 

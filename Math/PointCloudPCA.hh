@@ -18,32 +18,35 @@ using std::array;
 #include <TMatrixDSymEigen.h>
 
 /// point with weight in point cloud
-template<int N, typename T = double>
+template<int N, typename T = double, typename W = double>
 struct weightedpt {
     typedef array<T,N> coord_t;
+    typedef W weight_t;
 
     /// Weights-only constructor
-    explicit weightedpt(double ww = 1): x{{}}, w(ww) { }
+    explicit weightedpt(weight_t ww = weight_t(1)): x{{}}, w(ww) { }
 
     /// Constructor with array value
-    explicit weightedpt(T* xx, double ww = 1): w(ww) {
+    explicit weightedpt(T* xx, weight_t ww = weight_t(1)): w(ww) {
         if(xx) std::copy(xx, xx+N, x.data());
         else std::fill(x.begin(), x.end(), T{});
     }
 
     int i = 0;  ///< origin index
     coord_t x;  ///< coordinate
-    double w;   ///< weight
+    weight_t w; ///< weight
 };
 
 /// PCA calculation
-template<int N, typename T = double>
+template<int N, typename T = double, typename W = double>
 class PointCloudPCA {
 public:
     /// coordinate units type
-    typedef T units_t;
+    typedef T length_t;
     /// associated weighted-point type
-    typedef weightedpt<N,T> wpt_t;
+    typedef weightedpt<N,T,W> wpt_t;
+    /// weight units
+    typedef typename wpt_t::weight_t weight_t;
 
     // data
     typename wpt_t::coord_t mu{{}};     ///< mean center
@@ -51,7 +54,7 @@ public:
     array<array<double,N>,N> PCA{{}};   ///< orthogonal principal components vectors in PCA[i], largest to smallest
     array<double,N> width2{{}};         ///< spread along principal directions (eigenvalues of Cov), largest to smallest
     size_t n = 0;                       ///< number of points
-    double sw = 0;                      ///< sum of weights
+    weight_t sw{};                      ///< sum of weights
 
     /// Default constructor
     PointCloudPCA() { }
@@ -63,7 +66,7 @@ public:
         // weights vector
         TMatrixD w(1,n);
         for(size_t i=0; i<n; i++) { w(0,i) = v[i].w; }
-        sw = w.Sum();
+        sw = weight_t(w.Sum());
         if(!sw) return;
         if(!(sw == sw)) throw std::runtime_error("Invalid NaN sum weights");
 
@@ -147,7 +150,7 @@ public:
     }
 
     void display() const {
-        printf("Cloud of %zu points (total weight %g, average %g):\n", n, sw, n? sw/n : 0);
+        printf("Cloud of %zu points (total weight %g, average %g):\n", n, double(sw), n? sw/n : 0);
         if(N==3) {
             printf("\tmean = %g\t%g\t%g\t\tRMS = %g\t%g\t%g\n",
             double(mu[0]), double(mu[1]), double(mu[2]), sigma(0), sigma(1), sigma(2));

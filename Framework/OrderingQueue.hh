@@ -17,6 +17,7 @@ using std::priority_queue;
 #include <cmath> // for std::isfinite
 #include <stdexcept>
 #include <stdio.h>
+#include <csignal> // for SIGINT breakpoint
 
 /// Sort slightly-out-of-order items into proper order
 template<class T0, typename ordering_t = typename T0::ordering_t>
@@ -34,9 +35,9 @@ public:
     OrderingQueue(ordering_t _dt = order_max): dt(_dt) { }
     /// Destructor --- please leave cleared!
     ~OrderingQueue() {
-        assert(PQ::empty());
         if(!PQ::empty()) {
             fprintf(stderr, "\n*** WARNING:  OrderingQueue destructed with %zu elements remaining\n\n", PQ::size());
+            std::raise(SIGINT);
             //throw std::logic_error("OrderingQueue destructed without flush");
         }
     }
