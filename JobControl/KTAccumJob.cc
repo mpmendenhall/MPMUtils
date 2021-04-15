@@ -2,6 +2,7 @@
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "KTAccumJob.hh"
+#include <stdexcept>
 
 void KTAccumJobComm::endJob(BinaryIO& B) {
     if(!combos.size()) {
@@ -9,7 +10,7 @@ void KTAccumJobComm::endJob(BinaryIO& B) {
             if(kv.first.substr(0,7) != "Combine") continue;
             combos.push_back(kv.second->Get<string>());
             auto cd = kt.FindKey(combos.back());
-            if(!cd) exit(10);
+            if(!cd) throw std::runtime_error("Missing key for combining '" + combos.back() + "'");
 
             objs.push_back(nullptr);
             auto tp = cd->What();
@@ -23,10 +24,10 @@ void KTAccumJobComm::endJob(BinaryIO& B) {
     for(size_t i=0; i<combos.size(); i++) {
         auto cd = kt.FindKey(combos[i]);
         auto kd = B.receive<KeyData*>();
-        assert(kd);
+        if(!kd) throw std::logic_error("Failed to receive combining data  '" + combos[i] + "'");
 
         auto tp = cd->What();
-        assert(tp == kd->What());
+        if(tp != kd->What()) throw std::logic_error("Mismatched types for combining '" + combos[i] + "'");
 
         if(tp == kMESS_OBJECT) {
             auto h = kd->GetROOT<TH1>();
@@ -72,7 +73,7 @@ void KTAccumJob::returnCombined(BinaryIO& B) {
         if(kv.first.substr(0,7) != "Combine") continue;
         auto c = kv.second->Get<string>();
         auto kd = kt.FindKey(c);
-        if(!kd) throw std::runtime_error(("Missing key for combining '"+c+"'").c_str());
+        if(!kd) throw std::runtime_error(("Missing return value for combine '"+c+"'").c_str());
         B.send(*kd);
     }
 }

@@ -1,5 +1,5 @@
 /// \file PointCloudPCA.hh Principal Components Analysis for weighted point cloud
-// -- Michael P. Mendenhall, LLNL 2018
+// -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef POINTCLOUDPCA_HH
 #define POINTCLOUDPCA_HH
@@ -18,38 +18,45 @@ using std::array;
 #include <TMatrixDSymEigen.h>
 
 /// point with weight in point cloud
-template<int N, typename T = double, typename W = double>
-struct weightedpt {
-    typedef array<T,N> coord_t;
+template<size_t N, typename T = double, typename W = double>
+struct weightedpt: public array<T, N> {
+    /// dimensionality
+    static constexpr size_t NDIM = N;
+    /// coordinate component
+    typedef T component_t;
+    /// coordinate
+    typedef array<component_t, NDIM> coord_t;
+    /// point weight
     typedef W weight_t;
 
+    /// Default zero constructor
+    weightedpt(): coord_t{{}}, w{} { }
     /// Weights-only constructor
-    explicit weightedpt(weight_t ww = weight_t(1)): x{{}}, w(ww) { }
-
-    /// Constructor with array value
-    explicit weightedpt(T* xx, weight_t ww = weight_t(1)): w(ww) {
-        if(xx) std::copy(xx, xx+N, x.data());
-        else std::fill(x.begin(), x.end(), T{});
-    }
+    explicit weightedpt(weight_t ww): coord_t{{}}, w(ww) { }
+    /// Constructor with coordinate and weight
+    explicit weightedpt(const coord_t& x, weight_t ww = weight_t(1)): coord_t(x), w(ww) { }
 
     int i = 0;  ///< origin index
-    coord_t x;  ///< coordinate
     weight_t w; ///< weight
 };
 
 /// PCA calculation
-template<int N, typename T = double, typename W = double>
+template<class _wpt>
 class PointCloudPCA {
 public:
-    /// coordinate units type
-    typedef T length_t;
     /// associated weighted-point type
-    typedef weightedpt<N,T,W> wpt_t;
-    /// weight units
+    typedef _wpt wpt_t;
+    /// weight units shortcut
     typedef typename wpt_t::weight_t weight_t;
+    /// component shortcut
+    typedef typename wpt_t::component_t component_t;
+    /// coordinate shortcut
+    typedef typename wpt_t::coord_t coord_t;
+    /// shortcut to dimensionality
+    static constexpr int N = wpt_t::NDIM;
 
     // data
-    typename wpt_t::coord_t mu{{}};     ///< mean center
+    coord_t mu{{}};                     ///< mean center
     array<array<double,N>,N> Cov{{}};   ///< covariance matrix
     array<array<double,N>,N> PCA{{}};   ///< orthogonal principal components vectors in PCA[i], largest to smallest
     array<double,N> width2{{}};         ///< spread along principal directions (eigenvalues of Cov), largest to smallest
@@ -74,7 +81,7 @@ public:
         TMatrixD M(n,N);
         for(size_t i=0; i<n; i++)
             for(int j = 0; j<N; j++)
-                M(i,j) = v[i].x[j];
+                M(i,j) = v[i][j];
 
         // calculate mean
         auto u = w*M;
@@ -105,7 +112,7 @@ public:
     /// transverse spread from principal axis
     inline double sigmaT() const { return sqrt(sigmaT2()); }
     /// coordinate along principal axis
-    inline typename wpt_t::coord_t principal_coord(double u) const {
+    inline coord_t principal_coord(double u) const {
         auto x = mu;
         for(int i = 0; i<N; ++i) x[i] += PCA[0][i] * u;
         return x;
