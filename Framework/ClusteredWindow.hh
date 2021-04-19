@@ -29,6 +29,8 @@ public:
     explicit Cluster(ordering_t w = {}): dx(w) { }
     /// forbid direct assignment
     const Cluster& operator=(const Cluster& C) = delete;
+    /// Polymorphic destructor
+    virtual ~Cluster() { }
 
     /// Get ordering parameter
     explicit operator ordering_t() const { return x_median; }

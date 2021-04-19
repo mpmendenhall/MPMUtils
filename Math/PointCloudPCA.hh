@@ -42,7 +42,7 @@ struct weightedpt: public array<T, N> {
 
 /// PCA calculation
 template<class _wpt>
-class PointCloudPCA {
+class WPtsPCA {
 public:
     /// associated weighted-point type
     typedef _wpt wpt_t;
@@ -64,10 +64,10 @@ public:
     weight_t sw{};                      ///< sum of weights
 
     /// Default constructor
-    PointCloudPCA() { }
+    WPtsPCA() { }
 
     /// Constructor, calculated from points
-    explicit PointCloudPCA(const vector<wpt_t>& v): n(v.size()) {
+    explicit WPtsPCA(const vector<wpt_t>& v): n(v.size()) {
         if(!n) return;
 
         // weights vector
@@ -121,13 +121,13 @@ public:
     /// reverse direction
     void flip() {for(int i = 0; i<N-1; ++i) for(int j = 0; j<N; ++j) PCA[i][j] *= -1; }
 
-    void operator+=(const PointCloudPCA& P) {
+    void operator+=(const WPtsPCA& P) {
         if(!sw) {
             *this = P;
             return;
         }
 
-        PointCloudPCA Pnew;
+        WPtsPCA Pnew;
 
         Pnew.n = n + P.n;
         Pnew.sw = sw + P.sw;
@@ -144,7 +144,7 @@ public:
     }
 
     /// out-of-place sum
-    const PointCloudPCA operator+(const PointCloudPCA& P) const { auto PP = *this; PP += P; return PP; }
+    const WPtsPCA operator+(const WPtsPCA& P) const { auto PP = *this; PP += P; return PP; }
 
     void calcPrincipalComponents(const TMatrixDSym& MCov) {
         const TMatrixDSymEigen eigen(MCov);
@@ -169,5 +169,9 @@ public:
         }
     }
 };
+
+/// Shortcut type definition
+template <size_t N, typename T = double, typename W = double>
+using PointCloudPCA = WPtsPCA<weightedpt<N,T,W>>;
 
 #endif

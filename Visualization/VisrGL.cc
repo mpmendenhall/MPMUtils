@@ -14,7 +14,17 @@ const string GLVisDriver::_pause_info =
 #ifdef WITH_OPENGL
 
 #include <unistd.h> // for usleep
+
+#ifdef __APPLE__
+
+#define GL_SILENCE_DEPRECATION
+#include <GLUT/glut.h>
+
+#else
+
 #include <GL/glut.h>
+
+#endif
 
 /// singleton registered OpenGL window
 GLVisDriver* GLDr = nullptr;
