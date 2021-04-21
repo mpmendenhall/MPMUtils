@@ -15,17 +15,16 @@ vector<double> logbinedges(unsigned int nbins, double bmin, double bmax) {
     return binEdges;
 }
 
-void fill_interp(TH1* h, double x, double w) {
-    if(!h) return;
-    TAxis* Ax = h->GetXaxis();
+void fill_interp(TH1& h, double x, double w) {
+    auto Ax = h.GetXaxis();
     int b0 = Ax->FindBin(x);
-    if(b0 < 1 || b0 > h->GetNbinsX()) { h->Fill(x); return; }
+    if(b0 < 1 || b0 > h.GetNbinsX()) { h.Fill(x); return; }
     double c0 = Ax->GetBinCenter(b0);
     int b1 = x > c0? b0+1 : b0-1;
     double c1 = Ax->GetBinCenter(b1);
     double a = (c1-x)/(c1-c0);
-    h->Fill(c0, a*w);
-    h->Fill(c1, (1-a)*w);
+    h.Fill(c0, a*w);
+    h.Fill(c1, (1-a)*w);
 }
 
 void normalize_to_bin_width(TH1* f, double xscale, const string& ytitle) {
@@ -96,18 +95,17 @@ void scale_times_bin_center(TH1* f) {
     f->Scale(1.0);
 }
 
-TGraphErrors* histoDeriv(const TH1* h, unsigned int dxi, double s) {
-    assert(h);
-    int nb = h->GetNbinsX();
+TGraphErrors* histoDeriv(const TH1& h, unsigned int dxi, double s) {
+    int nb = h.GetNbinsX();
     TGraphErrors* g = new TGraphErrors();
     int n = 0;
     for(int i=1+dxi/2; i<=nb; i+=dxi) {
-        double x0 = h->GetBinCenter(i);
-        double x1 = h->GetBinCenter(i+dxi);
+        double x0 = h.GetBinCenter(i);
+        double x1 = h.GetBinCenter(i+dxi);
         double dx = x1-x0;
-        double dy = h->GetBinContent(i+dxi) - h->GetBinContent(i);
+        double dy = h.GetBinContent(i+dxi) - h.GetBinContent(i);
         g->SetPoint(n, 0.5*(x0+x1), s*dy/dx);
-        g->SetPointError(n, 0, sqrt(pow(h->GetBinError(i),2)+pow(h->GetBinError(i+dxi),2))*s/dx);
+        g->SetPointError(n, 0, sqrt(pow(h.GetBinError(i),2)+pow(h.GetBinError(i+dxi),2))*s/dx);
         n++;
     }
     return g;
@@ -204,13 +202,12 @@ TH1* cumulativeHist(const TH1& h, bool normalize, bool reverse) {
     return c;
 }
 
-TGraph* invertGraph(const TGraph* g) {
-    assert(g);
-    TGraph* gi = new TGraph(g->GetN());
+TGraph invertGraph(const TGraph& g) {
+    TGraph gi(g.GetN());
     double x,y;
-    for(int i=0; i<g->GetN(); i++) {
-        g->GetPoint(i,x,y);
-        gi->SetPoint(i,y,x);
+    for(int i=0; i<g.GetN(); i++) {
+        g.GetPoint(i,x,y);
+        gi.SetPoint(i,y,x);
     }
     return gi;
 }
@@ -318,18 +315,20 @@ TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut, double n_max) {
 }
 
 TGraph* matchHistoShapes(const TH1F& h1, const TH1F& h2) {
-    TH1* c1 = cumulativeHist(h1,true);
-    TH1* c2 = cumulativeHist(h2,true);
-    TGraph* c2g = TH1toTGraph(*c2);
+    auto c1 = cumulativeHist(h1,true);
+    auto c2 = cumulativeHist(h2,true);
+
+    auto c2g = TH1toTGraph(*c2);
     delete c2;
-    TGraph* c2i = invertGraph(c2g);
+
+    auto c2i = invertGraph(*c2g);
     delete c2g;
+
     int n = h1.GetNbinsX()-2;
     TGraph* T = new TGraph(n);
     for(int i=1; i<=n; i++)
-        T->SetPoint(i-1,c1->GetBinCenter(i),c2i->Eval(c1->GetBinContent(i)));
+        T->SetPoint(i-1,c1->GetBinCenter(i),c2i.Eval(c1->GetBinContent(i)));
     delete c1;
-    delete c2i;
     return T;
 }
 
@@ -415,17 +414,16 @@ TGraphErrors* interpolate(TGraphErrors& tg, float dx) {
     return gout;
 }
 
-double invCDF(TH1* h, double p) {
-    assert(h);
-    unsigned int nbins = h->GetNbinsX()-2;
+double invCDF(TH1& h, double p) {
+    unsigned int nbins = h.GetNbinsX()-2;
     if(p<=0) return 0;
-    if(p>=1) return h->GetBinLowEdge(nbins+1);
-    Double_t* cdf = h->GetIntegral();
+    if(p>=1) return h.GetBinLowEdge(nbins+1);
+    Double_t* cdf = h.GetIntegral();
     unsigned int mybin = std::upper_bound(cdf,cdf+nbins,p)-cdf;
     assert(mybin>0);
     assert(mybin<=nbins);
     double l = (p-cdf[mybin-1])/(cdf[mybin]-cdf[mybin-1]);
-    return h->GetBinLowEdge(mybin)*(1.0-l)+h->GetBinLowEdge(mybin+1)*l;
+    return h.GetBinLowEdge(mybin)*(1.0-l) + h.GetBinLowEdge(mybin+1)*l;
 }
 
 double hcount_from_end(const TH1& h, double c) {
@@ -471,11 +469,9 @@ TH1F* axisHist(const TH2& h, const string& hname,  AxisDirection d) {
 }
 
 vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d) {
-    assert(d<=Z_DIRECTION);
-
-    const TAxis* Ax1 = d==X_DIRECTION?h3.GetYaxis():h3.GetXaxis();
-    const TAxis* Ax2 = d==Z_DIRECTION?h3.GetYaxis():h3.GetZaxis();
-    const TAxis* Ax3 = d==X_DIRECTION?h3.GetXaxis():d==Y_DIRECTION?h3.GetYaxis():h3.GetZaxis();
+    const TAxis* Ax1 = d==X_DIRECTION? h3.GetYaxis() : h3.GetXaxis();
+    const TAxis* Ax2 = d==Z_DIRECTION? h3.GetYaxis() : h3.GetZaxis();
+    const TAxis* Ax3 = d==X_DIRECTION? h3.GetXaxis() : d==Y_DIRECTION? h3.GetYaxis() : h3.GetZaxis();
     const unsigned int n1 = Ax1->GetNbins();
     const unsigned int n2 = Ax2->GetNbins();
     const unsigned int n3 = Ax3->GetNbins();
@@ -513,12 +509,11 @@ vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d) {
 }
 
 vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection d, bool includeOverflow) {
-    assert(d==X_DIRECTION || d==Y_DIRECTION);
     vector<TH1F*> h1s;
     const unsigned int nx = h2.GetNbinsX();
     const unsigned int ny = h2.GetNbinsY();
-    const unsigned int nz = d==X_DIRECTION?nx:ny;
-    const unsigned int nn = d==X_DIRECTION?ny:nx;
+    const unsigned int nz = d==X_DIRECTION? nx : ny;
+    const unsigned int nn = d==X_DIRECTION? ny : nx;
 
     for(unsigned int z = 0; z <= nz+1; z++) {
         if(!includeOverflow && (z==0 || z==nz+1)) continue;

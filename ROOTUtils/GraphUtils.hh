@@ -39,10 +39,10 @@ TH2x* loglogHist(const string& name, const string& descrip, unsigned int nbins, 
     return new TH2x(name.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data(), nby, logbinedges(nby,ymin,ymax).data());
 }
 /// bin-to-bin derivative of histogram, with optional scale factor
-TGraphErrors* histoDeriv(const TH1* h, unsigned int dxi = 1, double s = 1.0);
+TGraphErrors* histoDeriv(const TH1& h, unsigned int dxi = 1, double s = 1.0);
 
 /// Fill histogram preserving *average* value interpolated between bins
-void fill_interp(TH1* h, double x, double w = 1.0);
+void fill_interp(TH1& h, double x, double w = 1.0);
 
 /// convert a histogram to a TGraph, optionally swapping x/y
 TGraphErrors* TH1toTGraph(const TH1& h, bool invert = false);
@@ -65,7 +65,7 @@ void normalize_to_bin_area(TH2* h, double xscale = 1.);
 void scale_times_bin_center(TH1* f);
 
 /// invert a TGraph
-TGraph* invertGraph(const TGraph* g);
+TGraph invertGraph(const TGraph& g);
 
 /// combine a list of TGraphs
 TGraph* combine_graphs(const vector<TGraph*>& gs);

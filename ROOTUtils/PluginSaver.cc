@@ -4,7 +4,6 @@
 #include "PluginSaver.hh"
 #include "libconfig_readerr.hh"
 #include "StringManip.hh"
-#include <cassert>
 #include <sstream>
 
 PluginSaver::PluginSaver(OutputManager* pnt, const string& nm, const string& inflName):

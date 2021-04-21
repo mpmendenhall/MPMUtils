@@ -342,7 +342,6 @@ void GLVisDriver::mouseTrackingAction(int x, int y) {
 
   /*
     void _plane(std::vector<float>& v) {
-        assert(v.size()==9);
         glBegin(GL_QUADS);
         glVertex3f(v[0]+0.5*v[3]+0.5*v[6], v[1]+0.5*v[4]+0.5*v[7], v[2]+0.5*v[5]+0.5*v[8]);
         glVertex3f(v[0]-0.5*v[3]+0.5*v[6], v[1]-0.5*v[4]+0.5*v[7], v[2]-0.5*v[5]+0.5*v[8]);
@@ -360,7 +359,6 @@ void GLVisDriver::mouseTrackingAction(int x, int y) {
     }
 
     void _quad(std::vector<float>& xyz) {
-        assert(xyz.size()==12);
         if(wireframe) glBegin(GL_LINE_LOOP);
         else glBegin(GL_QUADS);
         glVertex3f(xyz[0],xyz[1],xyz[2]);
