@@ -237,9 +237,9 @@ public:
     /// Get value for key, or nullptr if undefined
     KeyData* FindKey(const string& k, bool warn = false) const;
 
-    /// Get generic type
+    /// Get generic type; return whether found
     template<typename T>
-    void Get(const string& k, T& x, bool warn = false) const { auto v = FindKey(k,warn); if(v) v->Get(x); }
+    bool Get(const string& k, T& x, bool warn = false) const { auto v = FindKey(k,warn); if(v) v->Get(x); return v; }
 
     /// Get generic type out-of-place (required to exist)
     template<typename T>
