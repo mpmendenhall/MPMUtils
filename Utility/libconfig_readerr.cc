@@ -3,6 +3,7 @@
 #include "libconfig_readerr.hh"
 #include <stdio.h>
 #include <map>
+#include <stdexcept>
 
 std::map<const Setting*, const Config*> rConfigs;
 

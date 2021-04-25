@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdio>
 
 BoxTreeNode::iterator BoxTreeNode::begin() {
     iterator it(this);

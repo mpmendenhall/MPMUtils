@@ -15,6 +15,7 @@ using std::map;
 #include <cstring> // for std::memcpy
 #include <deque>
 using std::deque;
+#include <stdexcept>
 
 // workaround for older gcc without std::is_trivially_copyable
 #if __GNUG__ && __GNUC__ < 5

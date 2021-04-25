@@ -23,7 +23,7 @@ bool SockIOBuffer::open_socket(const string& host, int port) {
 
     bzero((char*) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    bcopy((char*)server->h_addr, (char*)&serv_addr.sin_addr.s_addr, server->h_length);
+    bcopy(server->h_addr, (char*)&serv_addr.sin_addr.s_addr, server->h_length);
     serv_addr.sin_port = htons(port);
     if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         fprintf(stderr, "ERROR connecting to socket %s:%i\n", host.c_str(), port);
