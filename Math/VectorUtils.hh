@@ -21,6 +21,10 @@ using atbegin_t = typename std::remove_reference<decltype(*std::declval<T&>().be
 template<typename V>
 void negate(V& v) { std::for_each(v.begin(), v.end(), [](atbegin_t<V>& x) { x = -x; }); }
 
+/// element-wise negation with offset
+template<typename V>
+void negate(V& v, array_contents_t<V> c) { std::for_each(v.begin(), v.end(), [=](atbegin_t<V>& x) { x = c-x; }); }
+
 /// scalar multiplication v *= s
 template<typename V, typename T>
 inline void scale(V& v, const T& s) { std::for_each(v.begin(), v.end(), [&s](atbegin_t<V>& x) { x *= s; }); }

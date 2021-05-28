@@ -2,6 +2,7 @@
 // -- Michael P. Mendenhall, 2018
 
 #include "LinalgHelpers.hh"
+#include <stdexcept>
 
 gsl_matrix_wrapper& gsl_matrix_wrapper::operator=(const gsl_matrix_wrapper& w) {
     if(this == &w) return *this;
@@ -64,9 +65,10 @@ std::istream& operator>> (std::istream &i, gsl_matrix_wrapper& M) {
     size_t m = 0, n = 0;
     i >> m >> n;
     M = gsl_matrix_wrapper(m,n,false);
-    for(size_t r=0; r<M->size1; r++)
-        for(size_t c=0; c<M->size2; c++)
-            i >> M(r,c);
+    if(m && n)
+        for(size_t r=0; r<M->size1; r++)
+            for(size_t c=0; c<M->size2; c++)
+                i >> M(r,c);
     return i;
 }
 

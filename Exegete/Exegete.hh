@@ -50,7 +50,7 @@
 #define _EXPLAIN(S) _EXREQSC; EX::Note::makeNote(S, __LINE__)
 
 /// Text comment showing the value of a variable
-#define _EXPLAINVAR(S,v) _EXREQSC; EX::VariableNote<decltype(v)>::makeVariableNote(S, __LINE__, #v, v)
+#define _EXPLAINVAR(S,v) _EXREQSC; EX::VariableNote<typename std::remove_reference<decltype(v)>::type>::makeVariableNote(S, __LINE__, #v, v)
 
 /// Text comment on anonymous value
 #define _EXPLAINVAL(S,v) _EXREQSC; EX::ValNote<std::remove_reference<decltype(v)>::type>::makeValNote(S, __LINE__, v)
