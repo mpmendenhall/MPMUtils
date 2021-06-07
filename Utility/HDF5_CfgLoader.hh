@@ -59,8 +59,7 @@ protected:
     /// configure nextSink
     void makeNext(const Setting& S) {
         if(S.exists("next")) nextSink = constructCfgObj<DataSink<T>>(S["next"]);
-        auto x = dynamic_cast<XMLProvider*>(nextSink);
-        if(x) addChild(x);
+        tryAdd(nextSink);
     }
     /// build XML output data
     void _makeXML(XMLTag& X) override {

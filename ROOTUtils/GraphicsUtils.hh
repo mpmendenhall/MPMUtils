@@ -35,9 +35,9 @@ void combo_draw(const vector<T*>& hs, const string& outpath, const char* opt = "
 }
 
 /// draw vertical line marker
-TLine* drawVLine(Float_t x, TVirtualPad* C, Int_t color = 4, Int_t style = 1);
+TLine* drawVLine(Float_t x, TVirtualPad* C = nullptr, Int_t color = 4, Int_t style = 1);
 /// draw horizontal line
-TLine* drawHLine(Float_t y, TVirtualPad* C, Int_t color = 4, Int_t style = 1);
+TLine* drawHLine(Float_t y, TVirtualPad* C = nullptr, Int_t color = 4, Int_t style = 1);
 /// draw circle
 TEllipse* drawCircle(float r, Int_t color = 1, Int_t lstyle = 1, float x0=0, float y0=0);
 /// draw shaded rectangle marker

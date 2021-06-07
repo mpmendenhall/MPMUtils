@@ -64,6 +64,13 @@ public:
     /// convenience for adding children
     template<class U>
     U* addChild(U* W) { if(W) { children.push_back(W); W->TreeWrap<T>::parent = this; } return W; }
+    /// convenience: attempt add if dynamically castable
+    template<class U>
+    TreeWrap<T>* tryAdd(U* W) {
+        auto c = dynamic_cast<TreeWrap<T>*>(W);
+        if(c) addChild(c);
+        return c;
+    }
 
 protected:
     TreeWrap<T>* parent = nullptr;  ///< parent node

@@ -15,7 +15,7 @@ using namespace libconfig;
 class PluginSaver: public SegmentSaver {
 public:
     /// Constructor, optionally with input filename
-    explicit PluginSaver(OutputManager* pnt, const string& nm = "PluginSaver", const string& inflName = "");
+    explicit PluginSaver(OutputManager* pnt, const Setting& S, const string& nm = "PluginSaver", const string& inflName = "");
     /// Destructor
     ~PluginSaver() { for(auto p: myPlugins) delete p; }
 
@@ -60,14 +60,12 @@ public:
     /// write items to current directory or subdirectory of provided
     TDirectory* writeItems(TDirectory* d = nullptr) override;
 
+protected:
+    /// initialize, Configure()ing from new settings or restored from file --- call in final class constructor
+    void init();
     /// Configure from libconfig object, dynamically loading plugins
     virtual void Configure(const Setting& S, bool skipUnknown = false);
-    /// Load configuration from named .cfg file
-    void LoadConfig(const string& fname);
-    /// Configure, loading from input file
-    void Reconfigure();
 
-protected:
     /// load and configure plugin by class name
     void buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown);
 

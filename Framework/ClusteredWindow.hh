@@ -119,7 +119,7 @@ public:
         }
     }
 
-    ordering_t cluster_dx;              ///< time spread for cluster identification
+    ordering_t cluster_dx{};            ///< time spread for cluster identification
     DataSink<cluster_t>* clustOut;      ///< clustered objects recipient
 
 protected:
@@ -139,15 +139,10 @@ public:
     typedef typename cluster_t::ordering_t ordering_t;
     typedef T sink_t;
 
-    /// Basic constructor
-    CBWindow(ordering_t cdx, ordering_t dw):
-    CB(cdx), OrderedWindow<cluster_t, ordering_t>(dw) {
-        CB::clustOut = this;
-    }
-
-    /// Special-purpose constructor (specialize me, including CB::clustOut = this)
+    /// Constuctor with pass-through args
     template<typename... Args>
-    explicit CBWindow(Args&&...) { throw std::logic_error("Unimplemented constructor"); }
+    explicit CBWindow(ordering_t dw, Args&&... a):
+    CB(std::forward<Args>(a)...), OrderedWindow<cluster_t, ordering_t>(dw) { CB::clustOut = this; }
 
     using CB::signal;
     /// special override for non-loopy signalling

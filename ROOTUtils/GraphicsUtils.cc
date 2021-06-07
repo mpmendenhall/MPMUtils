@@ -139,6 +139,7 @@ TPolyLine* makeEllipse(float x0, float y0, const double* iSigma) {
 }
 
 TLine* drawVLine(Float_t x, TVirtualPad* C, Int_t color, Int_t style) {
+    if(!C) C = gPad;
     Double_t xmin,ymin,xmax,ymax;
     C->Update();
     C->GetRangeAxis(xmin,ymin,xmax,ymax);
@@ -154,6 +155,7 @@ TLine* drawVLine(Float_t x, TVirtualPad* C, Int_t color, Int_t style) {
 }
 
 TLine* drawHLine(Float_t y, TVirtualPad* C, Int_t color, Int_t style) {
+    if(!C) C = gPad;
     Double_t xmin,ymin,xmax,ymax;
     C->Update();
     C->GetRangeAxis(xmin,ymin,xmax,ymax);
