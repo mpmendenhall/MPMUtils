@@ -165,12 +165,14 @@ add_custom_target(update_codeversion DEPENDS codeversion)
 ################
 
 # CXXFLAGS compile options, for c++ only.
+LIST(REMOVE_DUPLICATES CXXOPTS)
 message(STATUS "c++ compiler flags:")
 FOREACH(CXXOPT ${CXXOPTS})
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${CXXOPT}>)
     message(STATUS "\t${CXXOPT}")
 ENDFOREACH()
 
+LIST(REMOVE_DUPLICATES EXTLIBS)
 message(STATUS "Link libraries:")
 foreach(l ${EXTLIBS})
     message(STATUS "\t${l}")
