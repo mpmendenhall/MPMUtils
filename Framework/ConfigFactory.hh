@@ -60,13 +60,20 @@ BASE* constructCPCfgObj(const PARENT& P, const Setting& S, string defaultclass =
 class Configurable {
 public:
     /// Constructor
-    explicit Configurable(const Setting&) { }
-    /// Destructor
+    explicit Configurable(const Setting& S): Cfg(S) { }
+    /// Polymorphic Destructor
     virtual ~Configurable() { }
     /// Run configured operation
     virtual void run() { }
+
+protected:
+    const Setting& Cfg; ///< input configuration
 };
 
+/// register Configurable subclass
 #define REGISTER_CONFIGURABLE(NAME) static ObjectFactory<Configurable, NAME, const Setting&> the_##NAME##_CfgblFactory(#NAME);
+
+/// generate and register simple single-function Configurable --- follow by { brace enclosed } code block for run()
+#define REGISTER_EXECLET(NAME) class NAME: public Configurable { public: using Configurable::Configurable; void run() override; }; REGISTER_CONFIGURABLE(NAME) void NAME::run()
 
 #endif

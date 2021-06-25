@@ -6,13 +6,13 @@
 
 /// Data processing signals side-channel info
 enum datastream_signal_t {
-    DATASTREAM_INIT = 1,    ///< once-per-analysis initialization
-    DATASTREAM_START = 2,   ///< start of data block
-    DATASTREAM_CHECKPT = 3, ///< mid-calculation "checkpoint" request
+    DATASTREAM_INIT     = 1,    ///< once-per-analysis initialization
+    DATASTREAM_START    = 2,    ///< start of data block
+    DATASTREAM_CHECKPT  = 3,    ///< mid-calculation "checkpoint" request
 
-    DATASTREAM_FLUSH = 4,   ///< "breakpoint" data flush
-    DATASTREAM_REINIT = 5,  ///< initialize for new upstream source
-    DATASTREAM_END = 6      ///< once-per-analysis end of data
+    DATASTREAM_FLUSH    = 4,    ///< "breakpoint" data flush
+    DATASTREAM_REINIT   = 5,    ///< initialize for new upstream source
+    DATASTREAM_END      = 6     ///< once-per-analysis end of data
 };
 
 /// Base class passing signals

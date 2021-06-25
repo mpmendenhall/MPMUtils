@@ -2,7 +2,7 @@
 
 #include "OutputManager.hh"
 #include "PathUtils.hh"
-#include "StringManip.hh"
+#include "to_str.hh"
 #include <TFile.h>
 #include <TDirectory.h>
 #include <TH1.h>

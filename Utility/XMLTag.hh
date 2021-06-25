@@ -18,15 +18,15 @@ using std::ostream;
 class _XMLTag {
 public:
     /// Constructor
-    explicit _XMLTag(const string& nm = ""): name(nm) { }
+    explicit _XMLTag(const string& _name = ""): name(_name) { }
     /// Destructor
     virtual ~_XMLTag() { }
 
     /// Add a tag attribute
-    virtual void addAttr(const string& nm, const string& val) { attrs[nm] = val; }
+    virtual void addAttr(const string& attrnm, const string& val) { attrs[attrnm] = val; }
     /// Add a tag attribute
     template<typename C>
-    void addAttr(const string& nm, const C& val) { addAttr(nm, to_str(val)); }
+    void addAttr(const string& attrnm, const C& val) { addAttr(attrnm, to_str(val)); }
     /// Write output
     virtual void write(ostream& o, unsigned int ndeep = 0, const string& indent = "    ");
 
@@ -45,7 +45,7 @@ protected:
 class XMLTag: public TreeWrap<_XMLTag> {
 public:
     /// Constructor
-    explicit XMLTag(const string& nm = "") { name = nm; }
+    explicit XMLTag(const string& _name = "") { name = _name; }
     /// Write output
     void write(ostream& o, unsigned int ndeep = 0, const string& indent = "    ") override;
 };
@@ -68,10 +68,10 @@ public:
     /// build XML output
     virtual XMLTag* makeXML();
     /// Add a tag attribute
-    virtual void addAttr(const string& nm, const string& val) { xattrs[nm] = val; }
+    virtual void addAttr(const string& attrnm, const string& val) { xattrs[attrnm] = val; }
     /// Add a tag attribute
     template<typename C>
-    void addAttr(const string& nm, const C& val) { addAttr(nm, to_str(val)); }
+    void addAttr(const string& attrnm, const C& val) { addAttr(attrnm, to_str(val)); }
 
     string tagname;                     ///< this item's tag name
 

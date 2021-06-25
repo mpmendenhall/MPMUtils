@@ -1,6 +1,6 @@
 /// \file GraphUtils.cc
 #include "GraphUtils.hh"
-#include "StringManip.hh"
+#include "to_str.hh"
 #include <math.h>
 #include <TROOT.h>
 #include <TMath.h>

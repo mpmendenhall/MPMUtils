@@ -88,32 +88,33 @@ std::string popGlobalArg(const std::string& argname) {
     return s;
 }
 
-const std::string& optionalGlobalArg(const std::string& argname, const std::string& dflt, const std::string& help) {
+bool optionalGlobalArg(const std::string& argname, std::string& v, const std::string& help) {
     printf("* Optional argument '-%s <%s>' ", argname.c_str(), help.c_str());
     auto& GA = GlobalArgs();
     auto it = GA.find(argname);
     if(it == GA.end() || !it->second.size()) {
-        printf("defaulted to '%s'\n", dflt.c_str());
-        return dflt;
+        printf("defaulted to '%s'\n", v.c_str());
+        return false;
     }
     if(it->second.size() > 1) {
         printf(" specified too many times!\n");
         throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
     }
-    printf("-> '%s'\n", it->second[0].c_str());
-    return it->second[0];
+    v = it->second[0];
+    printf("-> '%s'\n", v.c_str());
+    return true;
 }
 
 bool optionalGlobalArg(const std::string& argname, double& v, const string& help) {
-    auto s = optionalGlobalArg(argname, to_str(v), help);
-    if(!s.size()) return false;
+    string s = to_str(v);
+    if(!optionalGlobalArg(argname, s, help)) return false;
     v = atof(s.c_str());
     return true;
 }
 
 bool optionalGlobalArg(const std::string& argname, int& v, const string& help) {
-    auto s = optionalGlobalArg(argname, to_str(v), help);
-    if(!s.size()) return false;
+    string s = to_str(v);
+    if(!optionalGlobalArg(argname, s, help)) return false;
     v = atoi(s.c_str());
     return true;
 }

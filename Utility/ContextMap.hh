@@ -166,8 +166,8 @@ inline void requiredGlobalArg(const std::string& argname, double& v, const std::
 inline void requiredGlobalArg(const std::string& argname, int& v, const std::string& help = "") { v = atoi(requiredGlobalArg(argname,help).c_str()); }
 /// pop one of multi-valued global arg (throw if none)
 std::string popGlobalArg(const std::string& argname);
-/// get optional argument with default
-const std::string& optionalGlobalArg(const std::string& argname, const std::string& dflt = "", const std::string& help = "");
+/// get optional argument, or leave with default
+bool optionalGlobalArg(const std::string& argname, std::string& v, const std::string& help = "");
 /// update value with optional global floating-point argument
 bool optionalGlobalArg(const std::string& argname, double& v, const std::string& help = "");
 /// update value with optional global floating-point argument

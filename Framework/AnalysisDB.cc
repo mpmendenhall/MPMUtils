@@ -6,7 +6,7 @@
 // -- Michael P. Mendenhall, 2016
 
 #include "AnalysisDB.hh"
-#include "StringManip.hh"
+#include "to_str.hh"
 #include "AnaGlobals.hh"
 #include "GetEnv.hh"
 #include "PathUtils.hh"
@@ -17,8 +17,8 @@ AnalysisDB* AnalysisDB::myDB = nullptr;
 
 string ADBfile() {
     string dbvar = PROJ_ENV_PFX+"_ANADB";
-    auto s = optionalGlobalArg("AnaDB", "$"+dbvar, "Analysis DB file");
-    auto dbfile = (s == "$"+dbvar? getEnv(dbvar) : s);
+    string res = "$"+dbvar;
+    auto dbfile = optionalGlobalArg("AnaDB", res, "Analysis DB file")? res : getEnv(dbvar);
 
     if(!fileExists(dbfile)) {
         printf("Initializing new AnaDB at '%s'\n", dbfile.c_str());
