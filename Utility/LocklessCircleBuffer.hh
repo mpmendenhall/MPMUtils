@@ -6,7 +6,7 @@
 #include <vector>
 #include <unistd.h>     // for usleep
 #include <pthread.h>
-#include <cassert>
+#include <stdexcept>
 #include <chrono>       // for timeouts
 
 /// pthreads function for launching read process
@@ -38,15 +38,14 @@ public:
 
     /// get pointer to next buffer space; nullptr if unavailable
     T* get_writepoint() {
-        assert(!writept);
-        if(writept || ready[write_idx]) { n_write_fails++; return nullptr; }
+        if(writept) throw std::logic_error("Unfinished write in progress");
+        if(ready[write_idx]) { ++n_write_fails; return nullptr; }
         return writept = &buf[write_idx];
     }
 
     /// get pointer to next buffer space, with timeout in s; nullptr if unavailable
     T* get_writepoint(double t_s) {
-        assert(!writept);
-        if(writept) return nullptr; // shouldn't happen!
+        if(writept) throw std::logic_error("Unfinished write in progress");
         auto t = std::chrono::steady_clock::now() + std::chrono::milliseconds(int(1e3*t_s));
         do {
             if(ready[write_idx]) { usleep(sleep_us); continue; }
@@ -58,8 +57,7 @@ public:
 
     /// call after completing access to write point, appending to processing queue
     void finish_write() {
-        assert(writept);
-        if(!writept) return;
+        if(!writept) throw std::logic_error("No write in progress");
         __sync_synchronize();
         ready[write_idx] = true;
         write_idx = (write_idx + 1)%buf.size();
