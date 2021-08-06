@@ -17,27 +17,27 @@ void Lorentz_boost::display() const {
 
 void Lorentz_boost::boost(double& v0, double& v3) const {
     double vv0 = v0;
-    double gamma = gammaM1 + 1;
-    v0 =  gamma*vv0 - beta*gamma*v3;
-    v3 = -beta*gamma*vv0 + gamma*v3;
+    double g = gamma();
+    v0 =  g*vv0 - beta*g*v3;
+    v3 = -beta*g*vv0 + g*v3;
 }
 
 void Lorentz_boost::unboost(double& v0, double& v3) const {
     double vv0 = v0;
-    double gamma = gammaM1 + 1;
-    v0 =  gamma*vv0 + beta*gamma*v3;
-    v3 =  beta*gamma*vv0 + gamma*v3;
+    double g = gamma();
+    v0 =  g*vv0 + beta*g*v3;
+    v3 =  beta*g*vv0 + g*v3;
 }
 
 void Lorentz_boost::operator*=(const Lorentz_boost& b) {
     double gm1 = (gammaM1*b.gammaM1 + gammaM1 + b.gammaM1)*(1 + beta * b.beta) + beta * b.beta;
-    beta = (beta + b.beta)*(b.gammaM1 + 1)*(gammaM1 + 1)/(gm1 + 1);
+    beta = (beta + b.beta) * b.gamma() * gamma() / (gm1 + 1);
     gammaM1 = gm1;
 }
 
 void Lorentz_boost::operator/=(const Lorentz_boost& b) {
     double gm1 = (gammaM1*b.gammaM1 + gammaM1 + b.gammaM1)*(1 - beta * b.beta) - beta * b.beta;
-    beta = (beta - b.beta)*(b.gammaM1 + 1)*(gammaM1 + 1)/(gm1 + 1);
+    beta = (beta - b.beta) * b.gamma() * gamma() / (gm1 + 1);
     gammaM1 = gm1;
 }
 
@@ -50,6 +50,37 @@ Lorentz_boost Lorentz_boost::to_projectile_CM(double& KE, double mProj, double m
     KE = gamma*KE + L.gammaM1*M - L.beta*gamma*pL;
     return L;
 }
+
+// check branch consistency
+double pz_branch(double E, double m, double dz, double pz, const Lorentz_boost& LB) {
+    double pp = sqrt(pow(LB.gamma()*(E - LB.beta*pz), 2.) -m*m);
+    return LB.gamma()*(pz - LB.beta*E) - dz*pp;
+}
+
+double Lorentz_boost::pz_CM_from_lab_direction(double E_CM, double m, double dz_lab) const {
+    // kinematics equations -> a*p_z^2 + b*p_z + c = 0
+    auto gm2 = gamma()*gamma();
+    auto b2 = beta*beta;
+    auto dz2 = dz_lab * dz_lab;
+
+    double a = -gm2*(1-dz2*b2);
+    double b = 2 * beta * gm2 * (1-dz2) * E_CM;
+    double c = gm2*(dz2-b2)*E_CM*E_CM - dz2*m*m;
+    double u = sqrt(b*b - 4*a*c);
+
+    // calculate two solution branches for quadratic; choose consistent one
+    double pz1 = (u - b)/(2*a);
+    double pz2 = (-u - b)/(2*a);
+    double pb1 = pz_branch(E_CM, m, dz_lab, pz1, *this);
+    double pb2 = pz_branch(E_CM, m, dz_lab, pz2, *this);
+
+    return fabs(pb1) < fabs(pb2)? pz1 : pz2;
+}
+
+double Lorentz_boost::dz_CM_from_lab_direction(double p_CM, double m, double dz_lab) const {
+    return pz_CM_from_lab_direction(sqrt(p_CM * p_CM + m * m), m,  dz_lab)/p_CM;
+}
+
 
 void testRelKin() {
     double TKE = 100;

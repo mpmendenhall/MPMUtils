@@ -59,6 +59,9 @@ public:
     double gammaM1 = 0; ///< boost factor gamma - 1
     double beta = 0;    ///< (signed) velocity/c
 
+    /// get gamma
+    inline double gamma() const { return gammaM1 + 1; }
+
     //----- define boost -----//
 
     /// Default identity boost constructor
@@ -94,15 +97,22 @@ public:
 
     //----- apply boost -----//
 
-    /// boost 4-vector (v0, v1, ?, ?) in (1,0,0) direction; return boosted v0
+    /// boost 4-vector (v0, v1, ?, ?) in (1,0,0) direction
     void boost(double& v0, double& v1) const;
-    /// boost 4-vector (v0, v1, ?, ?) in (-1,0,0) direction; return boosted v0
+    /// boost 4-vector (v0, v1, ?, ?) in (-1,0,0) direction
     void unboost(double& v0, double& v1) const;
 
     /// boosted momentum component given p_|| and total p^2
     double boost_p(double m, double px, double p2) const { double E = sqrt(p2+m*m); boost(E, px); return px; }
     /// boosted momentum component given p_|| and total p^2
     double unboost_p(double m, double px, double p2) const { double E = sqrt(p2+m*m); unboost(E, px); return px; }
+
+    /// given lab-frame unit direction component d_z and CM-frame energy, calculate CM frame momentum component p_z
+    /// (useful in 2-body CM systems where CM-frame E,|p| is known, and lab direction is measured)
+    double pz_CM_from_lab_direction(double E_CM, double m, double dz_lab) const;
+
+    /// given lab-frame unit direction component d_z and CM-frame |p|, calculate CM frame unit direction d_z
+    double dz_CM_from_lab_direction(double p_CM, double m, double dz_lab) const;
 
     /// print desciption to stdout
     void display() const;

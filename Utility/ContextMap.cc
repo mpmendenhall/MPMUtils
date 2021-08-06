@@ -69,6 +69,16 @@ size_t numGlobalArg(const std::string& argname) {
     return it == GlobalArgs().end()? 0 : it->second.size();
 }
 
+bool wasArgGiven(const std::string& argname, const std::string& help) {
+    printf("* Argument '+%s' [%s] ", argname.c_str(), help.c_str());
+    if(numGlobalArg(argname)) {
+        printf("enabled\n");
+        return true;
+    }
+    printf("disabled\n");
+    return false;
+}
+
 const std::string& requiredGlobalArg(const std::string& argname, const std::string& help) {
     printf("* Required argument '-%s <%s>' ", argname.c_str(), help.c_str());
     auto& v = GlobalArgs()[argname];
