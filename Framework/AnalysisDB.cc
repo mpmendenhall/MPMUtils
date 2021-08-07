@@ -7,7 +7,7 @@
 
 #include "AnalysisDB.hh"
 #include "to_str.hh"
-#include "AnaGlobals.hh"
+#include "GlobalArgs.hh"
 #include "GetEnv.hh"
 #include "PathUtils.hh"
 #include <time.h>

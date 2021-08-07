@@ -7,7 +7,6 @@
 #include <utility>
 #include <map>
 #include <vector>
-#include <string>
 #include <stdexcept>
 #include <typeinfo>
 
@@ -175,31 +174,5 @@ protected:
     /// Deregister on destruction
     virtual ~s_context_singleton_ptr() { ContextMap::unset<T,s_context_singleton_ptr>(); }
 };
-
-/// string-tagged arguments
-inline std::map<std::string, std::vector<std::string>>& GlobalArgs() { return ContextMap::getDefault<std::map<std::string, std::vector<std::string>>>(); }
-
-/// load command-line arguments
-void loadGlobalArgs(int argc, char** argv);
-/// get number of times argument was specified
-size_t numGlobalArg(const std::string& argname);
-/// check whether "+argname" given, with status message printout
-bool wasArgGiven(const std::string& argname, const std::string& help);
-/// get required single-valued command line argument or throw error
-const std::string& requiredGlobalArg(const std::string& argname, const std::string& help = "");
-/// get required single-valued command line argument or throw error
-inline void requiredGlobalArg(const std::string& argname, double& v, const std::string& help = "") { v = atof(requiredGlobalArg(argname,help).c_str()); }
-/// get required single-valued command line argument or throw error
-inline void requiredGlobalArg(const std::string& argname, int& v, const std::string& help = "") { v = atoi(requiredGlobalArg(argname,help).c_str()); }
-/// pop one of multi-valued global arg (throw if none)
-std::string popGlobalArg(const std::string& argname);
-/// get optional argument, or leave with default
-bool optionalGlobalArg(const std::string& argname, std::string& v, const std::string& help = "");
-/// update value with optional global floating-point argument
-bool optionalGlobalArg(const std::string& argname, double& v, const std::string& help = "");
-/// update value with optional global floating-point argument
-bool optionalGlobalArg(const std::string& argname, int& v, const std::string& help = "");
-/// debugging printout of global args
-void displayGlobalArgs();
 
 #endif
