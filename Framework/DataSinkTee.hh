@@ -30,7 +30,7 @@ public:
     ~DataSinkTee() { for(auto s: sinks) delete s; }
 
     /// take instance of object
-    void push(const sink_t& x) override { for(auto s: sinks) s->push(x); }
+    void push(sink_t& x) override { for(auto s: sinks) s->push(x); }
     /// accept data flow signal
     void signal(datastream_signal_t sig) override { for(auto s: sinks) s->signal(sig); }
 

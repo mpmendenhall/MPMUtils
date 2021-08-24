@@ -21,7 +21,7 @@ using std::priority_queue;
 
 /// Sort slightly-out-of-order items into proper order
 template<class T0, typename ordering_t = typename T0::ordering_t>
-class OrderingQueue: public DataSink<T0>, public priority_queue<T0, vector<T0>, reverse_ordering_deref<T0, ordering_t>> {
+class OrderingQueue: public DataSink<const T0>, public priority_queue<T0, vector<T0>, reverse_ordering_deref<T0, ordering_t>> {
 public:
 
     /// parent type
@@ -118,7 +118,7 @@ protected:
 /// Ordering queue passing directly to DataSink
 template<
     class TNext,
-    typename T0 = typename TNext::sink_t,
+    typename T0 = typename std::remove_const<typename TNext::sink_t>::type,
     typename ordering_t = typename T0::ordering_t
 >
 class InlineOrderingQueue: public OrderingQueue<T0, ordering_t> {

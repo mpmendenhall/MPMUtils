@@ -8,7 +8,6 @@
 #include <cmath> // for fabs
 #include <vector>
 using std::vector;
-#include <cstdio>
 
 /// "Cluster" base class
 template<class _T, typename _ordering_t = typename _T::ordering_t>
@@ -80,7 +79,7 @@ protected:
 
 /// Cluster builder
 template<class C>
-class ClusterBuilder: public DataSink<typename C::T> {
+class ClusterBuilder: public DataSink<const typename C::T> {
 public:
     typedef C cluster_t;
     typedef typename cluster_t::T T;
@@ -109,7 +108,6 @@ public:
     void push(const T& o) override {
         ordering_t t(o);
         if(!(t_prev <= t)) {
-            printf("\n*** t_prev = %g = %g + %g\n", t_prev, t, t_prev - t);
             dispObj(o);
             throw std::runtime_error("Out-of-order item received for clustering");
         }
@@ -122,7 +120,7 @@ public:
     }
 
     ordering_t cluster_dx{};            ///< time spread for cluster identification
-    DataSink<cluster_t>* clustOut;      ///< clustered objects recipient
+    DataSink<const cluster_t>* clustOut;///< clustered objects recipient
 
 protected:
     /// examine and decide whether to include cluster

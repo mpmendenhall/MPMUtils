@@ -65,7 +65,7 @@ protected:
 
 /// Cacheing HDF5 table writer
 template<typename T>
-class HDF5_Table_Writer: virtual public DataSink<T> {
+class HDF5_Table_Writer: virtual public DataSink<const T> {
 public:
     /// Constructor, from name of table and struct offsets/sizes
     HDF5_Table_Writer(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(), hsize_t nc = 1024, int cmp = 9): Tspec(ts), nchunk(nc), compress(cmp) { }

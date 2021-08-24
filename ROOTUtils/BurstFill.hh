@@ -32,7 +32,7 @@ protected:
     typedef ClusterBuilder<cluster_t> super;
 
     /// pre-ordering buffer
-    InlineOrderingQueue<DataSink<ordbin_t>> OQ;
+    InlineOrderingQueue<DataSink<const ordbin_t>> OQ;
 
     /// fill from cluster
     bool checkCluster(cluster_t& o) override {

@@ -51,14 +51,14 @@ public:
         nextSink->signal(DATASTREAM_END);
     }
 
-    DataSink<T>* nextSink = nullptr;    ///< next step in chain --- owned by this
+    DataSink<const T>* nextSink = nullptr;  ///< next step in chain --- owned by this
     int nLoad = -1;                     ///< maximum events to load
     hsize_t fRows = 0;                  ///< number of rows in input file
 
 protected:
     /// configure nextSink
     void makeNext(const Setting& S) {
-        if(S.exists("next")) nextSink = constructCfgObj<DataSink<T>>(S["next"]);
+        if(S.exists("next")) nextSink = constructCfgObj<DataSink<const T>>(S["next"]);
         tryAdd(nextSink);
     }
     /// build XML output data

@@ -31,7 +31,7 @@ public:
     typedef T sink_t;
 
     /// take instance of object
-    virtual void push(const sink_t&) = 0;
+    virtual void push(sink_t&) = 0;
 };
 
 #endif

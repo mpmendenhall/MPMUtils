@@ -32,7 +32,7 @@ public:
 
 /// Flow-through analysis on a ``window'' of ordered objects
 template<class T, typename _ordering_t = typename std::remove_pointer<T>::type::ordering_t>
-class OrderedWindow: protected deque<T>, public DataSink<T> {
+class OrderedWindow: protected deque<T>, public DataSink<const T> {
 public:
     /// ordering type
     typedef _ordering_t ordering_t;

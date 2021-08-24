@@ -49,9 +49,9 @@ public:
         /// constructor
         MOInput(Collator& _M): M(_M), n(M.add_input()) { }
         /// DataSink push
-        void push(const T& o) override { M.push(n,o); }
+        void push(T& o) override { M.push(n,o); }
         /// bulk push
-        void push(const std::vector<T>& os) { M.push(n,os); }
+        void push(std::vector<T>& os) { M.push(n,os); }
 
     protected:
         Collator& M;    ///< orderer
