@@ -1,9 +1,10 @@
 /// \file testPolynomial.cc Test of polynomial manipulation
 
+#include "ConfigFactory.hh"
+
 #include "Polynomial.hh"
 #include "PolyEval.hh"
 #include "PolyFit.hh"
-#include "CodeVersion.hh"
 #include "NGrid.hh"
 #include "BBox.hh"
 #include "TestOperators.hh"
@@ -63,9 +64,7 @@ void addSimple(const P& p, vector<T>& v, const Cvec& c) {
     }
 }
 
-int main(int, char**) {
-    CodeVersion::display_code_version();
-
+REGISTER_EXECLET(testPolynomial) {
     // array addition Semigroup
     SGArray_t<3> SGa3_a({1,2,3});
     SGArray_t<3> SGa3_b({4,5,6});
@@ -177,6 +176,4 @@ int main(int, char**) {
     //AbstractPolynomial<Rational, SemigroupPlus<int>> Pr({{1,2}, {3,{4,5}}});
     //Pr += Rational(1,2);
     //std::cout << Pr << Pr.pow(5) << "\n\n\n";
-
-    return EXIT_SUCCESS;
 }

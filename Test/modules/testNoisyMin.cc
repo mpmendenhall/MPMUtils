@@ -1,6 +1,7 @@
 /// \file testNoisyMin.cc Test NoisyMin algorithm
 
-#include "CodeVersion.hh"
+#include "ConfigFactory.hh"
+#include "GlobalArgs.hh"
 #include "NoisyMin.hh"
 
 #include <iostream>
@@ -76,25 +77,13 @@ void fitFile(const char* fname) {
 }
 
 
-int main(int argc, char** argv) {
-    if(argc != 2) return EXIT_FAILURE;
-    fitFile(argv[1]);
-    return EXIT_SUCCESS;
+REGISTER_EXECLET(testNoisyMin) {
+    fitFile(requiredGlobalArg("f", "fit data file").c_str());
 }
-
-
-
-
-
-
-
-
-
 
 
 /*
 int main(int, char**) {
-    CodeVersion::display_code_version();
 
     // noisy evaluation function
     //Quadratic<NVAR> Q(vector<double>({1.,2.,3.,4.,5.,6.,7.,8.,9.,10.}));

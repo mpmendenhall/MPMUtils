@@ -1,19 +1,20 @@
 /// \file testFiniteGroup.cc Test of finite group code
 
+#include "ConfigFactory.hh"
+#include "GlobalArgs.hh"
+
 #include "FiniteGroup.hh"
 #include "JankoGroup.hh"
 #include "MathieuGroup.hh"
 #include "PermutationGroup.hh"
 #include "CyclicGroup.hh"
 #include "Stopwatch.hh"
-#include "CodeVersion.hh"
 #include <stdlib.h>
 
-int main(int argc, char** argv) {
-    CodeVersion::display_code_version();
+REGISTER_EXECLET(testFiniteGroup) {
 
     int n = 999;
-    if(argc > 1) n = atoi(argv[1]);
+    optionalGlobalArg("n", n, "number of tests");
 
     if(n) {
         printf("\n\n\n----------- C_6 -------------\n\n");
@@ -81,6 +82,4 @@ int main(int argc, char** argv) {
         ConjugacyDecomposition<MathieuGroup::M22_genspan_t> CD_M22(MathieuGroup::M22());
         CD_M22.display();
     }
-
-    return EXIT_SUCCESS;
 }

@@ -1,11 +1,10 @@
 /// \file testRelKin.cc Test of relativistic kinematics calcs
 
-#include "CodeVersion.hh"
+#include "ConfigFactory.hh"
 #include "RelKin.hh"
 #include <stdio.h>
 
-int main(int, char**) {
-    CodeVersion::display_code_version();
+REGISTER_EXECLET(testKinematics) {
 
     printf("\n");
     testRelKin();
@@ -30,5 +29,4 @@ int main(int, char**) {
     (L0.inverse() * L0).display();
     (L0 / L0).display();
 
-    return EXIT_SUCCESS;
 }

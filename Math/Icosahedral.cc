@@ -1,6 +1,6 @@
 /// \file Icosahedral.cc
 // -- Michael P. Mendenhall, 2019
-/*
+
 #include "Icosahedral.hh"
 #include <algorithm>
 #include <iostream>
@@ -39,6 +39,8 @@ namespace Icosahedral {
 
     indexel_t::indexel_t(size_t ii): i(ii), o(Rs.element(i)) { }
 
+    /* circular definition with Nav...
+
     template<typename T>
     faceset_t<T>::faceset_t(size_t cnum) {
         // generators conjugacy group: rotation element around each face
@@ -68,10 +70,12 @@ namespace Icosahedral {
     const faceset_t<f12_t> dodFaces(1);
     const faceset_t<f15_t> flipAxes(1);
     const faceset_t<f20_t> icoFaces(0);
+    */
 
     /// arbitrary point selecting representative ``fundamental'' domain
     const axis_t fd_p0{{half, half, half*20}};
 
+    /*
     Navigator::Navigator():
     DecisionTree(n_elements, 15, [](size_t i, size_t j){ return axpart(Rs.element(i) * fd_p0, j); }) { }
     const Navigator Nav;
@@ -85,9 +89,11 @@ namespace Icosahedral {
         }
         throw std::logic_error("No supplied point in fundamental domain!");
     }
+
     const f12_t Navigator::v12 = selectFundamental(dodFaces);
     const f15_t Navigator::v15 = selectFundamental(flipAxes);
     const f20_t Navigator::v20 = selectFundamental(icoFaces);
+    */
 }
 
 void Icosahedral::describe() {
@@ -124,6 +130,7 @@ void Icosahedral::describe() {
 
     cout << "Elements of orders 6 and 10 combine parity inversion with the order-3 and order-5 rotations.\n\n";
 
+    /*
     cout << "A point can be classified into one of 120 domains covering the sphere\n";
     cout << "using a decision tree based on direction relative to flip axes:\n";
     Nav.display();
@@ -148,7 +155,7 @@ void Icosahedral::describe() {
         cout << "\n";
     }
     cout << "\n";
+    */
 
     cout << "-------------------------------------------------------\n\n";
 }
-*/

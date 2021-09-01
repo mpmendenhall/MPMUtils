@@ -1,6 +1,6 @@
 /// \file testFitters.cc Test of fit routines
 
-#include "CodeVersion.hh"
+#include "ConfigFactory.hh"
 #include "Polynomial.hh"
 #include "PolyEval.hh"
 #include "PolyFit.hh"
@@ -12,9 +12,7 @@ using std::cout;
 
 typedef double precision_t;
 
-int main(int, char**) {
-    CodeVersion::display_code_version();
-
+REGISTER_EXECLET(testFitters) {
     //////////////////////////////////////////////
     // all third-order 3-variable terms polynomial
 
@@ -81,6 +79,4 @@ int main(int, char**) {
     LMC.solve(vy);
     PF1.load(LMC);
     cout << PF1.P << "\n";
-
-    return EXIT_SUCCESS;
 }

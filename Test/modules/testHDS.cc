@@ -1,12 +1,11 @@
 /// \file testHDS.cc Test of Halfedge Data Structure
 // Michael P. Mendenhall, 2019
 
+#include "ConfigFactory.hh"
 #include "HalfedgeDS.hh"
-#include "CodeVersion.hh"
 #include <stdlib.h>
 
-int main(int, char**) {
-    CodeVersion::display_code_version();
+REGISTER_EXECLET(testHDS) {
 
     HalfedgeDS H(3);
     H.display(true);
@@ -18,6 +17,4 @@ int main(int, char**) {
             H.split_corners(f);
 
     H.display(true);
-
-    return EXIT_SUCCESS;
 }

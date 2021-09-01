@@ -1,9 +1,6 @@
 /// \file testQuadratic.cc Test quadratic manipulations
 
-int main(int, char**) { return 0; }
-
-/*
-#include "CodeVersion.hh"
+#include "ConfigFactory.hh"
 #include "Quadratic.hh"
 #include "QuadraticT.hh"
 #include "VisrGL.hh"
@@ -13,6 +10,9 @@ using std::vector;
 #include <TPad.h>
 #include <TRandom3.h>
 
+VisDriver* theVis = nullptr;
+
+/*
 /// Plot out ellipse slice in specified axis plane from columns basis m
 TGraph vEllipse(const gsl_matrix* m, double x0, double y0, size_t ax = 0, size_t ay = 1, int npts = 100) {
     TGraph g(npts+1);
@@ -34,6 +34,7 @@ TGraph vEllipse(const gsl_matrix* m, double x0, double y0, size_t ax = 0, size_t
     gsl_vector_free(v2);
     return g;
 }
+*/
 
 /// show 3-ellipse in vsr from principle axis columns
 void visEllipse(const gsl_matrix* m, size_t ax0 = 0, size_t ax1 = 1, size_t ax2 = 2) {
@@ -56,14 +57,14 @@ void visEllipse(const gsl_matrix* m, size_t ax0 = 0, size_t ax1 = 1, size_t ax2 
         auto a1 = axperms[na][1];
         auto a2 = axperms[na][2];
 
-        vsr::vec3 x = {gsl_matrix_get(m, ax0, a), gsl_matrix_get(m, ax1, a), gsl_matrix_get(m, ax2, a)};
+        VisDriver::vec3 x = {gsl_matrix_get(m, ax0, a), gsl_matrix_get(m, ax1, a), gsl_matrix_get(m, ax2, a)};
         auto mx = x;
         for(auto& c: mx) c = -c;
-        //vsr::setColor(1,0,0);
-        vsr::line(mx, x);
+        //theVis->setColor(1,0,0);
+        theVis->line(mx, x);
 
-        //vsr::setColor(0,0,1,0.3);
-        vector<vsr::vec3> vtxs;
+        //theVis->setColor(0,0,1,0.3);
+        vector<VisDriver::vec3> vtxs;
         int nsp = 11;
         for(int k=0; k < nsp*npts; k++) {
             auto z = (k-npts*nsp/2.)*2/(nsp*npts);
@@ -75,7 +76,7 @@ void visEllipse(const gsl_matrix* m, size_t ax0 = 0, size_t ax1 = 1, size_t ax2 
             x = {gsl_vector_get(v2, 0), gsl_vector_get(v2, 1), gsl_vector_get(v2, 2)};
             vtxs.push_back(x);
         }
-        vsr::lines(vtxs, true);
+        theVis->lines(vtxs, true);
     }
 }
 
@@ -103,16 +104,16 @@ void visProj(QuadraticCholesky& QC, int ax0 = 0, int ax1 = 1, int ax2 = 2) {
         EAP.projectL(QC.L);
         displayM(EAP.P);
 
-        vsr::setColor(1,0,0);
-        vsr::vec3 x = {};
+        theVis->setColor(1,0,0);
+        VisDriver::vec3 x = {};
         x[a] = 1;
         x[a] *= QC.projLength(x);
-        vsr::vec3 x2 = x;
+        VisDriver::vec3 x2 = x;
         x2[a] *= -1;
-        vsr::line(x2, x);
+        theVis->line(x2, x);
 
-        vsr::setColor(0,1,0);
-        vector<vsr::vec3> vtxs;
+        theVis->setColor(0,1,0);
+        vector<VisDriver::vec3> vtxs;
         for(int k=0; k < npts; k++) {
             gsl_vector_set(v, 0, vc[k]);
             gsl_vector_set(v, 1, vs[k]);
@@ -123,19 +124,12 @@ void visProj(QuadraticCholesky& QC, int ax0 = 0, int ax1 = 1, int ax2 = 2) {
             x[a2] = gsl_vector_get(v2, 1);
             vtxs.push_back(x);
         }
-        vsr::lines(vtxs, true);
+        theVis->lines(vtxs, true);
     }
 
 }
 
-int main(int, char**) {
-    CodeVersion::display_code_version();
-
-    GLVisDriver VD;
-    VD.initWindow("Ellipses!");
-    vsr::theDriver = &VD;
-    doGlutLoop();
-
+REGISTER_EXECLET(testQuadratic) {
 
     QuadraticT<3> R(vector<double>({1.,2.,3.,4.,5.,6.,7.,8.,9.,10.}));
     R *= 0.5;
@@ -153,6 +147,18 @@ int main(int, char**) {
     QuadraticT<3>::evalTerms(x0, cf);
     for(auto x: cf) printf("\t%g",x);
     printf("\n");
+
+    return;
+
+    GLVisDriver theGLDr;    ///< OpenGL-based visualization driver
+    if(GLVisDriver::hasGL) {
+        theGLDr.scale = 0.1;
+        theVis = &theGLDr;
+        theGLDr.windowTitle = "Ellipses!";
+        theGLDr.doGlutLoop();
+        theGLDr.display();
+    }
+    if(!theVis) throw std::logic_error("no valid visualizer");
 
     TRandom3 TR;
 
@@ -199,28 +205,25 @@ int main(int, char**) {
             displayM(QP.USi);
             displayM(QP2.USi);
 
-            vsr::startRecording();
-            vsr::clearWindow();
+            theVis->startRecording();
+            theVis->clearWindow();
 
-            vsr::setColor(0,0,1,0.3);
+            theVis->setColor(0,0,1,0.3);
             visEllipse(QP.USi);
 
-            //vsr::setColor(0,1,0,0.3);
+            //theVis->setColor(0,1,0,0.3);
             //visEllipse(QP2.USi);
 
-            //vsr::setColor(1,0,0,0.3);
+            //theVis->setColor(1,0,0,0.3);
             //visEllipse(QPc.USi);
 
             visProj(QC);
 
-            vsr::stopRecording();
+            theVis->stopRecording();
 
-            vsr::pause();
+            theVis->pause();
         } catch(...) { printf("Ouch, try again!\n"); }
 
     }
 
-    endGlutLoop();
-    return EXIT_SUCCESS;
 }
-*/

@@ -5,8 +5,6 @@
 #ifndef ICOSAHEDRAL_HH
 #define ICOSAHEDRAL_HH
 
-/*
-
 #include "Matrix.hh"
 #include "PhiField.hh"
 #include "ModularField.hh"
@@ -23,6 +21,9 @@ inline PhiField unit<PhiField>() { return PhiField::one(); }
 /// Schoenflies I_h = I x C_2 (= A_5 x Z_2), Coxeter [5,3]
 namespace Icosahedral {
     using std::array;
+
+    /// print description of icosahedral symmetry to stdout
+    void describe();
 
     /// Symmetry group element
     typedef Matrix<3,3,PhiField> elem_t;
@@ -122,9 +123,7 @@ namespace Icosahedral {
     /// cos theta for rotation
     inline PhiField cosTheta(const elem_t& M) { return (M.trace()-1)/2; }
 
-    /// print description of icosahedral symmetry to stdout
-    void describe();
-
+    /*
     /// Point classification into 120 domains (corresponding to enumerated group elements), cut by 15 dividing hemispheres
     /// arbitrary choice of which domain is "fundamental"
     class Navigator: public DecisionTree {
@@ -186,8 +185,8 @@ namespace Icosahedral {
         /// position
         Vec<3,T> v() const { return Matrix<3,3,T>(Rs.element(n))*v0(); }
     };
+    */
 }
-*/
 
 #endif
 

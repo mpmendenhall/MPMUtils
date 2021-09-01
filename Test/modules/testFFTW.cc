@@ -1,7 +1,7 @@
 /// \file testFFTW.cc FFTW3 wrapper tests
 
 #include "FFTW_Convolver.hh"
-#include "CodeVersion.hh"
+#include "ConfigFactory.hh"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -146,8 +146,7 @@ void test_roundtrips(const V& v) {
     test_roundtrip<DST_IV_Plan<calcs_t>>(v);
 }
 
-int main(int, char**) {
-    CodeVersion::display_code_version();
+REGISTER_EXECLET(testFFTW) {
     printf("\nsizeof(calcs_t) = %zu, min_exponent = %i\n\n", sizeof(calcs_t),
            std::numeric_limits<calcs_t>::min_exponent);
 
@@ -233,6 +232,4 @@ int main(int, char**) {
         GDF.convolve(delta2);
         display(delta2);
     }
-
-    return EXIT_SUCCESS;
 }

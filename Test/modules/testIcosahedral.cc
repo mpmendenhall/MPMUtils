@@ -2,17 +2,13 @@
 // -- Michael P. Mendenhall, 2019
 
 #include "Icosahedral.hh"
-#include "CodeVersion.hh"
+#include "ConfigFactory.hh"
 #include <stdlib.h>
 
-int main(int, char**) {
-    CodeVersion::display_code_version();
-/*
-    theSieve().display();
+REGISTER_EXECLET(testIcosahedral) {
+
     using namespace Icosahedral;
     describe();
-
-    //return EXIT_SUCCESS;
 
     set<cayley_t::elem_t> S;
     S = {0,1};
@@ -30,6 +26,4 @@ int main(int, char**) {
         i += c.second.size();
     }
     std::cout << "(total " << i << " elements).\n";
-*/
-    return EXIT_SUCCESS;
 }

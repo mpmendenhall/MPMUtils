@@ -39,13 +39,35 @@ void pixel_t::set256(const color::rgb& crgb, bool fg) {
 
 const Compositor Compositor::Cdefault;
 
+void VPixelBuffer::hline(rowcol_t x0, int dx, pixel_t p, const Compositor& C) {
+    if(dx < 0) {
+        x0.second += dx;
+        dx = -dx;
+    }
+    while(dx--) {
+        cput(x0, p, C);
+        x0.second++;
+    }
+}
+
+void VPixelBuffer::vline(rowcol_t x0, int dy, pixel_t p, const Compositor& C) {
+    if(dy < 0) {
+        x0.first += dy;
+        dy = -dy;
+    }
+    while(dy--) {
+        cput(x0, p, C);
+        x0.first++;
+    }
+}
+
 void pixelarray_t::composite(rowcol_t x0, const pixelarray_t& o, const Compositor& C) {
     int rmax = std::min(dim.first, o.dim.first - x0.first);
     int cmax = std::min(dim.second, o.dim.second - x0.second);
     rowcol_t x;
     for(x.first = x0.first; x.first < rmax; ++x.first) {
         for(x.second = x0.second; x.second < cmax; ++x.second) {
-            (*this)(x) = C((*this)(x), o(x-x0), x);
+            cput(x, o(x-x0), C);
         }
     }
 }
@@ -71,7 +93,7 @@ string pixelarray_t::render(const string& newline, char cnull) const {
 //----------------------------------
 //----------------------------------
 
-TermPic::TermPic(const string& s) {
+pixelmap_t::pixelmap_t(const string& s) {
     int row = 0;
     int col = 0;
     for(auto c: s) {
@@ -80,7 +102,7 @@ TermPic::TermPic(const string& s) {
     }
 }
 
-void TermPic::drawFrame(rowcol_t p0, rowcol_t p1, const pixel_t& c, const pixel_t& h, const pixel_t& v) {
+void pixelmap_t::drawFrame(rowcol_t p0, rowcol_t p1, const pixel_t& c, const pixel_t& h, const pixel_t& v) {
     drawRow(h, p0.first, p0.second+1, p1.second-1);
     drawRow(h, p1.first, p0.second+1, p1.second-1);
 
@@ -92,7 +114,7 @@ void TermPic::drawFrame(rowcol_t p0, rowcol_t p1, const pixel_t& c, const pixel_
     (*this)[p0] = (*this)[p1] = c;
 }
 
-void TermPic::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) const {
+void pixelmap_t::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) const {
 
     auto p1 = p0 + v.dim;
 
@@ -104,18 +126,18 @@ void TermPic::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) const {
             it = lower_bound(p0);
             continue;
         }
-        v(it->first - p0) = C(v(it->first - p0), it->second, it->first - p0);
+        v.cput(it->first - p0, it->second, C);
         ++it;
     }
 }
 
-rectangle_t TermPic::getBounds() const {
+rectangle_t pixelmap_t::getBounds() const {
     auto b = null_rectangle;
     for(auto& kv: *this) b.include(kv.first);
     return b;
 }
 
-void TermPic::display(pixel_t p_default) const {
+void pixelmap_t::display(pixel_t p_default) const {
     int row = 0;
     int col = 0;
 
@@ -156,6 +178,13 @@ void TermPic::display(pixel_t p_default) const {
 }
 
 //----------------------
+
+pixelarray_t TermViewport::toArray() const {
+    auto bb = getBounds();
+    pixelarray_t a(bb.dim());
+    getView(-bb.first, a);
+    return a;
+}
 
 rectangle_t MultiViewport::getBounds() const {
     auto b = null_rectangle;

@@ -1,6 +1,8 @@
 /// \file testFiber.cc Demonstration of boost::fiber
 // -- Michael P. Mendenhall, 2019
 
+#include "ConfigFactory.hh"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string>
@@ -30,7 +32,7 @@ void countdown(const string& s, unsigned int n) {
     }
 }
 
-int main(int, char**) {
+REGISTER_EXECLET(testFiber) {
 
     // optional: set scheduler. This is the default:
     boost::fibers::use_scheduling_algorithm< boost::fibers::algo::round_robin >();
@@ -104,6 +106,4 @@ int main(int, char**) {
     f5.join();
     f6.join();
     f7.join();
-
-    return EXIT_SUCCESS;
 }

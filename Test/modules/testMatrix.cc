@@ -1,6 +1,6 @@
 /// \file testMatrix.cc Test matrix operations
 
-#include "CodeVersion.hh"
+#include "ConfigFactory.hh"
 #include "Rational.hh"
 #include "Matrix.hh"
 #include "PhiField.hh"
@@ -150,13 +150,9 @@ void mtest(bool xact = false, bool do_crude = false, size_t nTrial = 5000) {
 
 }
 
-int main(int, char**) {
-    CodeVersion::display_code_version();
-
+REGISTER_EXECLET(testMatrix) {
     mtest<float,  11>(false, false, 100000);
     mtest<double, 11>(false, false, 100000);
     mtest<Rational, 6>(true);
     mtest<PhiField, 3>(true);
-
-    return EXIT_SUCCESS;
 }

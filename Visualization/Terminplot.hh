@@ -9,10 +9,10 @@
 namespace Terminart {
 
     /// Base class plot axis
-    class PlotAxis {
+    class PlotAxis: public TermViewport {
     public:
         /// Constructor
-        PlotAxis(int l = 10): length(l) { }
+        PlotAxis(bool horiz, int l): horizontal(horiz), length(l) { }
 
         /// polymorphic destructor
         virtual ~PlotAxis() { }
@@ -27,8 +27,17 @@ namespace Terminart {
 
         int getLength() const { return length; }
 
+        /// horizontal or vertical orientation
+        bool horizontal;
+
+        /// fill viewport vector starting at p0 with given dimensions
+        void getView(rowcol_t p0, pixelarray_t& v, const Compositor& C = Compositor::Cdefault) const override;
+        /// get bounding box
+        rectangle_t getBounds() const override { return {{0,0}, horizontal? rowcol_t{2,length} : rowcol_t{length,hpad+1}}; }
+
     protected:
         int length;                 ///< number of characters length
+        int hpad = 4;               ///< horizontal padding for vertical axis
         vector<double> binedges;    ///< binning information
 
         /// calculate bin edges array
@@ -37,43 +46,47 @@ namespace Terminart {
 
     /// Linear axis
     class LinAxis: public PlotAxis {
+    public:
         /// Constructor
-        LinAxis(double _x0, double _x1, int l): PlotAxis(l), x0(_x0), x1(_x1) { }
+        LinAxis(bool horiz, double _x0, double _x1, int l): PlotAxis(horiz, l), x0(_x0), x1(_x1) { }
 
         /// auto-set range
         void autorange(double _x0, double _x1) override { x0 = _x0; x1 = _x1; }
 
         /// transform value to axis coordinates
-        double x2i(double x) const override { return (x - x0)*length/(x1 - x0); }
+        double x2i(double x) const override { return (x - x0)*(length-1)/(x1 - x0); }
         /// transform axis coordinates to value
-        double i2x(double i) const override { return x0 + (i/length)*(x1 - x0); }
+        double i2x(double i) const override { return x0 + i*(x1 - x0)/(length-1); }
 
         double x0;
         double x1;
     };
 
-    /// Horizontal axis display
-    class HorizAxisView: public TermViewport {
+    /// x-y points graph/scatterplot
+    class TermGraph: public TermViewport, public vector<pair<double,double>> {
     public:
-        /// Constructor
-        HorizAxisView(const PlotAxis& P): Ax(P) { }
+        /// point on graph
+        typedef pair<double,double> xypt_t;
+        /// Inherit constructors
+        using vector::vector;
+        /// Destructor
+        ~TermGraph() { delete Ax; delete Ay; }
 
+        PlotAxis* Ax = nullptr; ///< x axis
+        PlotAxis* Ay = nullptr; ///< y axis
+        string symbs{",.~'^"};   ///< plotting symbols, interpolating low to high
+
+        /// auto-range axes
+        virtual void autorange();
+        /// initialize nullptr axes
+        virtual void initAxes();
+        /// print as table
+        void displayTable() const;
+
+        /// get bounding box
+        rectangle_t getBounds() const override;
         /// fill viewport vector starting at p0 with given dimensions
         void getView(rowcol_t p0, pixelarray_t& v, const Compositor& C = Compositor::Cdefault) const override;
-
-        const PlotAxis& Ax; ///< axis to display
-    };
-
-    /// Vertical axis display
-    class VertAxisView: public TermViewport {
-    public:
-        /// Constructor
-        VertAxisView(const PlotAxis& P): Ax(P) { }
-
-        /// fill viewport vector starting at p0 with given dimensions
-        void getView(rowcol_t p0, pixelarray_t& v, const Compositor& C = Compositor::Cdefault) const override;
-
-        const PlotAxis& Ax; ///< axis to display
     };
 
     /// Histogram
@@ -82,7 +95,7 @@ namespace Terminart {
         /// Constructor
         TermHisto() {}
         /// Destructor
-        ~TermHisto() { if(Ay) delete Ay; }
+        ~TermHisto() { delete Ay; }
 
         /// Fill x contents
         void Fill(double x, double w = 1);
@@ -93,7 +106,7 @@ namespace Terminart {
         void getView(rowcol_t p0, pixelarray_t& v, const Compositor& C = Compositor::Cdefault) const override;
 
     protected:
-        //const PlotAxis& Ax;         ///< binning axis
+        //const PlotAxis& Ax;       ///< binning axis
         vector<double> binconts;    ///< bin contents
     };
 

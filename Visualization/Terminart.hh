@@ -12,6 +12,8 @@ using std::map;
 #include <vector>
 using std::vector;
 #include <limits>
+#include <stdexcept>
+#include <cmath> // std::isfinite
 
 namespace Terminart {
 
@@ -21,6 +23,10 @@ namespace Terminart {
     inline rowcol_t operator+(const rowcol_t& a, const rowcol_t& b) { return {a.first+b.first, a.second+b.second}; }
     /// difference between row,col coordinates
     inline rowcol_t operator-(const rowcol_t& a, const rowcol_t& b) { return {a.first-b.first, a.second-b.second}; }
+    /// negate rowcol_t
+    inline rowcol_t operator-(const rowcol_t& a) { return {-a.first, -a.second}; }
+    /// valid non-negative finite dimensions?
+    inline bool isValidDim(rowcol_t x) { return x.first >= 0 && x.second >= 0 && std::isfinite(x.first) && std::isfinite(x.second); }
 
     /// rectangular pixel range
     struct rectangle_t: public std::pair<rowcol_t, rowcol_t> {
@@ -72,15 +78,42 @@ namespace Terminart {
         static const Compositor Cdefault;   ///< default compositor
     };
 
+    /// pixel buffer virtual base interface
+    class VPixelBuffer {
+    public:
+        /// default constructor
+        VPixelBuffer() { }
+        /// valid dimension check constructor
+        VPixelBuffer(rowcol_t dim) { if(!isValidDim(dim)) throw std::logic_error("Invalid pixel buffer dimensions"); }
+        /// polymorphic destructor
+        virtual ~VPixelBuffer() { }
+
+        /// element access
+        virtual pixel_t& operator()(rowcol_t x) = 0;
+        /// element access
+        virtual pixel_t operator()(rowcol_t x) const = 0;
+        /// place composited
+        void cput(rowcol_t x, const pixel_t& p, const Compositor& C) { (*this)(x) = C((*this)(x), p, x); }
+
+        pixel_t p_xtra;     ///< out-of-bounds extra pixel
+
+        /// draw horizontal line
+        void hline(rowcol_t x0, int dx, pixel_t p, const Compositor& C = Compositor::Cdefault);
+        /// draw vertical line
+        void vline(rowcol_t x0, int dy, pixel_t p, const Compositor& C = Compositor::Cdefault);
+    };
+
     /// fixed-size rectangular array of characters
-    class pixelarray_t: protected vector<pixel_t> {
+    class pixelarray_t: public VPixelBuffer, protected vector<pixel_t> {
     public:
         /// constructor
-        pixelarray_t(rowcol_t _dim): vector(dim.first*dim.second), dim(_dim) { }
-        /// element access, without bounds checking
-        pixel_t& operator()(rowcol_t x) { return (*this)[x.second + x.first*dim.second]; }
-        /// element access, without bounds checking
-        pixel_t operator()(rowcol_t x) const { return (*this)[x.second + x.first*dim.second]; }
+        pixelarray_t(rowcol_t _dim): VPixelBuffer(_dim), vector(_dim.first * _dim.second), dim(_dim) { }
+        /// bounds checking
+        bool inbounds(rowcol_t x) const { return 0 <= x.first && x.first < dim.first && 0 <= x.second && x.second < dim.second; }
+        /// element access
+        pixel_t& operator()(rowcol_t x) override { return inbounds(x)? (*this)[x.second + x.first*dim.second] : p_xtra; }
+        /// element access
+        pixel_t operator()(rowcol_t x) const override { return inbounds(x)? (*this)[x.second + x.first*dim.second] : p_xtra; }
         /// composite other array over this, starting at position x0 (in this array)
         void composite(rowcol_t x0, const pixelarray_t& o, const Compositor& C = Compositor::Cdefault);
 
@@ -99,7 +132,8 @@ namespace Terminart {
     public:
         /// polymorphic destructor
         ~TermViewport() { }
-        /// fill viewport vector starting at p0 with given dimensions
+
+        /// composite this into array at position p0
         virtual void getView(rowcol_t p0, pixelarray_t& v, const Compositor& C = Compositor::Cdefault) const = 0;
         /// get bounding box
         virtual rectangle_t getBounds() const { return infinite_rectangle; }
@@ -109,6 +143,9 @@ namespace Terminart {
             using rowcol_t::rowcol_t;
             TermViewport* V = nullptr;
         };
+
+        /// render bounding box to pixel array
+        virtual pixelarray_t toArray() const;
     };
 
     /// viewport over pixels array
@@ -124,13 +161,20 @@ namespace Terminart {
         }
         /// get bounding box
         rectangle_t getBounds() const override { return {x0, x0 + dim}; }
+        /// render bounding box to pixel array
+        pixelarray_t toArray() const override { return *this; }
     };
 
     /// sparse collection of display pixels
-    class TermPic: public map<rowcol_t, pixel_t>, public TermViewport {
+    class pixelmap_t: public VPixelBuffer, public map<rowcol_t, pixel_t>, public TermViewport {
     public:
         /// Constructor, with optional text block
-        TermPic(const string& s = "");
+        pixelmap_t(const string& s = "");
+
+         /// element access
+        pixel_t& operator()(rowcol_t x) override { return (*this)[x]; }
+        /// element access
+        pixel_t operator()(rowcol_t x) const override { auto it = find(x); return it == end()? p_xtra : it->second; }
 
         /// repeated char row [c0,c1]
         void drawRow(const pixel_t& p, int r, int c0, int c1) { if(c1 < c0) std::swap(c1,c0); while(c0 <= c1) (*this)[{r, c0++}] = p; }

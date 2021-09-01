@@ -1,6 +1,7 @@
 /// \file testRational.cc Test rational numbers and associated fields
 
-#include "CodeVersion.hh"
+#include "ConfigFactory.hh"
+
 #include "Eratosthenes.hh"
 #include "Rational.hh"
 #include "TestOperators.hh"
@@ -29,8 +30,7 @@ void summary(const PrimeSieve& S) {
     printf("\n");
 }
 
-int main(int, char**) {
-    CodeVersion::display_code_version();
+REGISTER_EXECLET(testRational) {
 
     auto& PS = theSieve();
     summary(PS);
@@ -103,5 +103,4 @@ int main(int, char**) {
     Quat Q({1},{2},{3},{4});
     std::cout << Q << "\n" << Q*Q << "\n" << Q.inverse() << "\n" << Q/Q << "\n";
 
-    return EXIT_SUCCESS;
 }
