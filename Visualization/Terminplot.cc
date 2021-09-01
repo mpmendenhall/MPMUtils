@@ -6,6 +6,7 @@
 #include <cmath>
 
 using namespace Terminart;
+using namespace color;
 
 void PlotAxis::calc_binedges() {
     binedges.resize(length+1);
@@ -48,6 +49,13 @@ rectangle_t TermGraph::getBounds() const {
     return bb;
 }
 
+/// "hit" in graph pixel
+struct gpxHit {
+    int n = 0;      ///< number of hits
+    double dy = 0;  ///< average y offset, [-.5, .. 5]
+    void operator+=(const gpxHit& h) { n += h.n; dy += h.dy; }
+};
+
 void TermGraph::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) const {
     if(!Ax || !Ay) throw std::logic_error("Uninitialized axes for graph view");
     if(Ay->horizontal || !Ax->horizontal) throw std::logic_error("Inconsistent axis orientations for graph view");
@@ -57,11 +65,29 @@ void TermGraph::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) const
     Ax->getView(p0, v, C);
     v.cput(p0 - rowcol_t(0,1), {'+'}, C);
 
+    // collect discretized hits on pixel grid
+    map<rowcol_t, gpxHit> hits;
+
     for(auto xy: *this) {
         auto ix = Ax->x2i(xy.first);
         auto iy = -Ay->x2i(xy.second) - 1;
-        int ii = symbs.size()*(round(iy) - iy + 0.5);
+        hits[{round(iy), round(ix)}] += {1, round(iy) - iy};
+    }
+
+    // maximum hit density
+    int nmax = 1;
+    for(auto& kv: hits) nmax = std::max(nmax, kv.second.n);
+
+    for(auto& kv: hits) {
+        int ii = symbs.size()*(kv.second.dy/kv.second.n + 0.5);
         if(ii == (int)symbs.size()) --ii;
-        v.cput(p0 + rowcol_t(round(iy), round(ix)), {symbs[ii]}, C);
+
+        pixel_t s = {symbs[ii]};
+        if(density_shade) {
+            double d = float(kv.second.n)/nmax;
+            s.set((rgb)hsv(0.9, 1, d), true);
+            s.set((rgb)hsv(2.3, 1, 0.5*d), false);
+        }
+        v.cput(p0 + kv.first, s, C);
     }
 }

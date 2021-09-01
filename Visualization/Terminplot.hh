@@ -72,9 +72,10 @@ namespace Terminart {
         /// Destructor
         ~TermGraph() { delete Ax; delete Ay; }
 
-        PlotAxis* Ax = nullptr; ///< x axis
-        PlotAxis* Ay = nullptr; ///< y axis
-        string symbs{",.~'^"};   ///< plotting symbols, interpolating low to high
+        PlotAxis* Ax = nullptr;     ///< x axis
+        PlotAxis* Ay = nullptr;     ///< y axis
+        string symbs{",.~'^"};      ///< plotting symbols, interpolating low to high
+        bool density_shade = true;  ///< whether to enable shading by density
 
         /// auto-range axes
         virtual void autorange();

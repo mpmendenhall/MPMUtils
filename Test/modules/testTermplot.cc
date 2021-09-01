@@ -5,18 +5,27 @@
 #include "Terminplot.hh"
 #include <cmath>
 #include <iostream>
+#include <TRandom3.h>
+#include <time.h>
 
 using namespace Terminart;
 
-REGISTER_EXECLET(testTermplot) {
+TRandom3 TR;
+
+void gSin(int npts, double phi = 0, double k = 5.2) {
     TermGraph TG;
-    for(int i = 0; i < 30; ++i) TG.emplace_back(i, sin(i*0.12321*M_PI));
-    //TG.displayTable();
+    for(int i = 0; i < npts; ++i) TG.emplace_back(i, sin(i*k*M_PI/npts + phi) + TR.Gaus()*sqrt(npts)*5e-3);
     TG.autorange();
 
-    std::cout << TG.toArray().render();
+    auto a = TG.toArray();
+    std::cout << a.render() << cmove_control(-a.dim);
+}
 
-    //pixelarray_t a({30,80});
-    //TG.getView({0,0}, a);
-    //std::cout << a.render("#\n");
+REGISTER_EXECLET(testTermplot) {
+    double phi = 0;
+    while(1) {
+        gSin(600, phi);
+        phi += 0.1;
+        usleep(10000);
+    }
 }

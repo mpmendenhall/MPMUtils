@@ -6,6 +6,7 @@
 
 #include "SGRManip.hh"
 #include "ColorSpec.hh"
+#include "to_str.hh"
 #include <utility> // for std::pair
 #include <map>
 using std::map;
@@ -16,6 +17,22 @@ using std::vector;
 #include <cmath> // std::isfinite
 
 namespace Terminart {
+
+    /// rendering specification for character "pixel"
+    struct pixel_t {
+        /// constructor
+        pixel_t(char _c = 0): c(_c) { }
+
+        /// set 24-bit color
+        void set(const color::rgb32& crgb, bool fg = true);
+        /// set enumerated 256-choices color
+        void set(unsigned char col, bool fg = true);
+        /// set 8-bit (256 color) approximant
+        void set256(const color::rgb& crgb, bool fg = true);
+
+        char c;     ///< character to display (0 for "blank" default)
+        TermSGR s;  ///< display style
+    };
 
     /// row,column location, from top left = 0,0
     typedef std::pair<int,int> rowcol_t;
@@ -50,22 +67,6 @@ namespace Terminart {
     static constexpr int int_infty = std::numeric_limits<int>::infinity();
     /// infinite interval rectangle
     static constexpr rectangle_t infinite_rectangle{{-int_infty, -int_infty}, {int_infty, int_infty}};
-
-    /// rendering specification for character "pixel"
-    struct pixel_t {
-        /// constructor
-        pixel_t(char _c = 0): c(_c) { }
-
-        /// set 24-bit color
-        void set(const color::rgb32& crgb, bool fg = true);
-        /// set enumerated 256-bit color
-        void set(unsigned char col, bool fg = true);
-        /// set 8-bit (256 color) approximant
-        void set256(const color::rgb& crgb, bool fg = true);
-
-        char c;     ///< character to display (0 for "blank" default)
-        TermSGR s;  ///< display style
-    };
 
     /// compositing rules for combining pixels
     class Compositor {
@@ -202,6 +203,12 @@ namespace Terminart {
         /// get bounding box
         rectangle_t getBounds() const override;
     };
+
+
+    /// cursor control codes
+    static constexpr const char* clear_to_origin = "\033[2J";
+    /// cursor movement control string
+    string cmove_control(rowcol_t x);
 }
 
 #endif

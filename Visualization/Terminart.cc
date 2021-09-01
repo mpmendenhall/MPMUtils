@@ -196,3 +196,15 @@ rectangle_t MultiViewport::getBounds() const {
     }
     return b;
 }
+
+//------------------------
+
+string Terminart::cmove_control(rowcol_t x) {
+    string s;
+    if(x.first > 0) s += "\033[" + to_str(x.first) + "B";
+    if(x.first < 0) s += "\033[" + to_str(-x.first) + "A";
+    if(x.second > 0) s += "\033[" + to_str(x.second) + "C";
+    if(x.second < 0) s += "\033[" + to_str(-x.second) + "D";
+    return s;
+}
+
