@@ -11,8 +11,8 @@ set(CMAKE_C_STANDARD 99) # sqlite3.c complains under c90 about 'long long' type
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 #set(CMAKE_CXX_STANDARD 17) # 'constexpr' getting usable
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_STANDARD 14)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 INCLUDE(CXXWarnings.cmake)
 INCLUDE(DefaultBuildType.cmake)
@@ -188,14 +188,14 @@ target_link_libraries(MPM ${EXTLIBS})
 add_dependencies(MPM update_codeversion)
 
 # test programs
-file(GLOB TESTEXEC Test/*.cc)
+file(GLOB TESTEXEC Test/mpmexamples.cc)
 file(GLOB TESTMODULES Test/modules/*.cc)
-add_library(MPMtests SHARED ${TESTMODULES})
-target_link_libraries(MPMtests MPM ${EXTLIBS})
+#add_library(MPMtests SHARED ${TESTMODULES})
+#target_link_libraries(MPMtests MPM ${EXTLIBS})
 foreach(E ${TESTEXEC})
 get_filename_component(EXN ${E} NAME_WE)
-    add_executable(${EXN} ${E})
-    target_link_libraries(${EXN} MPMtests MPM ${EXTLIBS})
+    add_executable(${EXN} ${E} ${TESTMODULES})
+    target_link_libraries(${EXN} MPM ${EXTLIBS})
 endforeach(E)
 
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
