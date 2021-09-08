@@ -74,7 +74,9 @@ public:
     void registerAccumulable(CUMDAT*& o, const string& onm, Args&&... a) {
         if(cumDat.count(onm)) throw std::runtime_error("Duplicate cumulative name '" + onm + "'");
         if(o) throw std::logic_error("Registration of '" + path + "/" + onm + "' would overwrite non-null pointer");
-        cumDat[onm] = o = dirIn? new CUMDAT(onm, *dirIn, std::forward<Args>(a)...) : new CUMDAT(onm, std::forward<Args>(a)...);
+        if(dirIn) o = new CUMDAT(onm, *dirIn, std::forward<Args>(a)...);
+        else o = new CUMDAT(onm, std::forward<Args>(a)...);
+        cumDat[onm] = o;
     }
 
     /// construct or restore non-cumulative by name

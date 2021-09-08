@@ -4,7 +4,6 @@
 #include "PluginSaver.hh"
 #include "libconfig_readerr.hh"
 #include "to_str.hh"
-#include <sstream>
 
 PluginSaver::PluginSaver(OutputManager* pnt, const Setting& S, const string& nm, const string& inflName):
 SegmentSaver(pnt, nm, inflName) {

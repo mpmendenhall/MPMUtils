@@ -101,7 +101,7 @@ template<typename T>
 class HDF5_Table_Transfer {
 public:
     /// Constructor
-    HDF5_Table_Transfer(const HDF5_Table_Spec& ts, hsize_t nc = 1024): tableIn(ts,nc), tableOut(ts,nc) { }
+    explicit HDF5_Table_Transfer(const HDF5_Table_Spec& ts, hsize_t nc = 1024): tableIn(ts,nc), tableOut(ts,nc) { }
     /// Transfer all entries with specified ID (assumed ascending), optionally re-numbering; return false at EOF.
     bool transferID(int64_t id, int64_t newID = -1);
     /// Transfer a (sorted ascending) list of ID-numbered rows, optionally renumbering

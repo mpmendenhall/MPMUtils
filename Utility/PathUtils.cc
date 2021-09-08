@@ -33,15 +33,15 @@
 #include <set>
 using std::set;
 
-bool fileExists(string f) {
+bool fileExists(const string& f) {
     return !system(("test -r '" + f + "'").c_str());
 }
 
-bool dirExists(string d) {
+bool dirExists(const string& d) {
     return !system(("test -d '" + d + "'").c_str());
 }
 
-void makePath(string p, bool forFile) {
+void makePath(const string& p, bool forFile) {
     vector<string> pathels = split(p,"/");
     if(forFile && pathels.size())
         pathels.pop_back();

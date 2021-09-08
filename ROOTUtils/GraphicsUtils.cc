@@ -91,7 +91,6 @@ void drawDataMCPair(TH1* dat, TH1* mc) {
 }
 
 void combo_draw_objs(const vector<TObject*>& hs, const string& outp, const char* opt) {
-    string aName;
     string outpath = outp;
     string nbase = split(outpath,"/").back();
     if(split(nbase,".").back()=="pdf") {

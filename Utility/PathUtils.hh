@@ -29,11 +29,11 @@ using std::string;
 using std::vector;
 
 /// check if file exists
-bool fileExists(string f);
+bool fileExists(const string& f);
 /// check if directory exists
-bool dirExists(string d);
+bool dirExists(const string& d);
 /// make sure the specified path exists (if not, create it); optionally, exclude last item on path (filename)
-void makePath(string p, bool forFile = false);
+void makePath(const string& p, bool forFile = false);
 /// list directory contents
 vector<string> listdir(const string& dir, bool includeHidden = false, bool fullPath = false);
 /// get time since last file modification (s)

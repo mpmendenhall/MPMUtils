@@ -51,28 +51,29 @@ Lorentz_boost Lorentz_boost::to_projectile_CM(double& KE, double mProj, double m
     return L;
 }
 
-// check branch consistency
-double pz_branch(double E, double m, double dz, double pz, const Lorentz_boost& LB) {
-    double pp = sqrt(pow(LB.gamma()*(E - LB.beta*pz), 2.) -m*m);
+// check solution branch consistency
+double check_pz_branch(double E, double m, double dz, double pz, const Lorentz_boost& LB) {
+    double Ep = LB.gamma()*(E - LB.beta*pz);
+    double pp = sqrt(Ep*Ep -m*m);
     return LB.gamma()*(pz - LB.beta*E) - dz*pp;
 }
 
 double Lorentz_boost::pz_CM_from_lab_direction(double E_CM, double m, double dz_lab) const {
     // kinematics equations -> a*p_z^2 + b*p_z + c = 0
-    auto gm2 = gamma()*gamma();
-    auto b2 = beta*beta;
-    auto dz2 = dz_lab * dz_lab;
-
+    double gm2 = gamma()*gamma();
+    double b2 = beta*beta;
+    double dz2 = dz_lab * dz_lab;
     double a = -gm2*(1-dz2*b2);
     double b = 2 * beta * gm2 * (1-dz2) * E_CM;
     double c = gm2*(dz2-b2)*E_CM*E_CM - dz2*m*m;
     double u = sqrt(b*b - 4*a*c);
 
-    // calculate two solution branches for quadratic; choose consistent one
+    // calculate two solution branches pz1,pz2 for quadratic;
+    // choose the one consistent with kinematics equations
     double pz1 = (u - b)/(2*a);
     double pz2 = (-u - b)/(2*a);
-    double pb1 = pz_branch(E_CM, m, dz_lab, pz1, *this);
-    double pb2 = pz_branch(E_CM, m, dz_lab, pz2, *this);
+    double pb1 = check_pz_branch(E_CM, m, dz_lab, pz1, *this);
+    double pb2 = check_pz_branch(E_CM, m, dz_lab, pz2, *this);
 
     return fabs(pb1) < fabs(pb2)? pz1 : pz2;
 }

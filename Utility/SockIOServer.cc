@@ -169,7 +169,7 @@ bool BlockHandler::process_v(const vector<char>& v) {
         else printf("%.1f MB", received/(1024*1024.));
         printf("'\n");
     }
-    return v.size();
+    return (bool)v.size();
 }
 
 char* BlockHandler::alloc_block(int32_t bsize) {

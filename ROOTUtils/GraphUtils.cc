@@ -416,8 +416,8 @@ TGraphErrors* interpolate(TGraphErrors& tg, float dx) {
 
 double invCDF(TH1& h, double p) {
     unsigned int nbins = h.GetNbinsX()-2;
-    if(p<=0) return 0;
-    if(p>=1) return h.GetBinLowEdge(nbins+1);
+    if(p <= 0.) return 0;
+    if(p >= 1.) return h.GetBinLowEdge(nbins+1);
     Double_t* cdf = h.GetIntegral();
     unsigned int mybin = std::upper_bound(cdf,cdf+nbins,p)-cdf;
     assert(mybin>0);
@@ -428,16 +428,16 @@ double invCDF(TH1& h, double p) {
 
 double hcount_from_end(const TH1& h, double c) {
     double s = 0;
-    double bc = 0;
     int i = h.GetNbinsX();
-    for(; i>1; i--) {
-        bc = h.GetBinContent(i);
+    for(; i>1; --i) {
+        double bc = h.GetBinContent(i);
         s += bc;
-        if(s >= c) break;
+        if(s >= c) {
+            auto fb = (s-c)/bc;
+            return h.GetBinLowEdge(i)*fb + (1-fb)*h.GetBinLowEdge(i+1);
+        }
     }
-    if(s < c || !bc) return h.GetBinLowEdge(1);
-    auto fb = (s-c)/bc;
-    return h.GetBinLowEdge(i)*fb + (1-fb)*h.GetBinLowEdge(i+1);
+    return h.GetBinLowEdge(1);
 }
 
 void fixNaNs(TH1* h) {

@@ -52,11 +52,11 @@ string vtos(const VT& ds, const string& sep = ",") {
 }
 
 /// split a string into a vector of doubles
-vector<double> sToDoubles(const string& str, const string splitchars = ", \t\r\n");
+vector<double> sToDoubles(const string& str, const string& splitchars = ", \t\r\n");
 /// split a string into a vector of ints
-vector<int> sToInts(const string& str, const string splitchars = ", \t\r\n");
+vector<int> sToInts(const string& str, const string& splitchars = ", \t\r\n");
 /// read in an array from a file
-vector< vector<double> > readArray(ifstream& fin, unsigned int minitems = 1, const string splitchars = ", \t\r\n");
+vector< vector<double> > readArray(ifstream& fin, unsigned int minitems = 1, const string& splitchars = ", \t\r\n");
 /// load file as string
 string loadFileString(const string& fname);
 
@@ -71,15 +71,15 @@ string replace(string str, char o, char n);
 /// check whether string a begins with string b
 bool startsWith(const string& a, const string& b);
 /// split a string into substrings on given split characters
-vector<string> split(const string& str, const string splitchars = " \t\r\n");
+vector<string> split(const string& str, const string& splitchars = " \t\r\n");
 /// join a list of strings into a single string
 string join(const vector<string>& ss, const string& sep = " ");
 /// strip junk chars off start and end of string
-string strip(const string& str, const string stripchars = " \t\r\n");
+string strip(const string& str, const string& stripchars = " \t\r\n");
 /// drop last segment after splitting character
-string dropLast(const string& str, const string splitchars);
+string dropLast(const string& str, const string& splitchars);
 /// divide into ([before last of char if present], after last of char)
-std::pair<string,string> splitLast(const string& str, const string splitchars);
+std::pair<string,string> splitLast(const string& str, const string& splitchars);
 /// keep starting characters in common between two strings
 string commonpfx(const string& s1, const string& s2);
 

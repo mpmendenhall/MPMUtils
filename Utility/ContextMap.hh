@@ -69,7 +69,7 @@ public:
     template<typename U, typename T = void>
     U* _get() {
         auto it = dat.find(tp_id<U,T>());
-        if(it != dat.end()) return (U*)it->second.first;
+        if(it != dat.end()) return static_cast<U*>(it->second.first);
         return parent? parent->_get<U,T>() : nullptr;
     }
 

@@ -71,7 +71,7 @@ string replace(string s, char o, char n) {
 
 bool startsWith(const string& a, const string& b) { return a.substr(0,b.size()) == b; }
 
-vector<string> split(const string& s, const string splitchars) {
+vector<string> split(const string& s, const string& splitchars) {
     vector<string> v;
     size_t p = 0;
     while(p<s.size()) {
@@ -96,7 +96,7 @@ string join(const vector<string>& ss, const string& sep) {
     return s;
 }
 
-string strip(const string& s, const string stripchars) {
+string strip(const string& s, const string& stripchars) {
     size_t wstart = s.find_first_not_of(stripchars);
     if(wstart == string::npos)
         return "";
@@ -104,7 +104,7 @@ string strip(const string& s, const string stripchars) {
     return s.substr(wstart,wend-wstart+1);
 }
 
-vector<double> sToDoubles(const string& s, const string splitchars) {
+vector<double> sToDoubles(const string& s, const string& splitchars) {
     vector<double> v;
     vector<string> words = split(s,splitchars);
     for(unsigned int i=0; i<words.size(); i++)
@@ -112,7 +112,7 @@ vector<double> sToDoubles(const string& s, const string splitchars) {
     return v;
 }
 
-vector<int> sToInts(const string& s, const string splitchars) {
+vector<int> sToInts(const string& s, const string& splitchars) {
     vector<int> v;
     vector<string> words = split(s,splitchars);
     for(unsigned int i=0; i<words.size(); i++)
@@ -120,7 +120,7 @@ vector<int> sToInts(const string& s, const string splitchars) {
     return v;
 }
 
-vector< vector<double> > readArray(ifstream& fin, unsigned int minitems, const string splitchars) {
+vector< vector<double> > readArray(ifstream& fin, unsigned int minitems, const string& splitchars) {
     vector< vector<double> > a;
     string s;
     while (fin.good()) {
@@ -132,11 +132,11 @@ vector< vector<double> > readArray(ifstream& fin, unsigned int minitems, const s
     return a;
 }
 
-string dropLast(const string& str, const string splitchars) {
+string dropLast(const string& str, const string& splitchars) {
     return str.substr(0, str.find_last_of(splitchars));
 }
 
-std::pair<string,string> splitLast(const string& str, const string splitchars) {
+std::pair<string,string> splitLast(const string& str, const string& splitchars) {
     auto i = str.find_last_of(splitchars);
     if(i == string::npos) return {"", str};
     return { str.substr(0, str.find_last_of(splitchars)), str.substr(i+1, string::npos) };

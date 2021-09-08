@@ -88,7 +88,7 @@ TCumulative* SegmentSaver::_registerCumulative(const string& onm, const TCumulat
     return c;
 }
 
-TH1* SegmentSaver::getSavedHist(const string& hname) { return saveHists.at(hname);
+TH1* SegmentSaver::getSavedHist(const string& hname) {
     auto it = saveHists.find(hname);
     if(it == saveHists.end()) throw std::runtime_error("Missing histogram '"+hname+"'");
     return it->second;
