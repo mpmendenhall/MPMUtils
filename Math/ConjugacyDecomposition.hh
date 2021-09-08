@@ -187,7 +187,7 @@ public:
     typedef typename cayley_t::enum_t enum_t;
 
     /// Constructor
-    GeneratorsConjugacy(const vector<typename G::elem_t>& gs, const G& GG = {}): Rs(gs,GG) {
+    explicit GeneratorsConjugacy(const vector<typename G::elem_t>& gs, const G& GG = {}): Rs(gs,GG) {
         renumerate(CD.make_renumeration());
     }
 

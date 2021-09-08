@@ -29,7 +29,7 @@ class ModularField {
 public:
     /// Default constructor to 0
     ModularField(): i(0) { }
-    /// Constructor from integer
+    /// Implicit constructor from integer
     ModularField(int n): i(n<0? N-1-(abs(n+1)%N) : n%N) { }
 
     /// check if 0
@@ -101,7 +101,6 @@ public:
 
         /// increment
         iterator& operator++() {
-            assert(i.i < N);
             ++i.i;
             return *this;
         }
@@ -110,7 +109,7 @@ public:
         /// inequality
         constexpr bool operator!=(const iterator& rhs) const { return i != rhs.i; }
         /// dereference
-        constexpr ModularField operator*() const { assert(0 <= i.i && i.i < N); return i; }
+        constexpr ModularField operator*() const { return i; }
 
         /// start stepping through modular range
         static constexpr iterator begin() { return iterator(); }
@@ -129,7 +128,6 @@ public:
 
         /// increment
         ref_iterator& operator++() {
-            assert(i.i < N);
             ++i.i;
             return *this;
         }
@@ -138,7 +136,7 @@ public:
         /// inequality
         constexpr bool operator!=(const ref_iterator& rhs) const { return i != rhs.i; }
         /// dereference
-        const ModularField& operator*() const { assert(0 <= i.i && i.i < N); return i; }
+        const ModularField& operator*() const { return i; }
 
         /// start stepping through modular range
         static constexpr ref_iterator begin() { return ref_iterator(); }

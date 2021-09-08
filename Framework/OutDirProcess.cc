@@ -38,13 +38,13 @@ void OutDirProcess::end_data(DataFrame& F) {
 }
 
 template<>
-TObject* OutDirProcess::addOutput(TObject* o, string n) {
+TObject* OutDirProcess::addOutput(TObject* o, const string& n) {
     if(!o) return o;
     if(!n.size()) {
         auto oo = dynamic_cast<TNamed*>(o);
         if(!oo) throw; // needs a name specified if not a TNamed!
-        n = oo->GetName();
-    }
-    writeObjs.emplace_back(n,o);
+        string nn = oo->GetName();
+        writeObjs.emplace_back(nn, o);
+    } else writeObjs.emplace_back(n,o);
     return o;
 }

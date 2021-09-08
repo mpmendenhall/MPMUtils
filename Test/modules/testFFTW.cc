@@ -151,12 +151,12 @@ REGISTER_EXECLET(testFFTW) {
            std::numeric_limits<calcs_t>::min_exponent);
 
     vector<calcs_t> v3({1., 2.5, 3.});
-    vector<calcs_t> v3k({0.3, 1., 2.});
+    //vector<calcs_t> v3k({0.3, 1., 2.});
 
     vector<calcs_t> v4({1., 2., 3.7, 4.1});
     vector<calcs_t> v5({1., 2., 5., 3., 4.1});
     vector<calcs_t> v6({1., 2., 5., 3., 4., 6.7});
-    vector<calcs_t> v6k({0., 1., 2., 0., 3., 0.});
+    //vector<calcs_t> v6k({0., 1., 2., 0., 3., 0.});
 
     test_roundtrips(v3);
 

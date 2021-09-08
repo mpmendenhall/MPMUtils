@@ -163,9 +163,9 @@ public:
     explicit LAPACKE_Matrix_SVD(VarMat<CT>& A): S(std::min(A.nRows(), A.nCols()),1), U(A.nRows(), S.nRows()), VT(S.nRows(), A.nCols()), PsI(nullptr), PsI_epsilon(0) {
 
         lapack_int info;
-        bool verbose = false;
+        const bool verbose = false;
 
-        char diag = (A.nRows() >= A.nCols() ? 'U':'L');         // upper or lower diagonal reduction, depending on A's dimensions
+        char diag = (A.nRows() >= A.nCols() ? 'U':'L');    // upper or lower diagonal reduction, depending on A's dimensions
         VarMat<T> e(std::max(S.nRows()-1, (size_t)1),1);   // holder for secondary diagonal
         CT* tauQ = new CT[S.nRows()];
         CT* tauP = new CT[S.nRows()];

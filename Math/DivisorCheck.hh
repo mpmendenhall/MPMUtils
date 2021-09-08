@@ -19,7 +19,7 @@ public:
     typedef typename std::make_unsigned<int_t>::type uint_t;
 
     /// constructor from divisor
-    DivisorCheck(int_t dd): d(std::abs(dd)) {
+    explicit DivisorCheck(int_t dd): d(std::abs(dd)) {
 
         if(!d) return;
 

@@ -55,19 +55,19 @@ TSQLHelper::TSQLHelper(const std::string& dbnm,
     throw std::runtime_error("Failed to connect to DB " + dbUser +"@" + dbAddressFull);
 }
 
-void TSQLHelper::execute() {
+void TSQLHelper::execute(const string& query) {
     delete res;
     res = nullptr;
-    if(!db->Exec(query)) throw std::runtime_error("DB Exec Failed: " + string(query));
+    if(!db->Exec(query.c_str())) throw std::runtime_error("DB Exec Failed: " + query);
 }
 
-void TSQLHelper::Query() {
+void TSQLHelper::Query(const string& query) {
     if(!db) {
         res = nullptr;
     } else {
         delete res;
-        res = db->Query(query);
-        if(db->GetErrorCode()) throw std::runtime_error("DB Query Failed: " + string(query));
+        res = db->Query(query.c_str());
+        if(db->GetErrorCode()) throw std::runtime_error("DB Query Failed: " + query);
     }
 }
 
@@ -93,13 +93,11 @@ float TSQLHelper::fieldAsFloat(TSQLRow* row, unsigned int fieldnum, float dflt) 
 }
 
 int TSQLHelper::getInsertID() {
-    sprintf(query,"SELECT LAST_INSERT_ID()");
-    Query();
-    TSQLRow* r = getFirst();
-    if(!r) throw std::runtime_error("Failed query " + string(query));
+    TSQLRow* r = getFirst("SELECT LAST_INSERT_ID()");
+    if(!r) throw std::runtime_error("LAST_INSERT_ID query failed");
     int rid = fieldAsInt(r,0);
     delete r;
-    if(!rid) throw std::runtime_error("Insertion failed " + string(query));
+    if(!rid) throw std::runtime_error("Insertion failed");
     return rid;
 }
 
@@ -113,17 +111,16 @@ void TSQLHelper::printResult() {
     }
 }
 
-TSQLRow* TSQLHelper::getFirst() {
-    Query();
-    if(!res)
-        return nullptr;
+TSQLRow* TSQLHelper::getFirst(const string& query) {
+    Query(query);
+    if(!res) return nullptr;
     return res->Next();
 }
 
 string sm2insert(const Stringmap& m) {
     string svars = "(";
     string svals = "VALUES (";
-    for(auto it = m.begin(); it != m.end(); it++) {
+    for(auto it = m.begin(); it != m.end(); ++it) {
         if(it != m.begin()) {
             svars += ",";
             svals += ",";

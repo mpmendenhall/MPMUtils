@@ -17,7 +17,7 @@ public:
     typedef enum_t elem_t;
 
     /// Constructor, from underlying <Enumerated Semigroup>
-    SGCayleyTable(const ESG_t& G): iID(G.identity_idx()), order(G.getOrder()) {
+    explicit SGCayleyTable(const ESG_t& G): iID(G.identity_idx()), order(G.getOrder()) {
         elem_t i = 0;
         for(auto& e1: G) {
             elem_t j = 0;

@@ -26,14 +26,14 @@ public:
     /// Calculate ground-level spectrum dPhi/dE [/s/cm^2/MeV] (calls calcAirSpectrum)
     double calcGroundSpectrum(double E);
 
-    double phi_L;               ///< Low-energy neutron flux (constant in E)
-    double phi_B;               ///< "basic" neutron spectrum shape, 1/Lethargy
+    double phi_L = 0;           ///< Low-energy neutron flux (constant in E)
+    double phi_B = 0;           ///< "basic" neutron spectrum shape, 1/Lethargy
 
-    double phi_inf;             ///< semi-infinite atmospheric flux, 1/Lethargy
-    double phi_T;               ///< thermal neutron spectrum E*dPhi/dE [/s/cm^2]
-    double phi_T_scaled;        ///< phi_T scaled as contribution to phi_G
-    double f_G;                 ///< ground enhancement factor
-    double phi_G;               ///< ground-level spectrum E*dPhi/dE [/s/cm^2]
+    double phi_inf = 0;         ///< semi-infinite atmospheric flux, 1/Lethargy
+    double phi_T = 0;           ///< thermal neutron spectrum E*dPhi/dE [/s/cm^2]
+    double phi_T_scaled = 0;    ///< phi_T scaled as contribution to phi_G
+    double f_G = 0;             ///< ground enhancement factor
+    double phi_G = 0;           ///< ground-level spectrum E*dPhi/dE [/s/cm^2]
 
     double scale_T = 1.0;       ///< extra scale factor for thermal contribution
     double scale_S = 1.0;       ///< extra scale factor for non-thermal spectrum

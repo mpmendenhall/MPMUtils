@@ -43,7 +43,7 @@ public:
     /// retrieve key values
     vector<V> retrieve(const K& k) const {
         vector<V> v;
-        for(auto it = this->lower_bound(k); it != this->upper_bound(k); it++) v.push_back(it->second);
+        for(auto it = this->lower_bound(k); it != this->upper_bound(k); ++it) v.push_back(it->second);
         return v;
     }
 

@@ -53,15 +53,14 @@ public:
     /// get name of DB in use
     string getDBName() const { return dbName; }
 
-    bool isNullResult;  ///< whether field query returned nullptr
+    bool isNullResult = false;  ///< whether field query returned nullptr
 
-    char query[9182];   ///< buffer space for SQL query strings
     /// execute a non-info-returning query
-    void execute();
+    void execute(const string& query);
 
 protected:
-    /// use current query string, return first row
-    TSQLRow* getFirst();
+    /// return first row from query
+    TSQLRow* getFirst(const string& query);
     /// get field as string (with default for nullptr)
     string fieldAsString(TSQLRow* row, unsigned int fieldnum=0, const std::string& dflt = "");
     /// get field as integer (with default for nullptr)
@@ -77,7 +76,7 @@ protected:
     bool checkTable(const std::string& tname) { return db && db->HasTable(tname.c_str()); }
 
     /// execute an info-returning query
-    void Query();
+    void Query(const string& query);
 
 protected:
     TSQLServer* db;             ///< DB server connection

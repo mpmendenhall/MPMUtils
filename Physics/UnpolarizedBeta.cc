@@ -37,7 +37,7 @@ struct coeff1 {
 /// sum coeff3 power series
 double sumCoeffs(const vector<coeff1>& coeffs, double x=1.0) {
     double s = 0;
-    for(vector<coeff1>::const_iterator it = coeffs.begin(); it != coeffs.end(); it++)
+    for(vector<coeff1>::const_iterator it = coeffs.begin(); it != coeffs.end(); ++it)
         s += it->c*pow(x,it->i);
     return s;
 }
@@ -53,7 +53,7 @@ struct coeff2 {
 /// sum coeff3 power series
 double sumCoeffs(const vector<coeff2>& coeffs, double x=1.0, double y=1.0) {
     double s = 0;
-    for(vector<coeff2>::const_iterator it = coeffs.begin(); it != coeffs.end(); it++)
+    for(vector<coeff2>::const_iterator it = coeffs.begin(); it != coeffs.end(); ++it)
         s += it->c*pow(x,it->i)*pow(y,it->j);
     return s;
 }
@@ -70,7 +70,7 @@ struct coeff3 {
 /// sum coeff3 power series
 double sumCoeffs(const vector<coeff3>& coeffs, double x=1.0, double y=1.0, double z=1.0) {
     double s = 0;
-    for(vector<coeff3>::const_iterator it = coeffs.begin(); it != coeffs.end(); it++)
+    for(vector<coeff3>::const_iterator it = coeffs.begin(); it != coeffs.end(); ++it)
         s += it->c*pow(x,it->i)*pow(y,it->j)*pow(z,it->k);
     return s;
 }

@@ -68,7 +68,7 @@ NucLevel::NucLevel(const Stringmap& m): fluxIn(0), fluxOut(0) {
 }
 
 void NucLevel::display(bool) const {
-    printf("[%i] A=%i Z=%i jpi=%s\t E = %.4f MeV\t HL = %.3g s\t Flux in = %.3g, out = %.3g\n",
+    printf("[%u] A=%u Z=%u jpi=%s\t E = %.4f MeV\t HL = %.3g s\t Flux in = %.3g, out = %.3g\n",
            n, A, Z, jpi.c_str(), E, hl, fluxIn, fluxOut);
 }
 
@@ -102,7 +102,7 @@ void DecayAtom::genAuger(vector<NucDecayEvent>& v) {
 }
 
 void DecayAtom::display(bool) const {
-    if(BET) printf("%s %i: pAuger = %.3f, Eauger = %.2f keV, initCapt = %.3f\n",
+    if(BET) printf("%s %u: pAuger = %.3f, Eauger = %.2f keV, initCapt = %.3f\n",
         BET->getName().c_str(), BET->getZ(), pAuger, 1e3*Eauger, IMissing);
     else printf("Atom information missing\n");
 }
@@ -110,7 +110,7 @@ void DecayAtom::display(bool) const {
 //-----------------------------------------
 
 void TransitionBase::display(bool) const {
-    printf("[%i]->[%i] %.3g (%i DF)\n",from.n,to.n,Itotal,getNDF());
+    printf("[%u]->[%u] %.3g (%u DF)\n",from.n,to.n,Itotal,getNDF());
 }
 
 //-----------------------------------------
@@ -407,7 +407,7 @@ void NucDecaySystem::setCutoff(double t) {
         levelDecays[n] = PSelector();
         for(auto tr : transOut[n]) levelDecays[n].addProb(tr->Itotal);
 
-        double pStart = (n+1==levels.size()); // starting probability 1 at top level
+        double pStart(n+1==levels.size()); // starting probability 1 at top level
         if(!pStart && levels[n].hl > tcut && transOut[n].size())
             for(auto tr: transIn[n]) pStart += tr->Itotal;
         lStart.addProb(pStart);
@@ -416,7 +416,7 @@ void NucDecaySystem::setCutoff(double t) {
 
 void NucDecaySystem::display(bool verbose) const {
     printf("---- Nuclear Level System ----\n");
-    printf("---- %i DF\n",getNDF());
+    printf("---- %u DF\n",getNDF());
     displayLevels(verbose);
     displayAtoms(verbose);
     displayTransitions(verbose);
@@ -426,7 +426,7 @@ void NucDecaySystem::display(bool verbose) const {
 void NucDecaySystem::displayLevels(bool verbose) const {
     printf("---- Energy Levels ----\n");
     for(auto& l: levels) {
-        printf("[%i DF] ",getNDF(l.n));
+        printf("[%u DF] ",getNDF(l.n));
         l.display(verbose);
     }
 }
@@ -434,7 +434,7 @@ void NucDecaySystem::displayLevels(bool verbose) const {
 void NucDecaySystem::displayTransitions(bool verbose) const {
     printf("---- Transitions ----\n");
     for(unsigned int i = 0; i<transitions.size(); i++) {
-        printf("(%i) ",i);
+        printf("(%u) ",i);
         transitions[i]->display(verbose);
     }
 }

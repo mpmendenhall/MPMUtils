@@ -32,7 +32,7 @@ public:
     double rtol = 1e-4; ///< relative tolerance on window edge movement to window width
 
 protected:
-    double fr0, fr1;    ///< current fit range
+    double fr0 = 0, fr1 = 0;    ///< current fit range
 };
 
 /// Gaussian peak iterative-range fitter

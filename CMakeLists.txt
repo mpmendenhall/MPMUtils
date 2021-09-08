@@ -10,10 +10,6 @@ set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 set(CMAKE_C_STANDARD 99) # sqlite3.c complains under c90 about 'long long' type
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-#set(CMAKE_CXX_STANDARD 17) # 'constexpr' getting usable
-#set(CMAKE_CXX_STANDARD 14)
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 INCLUDE(CXXWarnings.cmake)
 INCLUDE(DefaultBuildType.cmake)
 
@@ -184,6 +180,7 @@ endforeach(l)
 
 # libMPM omnibus
 add_library(MPM SHARED ${SOURCE_FILES})
+target_compile_features(MPM PUBLIC cxx_std_14)
 target_link_libraries(MPM ${EXTLIBS})
 add_dependencies(MPM update_codeversion)
 

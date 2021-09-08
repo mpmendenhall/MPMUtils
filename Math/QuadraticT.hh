@@ -22,7 +22,7 @@ public:
 
     /// constructor from coefficients array
     template<typename coeffs>
-    QuadraticT(const coeffs& v) {
+    explicit QuadraticT(const coeffs& v) {
         int n = 0;
         for(auto& x: A) x = v[n++];
         for(auto& x: b) x = v[n++];

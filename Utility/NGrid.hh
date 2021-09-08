@@ -45,7 +45,7 @@ public:
     class iterator: public std::iterator<std::forward_iterator_tag, const idx_t> {
     public:
         /// Constructor from grid dimensions
-        iterator(const idx_t& g): ngrid(g), c() { }
+        explicit iterator(const idx_t& g): ngrid(g), c() { }
         /// Constructor at mid position
         iterator(const idx_t& g, size_t ii): ngrid(g), i(ii), c() {
             if(i==(size_t)-1) a = N;

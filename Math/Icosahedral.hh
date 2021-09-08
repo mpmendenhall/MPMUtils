@@ -86,7 +86,7 @@ namespace Icosahedral {
     template<typename _face>
     struct faceset_t: public array<_face, _face::multiplicity()> {
         /// constructor with conjugacy class number
-        faceset_t(size_t cnum);
+        explicit faceset_t(size_t cnum);
         /// face number for element
         size_t facenum(size_t e) const { return elenum[e]/_face::order(); }
         /// group elements into faces

@@ -48,7 +48,7 @@ void randomDirection(double& x, double& y, double& z, double* rnd = nullptr);
 class NucLevel {
 public:
     /// constructor
-    NucLevel(const Stringmap& m);
+    explicit NucLevel(const Stringmap& m);
     /// print info
     void display(bool verbose = false) const;
     /// scale probabilities
@@ -103,7 +103,7 @@ struct NucDecayEvent {
 class DecayAtom {
 public:
     /// constructor
-    DecayAtom(BindingEnergyTable const* B);
+    explicit DecayAtom(BindingEnergyTable const* B);
     /// load Auger data from Stringmap
     void load(const Stringmap& m);
     /// generate Auger K probabilistically
@@ -310,7 +310,7 @@ protected:
 class NucDecayLibrary {
 public:
     /// constructor
-    NucDecayLibrary(const string& datp, double t = std::numeric_limits<double>::infinity());
+    explicit NucDecayLibrary(const string& datp, double t = std::numeric_limits<double>::infinity());
     /// destructor
     ~NucDecayLibrary();
     /// check if generator is available
@@ -331,7 +331,7 @@ protected:
 class GammaForest {
 public:
     /// Constructor, with conversion factor to MeV
-    GammaForest(const string& fname, double E2MeV = 1);
+    explicit GammaForest(const string& fname, double E2MeV = 1);
     /// get total cross section
     double getCrossSection() const { return gammaProb.getCumProb(); }
     /// generate cluster of gamma decays

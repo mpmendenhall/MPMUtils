@@ -14,7 +14,7 @@ using std::map;
 class BindingEnergyTable {
 public:
     /// constructor from Stringmap
-    BindingEnergyTable(const Stringmap& m);
+    explicit BindingEnergyTable(const Stringmap& m);
     /// get subshell binding energies for given shell
     const vector<double>& getShellBinding(unsigned int n) const;
     /// get subshell binding energy
@@ -39,7 +39,7 @@ protected:
 class BindingEnergyLibrary {
 public:
     /// constructor from SMFile containing element tables
-    BindingEnergyLibrary(const SMFile& Q);
+    explicit BindingEnergyLibrary(const SMFile& Q);
     /// destructor
     ~BindingEnergyLibrary();
     /// get BindingEnergyTable for specified element

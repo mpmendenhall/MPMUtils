@@ -49,7 +49,7 @@ REGISTER_EXECLET(testFitters) {
     PE.setX(vc);
     PE.evalPolynomial(PF.P, yy);
     LM.solve(yy);
-    auto& PP = PF.load(LM);
+    const auto& PP = PF.load(LM);
     std::cout << PP << "\n" << LM.ssresid() << "\n";
 
     ///////////////////////

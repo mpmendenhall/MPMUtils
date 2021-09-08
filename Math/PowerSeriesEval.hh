@@ -38,7 +38,7 @@ public:
     void add(Vec& v0, T k, size_t n) {
         if(!n) for(auto& s: v0) s += k;
         else {
-            auto& x = pow(n);
+            const auto& x = pow(n);
             size_t i = 0;
             for(auto& s: v0) s += k*x[i++];
         }
@@ -47,7 +47,7 @@ public:
     /// multiply vector by x^n
     void mul(Vec& v0, size_t n) {
         if(!n) return;
-         auto& x = pow(n);
+        const auto& x = pow(n);
         size_t i = 0;
         for(auto& s: v0) s *= x[i++];
     }

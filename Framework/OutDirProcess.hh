@@ -17,13 +17,13 @@ public:
 protected:
     /// add TObject-derived item to output write list
     template<class T>
-    T* addOutput(T* o, string n = "") { return (T*)addOutput(dynamic_cast<TObject*>(o), n); }
+    T* addOutput(T* o, const string& n = "") { return (T*)addOutput(dynamic_cast<TObject*>(o), n); }
     vector<pair<string,TObject*>> writeObjs;    ///< items to write and delete at end_data
     TDirectory* myDir = nullptr;                ///< output file directory
 };
 
 /// base specialization for saving TObjects to write list
 template<>
-TObject* OutDirProcess::addOutput(TObject* o, string n);
+TObject* OutDirProcess::addOutput(TObject* o, const string& n);
 
 #endif

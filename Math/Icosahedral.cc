@@ -112,19 +112,19 @@ void Icosahedral::describe() {
 
     cout << "The 2x15 elements of order 2 are flips by pi (with and without inversion)\n";
     cout << "around axes through the midpoints of opposite icosahedral/dodecahedral edges:\n";
-    auto& r15i = CD.M.find(2)->second.CCs.getClassNum(1);
+    const auto& r15i = CD.M.find(2)->second.CCs.getClassNum(1);
     for(auto i: r15i) cout << "\n#" << i << ":\t" << R3axis(Rs.element(i));
     cout << "\n\n";
 
     cout << "The 20 elements of order 3 describe rotations of an icosahedral face,\n";
     cout << "or between 3 faces at a dodecahedron vertex, around axes:\n";
-    auto& r20i = CD.M.find(3)->second.CCs.getClassNum(0);
+    const auto& r20i = CD.M.find(3)->second.CCs.getClassNum(0);
     for(auto i: r20i) cout << "\n#" << i << ":\t" << R3axis(Rs.element(i));
     cout << "\n\n";
 
     cout << "Two sets of 12 elements of order 5 describe rotations by 2pi/3 and 4pi/3\n";
     cout << "of a dodecahedral face or icosahedral vertex, around axes:\n";
-    auto& r12i = CD.M.find(5)->second.CCs.getClassNum(0);
+    const auto& r12i = CD.M.find(5)->second.CCs.getClassNum(0);
     for(auto i: r12i) cout << "\n#" << i << ":\t"<< R3axis(Rs.element(i));
     cout << "\n\n";
 

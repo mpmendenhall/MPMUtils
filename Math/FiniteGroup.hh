@@ -151,10 +151,10 @@ protected:
 public:
 
     /// Constructor, from operator and generators
-    GeneratorsSemigroup(const vector<elem_t>& gs, const SG_t& G = {}): SG_t(G), elems(span(gs,G)) { find_id(G); }
+    explicit GeneratorsSemigroup(const vector<elem_t>& gs, const SG_t& G = {}): SG_t(G), elems(span(gs,G)) { find_id(G); }
     /// Constructor, catchall for alternative generator enumerations
     template<class V>
-    GeneratorsSemigroup(const V& gs, const SG_t& G = {}): SG_t(G), elems(span<V>(gs, G)) { find_id(G); }
+    explicit GeneratorsSemigroup(const V& gs, const SG_t& G = {}): SG_t(G), elems(span<V>(gs, G)) { find_id(G); }
 
     /// number of elements in group
     size_t getOrder() const { return elems.size(); }

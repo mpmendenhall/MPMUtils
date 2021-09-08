@@ -108,7 +108,7 @@ namespace Terminart {
     class pixelarray_t: public VPixelBuffer, protected vector<pixel_t> {
     public:
         /// constructor
-        pixelarray_t(rowcol_t _dim): VPixelBuffer(_dim), vector(_dim.first * _dim.second), dim(_dim) { }
+        explicit pixelarray_t(rowcol_t _dim): VPixelBuffer(_dim), vector(_dim.first * _dim.second), dim(_dim) { }
         /// bounds checking
         bool inbounds(rowcol_t x) const { return 0 <= x.first && x.first < dim.first && 0 <= x.second && x.second < dim.second; }
         /// element access
