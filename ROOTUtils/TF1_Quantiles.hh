@@ -8,7 +8,7 @@
 class TF1_Quantiles {
 public:
     /// constructor
-    TF1_Quantiles(TF1& f);
+    explicit TF1_Quantiles(TF1& f);
     /// return quantile for 0 <= p <= 1
     double eval(double p) const;
     /// get average value

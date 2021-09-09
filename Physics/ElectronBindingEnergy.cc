@@ -30,7 +30,7 @@ double BindingEnergyTable::getSubshellBinding(unsigned int n, unsigned int m) co
 }
 
 void BindingEnergyTable::display() const {
-    printf("----- %i %s Electron Binding -----\n",Z,nm.c_str());
+    printf("----- %u %s Electron Binding -----\n",Z,nm.c_str());
     for(unsigned int n=0; n<eBinding.size(); n++) {
         printf("\t%c:",shellnames[n]);
         for(unsigned int m=0; m<eBinding[n].size(); m++)

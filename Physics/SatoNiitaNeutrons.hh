@@ -82,10 +82,10 @@ protected:
     // Table 4 for g
     const double g_1 = -0.0235;
     const double g_2 = -0.0129;
-    /***/ double g_3;                   ///< from Eq. (12)
+    /***/ double g_3 = 0;               ///< from Eq. (12)
     const double g_4 = 0.969;
-    /***/ double g_5;                   ///< from Eq. (13)
-    /***/ double g_6;                   ///< from Eq. (16)
+    /***/ double g_5 = 0;               ///< from Eq. (13)
+    /***/ double g_6 = 0;               ///< from Eq. (16)
 
     // Table 5 for h
     const double h_31 = -25.2;
