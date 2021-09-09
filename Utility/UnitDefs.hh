@@ -6,6 +6,7 @@
 
 #include "Rational.hh"
 #include "Vec.hh"
+#include <stdexcept>
 
 /// namespace for units represented (internally) in the SI system
 namespace Units {
@@ -33,13 +34,24 @@ namespace Units {
         /// multiply unitful values
         const Unitful operator*(const Unitful& v) const { auto c = *this; return c *= v; }
 
+        /// multiply unitful values
+        Unitful& operator/=(const Unitful& v) { (dimensions_t&)(*this) -= (dimensions_t&)v; val /= v.val; return *this; }
+        /// multiply unitful values
+        const Unitful operator/(const Unitful& v) const { auto c = *this; return c /= v; }
+
+        /// this item in specified (consistent!) units
+        double in(const Unitful& v) const {
+            if((const dimensions_t&)(*this) != (const dimensions_t&)v) throw std::logic_error("Inconsistent units");
+            return val / v.val;
+        }
+
         double val; ///< value in base units
     };
 
 }
 
 #include "UnitDefs_Base.hh"
-//#include "UnitDefs_Mechanics.hh"
-//#include "UnitDefs_EM.hh"
+#include "UnitDefs_Mechanics.hh"
+#include "UnitDefs_EM.hh"
 
 #endif

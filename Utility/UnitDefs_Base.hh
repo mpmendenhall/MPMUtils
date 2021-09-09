@@ -1,4 +1,5 @@
-/// \file UnitDefs_Base.hh SI units system definitions
+/// \file UnitDefs_Base.hh SI base units, prefixes
+
 #ifndef UNITDEFS_BASE_HH
 #define UNITDEFS_BASE_HH
 

@@ -1,159 +1,91 @@
+/// \file UnitDefs_Mechanics.hh Mechanics units (mks based)
+
 #ifndef UNITDEFS_MECHANICS_HH
-#define UNITDEFS_MECHANICS_HH 1
+#define UNITDEFS_MECHANICS_HH
 
-namespace SI {
+namespace Units {
+    // frequency
+    const Unitful hertz = Unitful(1)/second;    //< hertz
 
-	/// Frequency in SI system
-	class SIFrequency: public Unitful {
-	public:
-		/// constructor
-		SIFrequency(double t = 0): Unitful(t,second.inverse()) {}
-		/// re-casting constructor
-		SIFrequency(const unit7_t& u): Unitful(1,u) { assertConsistent(SIFrequency()); }
-	};
-	const SIFrequency hertz = second.inverse();				//< hertz
+    // velocity & friends
+    Unitful c(299792458, meter/second);         //< speed of light
+    Unitful knot = nmi/hour;                    //< knot (nautical miles per hour)
+    Unitful lightyear = c*yearSolar;            //< lightyear
+    Unitful lightsecond = c*second;             //< lightsecond
 
+    // acceleration
+    Unitful g(9.80665, meter/second/second);    //< acceleration due to gravity at sea level
 
-	/// Speed in SI system
-	class SISpeed: public Unitful {
-	public:
-		/// constructor
-		SISpeed(double t = 0): Unitful(t,meter/second) {}
-		/// re-casting constructor
-		SISpeed(const unit7_t& u): Unitful(1,u) { assertConsistent(SISpeed()); }
-	};
-	SISpeed c = meter/second*299792458;	//< speed of light
-	SISpeed knot = nmi/hour;			//< knot (nautical miles per hour)
-	Unitful lightyear = c*yearSolar;	//< lightyear
-	Unitful lightsecond = c*second;	//< lightsecond
+    // area
+    const Unitful are(100, meter*meter);        //< are (square decameter)
+    const Unitful stremma(10, are);             //< stremma (1000 square meters)
+    const Unitful hectare(100, are);            //< hectare
+    const Unitful barn(100, fermi*fermi);       //< barn (100 square fermis)
 
+    const Unitful section = mile*mile;          //< section (square mile)
+    const Unitful acre = furlong*chain;         //< acre (1/640 square mile)
+    const Unitful rood(.25, acre);              //< rood (quarter acre)
+    const Unitful yardland(30, acre);           //< yardland (30 acres)
+    const Unitful hide(100, acre);              //< hide (100 acres)
+    const Unitful barony(4000, acre);           //< barony (4000 acres)
+    const Unitful board = inch*foot;            //< board (inch by foot)
+    const Unitful cord(192, board);             //< cord (192 boards)
 
-	/// Acceleration in SI system
-	class SIAcceleration: public Unitful {
-	public:
-		/// constructor
-		SIAcceleration(double t = 0): Unitful(t,meter/second/second) {}
-		/// re-casting constructor
-		SIAcceleration(const unit7_t& u): Unitful(1,u) { assertConsistent(SIAcceleration()); }
-	};
-	SIAcceleration g = meter/second/second*9.80665;	//< acceleration due to gravity at sea level
+    const Unitful township(36, mileUS*mileUS);  //< survey township (36 square survey miles)
 
+    // volume
+    const Unitful ml = cm*cm*cm;                //< milliliter
+    const Unitful liter(1000, ml);              //< liter
+    const Unitful inch3 = inch*inch*inch;       //< cubic inch
+    const Unitful foot3 = foot*foot*foot;       //< cubic foot
 
-	/// Area in SI system
-	class SIArea: public Unitful {
-	public:
-		/// constructor
-		SIArea(double t = 0): Unitful(t,meter*meter) {}
-		/// re-casting constructor
-		SIArea(const unit7_t& u): Unitful(1,u) { assertConsistent(SIArea()); }
-	};
-	const SIArea are = meter*meter*100;			//< are (square decameter)
-	const SIArea stremma = meter*meter*1000;	//< stremma (1000 square meters)
-	const SIArea hectare = are*100;				//< hectare
-	const SIArea barn = fermi*fermi*100;		//< barn (100 square fermis)
+    const Unitful floz(29.57353, ml);           //< fluid ounce
+    const Unitful tbsp(.5, floz);               //< tablespoon    (1/2 fluid oz)
+    const Unitful tsp(1./3, tbsp);              //< teaspoon    (1/6 fluid oz)
+    const Unitful fldram(1/8., floz);           //< fluid dram (1/8 fluid oz)
+    const Unitful minim(1/60., fldram);         //< minim (1/60 fluid dram)
+    const Unitful gill(4, floz);                //< gill (4 fluid oz; 1/2 cup)
+    const Unitful cup(8, floz);                 //< cup (8 fluid oz; 2 gill)
+    const Unitful pint(2, cup);                 //< pint (2 cups)
+    const Unitful quart(2, pint);               //< quart (2 pints)
+    const Unitful gallon(4, quart);             //< gallon (4 quarts)
+    const Unitful barrel(42, gallon);           //< oil barrel (42 gallons)
+    const Unitful beerbbl(31, gallon);          //< beer barrel (31 gallons)
+    const Unitful hogshead(2, barrel);          //< hogshead (2 barrels) ?
 
-	const SIArea section = mile*mile;			//< section (square mile)
-	const SIArea acre = furlong*chain;			//< acre (1/640 square mile)
-	const SIArea rood = acre/4;					//< rood (quarter acre)
-	const SIArea yardland = acre*30;			//< yardland (30 acres)
-	const SIArea hide = acre*100;				//< hide (100 acres)
-	const SIArea barony = acre*4000;			//< barony (4000 acres)
-	const SIArea board = inch*foot;				//< board (inch by foot)
-	const SIArea cord = board*192;				//< cord (192 boards)
+    const Unitful dryPint(33.6003125, inch3);   //< dry pint
+    const Unitful dryQuart(2, dryPint);         //< dry quart
+    const Unitful dryGallon(4, dryQuart);       //< dry gallon
+    const Unitful peck(2, dryGallon);           //< peck (2 dry gallons; quarter bushel)
+    const Unitful kenning(2, peck);             //< kenning (2 pecks; half bushel)
+    const Unitful bushel(2, kenning);           //< bushel (4 pecks)
 
-	const SIArea township = mileUS*mileUS*36;	//< survey township (36 square survey miles)
+    // force
+    const Unitful newton = kg*meter/(second*second);    //< newton
+    const Unitful dyne(1e-5, newton);                   //< dyne (\f$ 10^{-5}\f$ Newtons)
+    const Unitful lbf = lb*g;                           //< pound-force
+    const Unitful poundal = lb*foot/second/second;      //< poundal (pdl)
+    const Unitful kgf = kg*g;                           //< kilogram-force
+    const Unitful slug = lbf/(foot/second/second);      //< slug mass
 
+    // pressure
+    const Unitful pascal = newton/(meter*meter);    //< pascal
+    const Unitful bar(100000, pascal);              //< bar
+    const Unitful atm(101325, pascal);              //< atmosphere
 
-	/// Volume in SI system
-	class SIVolume: public Unitful {
-	public:
-		/// constructor
-		SIVolume(double t = 0): Unitful(t,meter*meter*meter) {}
-		/// re-casting constructor
-		SIVolume(const unit7_t& u): Unitful(1,u) { assertConsistent(SIVolume()); }
-	};
-	const SIVolume ml = cm*cm*cm;	//< milliliter
-	const SIVolume liter = ml*1000;	//< liter
-	const SIVolume inch3 = inch*inch*inch; //< cubic inch
-	const SIVolume foot3 = foot*foot*foot; //< cubic foot
+    // energy
+    const Unitful joule = newton*meter;             //< joule
+    const Unitful calorie(4.184, joule);            //< thermochemical calorie
+    const Unitful cal15(4.1858, joule);             //< 15 degree celcius calorie
+    const Unitful calIT(4.1868, joule);             //< International Steam Table (1956) calorie
+    const Unitful btu(5./9, calIT*lb/gram);         //< british thermal unit, IT version
 
-	const SIVolume floz = ml*29.57353;	//< fluid ounce
-	const SIVolume tbsp = floz/2;		//< tablespoon	(1/2 fluid oz)
-	const SIVolume tsp = tbsp/3;		//< teaspoon	(1/6 fluid oz)
-	const SIVolume fldram = floz/8;		//< fluid dram (1/8 fluid oz)
-	const SIVolume minim = fldram/60;	//< minim (1/60 fluid dram)
-	const SIVolume gill = floz*4;		//< gill (4 fluid oz; 1/2 cup)
-	const SIVolume cup = floz*8;		//< cup (8 fluid oz; 2 gill)
-	const SIVolume pint = cup*2;		//< pint (2 cups)
-	const SIVolume quart = pint*2;		//< quart (2 pints)
-	const SIVolume gallon = quart*4;	//< gallon (4 quarts)
-	const SIVolume barrel = gallon*42;	//< oil barrel (42 gallons)
-	const SIVolume beerbbl = gallon*31;	//< beer barrel (31 gallons)
-	const SIVolume hogshead = barrel*2;	//< hogshead (2 barrels) ?
-
-	const SIVolume dryPint = inch3*33.6003125;	//< dry pint
-	const SIVolume dryQuart = dryPint*2;		//< dry quart
-	const SIVolume dryGallon = dryQuart*4;		//< dry gallon
-	const SIVolume peck = dryGallon*2;			//< peck (2 dry gallons; quarter bushel)
-	const SIVolume kenning = peck*2;			//< kenning (2 pecks; half bushel)
-	const SIVolume bushel = kenning*2;			//< bushel (4 pecks)
-
-
-	/// Force in SI system
-	class SIForce: public Unitful {
-	public:
-		/// constructor
-		SIForce(double t = 0): Unitful(t,kg*meter/(second*second)) {}
-		/// re-casting constructor
-		SIForce(const unit7_t& u): Unitful(1,u) { assertConsistent(SIForce()); }
-	};
-	const SIForce newton = kg*meter/(second*second);	//< newton
-	const SIForce dyne = newton*1e-5;					//< dyne (\f$ 10^{-5}\f$ Newtons)
-	const SIForce lbf = lb*g;							//< pound-force
-	const SIForce poundal = lb*foot/second/second;		//< poundal (pdl)
-	const SIForce kgf = kg*g;							//< kilogram-force
-	const SIMass slug = lbf/(foot/second/second);		//< slug mass
-
-	/// Pressure in SI system
-	class SIPressure: public Unitful {
-	public:
-		/// constructor
-		SIPressure(double t = 0): Unitful(t,newton/(meter*meter)) {}
-		/// re-casting constructor
-		SIPressure(const unit7_t& u): Unitful(1,u) { assertConsistent(SIPressure()); }
-	};
-	const SIPressure pascal = newton/(meter*meter);		//< pascal
-	const SIPressure bar = pascal*100000;				//< bar
-	const SIPressure atm = pascal*101325;				//< atmosphere
-
-	/// Energy in SI system
-	class SIEnergy: public Unitful {
-	public:
-		/// constructor
-		SIEnergy(double t = 0): Unitful(t,newton*meter) {}
-		/// re-casting constructor
-		SIEnergy(const unit7_t& u): Unitful(1,u) { assertConsistent(SIEnergy()); }
-	};
-	const SIEnergy joule = newton*meter;		//< joule
-	const SIEnergy calorie = joule*4.184;		//< thermochemical calorie
-	const SIEnergy cal15 = joule*4.1858;		//< 15 degree celcius calorie
-	const SIEnergy calIT = joule*4.1868;		//< International Steam Table (1956) calorie
-	const SIEnergy btu = (lb/gram*5.0/9.0)*calIT;	//< british thermal unit, IT version
-
-	/// Power in SI system
-	class SIPower: public Unitful {
-	public:
-		/// constructor
-		SIPower(double t = 0): Unitful(t,joule/second) {}
-		/// re-casting constructor
-		SIPower(const unit7_t& u): Unitful(1,u) { assertConsistent(SIPower()); }
-	};
-	const SIPower watt = joule/second;				//< watt
-	const SIPower hp = foot*lbf/second*550;			//< mechanical horsepower
-	const SIPower metricHP = meter*kgf/second*75;	//< metric horsepower
-	const SIPower electricalHP = watt*746;			//< electrical horsepower
-	const SIPower boilerHP = btu/hour*33475;		//< boiler horsepower
-
+    // power
+    const Unitful watt = joule/second;               //< watt
+    const Unitful hp(550, foot*lbf/second);          //< mechanical horsepower
+    const Unitful metricHP(75, meter*kgf/second);    //< metric horsepower
+    const Unitful electricalHP(746, watt);           //< electrical horsepower
+    const Unitful boilerHP(33475, btu/hour);         //< boiler horsepower
 }
 
 #endif
