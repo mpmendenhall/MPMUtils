@@ -115,7 +115,7 @@ public:
         currentC.dx = cluster_dx;
         if(!currentC.tryAdd(o)) {
             completeCluster();
-            if(!currentC.tryAdd(o)) throw;
+            if(!currentC.tryAdd(o)) throw -1;
         }
     }
 

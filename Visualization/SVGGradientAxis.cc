@@ -18,7 +18,7 @@ double SVGGradientAxis::axisUnits(double x) const {
 }
 
 double SVGGradientAxis::dAxisUnits(double) const {
-    if(logscale) throw;
+    if(logscale) throw -1;
     return 1./range.dl();
 }
 

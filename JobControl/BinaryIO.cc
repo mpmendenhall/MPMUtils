@@ -5,7 +5,7 @@
 #include <cstring> // for std::memcpy
 
 void BinaryWriter::end_wtx() {
-    if(!wtxdepth) throw;
+    if(!wtxdepth) throw -1;
     if(--wtxdepth) return;
 
     if(!wbuff.size()) return;

@@ -63,8 +63,6 @@ public:
 
 #else
 
-#include <stdio.h>
-
 /// Placeholder for reading uncompressed files when compiled without boost
 class gzWrapper {
 public:
@@ -72,10 +70,7 @@ public:
     gzWrapper(const std::string& fname, bool isZipped = true):
     f(fname.c_str(), std::ios_base::in | std::ios_base::binary) {
         if(!f.good()) throw std::runtime_error("Failed to open file '" + fname + "' for reading.");
-        if(isZipped) {
-            printf("Must compile WITH_BOOST to read .gz files!\n");
-            throw;
-        }
+        if(isZipped) throw std::logic_error("Reading .gz files requires compile WITH_BOOST");
     }
     std::ifstream f;    ///< file input
 };
@@ -86,10 +81,7 @@ public:
     /// Constructor
     gzOutWrapper(const std::string& fname, bool isZipped = true):
     f(fname.c_str(), std::ios_base::out | std::ios_base::binary) {
-        if(isZipped) {
-            printf("Must compile WITH_BOOST to write .gz files!\n");
-            throw;
-        }
+        if(isZipped) throw std::logic_error("Writing .gz files requires compile WITH_BOOST");
     }
     static const bool canZip = false;
     std::ofstream f;    ///< file input

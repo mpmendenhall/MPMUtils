@@ -6,7 +6,6 @@
 
 #include "SGRManip.hh"
 #include "ColorSpec.hh"
-#include "to_str.hh"
 #include <utility> // for std::pair
 #include <map>
 using std::map;
@@ -79,7 +78,7 @@ namespace Terminart {
         static const Compositor Cdefault;   ///< default compositor
     };
 
-    /// pixel buffer virtual base interface
+    /// pixel buffer virtual base interface, with drawing primitives
     class VPixelBuffer {
     public:
         /// default constructor
@@ -89,19 +88,23 @@ namespace Terminart {
         /// polymorphic destructor
         virtual ~VPixelBuffer() { }
 
-        /// element access
+        /// mutable element access
         virtual pixel_t& operator()(rowcol_t x) = 0;
-        /// element access
+        /// const element access
         virtual pixel_t operator()(rowcol_t x) const = 0;
-        /// place composited
+        /// composite pixel into buffer
         void cput(rowcol_t x, const pixel_t& p, const Compositor& C) { (*this)(x) = C((*this)(x), p, x); }
 
-        pixel_t p_xtra;     ///< out-of-bounds extra pixel
+        pixel_t p_xtra;     ///< extra pixel returned for out-of-bounds element access
 
         /// draw horizontal line
         void hline(rowcol_t x0, int dx, pixel_t p, const Compositor& C = Compositor::Cdefault);
         /// draw vertical line
         void vline(rowcol_t x0, int dy, pixel_t p, const Compositor& C = Compositor::Cdefault);
+        /// framed rectangle
+        void drawFrame(rectangle_t r, const pixel_t& c = {'+'}, const pixel_t& h = {'-'}, const pixel_t& v = {'|'},
+                       const Compositor& C = Compositor::Cdefault);
+
     };
 
     /// fixed-size rectangular array of characters
@@ -126,6 +129,17 @@ namespace Terminart {
 
         /// render with terminal control codes
         string render(const string& newline = "\n", char cnull = ' ') const;
+    };
+
+    /// sparse collection of display pixels
+    class pixelmap_t: public VPixelBuffer, public map<rowcol_t, pixel_t> {
+    public:
+        /// Constructor, with optional text block
+        explicit pixelmap_t(const string& s = "");
+        /// mutable element access
+        pixel_t& operator()(rowcol_t x) override { return (*this)[x]; }
+        /// const element access
+        pixel_t operator()(rowcol_t x) const override { auto it = find(x); return it == end()? p_xtra : it->second; }
     };
 
     /// base class providing pixels in a viewport
@@ -166,31 +180,15 @@ namespace Terminart {
         pixelarray_t toArray() const override { return *this; }
     };
 
-    /// sparse collection of display pixels
-    class pixelmap_t: public VPixelBuffer, public map<rowcol_t, pixel_t>, public TermViewport {
-    public:
-        /// Constructor, with optional text block
-        pixelmap_t(const string& s = "");
-
-         /// element access
-        pixel_t& operator()(rowcol_t x) override { return (*this)[x]; }
-        /// element access
-        pixel_t operator()(rowcol_t x) const override { auto it = find(x); return it == end()? p_xtra : it->second; }
-
-        /// repeated char row [c0,c1]
-        void drawRow(const pixel_t& p, int r, int c0, int c1) { if(c1 < c0) std::swap(c1,c0); while(c0 <= c1) (*this)[{r, c0++}] = p; }
-        /// repeated char column [r0,r1]
-        void drawCol(const pixel_t& p, int c, int r0, int r1) { if(r1 < r0) std::swap(r1,r0); while(r0 <= r1) (*this)[{r0++, c}] = p; }
-        /// frame with corners at p0, p1
-        void drawFrame(rowcol_t p0, rowcol_t p1, const pixel_t& c = {'+'}, const pixel_t& h = {'-'}, const pixel_t& v = {'|'});
+    /// viewport over pixels map
+    class MapViewport: public TermViewport, public pixelmap_t {
+        /// inherit pixel array constructors
+        using pixelmap_t::pixelmap_t;
 
         /// get bounding box
         rectangle_t getBounds() const override;
         /// fill viewport vector starting at p0 with given dimensions
         void getView(rowcol_t p0, pixelarray_t& v, const Compositor& C = Compositor::Cdefault) const override;
-
-        /// print out
-        void display(pixel_t p_default = {' '}) const;
     };
 
     /// placement of multiple sub-views
@@ -205,10 +203,19 @@ namespace Terminart {
     };
 
 
-    /// cursor control codes
-    static constexpr const char* clear_to_origin = "\033[2J";
-    /// cursor movement control string
+    // cursor control codes
+
+    /// clear terminal and move cursor to bottom left
+    static constexpr const char* clear_to_bl = "\033[2J";
+    /// save current cursor position
+    static constexpr const char* save_cpos = "\033[s";
+    /// restore saved cursor position
+    static constexpr const char* restore_cpos = "\033[u";
+
+    /// cursor relative movement control string
     string cmove_control(rowcol_t x);
+    /// cursor absolute position control string
+    string cpos_control(rowcol_t x);
 }
 
 #endif

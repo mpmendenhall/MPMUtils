@@ -191,7 +191,7 @@ public:
 protected:
     /// blocking data receive
     void _receive(void* vptr, int size) override {
-        if((const char*)pR + size > eR) throw;
+        if((const char*)pR + size > eR) throw -1;
         std::memcpy(vptr,pR,size);
         (const char*&)pR += size;
     }
@@ -210,7 +210,7 @@ public:
 protected:
     /// blocking data send
     void _send(void* vptr, int size) override {
-        if((char*)pW + size > eW) throw;
+        if((char*)pW + size > eW) throw -1;
         std::memcpy(pW,vptr,size);
         (char*&)pW += size;
     }

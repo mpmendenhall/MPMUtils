@@ -36,7 +36,7 @@ const string& SegmentSaver::getMeta(const string& k) {
     TObject* o = nullptr;
     if(dirIn) dirIn->GetObject(("meta/"+k).c_str(), o);
     auto oo = dynamic_cast<TObjString*>(o);
-    auto& s = (xmeta[k] = oo? oo->GetString() : "");
+    const auto& s = (xmeta[k] = oo? oo->GetString() : "");
     delete o;
     return s;
 }

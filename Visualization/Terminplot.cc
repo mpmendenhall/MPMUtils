@@ -51,6 +51,8 @@ rectangle_t TermGraph::getBounds() const {
 
 /// "hit" in graph pixel
 struct gpxHit {
+    gpxHit(int _n, double _dy): n(_n), dy(_dy) { }
+    gpxHit() { }
     int n = 0;      ///< number of hits
     double dy = 0;  ///< average y offset, [-.5, .. 5]
     void operator+=(const gpxHit& h) { n += h.n; dy += h.dy; }

@@ -1,6 +1,7 @@
 /// \file Terminart.cc
 
 #include "Terminart.hh"
+#include "to_str.hh"
 
 using namespace Terminart;
 
@@ -61,6 +62,32 @@ void VPixelBuffer::vline(rowcol_t x0, int dy, pixel_t p, const Compositor& C) {
     }
 }
 
+void VPixelBuffer::drawFrame(rectangle_t r,
+                             const pixel_t& c, const pixel_t& h, const pixel_t& v,
+                             const Compositor& C) {
+
+    r.second = r.second + rowcol_t{-1,-1};
+    if(r.isNull()) return;
+
+    auto d = r.dim();
+    if(!isValidDim(d)) throw std::logic_error("invalid frame dimensions");
+
+    hline(r.first,   d.second, h, C);
+    hline(r.second, -d.second, h, C);
+
+    vline(r.first,   d.first,  v, C);
+    vline(r.second, -d.first,  v, C);
+
+    cput(r.first,  c, C);
+    cput(r.second, c, C);
+    std::swap(r.first.first, r.second.first);
+    cput(r.first,  c, C);
+    cput(r.second, c, C);
+}
+
+//----------------------------------
+//----------------------------------
+
 void pixelarray_t::composite(rowcol_t x0, const pixelarray_t& o, const Compositor& C) {
     int rmax = std::min(dim.first, o.dim.first - x0.first);
     int cmax = std::min(dim.second, o.dim.second - x0.second);
@@ -102,19 +129,10 @@ pixelmap_t::pixelmap_t(const string& s) {
     }
 }
 
-void pixelmap_t::drawFrame(rowcol_t p0, rowcol_t p1, const pixel_t& c, const pixel_t& h, const pixel_t& v) {
-    drawRow(h, p0.first, p0.second+1, p1.second-1);
-    drawRow(h, p1.first, p0.second+1, p1.second-1);
+//----------------------------------
+//----------------------------------
 
-    drawCol(v, p0.second, p0.first+1, p1.first-1);
-    drawCol(v, p1.second, p0.first+1, p1.first-1);
-
-    (*this)[p0] = (*this)[p1] = c;
-    std::swap(p0.first, p1.first);
-    (*this)[p0] = (*this)[p1] = c;
-}
-
-void pixelmap_t::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) const {
+void MapViewport::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) const {
 
     auto p1 = p0 + v.dim;
 
@@ -131,53 +149,14 @@ void pixelmap_t::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) cons
     }
 }
 
-rectangle_t pixelmap_t::getBounds() const {
+rectangle_t MapViewport::getBounds() const {
     auto b = null_rectangle;
     for(auto& kv: *this) b.include(kv.first);
     return b;
 }
 
-void pixelmap_t::display(pixel_t p_default) const {
-    int row = 0;
-    int col = 0;
-
-    string s;
-    TermSGR tprev;
-    TermSGR t0;
-
-    for(auto& kv: *this) {
-        while(row < kv.first.first) {
-            s += t0.diff(tprev);
-            tprev = t0;
-            s += "\n";
-            ++row;
-            col = 0;
-        }
-
-        if(col) {
-            while(col++ < kv.first.second) {
-                s += p_default.s.diff(tprev);
-                tprev = p_default.s;
-                s += p_default.c;
-            }
-        } else {
-            while(col++ < kv.first.second) {
-                s += t0.diff(tprev);
-                tprev = t0;
-                s += ' ';
-            }
-        }
-
-        s += kv.second.s.diff(tprev);
-        tprev = kv.second.s;
-        s += (kv.second.c? kv.second.c : p_default.c);
-    }
-
-    s += TermSGR().diff(tprev);
-    printf("%s\n", s.c_str());
-}
-
-//----------------------
+//----------------------------------
+//----------------------------------
 
 pixelarray_t TermViewport::toArray() const {
     auto bb = getBounds();
@@ -185,6 +164,9 @@ pixelarray_t TermViewport::toArray() const {
     getView(-bb.first, a);
     return a;
 }
+
+//----------------------------------
+//----------------------------------
 
 rectangle_t MultiViewport::getBounds() const {
     auto b = null_rectangle;
@@ -197,7 +179,8 @@ rectangle_t MultiViewport::getBounds() const {
     return b;
 }
 
-//------------------------
+//----------------------------------
+//----------------------------------
 
 string Terminart::cmove_control(rowcol_t x) {
     string s;
@@ -208,3 +191,6 @@ string Terminart::cmove_control(rowcol_t x) {
     return s;
 }
 
+string Terminart::cpos_control(rowcol_t x) {
+    return "\033[" + to_str(x.first) + ";" + to_str(x.second) + "H";
+}
