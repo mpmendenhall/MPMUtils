@@ -122,12 +122,12 @@ public:
     /// Constructor
     SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS);
 protected:
-    /// theblock = myServer->get_allocated()
+    /// theblock = mySBSS->get_allocated()
     void request_block(int32_t /*bsize*/) override;
-    /// myServer->return_allocated(theblock); theblock = nullptr
+    /// mySBSS->return_allocated(theblock); theblock = nullptr
     void return_block() override;
 
-    SockBlockSerializerServer* myServer;    ///< server handling serialization
+    SockBlockSerializerServer* mySBSS;  ///< server handling serialization
 };
 
 #include "ThreadDataSerializer.hh"

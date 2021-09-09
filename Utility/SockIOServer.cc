@@ -20,7 +20,6 @@ bool SockIOServer::process_connections() {
     if (sockfd < 0) {
         fprintf(stderr, "ERROR %i opening socket\n", sockfd);
         throw std::runtime_error("Cannot open socket\n");
-        return false;
     }
 
     // bind server to socket
@@ -214,14 +213,14 @@ void ThreadedSockIOServer::handlerClosed(ConnHandler* h) {
 ////////////////////
 
 SockBlockSerializerHandler::SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS):
-BlockHandler(sfd, SBS), myServer(SBS) { }
+BlockHandler(sfd, SBS), mySBSS(SBS) { }
 
 void SockBlockSerializerHandler::request_block(int32_t /*bsize*/) {
-    theblock = myServer->get_allocated();
+    theblock = mySBSS->get_allocated();
 }
 
 void SockBlockSerializerHandler::return_block() {
-    if(theblock) myServer->return_allocated(theblock);
+    if(theblock) mySBSS->return_allocated(theblock);
     theblock = nullptr;
 }
 
