@@ -3,6 +3,8 @@
 #ifndef UNITDEFS_EM_HH
 #define UNITDEFS_EM_HH
 
+#include "UnitDefs_Base.hh"
+
 namespace Units {
 
     const Unitful coulomb = ampere*second;      //< coulomb (charge)
