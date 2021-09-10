@@ -125,7 +125,7 @@ public:
 
     /// calculate partition structure
     constexpr partition_t partitions() const {
-        array<idx_t,N> cs{};    //< cycle sizes
+        array<idx_t,N> cs{};    ///< cycle sizes
         idx_t nc = 0;   // number of cycles found
         idx_t u = 0;    // number of elements checked
         auto s = RangeArray<idx_t,0,N>(); // as-yet-unassigned elements
