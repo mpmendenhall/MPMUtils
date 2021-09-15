@@ -1,6 +1,9 @@
 /// \file Averager.hh Simple statistics accumulation
 // -- Michael P. Mendenhall, 2019
 
+#ifndef AVERAGER_HH
+#define AVERAGER_HH
+
 #include <cmath>
 
 /// Weighted average with second moment
@@ -33,8 +36,12 @@ struct Averager {
     value_t sigma() const { return sqrt(variance()); }
     /// sqrt(N)-weighted uncertainty
     value_t uncert() const { return sqrt(variance()/sum_w); }
+    /// uncertainty squared
+    value_t uncert2() const { return variance()/sum_w; }
 
     weight_t sum_w{};   ///< sum of weights
     value_t sum_wx{};   ///< weighted sum w*x
     value_t sum_wxx{};  ///< weighted sum w*x^2
 };
+
+#endif

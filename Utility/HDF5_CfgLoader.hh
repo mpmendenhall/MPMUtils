@@ -59,6 +59,11 @@ protected:
     /// configure nextSink
     void makeNext(const Setting& S) {
         if(S.exists("next")) nextSink = constructCfgObj<DataSink<const T>>(S["next"]);
+        else {
+            string nxt;
+            if(optionalGlobalArg("h5next", nxt, "HDF5 reader next output class"))
+                nextSink = constructCfgClass<DataSink<const T>>(nxt);
+        }
         tryAdd(nextSink);
     }
     /// build XML output data

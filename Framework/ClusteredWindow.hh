@@ -46,6 +46,10 @@ public:
     /// print cluster information
     virtual void display(ordering_t x0 = 0) const {
         printf("Cluster with %zu objects at t = %g (max spacing %g)\n", size(), x_median - x0, dx);
+        for(auto& o: *this) {
+            printf("\t");
+            dispObj(o);
+        }
     }
 
     /// Perform analysis at completion of cluster. Override to add more fancy calculations.
@@ -108,6 +112,8 @@ public:
     void push(const T& o) override {
         ordering_t t(o);
         if(!(t_prev <= t)) {
+            dispObj(currentC);
+            printf("t_prev = %g\n", t_prev);
             dispObj(o);
             throw std::runtime_error("Out-of-order item received for clustering");
         }
