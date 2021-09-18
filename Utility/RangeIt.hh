@@ -9,6 +9,12 @@
 using std::array;
 #include <cassert>
 
+#if __cplusplus >= 201400
+#define _constexpr constexpr
+#else
+#define _constexpr
+#endif
+
 /// iterator for values N0, ... , N1
 template<typename val_t, val_t N0, val_t N1>
 class RangeIt: public std::iterator<std::forward_iterator_tag, const val_t> {
@@ -39,7 +45,7 @@ protected:
 
 /// pre-populated array
 template<typename val_t, val_t N0, val_t N1>
-constexpr array<val_t, N1-N0> RangeArray() {
+_constexpr array<val_t, N1-N0> RangeArray() {
     array<val_t, N1-N0> a{};
     std::copy(RangeIt<val_t,N0,N1>::begin(), RangeIt<val_t,N0,N1>::end(), a.begin());
     return a;

@@ -9,6 +9,12 @@
 #include "Partition.hh"
 #include <numeric>
 
+#if __cplusplus >= 201500L
+#define _constexpr constexpr
+#else
+#define _constexpr
+#endif
+
 /// Compile-time-evaluable factorial function
 constexpr inline size_t factorial(size_t i) { return i > 1? i*factorial(i-1) : 1; }
 
@@ -29,14 +35,14 @@ public:
     typedef typename cycles_t::partition_t partition_t;
 
     /// Default constructor for identity permutation
-    constexpr Permutation(): super{} { for(idx_t i{}; i<N; i++) (*this)[i] = i; }
+    _constexpr Permutation(): super{} { for(idx_t i{}; i<N; i++) (*this)[i] = i; }
     /// Permutation from array, with optional index offset (for cut-and-paste from Fortran-style indices)
-    explicit constexpr Permutation(const super& a, int i=0): super(a) { if(i) for(auto& c: *this) c -= i; assert(validate()); }
+    explicit _constexpr Permutation(const super& a, int i=0): super(a) { if(i) for(auto& c: *this) c -= i; assert(validate()); }
 
     /// element access
-    constexpr idx_t operator[](size_t i) const { return ((super&)*this)[i]; }
+    _constexpr idx_t operator[](size_t i) const { return ((super&)*this)[i]; }
     /// swap two elements
-    constexpr void swap(size_t i, size_t j) { std::swap((*this)[i], (*this)[j]); }
+    void swap(size_t i, size_t j) { std::swap((*this)[i], (*this)[j]); }
 
     /// equality comparison
     constexpr bool operator==(const Permutation& P) const { return (super&)*this == (super&)P; }
@@ -69,7 +75,7 @@ public:
     constexpr Permutation operator/(const Permutation& P) const { auto p = *this; return p /= P; }
 
     /// enumeration index for permutation
-    static constexpr enum_t idx(const Permutation& e) {
+    static _constexpr enum_t idx(const Permutation& e) {
         if(N<2) return 0;
 
         array<idx_t, N-1> e0{};
@@ -96,7 +102,7 @@ public:
     }
 
     /// calculate element cycles
-    constexpr cycles_t cycles() const {
+    _constexpr cycles_t cycles() const {
 
         cycles_t c{};   // unsorted cycles
         size_t nc = 0;  // number of cycles found
@@ -124,7 +130,7 @@ public:
     }
 
     /// calculate partition structure
-    constexpr partition_t partitions() const {
+    _constexpr partition_t partitions() const {
         array<idx_t,N> cs{};    ///< cycle sizes
         idx_t nc = 0;   // number of cycles found
         idx_t u = 0;    // number of elements checked
@@ -159,7 +165,7 @@ public:
 
 protected:
     /// mutable element access
-    constexpr idx_t& operator[](size_t i) { return ((super&)*this)[i]; }
+    _constexpr idx_t& operator[](size_t i) { return ((super&)*this)[i]; }
 
     friend class Permutation<N-1>; // for applying sub-permutation
 };
@@ -168,7 +174,7 @@ template<>
 constexpr inline size_t Permutation<0>::idx(const Permutation&) { return 0; }
 /// Null permutation special case, in case not optimized out
 template<>
-constexpr inline Permutation<0> Permutation<0>::element(size_t) { return {}; }
+_constexpr inline Permutation<0> Permutation<0>::element(size_t) { return {}; }
 
 /// output representation for permutation
 template<size_t N, typename idx_t>
@@ -198,10 +204,12 @@ public:
     /// Get group element c = ab
     static constexpr elem_t apply(elem_t a, elem_t b) { return a*b; }
 
+    /// iterator typedef
+    typedef esg_static_iterator<SymmetricGroup> iterator; 
     /// element iteration start
-    static constexpr auto begin() { return esg_static_iterator<SymmetricGroup<N>>(); }
+    static constexpr iterator begin() { return esg_static_iterator<SymmetricGroup>(); }
     /// element iteration end
-    static constexpr auto end() { return esg_static_iterator<SymmetricGroup<N>>(getOrder()); }
+    static constexpr iterator end() { return esg_static_iterator<SymmetricGroup>(getOrder()); }
 };
 
 /// Signed Permutation (combines permute with +/- sign flip)
@@ -214,7 +222,7 @@ public:
     /// Default constructor for identity permutation
     constexpr SignedPermutation(): super(_id()) { }
     /// Permutation from array
-    explicit constexpr SignedPermutation(const super& a): super(a) { assert(validate()); }
+    explicit constexpr SignedPermutation(const super& a): super(a) { }
 
     /// extract permutation component
     operator Permutation<N>() const {

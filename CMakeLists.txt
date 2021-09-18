@@ -70,8 +70,9 @@ if(FFTW_LIBS-NOTFOUND OR NO_FFTW)
     message(STATUS "Disabling FFTW3 dependency")
     add_compile_options("-DWITHOUT_FFTW")
 else()
-    add_compile_options("-DWITH_FFTW_FLOAT128")
-    LIST(APPEND EXTLIBS ${FFTW_LIBS} fftw3f fftw3l fftw3q quadmath m)
+    #add_compile_options("-DWITH_FFTW_FLOAT128")
+    #LIST(APPEND EXTLIBS ${FFTW_LIBS} fftw3f fftw3l fftw3q quadmath m)
+    LIST(APPEND EXTLIBS ${FFTW_LIBS} m)
 endif()
 
 #####

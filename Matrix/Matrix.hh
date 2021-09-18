@@ -28,6 +28,12 @@
 using std::vector;
 #include <cassert>
 
+#if __cplusplus >= 201400L
+#define _constexpr constexpr
+#else
+#define _constexpr
+#endif
+
 /// Handle min in a==b case without tripping -Wduplicated-branches warnings
 template <class T>
 constexpr T constexpr_min(T a, T b) { return a < b ? a : b; }
@@ -56,7 +62,7 @@ public:
     /// generate a random-filled matrix
     static Matrix random();
     /// generate identity matrix
-    static constexpr Matrix identity();
+    static _constexpr Matrix identity();
     /// generate rotation between two axes
     static constexpr Matrix rotation(size_t a1, size_t a2, T th);
 
@@ -192,7 +198,7 @@ Matrix<M,N,T> Matrix<M,N,T>::random() {
 }
 
 template<size_t M, size_t N, typename T>
-constexpr Matrix<M,N,T> Matrix<M,N,T>::identity() {
+_constexpr Matrix<M,N,T> Matrix<M,N,T>::identity() {
     Matrix foo{};
     for(size_t i=0; i < nDiag; i++) foo(i,i) = unit<T>();
     return foo;

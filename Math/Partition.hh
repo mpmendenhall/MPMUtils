@@ -9,6 +9,12 @@
 #include <array>
 using std::array;
 
+#if __cplusplus >= 201400L
+#define _constexpr constexpr
+#else
+#define _constexpr
+#endif
+
 /// Partitioning of a fixed number of elements
 template<size_t N, typename idx_t = size_t>
 class Partition: public array<idx_t,N> {
@@ -16,7 +22,7 @@ public:
     /// index array type
     typedef array<idx_t,N> idx_array_t;
     /// default constructor
-    constexpr Partition(): idx_array_t{} { (*this)[0] = N; }
+    _constexpr Partition(): idx_array_t{} { (*this)[0] = N; }
 
     /// partition lower bound
     constexpr inline idx_t i0(idx_t i) const { return i? (*this)[i-1] : 0; }
@@ -25,9 +31,9 @@ public:
 
     /// re-order partitioned groups according to specified scheme
     template<typename valarray_t>
-    constexpr Partition reorder(const idx_array_t& o, valarray_t& v) const {
+    _constexpr Partition reorder(const idx_array_t& o, valarray_t& v) const {
         Partition nn{};
-        valarray_t vv{};
+	valarray_t vv{};
 
         idx_t i=0, jj = 0;
         for(; jj < N; ++i) {
@@ -77,9 +83,9 @@ public:
     val_array_t v{};  ///< contents
 
     /// reorder this object's data
-    constexpr void reorder(const typename Partition<N,idx_t>::idx_array_t& o) { (Partition<N,idx_t>&)(*this) = Partition<N,idx_t>::reorder(o,v); }
+    void reorder(const typename Partition<N,idx_t>::idx_array_t& o) { (Partition<N,idx_t>&)(*this) = Partition<N,idx_t>::reorder(o,v); }
     /// sort in "canonical" descending-cycle-length order
-    constexpr void sort(size_t nc = N) { reorder(this->cyclen_descending(nc)); }
+    void sort(size_t nc = N) { reorder(this->cyclen_descending(nc)); }
 };
 
 /// output representation for PartArray

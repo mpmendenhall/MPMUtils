@@ -31,9 +31,9 @@ public:
     /// Get group element c = ab
     static constexpr elem_t apply(elem_t a, elem_t b) { return a+b; }
     /// element iteration start
-    static constexpr auto begin() { return elem_t::ref_iterator::begin(); }
+    static constexpr decltype(elem_t::ref_iterator::begin()) begin() { return elem_t::ref_iterator::begin(); }
     /// element iteration end
-    static constexpr auto end() { return elem_t::ref_iterator::end(); }
+    static constexpr decltype(elem_t::ref_iterator::end()) end() { return elem_t::ref_iterator::end(); }
 };
 
 #endif
