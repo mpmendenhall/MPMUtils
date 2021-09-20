@@ -53,10 +53,12 @@ REGISTER_EXECLET(testAverager) {
 
     for(double i = 1; i < 5; ++i) {
         A += i;
+        A.add(i + 0.5, 0.5);
         B += 3+i;
         A.display();
 
         _A += i;
+        _A.add(i + 0.5, 0.5);
         _B += 3+i;
     }
 

@@ -10,24 +10,43 @@
 /// Weighted average with numerically-stable variance tracking
 template<typename value_t = double, typename weight_t = double>
 struct Averager {
+    /// Default constructor
+    Averager() { }
+
     /// Add weighted item
-    void add(value_t v, weight_t w = 1) {
-        if(!sw) {
-            sw = w;
-            swx = v*w;
-            return;
-        }
+    void add(value_t x, weight_t w) {
         if(!w) return;
 
-        auto vw = v*w;
-        double u = sw*vw - w*swx;
+        auto wx = w*x;
+
+        if(!sw) {
+            sw = w;
+            swx = wx;
+            return;
+        }
+
+        double u = sw*wx - w*swx;
         sw2S += (w*w*sw2S + u*u)/(sw * w);
         sw += w;
-        swx += vw;
+        swx += wx;
+    }
+
+    /// Add with unity weight
+    void add(value_t x) {
+        if(!sw) {
+            ++sw;
+            swx = x;
+            return;
+        }
+
+        double u = sw*x - swx;
+        sw2S += (sw2S + u*u)/sw;
+        ++sw;
+        swx += x;
     }
 
     /// add with unity weight
-    Averager& operator+=(value_t v) { add(v); return *this; }
+    Averager& operator+=(value_t x) { add(x); return *this; }
 
     /// add averager
     Averager& operator+=(const Averager& a) {
@@ -40,6 +59,21 @@ struct Averager {
         swx += a.swx;
         return *this;
     }
+
+    /// rescale weights, preserving value and variance (but scaling effective sqrt(N))
+    void wscale(weight_t c) { sw *= c; swx *= c; sw2S *= c*c; }
+
+    /// unary minus
+    const Averager operator-() const { return Averager(sw, -swx, sw2S); }
+    /// inplace subtraction
+    Averager& operator-=(const Averager& rhs) { *this += -rhs; }
+    /// subtraction
+    const Averager operator-(const Averager& rhs) const { auto p = *this; p -= rhs; return p; }
+
+    /// scalar multiplication of mean value, spread
+    Averager& operator*=(value_t c) { swx *= c; sw2S *= c*c; return *this; }
+    /// scalar multiplication of mean value, spread
+    const Averager operator*(value_t c) const { auto p = *this; p *= c; return p; }
 
     /// total weight
     weight_t weight() const { return sw; }
@@ -60,6 +94,9 @@ struct Averager {
     void display() const { printf("mu = %g, sigma = %g (w = %g)\n", average(), sigma(), weight()); }
 
 protected:
+    /// Constructor with contents
+    Averager(weight_t _sw, value_t _swx, value_t _sw2s): sw(_sw), swx(_swx), sw2S(_sw2s) { }
+
     weight_t sw{};  ///< sum of weights
     value_t swx{};  ///< weighted sum w*x
     value_t sw2S{}; ///< weighted variance (sw)^2 sigma^2

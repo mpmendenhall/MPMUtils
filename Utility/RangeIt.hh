@@ -8,12 +8,7 @@
 #include <array>
 using std::array;
 #include <cassert>
-
-#if __cplusplus >= 201400
-#define _constexpr constexpr
-#else
-#define _constexpr
-#endif
+#include "iffy_constexpr.hh"
 
 /// iterator for values N0, ... , N1
 template<typename val_t, val_t N0, val_t N1>

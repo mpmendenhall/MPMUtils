@@ -8,12 +8,7 @@
 #include <cassert>
 #include <array>
 using std::array;
-
-#if __cplusplus >= 201400L
-#define _constexpr constexpr
-#else
-#define _constexpr
-#endif
+#include "iffy_constexpr.hh"
 
 /// Partitioning of a fixed number of elements
 template<size_t N, typename idx_t = size_t>

@@ -27,12 +27,7 @@
 #include <vector>
 using std::vector;
 #include <cassert>
-
-#if __cplusplus >= 201400L
-#define _constexpr constexpr
-#else
-#define _constexpr
-#endif
+#include "iffy_constexpr.hh"
 
 /// Handle min in a==b case without tripping -Wduplicated-branches warnings
 template <class T>

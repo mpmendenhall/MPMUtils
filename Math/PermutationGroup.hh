@@ -8,12 +8,7 @@
 #include "RangeIt.hh"
 #include "Partition.hh"
 #include <numeric>
-
-#if __cplusplus >= 201500L
-#define _constexpr constexpr
-#else
-#define _constexpr
-#endif
+#include "iffy_constexpr.hh"
 
 /// Compile-time-evaluable factorial function
 constexpr inline size_t factorial(size_t i) { return i > 1? i*factorial(i-1) : 1; }
@@ -205,7 +200,7 @@ public:
     static constexpr elem_t apply(elem_t a, elem_t b) { return a*b; }
 
     /// iterator typedef
-    typedef esg_static_iterator<SymmetricGroup> iterator; 
+    typedef esg_static_iterator<SymmetricGroup> iterator;
     /// element iteration start
     static constexpr iterator begin() { return esg_static_iterator<SymmetricGroup>(); }
     /// element iteration end
