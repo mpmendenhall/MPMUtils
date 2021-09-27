@@ -4,7 +4,7 @@
 #ifndef UNPOLARIZEDBETA_HH
 #define UNPOLARIZEDBETA_HH
 
-#include <math.h>
+#include <cmath>
 #include "NuclPhysConstants.hh"
 using namespace physconst;
 

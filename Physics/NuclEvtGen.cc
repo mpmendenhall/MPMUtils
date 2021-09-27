@@ -4,7 +4,7 @@
 #include "NuclPhysConstants.hh"
 using namespace physconst;
 
-#include <math.h>
+#include <cmath>
 #include <stdlib.h>
 #include <stdexcept>
 

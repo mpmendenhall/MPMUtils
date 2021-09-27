@@ -1,7 +1,8 @@
 /// \file FloatErr.cc
+
 #include "FloatErr.hh"
 #include "StringManip.hh"
-#include <math.h>
+#include <cmath>
 
 float_err::float_err(const std::string& s): x(0), err(0) {
     vector<string> v = split(s,"~");

@@ -1,7 +1,6 @@
+/// \file SatoNiitaNeutrons.cc
+
 #include "SatoNiitaNeutrons.hh"
-#include <cmath>
-#include <cassert>
-#include <iostream>
 
 void SatoNiitaNeutrons::setParameters(double ss, double rc, double d, double w) {
     s_mod = ss;

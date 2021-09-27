@@ -1,4 +1,5 @@
-/// \file ElectronBindingEnergy.cc Atomic shell binding energy tables
+/// \file ElectronBindingEnergy.cc
+
 #include "ElectronBindingEnergy.hh"
 #include <stdio.h>
 

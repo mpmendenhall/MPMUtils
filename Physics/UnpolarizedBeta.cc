@@ -1,10 +1,10 @@
 /// \file UnpolarizedBeta.cc
+
 #include "UnpolarizedBeta.hh"
 #include <vector>
 #include <map>
 #include <cassert>
 #include <gsl/gsl_sf_dilog.h>
-#include <cmath>
 #include <stdexcept>
 
 #ifdef USE_ROOT_MATH
