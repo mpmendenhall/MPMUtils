@@ -8,14 +8,15 @@
 #include "MPIBinaryIO.hh"
 #include <cstring> // for std::memcpy
 #include <iostream> // for std::cout
+using std::cout;
 #include <stdexcept>
 
 void MPIBinaryIO::display() {
-    std::cout << "Rank " << mpirank << " task of " << mpisize << " available on " << hostname;
-    std::cout << " (" << coresPerNode << " cores) starting run.\n";
-    std::cout << " children: <";
-    for(auto r: availableRanks) std::cout << " " << r;
-    std::cout << " >\n";
+    cout << "Rank " << mpirank << " task of " << mpisize << " available on " << hostname;
+    cout << " (" << coresPerNode << " cores) starting run.\n";
+    cout << " children: <";
+    for(auto r: availableRanks) cout << " " << r;
+    cout << " >\n";
 }
 
 int MPIBinaryIO::mpisize = 0;
@@ -56,7 +57,7 @@ void MPIBinaryIO::uninit() { MPI_Finalize(); }
 void MPIBinaryIO::init(int argc, char **argv) {
     int status = MPI_Init(&argc, &argv);
     if(status != MPI_SUCCESS) {
-        std::cout << "MPI Init Error.\n";
+        cout << "MPI Init Error.\n";
         MPI_Abort(MPI_COMM_WORLD,status);
     }
 

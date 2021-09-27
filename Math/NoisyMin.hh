@@ -8,6 +8,8 @@
 #include "Quadratic.hh"
 #include "LinMin.hh"
 #include <string>
+using std::string;
+using std::vector;
 
 /// Minimizer for N-dimensional ``noisy'' function evaluation
 /**
@@ -77,7 +79,7 @@ public:
     double nSigmaStat = 4;          ///< statistical uncertainty search region expansion
 
     // internal / debugging quantities
-    vector<std::string> vnames{N};  ///< variable names
+    vector<string> vnames{N};       ///< variable names
     vector<evalpt> fvals;           ///< collected function evaluations
     gsl_matrix_wrapper SR0{N,N};    ///< initial search range/limits ellipse (Cholesky form)
     bool minStep = false;           ///< whether to apply minimum step limits

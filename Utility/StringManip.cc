@@ -46,7 +46,7 @@ string itosRN(int i) {
 
 string c_to_str(char c) {
     char ch[3];
-    sprintf(ch,"%c",c);
+    snprintf(ch, 3, "%c", c);
     return string(ch);
 }
 

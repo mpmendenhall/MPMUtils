@@ -397,7 +397,7 @@ std::ostream& operator<< (std::ostream &o, const NoisyMin& NM) {
     o << NM.QRNGn << '\n';
 
     // internal / debugging quantities
-    //vector<std::string> vnames;     ///< variable names
+    //vector<string> vnames;     ///< variable names
     //LinMin LM{NTERMS};              ///< fitter for quadratic surface x^T A x + b^T x + c around minimum
 
     return o;

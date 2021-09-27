@@ -8,6 +8,7 @@
 #include "ColorSpec.hh"
 #include "BBox.hh"
 #include <fstream>
+using std::ofstream;
 #include <cmath>
 
 namespace SVG {
@@ -256,7 +257,7 @@ namespace SVG {
         }
         /// write to file
         void write(const string& fname) {
-            std::ofstream o;
+            ofstream o;
             o.open(fname);
             write(o);
             o.close();

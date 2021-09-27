@@ -6,7 +6,6 @@
 
 #include "MPIBinaryIO.hh"
 #include "MultiJobControl.hh"
-#include <stdexcept>
 
 #ifdef WITH_MPI
 

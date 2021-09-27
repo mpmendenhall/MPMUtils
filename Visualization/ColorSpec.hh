@@ -40,7 +40,7 @@ namespace color {
         /// Color as 24-bit integer 0xRrGgBb
         int32_t as_rgb_i24() const { return (int32_t(r) << 16) + (int32_t(g) << 8) + int32_t(b); }
         /// Color as hexadecimal string "RrGgBb"
-        explicit operator string() const { char c[7]; sprintf(c,"%06x", as_rgb_i24()); return c; }
+        explicit operator string() const { char c[7]; snprintf(c, 7, "%06x", as_rgb_i24()); return c; }
     };
 
     struct hsv;

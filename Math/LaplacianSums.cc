@@ -24,7 +24,7 @@ double sum_factored_iquadratic(double u, double d) {
         return x*x;
     }
     if(!u) return sum_laplacian(d*d);
-    return M_PI*sinh(2*M_PI*d)/(d*(cosh(2*M_PI*d) - cos(2*M_PI*u)));
+    return M_PI/(d*(1/tanh(2*M_PI*d) - cos(2*M_PI*u)/sinh(2*M_PI*d)));
 }
 
 double sum_inverse_quadratic(double a, double b, double c) {

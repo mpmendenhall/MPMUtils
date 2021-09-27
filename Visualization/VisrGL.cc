@@ -215,7 +215,6 @@ void GLVisDriver::reshapeWindow(int width, int height) {
 
 void GLVisDriver::getMatrix() {
 
-
     float mP[4][4];
     glGetFloatv(GL_PROJECTION_MATRIX,  mP[0]); // download projection matrix
     glMatrixMode(GL_MODELVIEW);

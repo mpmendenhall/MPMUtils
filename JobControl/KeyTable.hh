@@ -7,9 +7,6 @@
 #include "BinaryIO.hh"
 #include <TMessage.h>
 #include <TObject.h>
-#include <map>
-using std::map;
-#include <stdexcept>
 
 #if BOOST_VERSION < 106900
 #include <boost/functional/hash.hpp>

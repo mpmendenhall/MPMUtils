@@ -152,7 +152,7 @@ vector<char> SQLite_Helper::toBlob() {
 
     sqlite3* dbb = nullptr;
     char memname[1024];
-    sprintf(memname, "file:/whatever?ptr=%p&sz=0&max=%zu&freeonclose=0", v.data(), v.size());
+    snprintf(memname, 1024, "file:/whatever?ptr=%p&sz=0&max=%zu&freeonclose=0", v.data(), v.size());
     int err = sqlite3_open_v2(memname, &dbb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_URI, "memvfs");
     if(err != SQLITE_OK) {
         std::runtime_error e("Failed to open memdb '" + string(memname) + "', error " + sqlite3_errmsg(dbb));
@@ -169,7 +169,7 @@ vector<char> SQLite_Helper::toBlob() {
 void SQLite_Helper::fromBlob(const void* dat, size_t sz) {
     sqlite3* dbb = nullptr;
     char memname[1024];
-    sprintf(memname, "file:/whatever?ptr=%p&sz=%zu&max=%zu&freeonclose=0", dat, sz, sz);
+    snprintf(memname, 1024, "file:/whatever?ptr=%p&sz=%zu&max=%zu&freeonclose=0", dat, sz, sz);
     int err = sqlite3_open_v2(memname, &dbb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_URI, "memvfs");
     if(err != SQLITE_OK) {
         std::runtime_error e("Failed to open memdb '" + string(memname) + "', error " + sqlite3_errmsg(dbb));

@@ -22,11 +22,9 @@ CN: polls isRunning(...) until a job has completed; runs JS->C->endJob(CN) to re
 #ifndef MULTIJOBCONTROL_HH
 #define MULTIJOBCONTROL_HH
 
-#include "BinaryIO.hh"
 #include "ObjectFactory.hh"
 #include "KeyTable.hh"
 #include <unistd.h>
-#include <stdexcept>
 
 class JobComm;
 

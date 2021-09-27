@@ -43,9 +43,9 @@ string TermSGR::diff(const TermSGR& S) const {
 
     if(!v.size()) return "";
 
-    char c[20];
+    char c[32];
     string s = "\x1b[";
-    for(auto i: v) { sprintf(c, "%i;", i); s += c; }
+    for(auto i: v) { snprintf(c, 32, "%i;", i); s += c; }
     s.back() = 'm';
     return s;
 }
