@@ -29,8 +29,6 @@
 #include <TSQLServer.h>
 #include <TSQLRow.h>
 #include <TSQLResult.h>
-#include <vector>
-#include <string>
 #include "Stringmap.hh"
 
 #define IGNORE_DEAD_DB false

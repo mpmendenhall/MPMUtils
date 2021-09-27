@@ -3,7 +3,6 @@
 
 #include "ConfigFactory.hh"
 #include "Averager.hh"
-#include <stdio.h>
 
 /// old-style averager with sum w*x, sum w*x*x
 template<typename value_t = double, typename weight_t = double>

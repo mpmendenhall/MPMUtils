@@ -5,7 +5,7 @@
 
 #include <netdb.h>  // for sockaddr_in, hostent
 #include <unistd.h> // for write(...), close(...)
-#include <signal.h>
+#include <signal.h> // for SIGPIPE
 #include <string>
 using std::string;
 

@@ -5,7 +5,6 @@
 #define CAYLEYTABLE_HH
 
 #include "FiniteGroup.hh"
-#include <iostream>
 
 /// Construct <Enumerated Semigroup> Cayley Table isomorphism of input <Enumerated Semigroup> G for faster group operations
 template<class ESG_t>

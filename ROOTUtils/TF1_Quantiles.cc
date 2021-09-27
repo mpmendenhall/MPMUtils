@@ -1,3 +1,6 @@
+/// \file TF1_Quantiles.cc
+// Michael P. Mendenhall
+
 #include "TF1_Quantiles.hh"
 #include <stdexcept>
 #include <TMath.h>

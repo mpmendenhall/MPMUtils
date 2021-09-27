@@ -3,7 +3,6 @@
 #include "ConfigFactory.hh"
 
 #include "UnitDefs.hh"
-#include <stdlib.h>
 
 using namespace Units;
 

@@ -25,10 +25,6 @@
 
 #include "VarVec.hh"
 #include "Matrix.hh"
-#include "BinaryOutputObject.hh"
-#include <vector>
-#include <algorithm>
-#include <cassert>
 
 /// A templatized, dynamically allocated matrix class.
 /**

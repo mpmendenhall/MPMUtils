@@ -6,16 +6,10 @@
 
 #include "OutputManager.hh"
 #include "TCumulative.hh"
-#include <TH1.h>
 #include <TVectorT.h>
 #include <TFile.h>
-#include <map>
-#include <string>
 #include <stdexcept>
 #include <set>
-
-using std::map;
-using std::string;
 using std::set;
 
 /// class for saving, retrieving, and summing data from file

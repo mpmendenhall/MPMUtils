@@ -23,12 +23,9 @@
 #define STRINGMAP_HH
 
 #include <map>
-#include <vector>
 #include "StringManip.hh"
-
+using std::map;
 using std::multimap;
-using std::vector;
-using std::string;
 
 /// wrapper for multimap with extra convenience functions
 template<class K, class V>

@@ -1,13 +1,8 @@
 /// \file SMFile.cc
 
 #include "SMFile.hh"
-
-#include <iostream>
-#include <sstream>
-#include <fstream>
 #include <utility>
 #include <stdexcept>
-#include "StringManip.hh"
 
 SMFile::SMFile(const string& fname, bool readit) {
     if(!readit || fname=="") return;

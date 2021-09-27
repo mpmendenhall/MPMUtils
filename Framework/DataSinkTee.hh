@@ -6,9 +6,6 @@
 
 #include "ConfigFactory.hh"
 #include "XMLTag.hh"
-#include <stdexcept>
-#include <vector>
-using std::vector;
 
 /// Tee input to multiple configured sinks
 template<typename T>

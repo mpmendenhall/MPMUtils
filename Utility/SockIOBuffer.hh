@@ -8,7 +8,6 @@
 #include <netdb.h> // for sockaddr_in, hostent
 #include <string>
 using std::string;
-#include <vector>
 using std::vector;
 
 /// Buffered data block output to socket connection

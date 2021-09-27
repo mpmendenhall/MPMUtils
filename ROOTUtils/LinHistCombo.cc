@@ -25,7 +25,6 @@
 
 #include "LinHistCombo.hh"
 #include "StringManip.hh"
-#include <TH1.h>
 
 unsigned int LinHistCombo::nFitters = 0;
 

@@ -5,7 +5,6 @@
 #include "VisrGL.hh"
 #include "VisrSVG.hh"
 #include "Icosahedral.hh"
-#include "ColorSpec.hh"
 
 #include <TRandom3.h>
 #include <stdlib.h>

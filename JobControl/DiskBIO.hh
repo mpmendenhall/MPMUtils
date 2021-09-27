@@ -7,7 +7,6 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include <stdexcept>
 
 /// Binary write to iostream objects
 class IOStreamBWrite: virtual public BinaryWriter {

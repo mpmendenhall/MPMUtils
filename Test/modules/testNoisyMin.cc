@@ -4,9 +4,7 @@
 #include "GlobalArgs.hh"
 #include "NoisyMin.hh"
 
-#include <iostream>
 #include <fstream>
-#include <stdio.h>
 using std::cout;
 
 #include <TGraph.h>

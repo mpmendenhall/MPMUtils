@@ -20,7 +20,6 @@
  */
 
 #include "TagCounter.hh"
-#include "StringManip.hh"
 
 #include <stdlib.h>
 #include <cassert>

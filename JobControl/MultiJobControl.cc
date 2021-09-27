@@ -3,7 +3,6 @@
 
 #include "MultiJobControl.hh"
 #include "DiskBIO.hh"
-#include <algorithm>
 
 string workerName(size_t wclass) { return FactoriesIndex::indexFor<JobWorker>().at(wclass).classname; }
 

@@ -5,10 +5,6 @@
 #define ELECTRONBINDINGENERGY_HH
 
 #include "SMFile.hh"
-#include <vector>
-#include <map>
-
-using std::map;
 
 /// table of electron binding energies
 class BindingEnergyTable {

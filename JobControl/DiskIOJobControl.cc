@@ -2,7 +2,6 @@
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "DiskIOJobControl.hh"
-#include <sstream>
 
 /*
 void DiskIOJobControl::init(int argc, char **argv) {

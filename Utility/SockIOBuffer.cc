@@ -2,7 +2,6 @@
 
 #include "SockIOBuffer.hh"
 #include <string.h> // for bzero(...)
-#include <unistd.h> // for write(...)
 #include <stdio.h>  // for printf(...)
 #include <signal.h> // for SIGPIPE
 #include <errno.h>  // for errno
@@ -53,7 +52,7 @@ int sockwrite(int fd, char* buff, size_t nbytes) {
         nbytes -= ret;
         buff += ret;
     }
-    return nwritten; 
+    return nwritten;
 }
 
 void SockIOBuffer::process_item() {

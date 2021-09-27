@@ -11,12 +11,10 @@
 using std::vector;
 #include <queue>
 using std::priority_queue;
-#include <stdio.h>  // for printf
 #include <cassert>
 #include <limits>
 #include <cmath> // for std::isfinite
 #include <stdexcept>
-#include <stdio.h>
 #include <csignal> // for SIGINT breakpoint
 
 /// Sort slightly-out-of-order items into proper order

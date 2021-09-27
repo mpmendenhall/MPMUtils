@@ -22,13 +22,9 @@
 #ifndef EX_CONTEXT_HH
 #define EX_CONTEXT_HH
 
-#include "EX_Note.hh"
 #include "EX_Scope.hh"
-
 #include <vector>
 using std::vector;
-#include <map>
-using std::map;
 #include <cassert>
 
 

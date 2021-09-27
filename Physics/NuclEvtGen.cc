@@ -6,7 +6,6 @@ using namespace physconst;
 
 #include <math.h>
 #include <stdlib.h>
-#include <algorithm>
 #include <stdexcept>
 
 #include <TRandom.h>

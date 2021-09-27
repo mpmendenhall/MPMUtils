@@ -5,7 +5,6 @@
 #define CLUSTEREDWINDOW_HH
 
 #include "OrderedWindow.hh"
-#include <cmath> // for fabs
 #include <vector>
 using std::vector;
 

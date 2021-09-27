@@ -4,12 +4,10 @@
 #define HDF5_CFGLOADER_HH
 
 #include "HDF5_IO.hh"
-#include "DataSink.hh"
 #include "GlobalArgs.hh"
 #include "ConfigFactory.hh"
 #include "AnalysisStep.hh"
 #include "ProgressBar.hh"
-#include "XMLTag.hh"
 
 /// Scan generic data from HDF5 file
 template<typename T>

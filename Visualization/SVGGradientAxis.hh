@@ -8,8 +8,6 @@
 #include "Interval.hh"
 #include <set>
 using std::set;
-#include <array>
-using std::array;
 
 /// D-dimensional plane equation
 template<size_t D, typename val_tp>

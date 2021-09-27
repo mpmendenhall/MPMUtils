@@ -61,17 +61,10 @@
 
 #include "RangeIt.hh"
 #include "Renumerate.hh"
-#include <map>
-using std::map;
 #include <utility>
 using std::pair;
-#include <vector>
-using std::vector;
-#include <set>
-using std::set;
 #include <iostream>
 #include <algorithm>
-#include <cassert>
 
 //////////////////////////////////
 // basic (semi)group constructions

@@ -3,7 +3,6 @@
 #ifndef CONJUGACYDECOMPOSITION_HH
 #define CONJUGACYDECOMPOSITION_HH
 
-#include "FiniteGroup.hh"
 #include "CayleyTable.hh"
 #include "EquivalenceClasses.hh"
 

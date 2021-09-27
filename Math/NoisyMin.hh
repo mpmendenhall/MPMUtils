@@ -4,7 +4,6 @@
 #define NOISYMIN_HH
 
 #include "PointSelector.hh"
-#include "LinalgHelpers.hh"
 #include "Quadratic.hh"
 #include "LinMin.hh"
 #include <string>

@@ -4,8 +4,7 @@
 #include "Quadratic.hh"
 #include "QuadraticT.hh"
 #include "VisrGL.hh"
-#include <vector>
-using std::vector;
+
 #include <TGraph.h>
 #include <TPad.h>
 #include <TRandom3.h>

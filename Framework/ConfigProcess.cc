@@ -1,7 +1,6 @@
 /// \file ConfigProcess.cc
 
 #include "ConfigProcess.hh"
-#include <cassert>
 #include <chrono>
 using std::chrono::steady_clock;
 

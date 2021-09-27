@@ -24,7 +24,6 @@
 
 #include "Polynomial.hh"
 #include "PolyEval.hh"
-#include <cassert>
 
 /// Configure LinMin-like classes to fit polynomial P(X;coeffs) = y(X)
 template<class Poly>

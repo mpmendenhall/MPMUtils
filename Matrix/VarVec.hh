@@ -23,14 +23,9 @@
 /// Make sure this header is only loaded once
 #define VARVEC_HH
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <vector>
 #include "Vec.hh"
 #include "Permutation.hh"
 #include "BinaryOutputObject.hh"
-#include <algorithm>
 #include <exception>
 
 /// Return a random number, uniformly distributed over interval [a,b]
@@ -436,8 +431,7 @@ double VarVec<T>::norm_L2() const {
 template<typename T>
 ostream& operator<<(ostream& o, const VarVec<T>& v) {
     o << "< ";
-    for(size_t i=0; i<v.size(); i++)
-        o << v[i] << " ";
+    for(size_t i=0; i<v.size(); i++) o << v[i] << " ";
     o << ">";
     return o;
 }

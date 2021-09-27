@@ -1,7 +1,6 @@
 /// \file OutDirProcess.cc
 
 #include "OutDirProcess.hh"
-#include <TFile.h>
 
 void OutDirProcess::start_data(DataFrame& F) {
     // search up chain to find any preceding OutDirProcess

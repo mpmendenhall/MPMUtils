@@ -2,7 +2,6 @@
 
 #include "JobQueue.hh"
 #include <algorithm>
-#include <cassert>
 
 JobQueue::Job JobQueue::jthread::haltThread;
 

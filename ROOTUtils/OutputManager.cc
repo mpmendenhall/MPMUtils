@@ -4,8 +4,6 @@
 #include "PathUtils.hh"
 #include "to_str.hh"
 #include <TFile.h>
-#include <TDirectory.h>
-#include <TH1.h>
 #include <TStyle.h>
 
 bool OutputManager::squelchAllPrinting = false;

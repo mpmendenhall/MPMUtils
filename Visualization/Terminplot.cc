@@ -2,8 +2,6 @@
 
 #include "Terminplot.hh"
 #include <algorithm>
-#include <stdexcept>
-#include <cmath>
 
 using namespace Terminart;
 using namespace color;

@@ -1,7 +1,6 @@
 /// \file DataFrame.cc
 
 #include "DataFrame.hh"
-#include <cassert>
 
 DataManager::~DataManager() {
     if(nAlloc != pool.size()) {

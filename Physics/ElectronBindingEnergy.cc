@@ -1,6 +1,5 @@
 /// \file ElectronBindingEnergy.cc Atomic shell binding energy tables
 #include "ElectronBindingEnergy.hh"
-#include "StringManip.hh"
 #include <stdio.h>
 
 const string BindingEnergyTable::shellnames = "KLMNOPQRST";

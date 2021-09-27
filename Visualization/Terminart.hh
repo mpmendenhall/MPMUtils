@@ -7,10 +7,6 @@
 #include "SGRManip.hh"
 #include "ColorSpec.hh"
 #include <utility> // for std::pair
-#include <map>
-using std::map;
-#include <vector>
-using std::vector;
 #include <limits>
 #include <stdexcept>
 #include <cmath> // std::isfinite

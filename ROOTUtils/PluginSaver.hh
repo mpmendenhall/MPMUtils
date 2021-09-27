@@ -8,8 +8,7 @@
 #include "ObjectFactory.hh"
 #include <chrono>
 using std::chrono::steady_clock;
-#include <libconfig.h++>
-using namespace libconfig;
+#include "libconfig_readerr.hh"
 
 /// A SegmentSaver that manages several (optional) plugin SegmentSavers sharing the same file
 class PluginSaver: public SegmentSaver {

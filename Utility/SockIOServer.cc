@@ -11,7 +11,6 @@
 #include <stdio.h>     // for printf(...)
 #include <sys/ioctl.h> // for ioctl(...)
 #include <poll.h>      // for poll(...)
-#include <pthread.h>
 #include <stdexcept>
 
 bool SockIOServer::process_connections() {

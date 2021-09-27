@@ -5,8 +5,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string>
-using std::string;
 //#include <chrono> // boost includes get this
 #include <cassert>
 

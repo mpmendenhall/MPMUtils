@@ -5,7 +5,6 @@
 #define QUATERNION_HH
 
 #include "Abstract.hh"
-#include <array>
 
 /// Quaternion arithmetic over arithmetic ring R
 template<typename R = double>

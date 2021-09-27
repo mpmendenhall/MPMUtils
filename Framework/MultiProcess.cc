@@ -1,7 +1,6 @@
 /// \file MultiProcess.cc
 
 #include "MultiProcess.hh"
-#include <cassert>
 
 REGISTER_FACTORYOBJECT(MultiProcess,ConfigProcess)
 

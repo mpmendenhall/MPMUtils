@@ -3,7 +3,6 @@
 #include "SockConnection.hh"
 #include <string.h> // for bzero(...)
 #include <stdio.h>  // for printf(...)
-#include <signal.h> // for SIGPIPE
 #include <errno.h>  // for errno
 
 bool SockConnection::open_socket(const string& host, int port) {

@@ -24,7 +24,6 @@
 
 #include <stdexcept>
 #include <dirent.h>
-#include <algorithm>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>

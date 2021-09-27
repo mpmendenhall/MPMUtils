@@ -6,7 +6,6 @@
 
 #include "Vec.hh"
 #include <stdexcept>
-#include <cmath>
 
 /// namespace for units represented (internally) in the SI system
 namespace Units {

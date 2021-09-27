@@ -24,7 +24,6 @@
 
 #include "StringManip.hh"
 #include <cassert>
-#include <algorithm>
 #include <deque>
 #include <stack>
 #include <stdio.h>

@@ -9,11 +9,6 @@
 #include "TF1_Quantiles.hh"
 #include "FloatErr.hh"
 
-#include <TF1.h>
-#include <vector>
-using std::vector;
-#include <map>
-using std::map;
 #include <set>
 using std::set;
 #include <limits>

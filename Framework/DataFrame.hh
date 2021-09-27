@@ -14,8 +14,6 @@ using std::string;
 #include <stdlib.h>
 #include <stdio.h>
 #include <boost/core/noncopyable.hpp>
-#include <mutex>
-#include <cassert>
 
 class DataFrame;
 

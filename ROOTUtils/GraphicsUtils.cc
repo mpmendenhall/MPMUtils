@@ -2,19 +2,16 @@
 #include "GraphicsUtils.hh"
 #include "PathUtils.hh"
 #include "StringManip.hh"
-#include <algorithm>
 #include <cassert>
 
 #include <unistd.h>
 
-#include <TEllipse.h>
 #include <TPad.h>
 #include <TCanvas.h>
 #include <TH1F.h>
 #include <TH2F.h>
 #include <TLatex.h>
 #include <TBox.h>
-#include <TStyle.h>
 #include <TColor.h>
 
 bool compareHistosByMax(TH1* i, TH1* j) {

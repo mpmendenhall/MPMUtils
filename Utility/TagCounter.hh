@@ -22,14 +22,8 @@
 #ifndef TAGCOUNTER_HH
 #define TAGCOUNTER_HH
 
-#include <map>
-#include <iostream>
 #include <istream>
-#include <sstream>
 #include "Stringmap.hh"
-#include "StringManip.hh"
-
-using std::map;
 
 /// Templatized counts tally
 template<typename T>

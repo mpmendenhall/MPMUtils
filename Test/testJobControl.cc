@@ -5,7 +5,6 @@ export SLURM_CPUS_ON_NODE=4
 mpirun -np $SLURM_CPUS_ON_NODE bin/testJobControl
 */
 
-#include "MPIBinaryIO.hh"
 #include "MPIJobControl.hh"
 #include "ThreadsJobControl.hh"
 #include "KTAccumJob.hh"

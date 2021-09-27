@@ -2,7 +2,6 @@
 // -- Michael P. Mendenhall, 2019
 
 #include "PluginSaver.hh"
-#include "libconfig_readerr.hh"
 #include "to_str.hh"
 
 PluginSaver::PluginSaver(OutputManager* pnt, const Setting& S, const string& nm, const string& inflName):

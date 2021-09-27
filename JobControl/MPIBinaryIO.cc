@@ -6,10 +6,8 @@
 #endif
 
 #include "MPIBinaryIO.hh"
-#include <cstring> // for std::memcpy
 #include <iostream> // for std::cout
 using std::cout;
-#include <stdexcept>
 
 void MPIBinaryIO::display() {
     cout << "Rank " << mpirank << " task of " << mpisize << " available on " << hostname;

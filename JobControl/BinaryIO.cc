@@ -2,7 +2,6 @@
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "BinaryIO.hh"
-#include <cstring> // for std::memcpy
 
 void BinaryWriter::end_wtx() {
     if(!wtxdepth) throw -1;

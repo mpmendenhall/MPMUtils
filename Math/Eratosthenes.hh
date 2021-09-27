@@ -28,7 +28,6 @@ using std::vector;
 #include <map>
 using std::map;
 #include <mutex>
-#include <type_traits>
 
 /// Sieve of Eratosthenes primes/factoring utility
 class PrimeSieve {

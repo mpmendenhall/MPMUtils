@@ -9,8 +9,6 @@
 
 #include <map>
 using std::map;
-#include <vector>
-using std::vector;
 #include <iostream>
 using std::ostream;
 

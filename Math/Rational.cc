@@ -1,9 +1,6 @@
 /// \file Rational.cc
 
 #include "Rational.hh"
-#include <cassert>
-#include <limits>
-#include <cmath>
 
 const auto int_t_max = std::numeric_limits<Rational::int_t>::max();
 

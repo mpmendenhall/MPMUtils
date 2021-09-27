@@ -4,7 +4,6 @@
 #include "HDF5_IO.hh"
 #include "PathUtils.hh" // for makePath
 #include <climits>
-#include <stdexcept>
 
 void HDF5_InputFile::openInput(const string& filename) {
     if(infile_id) {

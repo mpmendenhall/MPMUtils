@@ -5,7 +5,6 @@
 
 #include "SVGBuilder.hh"
 #include "GridLayout.hh"
-#include <cassert>
 
 /// place grid of subgroups in element
 void makeGrid(const GridLayout<double>& L, vector<shared_ptr<SVG::group>>& els, XMLBuilder& X) {

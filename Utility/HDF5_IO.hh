@@ -4,7 +4,6 @@
 #ifndef HDF5_IO_HH
 #define HDF5_IO_HH
 
-#include "HDF5_StructInfo.hh"
 #include "HDF5_Table_Cache.hh"
 
 /// base class for HDF5 file input

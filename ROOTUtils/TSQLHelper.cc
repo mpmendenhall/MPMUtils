@@ -26,10 +26,7 @@
 #include "TSQLHelper.hh"
 #include <stdlib.h>
 #include <unistd.h>
-#include "StringManip.hh"
 #include <stdexcept>
-#include <map>
-using std::map;
 
 TSQLHelper::TSQLHelper(const std::string& dbnm,
                      const std::string& dbAddress,

@@ -3,13 +3,13 @@
 #ifndef SOCKIOSERVER_HH
 #define SOCKIOSERVER_HH
 
+#include "ThreadDataSerializer.hh"
+
 #include <string>
 using std::string;
-#include <vector>
-using std::vector;
 #include <set>
 using std::set;
-#include <mutex>
+using std::vector;
 
 class ConnHandler;
 
@@ -129,8 +129,6 @@ protected:
 
     SockBlockSerializerServer* mySBSS;  ///< server handling serialization
 };
-
-#include "ThreadDataSerializer.hh"
 
 /// Block data serializer server
 class SockBlockSerializerServer: public ThreadedSockIOServer,

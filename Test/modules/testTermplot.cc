@@ -3,7 +3,7 @@
 
 #include "ConfigFactory.hh"
 #include "Terminplot.hh"
-#include <cmath>
+
 #include <iostream>
 #include <TRandom3.h>
 #include <time.h>

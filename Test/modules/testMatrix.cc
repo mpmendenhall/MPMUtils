@@ -1,7 +1,6 @@
 /// \file testMatrix.cc Test matrix operations
 
 #include "ConfigFactory.hh"
-#include "Rational.hh"
 #include "Matrix.hh"
 #include "PhiField.hh"
 #include "Stopwatch.hh"

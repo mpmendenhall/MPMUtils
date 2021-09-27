@@ -6,10 +6,7 @@
 
 #include "HDF5_StructInfo.hh"
 #include "DataSource.hh"
-#include "DataSink.hh"
 
-#include <vector>
-using std::vector;
 #include <map>
 using std::multimap;
 #include <algorithm>

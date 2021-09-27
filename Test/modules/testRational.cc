@@ -2,19 +2,13 @@
 
 #include "ConfigFactory.hh"
 
-#include "Eratosthenes.hh"
-#include "Rational.hh"
 #include "TestOperators.hh"
 #include "SurdField.hh"
 #include "ModularField.hh"
-#include "Abstract.hh"
 #include "Quaternion.hh"
 #include "Stopwatch.hh"
 #include "ProgressBar.hh"
 
-#include <stdio.h>
-#include <iostream>
-#include <cassert>
 #include <random>
 
 void summary(const PrimeSieve& S) {

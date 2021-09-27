@@ -3,11 +3,9 @@
 
 #include "ConfigFactory.hh"
 #include "GlobalArgs.hh"
-#include "libconfig_readerr.hh"
 #include "AnalysisStep.hh"
 #include "Exegete.hh"
 
-#include <stdlib.h>
 #include <stdio.h>
 
 /// Execute configured analysis routine

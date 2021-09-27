@@ -2,7 +2,6 @@
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "KTAccumJob.hh"
-#include <stdexcept>
 
 void KTAccumJobComm::endJob(BinaryIO& B) {
     if(!combos.size()) {

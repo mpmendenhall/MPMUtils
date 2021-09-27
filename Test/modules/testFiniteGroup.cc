@@ -3,10 +3,8 @@
 #include "ConfigFactory.hh"
 #include "GlobalArgs.hh"
 
-#include "FiniteGroup.hh"
 #include "JankoGroup.hh"
 #include "MathieuGroup.hh"
-#include "PermutationGroup.hh"
 #include "CyclicGroup.hh"
 #include "Stopwatch.hh"
 #include <stdlib.h>

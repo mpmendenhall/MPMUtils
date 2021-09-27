@@ -2,8 +2,6 @@
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "ThreadsJobControl.hh"
-#include <sstream>
-#include <unistd.h>
 #include <thread>
 
 /*

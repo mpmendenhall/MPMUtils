@@ -21,7 +21,6 @@
 
 #include "ControlMenu.hh"
 #include <utility>
-#include <cassert>
 
 bool StreamInteractor::menutils_CheckStackSize(unsigned int n) {
     assert(mydeque && mystack);

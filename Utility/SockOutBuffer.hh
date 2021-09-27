@@ -5,8 +5,6 @@
 
 #include "SockConnection.hh"
 #include "LocklessCircleBuffer.hh"
-
-#include <vector>
 using std::vector;
 
 /// Buffered data block output to socket connection

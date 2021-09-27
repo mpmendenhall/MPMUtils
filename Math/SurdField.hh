@@ -6,7 +6,6 @@
 
 #include "Rational.hh"
 #include <set>
-#include <cmath>
 
 /// Square root of prime factors; constructor defaults to 1
 class PrimeRoot_t: public std::set<int> {

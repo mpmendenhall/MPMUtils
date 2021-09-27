@@ -23,13 +23,8 @@
 /// Make sure this header is only loaded once
 #define BLOCKCMAT_HH
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <vector>
-#include <cassert>
 #include "CMatrix.hh"
 #include "VarMat.hh"
-#include "BinaryOutputObject.hh"
 #ifdef WITH_LAPACKE
 #include "LAPACKE_Matrix.hh"
 #endif

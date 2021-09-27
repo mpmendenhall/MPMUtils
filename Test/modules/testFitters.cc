@@ -1,8 +1,6 @@
 /// \file testFitters.cc Test of fit routines
 
 #include "ConfigFactory.hh"
-#include "Polynomial.hh"
-#include "PolyEval.hh"
 #include "PolyFit.hh"
 #include "LinMinConstrained.hh"
 #include "NGrid.hh"

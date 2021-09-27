@@ -5,10 +5,8 @@
 #define PERMUTATIONGROUP_HH
 
 #include "FiniteGroup.hh"
-#include "RangeIt.hh"
 #include "Partition.hh"
 #include <numeric>
-#include "iffy_constexpr.hh"
 
 /// Compile-time-evaluable factorial function
 constexpr inline size_t factorial(size_t i) { return i > 1? i*factorial(i-1) : 1; }

@@ -69,8 +69,6 @@ REGISTER_BAR(Baz)
 #define CONFIGASSEMBLER_HH
 
 #include "ObjectFactory.hh"
-#include <vector>
-using std::vector;
 
 /// Configuration assembler base class for generating 'C(...)'
 template<typename C>

@@ -2,14 +2,10 @@
 
 #include "ConfigFactory.hh"
 
-#include "Polynomial.hh"
-#include "PolyEval.hh"
 #include "PolyFit.hh"
 #include "NGrid.hh"
 #include "BBox.hh"
 #include "TestOperators.hh"
-
-#include "Abstract.hh"
 
 #include "LegendrePolynomials.hh"
 #include "HermitePolynomials.hh"

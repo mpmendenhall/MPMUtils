@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <iostream>
 #include <array>
-#include <algorithm>
 #include "GeomCalcUtils.hh"
 
 using std::ostream;

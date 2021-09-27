@@ -6,8 +6,6 @@
 // -- Michael P. Mendenhall, 2016
 
 #include "CircleMin.hh"
-#include <cmath>
-#include <iostream>
 using std::cout;
 
 #include <Math/Functor.h>

@@ -5,8 +5,6 @@
 #define POLYNOMIAL_HH
 
 #include "Abstract.hh"
-#include <vector>
-#include <cmath>
 
 /// Algebraic polynomial of monomials
 template<typename M, typename R>

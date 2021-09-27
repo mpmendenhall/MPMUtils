@@ -3,7 +3,6 @@
 
 #include "Icosahedral.hh"
 #include "ConfigFactory.hh"
-#include <stdlib.h>
 
 REGISTER_EXECLET(testIcosahedral) {
 

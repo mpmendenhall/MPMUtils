@@ -26,8 +26,6 @@
 #ifndef MULTIGAUS_HH
 #define MULTIGAUS_HH 1
 
-#include <string>
-using std::string;
 #include <vector>
 using std::vector;
 
