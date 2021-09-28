@@ -135,6 +135,10 @@ string dropLast(const string& str, const string& splitchars) {
     return str.substr(0, str.find_last_of(splitchars));
 }
 
+string suffix(const string& str, const string& splitchars) {
+    return str.substr(str.find_last_of(splitchars), string::npos);
+}
+
 std::pair<string,string> splitLast(const string& str, const string& splitchars) {
     auto i = str.find_last_of(splitchars);
     if(i == string::npos) return {"", str};

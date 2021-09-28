@@ -78,6 +78,8 @@ string join(const vector<string>& ss, const string& sep = " ");
 string strip(const string& str, const string& stripchars = " \t\r\n");
 /// drop last segment after splitting character
 string dropLast(const string& str, const string& splitchars);
+/// get suffix after last of split characters
+string suffix(const string& str, const string& splitchars = ".");
 /// divide into ([before last of char if present], after last of char)
 std::pair<string,string> splitLast(const string& str, const string& splitchars);
 /// keep starting characters in common between two strings

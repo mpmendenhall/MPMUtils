@@ -9,11 +9,8 @@
 #include "PathUtils.hh"
 #include "GetEnv.hh"
 #include "StringManip.hh"
-#include "CodeVersion.hh"
 #include <fstream>
 #include <stdio.h>
-
-void displayCodeVersion() { CodeVersion::display_code_version(); }
 
 string md5sum(const string& f) {
     FILE *p = popen(("md5sum "+f).c_str(), "r");

@@ -6,6 +6,7 @@
 
 #include "ContextMap.hh"
 #include "XMLTag.hh"
+#include "CodeVersion.hh"
 #include <time.h>
 
 /// get md5sum hash for file
@@ -13,9 +14,6 @@ string md5sum(const string& f);
 
 /// generate input file XML entry, with md5 of the file (use on '.xml' for large files!)
 XMLTag* infileEntry(const string& f);
-
-/// print code version info to stdout
-void displayCodeVersion();
 
 /// Base class for setting up standard ``analysis step'' .xml metadata
 class AnalysisStep: public XMLProvider, public s_context_singleton_ptr<AnalysisStep> {

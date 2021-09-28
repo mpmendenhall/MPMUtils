@@ -11,7 +11,7 @@
 /// Execute configured analysis routine
 int main(int argc, char** argv) {
     _EXPLAIN("Executing mpmexamples");
-    displayCodeVersion();
+    CodeVersion::display_code_version();
 
     if(argc < 2) {
         printf("Arguments: ./mpmexamples <config file | class> [-argname argval(s) ...]\n");

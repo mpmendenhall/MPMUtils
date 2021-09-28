@@ -127,7 +127,7 @@ LIST(APPEND EXTLIBS ${Geant4_LIBRARIES})
 #########################
 # Choose objects to build
 
-foreach(dir IN ITEMS External Exegete Framework JobControl Math Matrix Physics ROOTUtils Utility Visualization )
+foreach(dir IN ITEMS Delta External Exegete Framework JobControl Math Matrix Physics ROOTUtils Utility Visualization )
 include_directories(${PROJECT_SOURCE_DIR}/${dir})
 file(GLOB DIRSRC ${dir}/*.c*)
 LIST(APPEND SOURCE_FILES ${DIRSRC})
@@ -186,7 +186,7 @@ target_link_libraries(MPM ${EXTLIBS})
 add_dependencies(MPM update_codeversion)
 
 # test programs
-file(GLOB TESTEXEC Test/mpmexamples.cc)
+file(GLOB TESTEXEC Test/mpmexamples.cc Test/Delta.cc)
 file(GLOB TESTMODULES Test/modules/*.cc)
 #add_library(MPMtests SHARED ${TESTMODULES})
 #target_link_libraries(MPMtests MPM ${EXTLIBS})
