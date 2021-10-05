@@ -11,7 +11,7 @@
 class SockDistribHandler: public ConnHandler, public SockOutBuffer {
 public:
     /// Constructor
-    explicit SockDistribHandler(int sfd, SockIOServer* s = nullptr): ConnHandler(sfd,s) { SockOutBuffer::sockfd = sfd; SockOutBuffer::launch_mythread(); }
+    explicit SockDistribHandler(int sfd, SockIOServer* s = nullptr): ConnHandler(sfd,s), SockOutBuffer(sfd) { SockOutBuffer::launch_mythread(); }
 
     /// handle responses from client (do nothing; wait for output to break)
     void handle() override {
@@ -43,14 +43,11 @@ protected:
 };
 
 /// Client requesting and receiving block data from server
-class SockDistribClient: public SockConnection, public BlockHandler {
+class SockDistribClient: public BlockHandler {
 public:
     /// Constructor
-    SockDistribClient(const string& host = "", int port = 0):
-    BlockHandler(0,nullptr) { if(host.size() && port) SockDistribClient::open_socket(host,port); }
-
-    /// Open connection and receive block response
-    bool open_socket(const string& host, int port) override;
+    explicit SockDistribClient(const string& _host = "", int _port = 0):
+    BlockHandler(0,nullptr) { host = _host; port = _port; if(host.size() && port) connect_to_socket(); }
 
     // subclass me: Process data after buffer read; return false to end communication
     // bool process(const vector<char>& v) overide;

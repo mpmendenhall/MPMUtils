@@ -4,6 +4,7 @@
 #define SOCKIOSERVER_HH
 
 #include "ThreadDataSerializer.hh"
+#include "SockConnection.hh"
 
 #include <string>
 using std::string;
@@ -14,15 +15,11 @@ using std::vector;
 class ConnHandler;
 
 /// Base class listening and handling connections to port
-class SockIOServer {
+class SockIOServer: public SockConnection {
 public:
     /// Constructor
     SockIOServer() { }
-    /// Destructor
-    virtual ~SockIOServer() { }
 
-    string host = "localhost";          ///< host to serve on
-    int port = 0;                       ///< port to serve on
     bool accept_connections = false;    ///< whether to accept new connections
 
     /// receive and process connections to host and port
@@ -40,16 +37,13 @@ protected:
 };
 
 /// Base class for handling one accepted connection
-class ConnHandler {
+class ConnHandler: public SockConnection {
 public:
     /// Constructor
-    explicit ConnHandler(int sfd, SockIOServer* s = nullptr): sockfd(sfd), myServer(s) { }
-    /// Destructor
-    virtual ~ConnHandler() { }
+    explicit ConnHandler(int sfd, SockIOServer* s = nullptr): SockConnection(sfd), myServer(s) { }
     /// Communicate with accepted connection
     virtual void handle();
 
-    int sockfd;             ///< accepted connection file descriptor
     SockIOServer* myServer; ///< spawning parent server
 };
 
@@ -94,16 +88,14 @@ public:
     int read_timeout_ms = 2000;     ///< timeout for read after getting block header
 
 protected:
-    /// Read block data of expected size; return if successful
-    virtual bool read_block(int32_t bsize);
+    /// Allocate block buffer space (default: allocate in theblock->data)
+    virtual char* alloc_block(int32_t bsize);
     /// Set theblock to write point, or null if unavailable
     virtual void request_block(int32_t /*bsize*/) { if(!theblock) theblock = new dblock; }
     /// Return completed block to whence it came --- set to nullptr if not for re-use!
     virtual void return_block() { }
 
-    /// Allocate block buffer space
-    virtual char* alloc_block(int32_t bsize);
-    /// Process data `theblock` after buffer read; return false to end communication
+    /// Process data after buffer read (default: calls process_v on theblock->data); return false to end communication
     virtual bool process(int32_t bsize);
     /// Process data after buffer read; return false to end communication
     virtual bool process_v(const vector<char>&);

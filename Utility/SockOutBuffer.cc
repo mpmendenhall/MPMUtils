@@ -7,10 +7,10 @@
 void SockOutBuffer::process_item() {
     if(sockfd) {
         int32_t bsize = current.size();
-        auto ret = sockwrite((char*)&bsize, sizeof(bsize));
-        if(ret > 0 && bsize) ret = sockwrite(current.data(), bsize);
-        if(ret <= 0) {
-            fprintf(stderr, "ERROR %i writing to socket descriptor %i; connection closed!\n", errno, sockfd);
+        try {
+            sockwrite(current.data(), bsize);
+        } catch(std::runtime_error& e) {
+            fprintf(stderr, "%s\n\tclosing socket descriptor %i\n", e.what(), sockfd);
             close_socket();
         }
     }
@@ -23,9 +23,9 @@ void SockOutBuffer::process_item() {
 
 #ifdef SOCKET_BUFFTEST
 int main(int, char **) {
-    SockOutBuffer SIB;
+    SockOutBuffer SIB("localhost", 9999);
     SIB.launch_mythread();
-    SIB.open_socket("localhost",9999);
+    SIB.connect_to_socket();
 
     for(int i=0; i<10; i++) {
         printf("Sending some data...\n");

@@ -15,9 +15,3 @@ void SockDistribServer::sendData(const char* d, size_t n) {
         cc->finish_write();
     }
 }
-
-bool SockDistribClient::open_socket(const string& host, int port) {
-    bool b = SockConnection::open_socket(host, port);
-    if(b) BlockHandler::sockfd = SockConnection::sockfd;
-    return b;
-}

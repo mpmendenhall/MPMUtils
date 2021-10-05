@@ -103,17 +103,20 @@ public:
     virtual void process_item() = 0;
 
     /// launch buffer thread
-    virtual int launch_mythread() {
+    void launch_mythread() {
+        if(is_launched) throw std::logic_error("double launch attempted");
         is_launched = true;
-        return pthread_create(&mythread, nullptr, run_buffer_thread<typename std::remove_reference<decltype(*this)>::type>, this);
+        auto rc = pthread_create(&mythread, nullptr, run_buffer_thread<typename std::remove_reference<decltype(*this)>::type>, this);
+        if(rc) throw rc;
     }
 
     /// finish clearing buffer thread
-    virtual int finish_mythread() {
+    void finish_mythread() {
+        if(!is_launched) throw std::logic_error("attempt to finish un-begun work");
         all_done = true;
         int rc = pthread_join(mythread, NULL);
         is_launched = false;
-        return rc;
+        if(rc) throw rc;
     }
 
     size_t n_write_fails = 0;       ///< number of buffer-full write failures

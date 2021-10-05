@@ -11,8 +11,10 @@
 
 /// Scan generic data from HDF5 file
 template<typename T>
-class HDF5_CfgLoader: public Configurable, public HDF5_TableInput<T>, virtual public XMLProvider {
+class HDF5_CfgLoader: public Configurable, public HDF5_TableInput<T>, virtual public XMLProvider, public SinkUser<const T> {
 public:
+    using SinkUser<const T>::nextSink;
+
     /// Constructor
     explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", bool doMakeNext = true, const string& tname = "", int v = 0):
     XMLProvider("HDF5_CfgLoader"), Configurable(S), HDF5_TableInput<T>(tname, v) {
@@ -26,9 +28,6 @@ public:
 
         if(doMakeNext) makeNext(S);
     }
-
-    /// Destructor
-    ~HDF5_CfgLoader() { delete nextSink; }
 
     /// Push input file contents to nextSink
     void run() override {
@@ -49,7 +48,6 @@ public:
         nextSink->signal(DATASTREAM_END);
     }
 
-    DataSink<const T>* nextSink = nullptr;  ///< next step in chain --- owned by this
     int nLoad = -1;                     ///< maximum events to load
     hsize_t fRows = 0;                  ///< number of rows in input file
 

@@ -16,10 +16,15 @@
 
 /// Combine ordered items received from multiple "push" sources
 template<class T, typename ordering_t = typename T::ordering_t>
-class Collator {
+class Collator: public SinkUser<T> {
 public:
+    typedef typename std::remove_const<T>::type Tmut_t;
+    using SinkUser<T>::nextSink;
+
     /// polymorphic destructor: remember final flush.
-    virtual ~Collator() { assert(PQ.empty()); }
+    virtual ~Collator() {
+        if(!PQ.empty()) printf("Warning: %zu items left in un-flushed collator queue\n", PQ.size());
+    }
 
     /// add enumerated input
     size_t add_input(int nreq = 0) {
@@ -33,7 +38,10 @@ public:
     /// change minimum number required from input
     void change_required(size_t nI, int i) {
         auto& n = input_n.at(nI).first;
-        if(n <= 0 && n-i > 0) { --inputs_waiting; assert(inputs_waiting >= 0); }
+        if(n <= 0 && n-i > 0) {
+            if(inputs_waiting <= 0) throw std::logic_error("invalid inputs reduction");
+            --inputs_waiting;
+        }
         if(n > 0 && n-i <= 0) ++inputs_waiting;
         input_n[nI].second += i;
         n -= i;
@@ -58,10 +66,12 @@ public:
         size_t n;       ///< input enumeration
     };
 
-    /// add item from enumerated input
+    /// add item from enumerated input; output available collated
     void push(size_t nI, const T& o) {
-        assert(nI < input_n.size());
-        if(!input_n[nI].first++) { --inputs_waiting; assert(inputs_waiting >= 0); }
+        if(!input_n.at(nI).first++) {
+            --inputs_waiting;
+            assert(inputs_waiting >= 0);
+        }
         PQ.emplace(nI,o);
 
         while(!inputs_waiting && !PQ.empty()) pop();
@@ -69,11 +79,11 @@ public:
 
     /// bulk-add items
     void push(size_t nI, const std::vector<T>& os) {
-        assert(nI < input_n.size());
-        if(!os.size()) return;
-        auto& n = input_n[nI].first;
-        if(n <= 0 && n + os.size() > 0) { --inputs_waiting; assert(inputs_waiting >= 0); }
-        n += os.size();
+        int dn = os.size();
+        if(!dn) return;
+        auto& n = input_n.at(nI).first;
+        if(n <= 0 && n + dn > 0) { --inputs_waiting; assert(inputs_waiting >= 0); }
+        n += dn;
         for(auto& o: os) PQ.emplace(nI,o);
 
         while(!inputs_waiting && !PQ.empty()) pop();
@@ -117,8 +127,6 @@ public:
         return v;
     }
 
-    DataSink<T>* nextSink = nullptr;
-
 protected:
 
     /// pop next element (and push to nextSink)
@@ -134,19 +142,16 @@ protected:
     /// counter for (required number, waiting threshold) of datapoints from each input
     std::vector<std::pair<int,int>> input_n;
 
-    /// item from enumerated source
-    typedef std::pair<size_t,T> iT;
-
-    /// ordering comparator
-    struct s_order {
-        /// reverse ordering comparison
-        bool operator()(const iT& a, const iT& b) const {
-            return ordering_t(deref_if_ptr(b.second)) < ordering_t(deref_if_ptr(a.second));
+    /// one item from enumerated source
+    struct iT: public std::pair<size_t,Tmut_t> {
+        /// reverse ordering operator
+        bool operator<(const iT& b) const {
+            return ordering_t(deref_if_ptr(b.second)) < ordering_t(deref_if_ptr(this->second));
         }
     };
 
     /// ordered inputs
-    std::priority_queue<iT, std::vector<iT>, s_order> PQ;
+    std::priority_queue<iT, std::vector<iT>> PQ;
 };
 
 #endif

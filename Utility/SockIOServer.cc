@@ -1,44 +1,13 @@
 /// \file SockIOServer.cc
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE // for POLLRDHUP in poll()
-#endif
-
 #include "SockIOServer.hh"
-#include <netdb.h>     // for sockaddr_in, hostent
-#include <string.h>    // for bzero(...)
 #include <unistd.h>    // for write(...), usleep(n)
 #include <stdio.h>     // for printf(...)
 #include <sys/ioctl.h> // for ioctl(...)
-#include <poll.h>      // for poll(...)
 #include <stdexcept>
 
 bool SockIOServer::process_connections() {
-    // open socket file descriptor
-    auto sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        fprintf(stderr, "ERROR %i opening socket\n", sockfd);
-        throw std::runtime_error("Cannot open socket\n");
-    }
-
-    // bind server to socket
-    struct sockaddr_in serv_addr;
-    serv_addr.sin_family = AF_INET;
-    if(host.size()) {
-        struct hostent* hostinfo = gethostbyname(host.c_str());
-        if(hostinfo == nullptr) {
-            fprintf (stderr, "ERROR unknown hostname '%s'\n", host.c_str());
-            return false;
-        }
-        serv_addr.sin_addr = *(struct in_addr*) hostinfo->h_addr;
-    } else serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // default for this machine
-    serv_addr.sin_port = htons(port); // host to network byte order
-    int rc = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
-    if(rc < 0) {
-        fprintf(stderr, "ERROR %i binding socket\n", rc);
-        close(sockfd);
-        return false;
-    }
+    create_socket();
 
     // listen on socket for connections, allowing a backlog of 10
     listen(sockfd, 10);
@@ -104,49 +73,19 @@ void ConnHandler::handle() {
 ////////////////////
 ////////////////////
 
-#ifdef __APPLE__
-#define OR_POLLRDHUP
-#else
-#define OR_POLLRDHUP | POLLRDHUP
-#endif
-
 void BlockHandler::handle() {
     int32_t bsize;
-    struct pollfd pfd;
-    pfd.fd = sockfd;
-    pfd.events = POLLIN OR_POLLRDHUP;
     while(1) {
         if(abort) break;
-        int ret = poll(&pfd, 1 /*entries in pfd[]*/, block_timeout_ms);
-        if(ret != 1 || !(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL OR_POLLRDHUP))) break; // timeout or error
         bsize = 0;
-        int len = read(sockfd, &bsize, sizeof(bsize));
-        if(len != sizeof(bsize)) break; // error condition, e.g connection closed
-
-        if(bsize > 0 && !read_block(bsize)) break;
+        sockread(reinterpret_cast<char*>(&bsize), sizeof(bsize));
+        if(bsize > 0) {
+             auto buff = alloc_block(bsize);
+             if(!buff) break;
+             sockread(buff, bsize);
+        }
         if(!process(bsize)) break;
     }
-}
-
-bool BlockHandler::read_block(int32_t bsize) {
-    //printf("Reading block size %i\n", bsize);
-    auto buff = alloc_block(bsize);
-    if(!buff) return false;
-
-    int32_t nread = 0;
-    struct pollfd pfd;
-    pfd.fd = sockfd;
-    pfd.events = POLLIN OR_POLLRDHUP;
-    while(nread < bsize) {
-        int ret = poll(&pfd, 1 /*entries in pfd[]*/, read_timeout_ms);
-        if(ret != 1 || !(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL OR_POLLRDHUP))) break; // timeout or error
-
-        auto len = read(sockfd, buff+nread, bsize-nread);
-        if(len < 0) return false;
-        nread += len;
-        if(nread != bsize) usleep(1000);
-    }
-    return true;
 }
 
 bool BlockHandler::process(int32_t bsize) {
