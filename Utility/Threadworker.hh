@@ -5,6 +5,7 @@
 #define THREADWORKER_HH
 
 #include <pthread.h>
+#include <sched.h>
 #include <stdexcept>
 #include <condition_variable>
 #include <mutex>

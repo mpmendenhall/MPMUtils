@@ -51,6 +51,14 @@ public:
     }
 };
 
+/// attempt to find output lastSink from any input
+template<typename T>
+_SinkUser* _find_lastSink(T* s) {
+    auto i = dynamic_cast<_SinkUser*>(s);
+    if(!i) throw std::runtime_error("Invalid input chain top class");
+    return i->lastSink();
+}
+
 /// Redirection to a subsidiary sink output
 class SubSinkUser: public _SinkUser {
 public:
@@ -93,6 +101,16 @@ public:
     /// pass through data flow signal
     virtual void su_signal(datastream_signal_t s) { if(nextSink) nextSink->signal(s); }
 };
+
+/// attempt to find output lastSink from any input
+template<typename T, typename U>
+SinkUser<T>* find_lastSink(U* s) {
+    auto i = dynamic_cast<_SinkUser*>(s);
+    if(!i) throw std::runtime_error("Invalid input chain top class");
+    auto j = dynamic_cast<SinkUser<T>*>(i->lastSink());
+    if(!j) throw std::runtime_error("Incorrect output type for input chain");
+    return j;
+}
 
 /// Combined input/output link in analysis chain
 template<typename T, typename U>

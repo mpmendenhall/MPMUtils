@@ -359,8 +359,8 @@ public:
 
     /// get precalculated FFT workspace for dimension m
     static DFTWorkspace& get_ffter(size_t m, bool fwd) {
-        static map<size_t, DFTWorkspace*> ffters[2];
         std::lock_guard<std::mutex> lk(fftw_planner_mutex<T>());
+        static map<size_t, DFTWorkspace*> ffters[2];
         auto it = ffters[fwd].find(m);
         if(it != ffters[fwd].end()) return *(it->second);
         return *(ffters[fwd][m] = new DFTWorkspace(m,fwd));
@@ -376,8 +376,8 @@ public:
 
     /// get precalculated FFT workspace for dimension m
     static R2CWorkspace& get_ffter(size_t m, bool fwd) {
-        static map<size_t, R2CWorkspace*> ffters[2];
         std::lock_guard<std::mutex> lk(fftw_planner_mutex<T>());
+        static map<size_t, R2CWorkspace*> ffters[2];
         auto it = ffters[fwd].find(m);
         if(it != ffters[fwd].end()) return *(it->second);
         return *(ffters[fwd][m] = new R2CWorkspace(m,fwd));

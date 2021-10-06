@@ -7,6 +7,7 @@
 #include <libconfig.h++>
 using namespace libconfig;
 using std::string;
+#include <stdio.h>
 
 /// Default empty configuration
 extern const Config NullConfig;
@@ -25,6 +26,16 @@ const Setting& registerConfig(const Config& cfg);
 const Config& lookupConfig(const Setting& S);
 /// Look up configuration for setting (nullptr if not registered)
 const Config* lookupConfig(const Setting* S);
+
+/// place after try { ... } block for more helpful configuration error printouts
+#define SHOW_CFG_ERRORS \
+    catch(SettingNotFoundException& e) { \
+        printf("Setting not found thrown at '%s'\n", e.getPath()); throw; \
+    } catch(SettingException& e) { \
+        printf("Configuration SettingException (wrong type) at '%s'\n", e.getPath()); throw; \
+    } catch(ConfigException& e) { \
+        printf("Exiting on configuration error.\n"); throw; \
+    }
 
 #endif
 

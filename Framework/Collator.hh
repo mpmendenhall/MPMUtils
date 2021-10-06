@@ -117,9 +117,12 @@ public:
 
     /// thread-safe push to queue for use in threadjob()
     void qpush(size_t nI, const T& o) {
-        lock_guard<mutex> l(inputMut);
-        _push(nI, o);
-        inputReady.notify_one();
+        {
+            lock_guard<mutex> l(inputMut);
+            _push(nI, o);
+            inputReady.notify_one();
+        }
+        sched_yield();
     }
 
     /// thread-safe bulk-add items
@@ -160,7 +163,7 @@ public:
         /// bulk push
         void push(const vector<Tmut_t>& os) { M.qpush(n,os); }
 
-        SinkUser<T>* inSrc = nullptr;   ///< track source using this as sink
+        SinkUser<T>* inSrc = nullptr;   ///< input to this collator slot
     protected:
         Collator& M;    ///< orderer
         size_t n;       ///< input enumeration

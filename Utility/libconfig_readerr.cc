@@ -44,8 +44,6 @@ void readConfigFile(Config& cfg, const string& cfgfile, bool autoconvert) {
     try { cfg.readFile(cfgfile.c_str()); }
     catch(ParseException& e) {
         printf("\n\nConfiguration file syntax error!\n");
-        //auto ename = e.getError();
-        //if(ename) printf("\t%s\n", ename);
         auto efile = e.getFile();
         if(efile) printf("In file: '%s' ", efile);
         printf("Line %i\n\n", e.getLine());
