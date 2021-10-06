@@ -15,7 +15,8 @@ int main(int argc, char** argv) {
 
     if(argc < 2) {
         printf("Arguments: ./mpmexamples <config file | class> [-argname argval(s) ...]\n");
-        FactoriesIndex::display();
+        printf("Available class options:\n");
+        BaseFactory<Configurable>::displayConstructionOpts<const Setting&>();
         return EXIT_FAILURE;
     }
 

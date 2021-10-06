@@ -121,12 +121,31 @@ public:
         return dynamic_cast<_ArgsBaseFactory<B, Args...>&>(indexFor<B, Args...>().at(i)).construct(std::forward<Args>(a)...);
     }
 
+    /// show available options for construction
+    template<typename... Args>
+    static void displayConstructionOpts() {
+        for(auto& kv: indexFor<B, Args...>())
+            printf("\t'%s'\n", kv.second.classname.c_str());
+    }
+
     /// construct named-class object with arguments; nullptr if unavailable
     template<typename... Args>
     static base* construct(const string& classname, Args&&... a) {
         auto& mi = indexFor<B, Args...>();
         auto it = mi.find(hash(classname));
         return it == mi.end()?  nullptr : dynamic_cast<_ArgsBaseFactory<B, Args...>&>(it->second).construct(std::forward<Args>(a)...);
+    }
+
+    /// construct named-class object with arguments; throw with error message if unavailable
+    template<typename... Args>
+    static base* construct_or_throw(const string& classname, Args&&... a) {
+        auto o = construct(classname, std::forward<Args>(a)...);
+        if(!o) {
+            printf("Available options:\n");
+            displayConstructionOpts<Args...>();
+            throw std::runtime_error("Unknown class '" + classname + "' requested");
+        }
+        return o;
     }
 };
 

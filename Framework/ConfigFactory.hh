@@ -1,5 +1,5 @@
 /// \file ConfigFactory.hh Helper for ``factory'' construction from libconfig settings
-// -- Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef CONFIGFACTORY_HH
 #define CONFIGFACTORY_HH
@@ -11,49 +11,19 @@
 /// Compile-time registration of configuration-file-constructed classes
 #define REGISTER_CONFIG(NAME, BASE) static ObjectFactory<BASE, NAME, const Setting&> the_##NAME##_CfgFactory(#NAME);
 
-/// Compile-time registration of configuration-file-constructed classes with const parent ref
-#define REGISTER_CPCONFIG(NAME, BASE, PARENT) static ObjectFactory<BASE, NAME, const PARENT&, const Setting&> the_##NAME##_CPFactory(#NAME);
-
-/// Compile-time registration of configuration-file-constructed classes with mutable parent ref
-#define REGISTER_MPCONFIG(NAME, BASE, PARENT) static ObjectFactory<BASE, NAME, PARENT&, const Setting&> the_##NAME##_MPFactory(#NAME);
-
 /// Construct class-named (possibly-null-configured) object
-template<typename BASE>
-BASE* constructCfgClass(const string& classname, bool failOK = false, const Setting& S = NullSetting) {
-    auto o = BaseFactory<BASE>::construct(classname, S);
-    if(!o && !failOK) {
-        FactoriesIndex::display();
-        throw std::runtime_error("Unknown class '" + classname + "' requested");
-    }
-    return o;
+template<typename BASE, typename... Args>
+BASE* constructCfgClass(const string& classname, bool failOK = false, const Setting& S = NullSetting,  Args&&... a) {
+    return failOK? BaseFactory<BASE>::construct(classname, S, std::forward<Args>(a)...)
+        : BaseFactory<BASE>::construct_or_throw(classname, S, std::forward<Args>(a)...);
 }
 
 /// Construct configured object
-template<typename BASE>
-BASE* constructCfgObj(const Setting& S, string defaultclass = "", bool failOK = false) {
+template<typename BASE, typename... Args>
+BASE* constructCfgObj(const Setting& S, string defaultclass = "", bool failOK = false,  Args&&... a) {
     S.lookupValue("class", defaultclass);
     if(!defaultclass.size()) throw std::runtime_error("'class' not set in configuration");
-    return constructCfgClass<BASE>(defaultclass, failOK, S);
-}
-
-/// Construct configured object
-template<typename BASE, typename PARENT>
-BASE* constructMPCfgObj(PARENT& P, const Setting& S, string defaultclass = "", bool failOK = false) {
-    S.lookupValue("class", defaultclass);
-    if(!defaultclass.size()) throw std::runtime_error("'class' not set in configuration");
-    auto o = BaseFactory<BASE>::construct(defaultclass, P, S);
-    if(!o && !failOK) throw std::runtime_error("Unknown class '"+defaultclass+"' requested in configuration");
-    return o;
-}
-
-/// Construct configured object
-template<typename BASE, typename PARENT>
-BASE* constructCPCfgObj(const PARENT& P, const Setting& S, string defaultclass = "", bool failOK = false) {
-    S.lookupValue("class", defaultclass);
-    if(!defaultclass.size()) throw std::runtime_error("'class' not set in configuration");
-    auto o = BaseFactory<BASE>::construct(defaultclass, P, S);
-    if(!o && !failOK) throw std::runtime_error("Unknown class '"+defaultclass+"' requested in configuration");
-    return o;
+    return constructCfgClass<BASE>(defaultclass, failOK, S, std::forward<Args>(a)...);
 }
 
 /// Base class for a generic top-level configurable object
@@ -74,6 +44,8 @@ protected:
 #define REGISTER_CONFIGURABLE(NAME) static ObjectFactory<Configurable, NAME, const Setting&> the_##NAME##_CfgblFactory(#NAME);
 
 /// generate and register simple single-function Configurable --- follow by { brace enclosed } code block for run()
-#define REGISTER_EXECLET(NAME) class NAME: public Configurable { public: using Configurable::Configurable; void run() override; }; REGISTER_CONFIGURABLE(NAME) void NAME::run()
+#define REGISTER_EXECLET(NAME) class NAME: public Configurable { \
+    public: using Configurable::Configurable; void run() override; }; \
+    REGISTER_CONFIGURABLE(NAME) void NAME::run()
 
 #endif
