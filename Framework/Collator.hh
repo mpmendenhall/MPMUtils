@@ -15,6 +15,7 @@ using std::vector;
 #include <utility>
 #include <stdio.h>
 #include <cassert>
+#include <unistd.h>
 
 /// Combine ordered items received from multiple "push" sources
 template<class T, typename ordering_t = typename T::ordering_t>
@@ -33,7 +34,7 @@ public:
         ++inputs_waiting;
         size_t nI = input_n.size();
         input_n.emplace_back(0,0);
-        if(nreq) change_required(nI,nreq);
+        if(nreq) change_required(nI, nreq);
         return nI;
     }
 
@@ -117,11 +118,20 @@ public:
 
     /// thread-safe push to queue for use in threadjob()
     void qpush(size_t nI, const T& o) {
+        int myWait = input_n[nI].first;
+
+        // time to clear buffer
+        while(myWait > 32 && !inputs_waiting) {
+            sched_yield();
+            myWait = input_n[nI].first;
+        }
+
         {
             lock_guard<mutex> l(inputMut);
             _push(nI, o);
-            inputReady.notify_one();
+            if(!inputs_waiting) inputReady.notify_one();
         }
+        if(myWait > 32) usleep(1000*(myWait - 32));
         sched_yield();
     }
 
@@ -134,12 +144,12 @@ public:
 
     /// thread to pull from queue and push downstream
     void threadjob() override {
-        while(true) {
+        do {
             vector<Tmut_t> v;
+
             {
                 unique_lock<mutex> lk(inputMut);  // acquire unique_lock on queue in this scope
                 inputReady.wait(lk, [this]{ return !inputs_waiting || all_done; });  // unlock until notified
-                if(all_done) break;
                 while(!inputs_waiting && !PQ.empty()) {
                     auto& o = PQ.top();
                     if(!--input_n[o.first].first) ++inputs_waiting;
@@ -147,8 +157,10 @@ public:
                     PQ.pop();
                 }
             }
+
             if(nextSink) for(auto& o: v) nextSink->push(o);
-        }
+
+        } while(!all_done);
 
         signal(DATASTREAM_FLUSH);
     }
@@ -157,16 +169,16 @@ public:
     class MOqInput: public DataSink<T> {
     public:
         /// constructor
-        MOqInput(Collator& _M): M(_M), n(M.add_input()) { }
+        MOqInput(Collator& _M): M(&_M), n(M->add_input()) { }
         /// DataSink push
-        void push(T& o) override { M.qpush(n,o); }
+        void push(T& o) override { M->qpush(n,o); }
         /// bulk push
-        void push(const vector<Tmut_t>& os) { M.qpush(n,os); }
+        void push(const vector<Tmut_t>& os) { M->qpush(n,os); }
 
         SinkUser<T>* inSrc = nullptr;   ///< input to this collator slot
     protected:
-        Collator& M;    ///< orderer
-        size_t n;       ///< input enumeration
+        Collator* M;    ///< orderer
+        const size_t n; ///< input enumeration
     };
 
 protected:
@@ -201,8 +213,7 @@ protected:
         PQ.pop();
     }
 
-    /// number of inputs with input_n.first <= 0
-    int inputs_waiting = 0;
+    int inputs_waiting = 0; ///< number of inputs with input_n.first <= 0
     /// counter for (required number, waiting threshold) of datapoints from each input
     vector<std::pair<int,int>> input_n;
 

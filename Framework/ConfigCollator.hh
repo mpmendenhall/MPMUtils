@@ -8,16 +8,17 @@
 #include "ConfigFactory.hh"
 #include "GlobalArgs.hh"
 #include "XMLTag.hh"
+#include "fftwx.hh"
 
 /// wrapper to run Configurable in its own thread
 class ConfigThreader: public Threadworker {
 public:
     /// Constructor
-    ConfigThreader(Configurable* _C): C(_C) { }
+    ConfigThreader(Configurable& _C): C(_C) { }
     /// run in thread
-    void threadjob() override { if(C) C->run(); }
+    void threadjob() override { C.run(); }
     /// the Configurable to run
-    Configurable* C = nullptr;
+    Configurable& C;
 };
 
 /// Configturation-buildable Collator object
@@ -26,6 +27,8 @@ class ConfigCollator: public Collator<T>, public Configurable, public XMLProvide
 public:
     using Collator<T>::nextSink;
     typedef typename Collator<T>::MOqInput qadaptor_t;
+    int nthreads = 0;           ///< number of separate input threads (0 for single-threaded)
+    Configurable* C0 = nullptr; ///< representative input chain head
 
     /// Constructor
     explicit ConfigCollator(const Setting& S): Configurable(S), XMLProvider("Collator") {
@@ -33,6 +36,9 @@ public:
             nextSink = constructCfgObj<DataSink<T>>(S["next"]);
             tryAdd(nextSink);
         }
+        S.lookupValue("ninputs", nthreads);
+        optionalGlobalArg("nCollimate", nthreads, "number of parallel collated processes (0 for single-threaded)");
+
     }
 
     /// Destructor
@@ -43,20 +49,16 @@ public:
         if(!nextSink) throw std::runtime_error("Collator requires next: output");
         if(!Cfg.exists("prev")) throw std::runtime_error("Collator requires prev: input chain");
 
-        // number of parallel input chains
-        int nIn = 0;
-        Cfg.lookupValue("ninputs", nIn);
-        optionalGlobalArg("nCollimate", nIn, "number of parallel collated processes (0 for single-threaded)");
-
         // single-threaded mode
-        if(nIn <= 0) { run_singlethread(); return; }
+        if(nthreads <= 0) { run_singlethread(); return; }
 
         vector<ConfigThreader*> chains;
-        vector<qadaptor_t> adapters(nIn, *this);
+        vector<qadaptor_t> adapters;
+        for(int i = 0; i < nthreads; ++i) adapters.emplace_back(*this);
         for(auto& a: adapters) {
             auto C = constructCfgObj<Configurable>(Cfg["prev"]);
             if(!chains.size()) { C0 = C; tryAdd(C0); }
-            chains.push_back(new ConfigThreader(C));
+            chains.push_back(new ConfigThreader(*C));
             a.inSrc = find_lastSink<T>(C);
             a.inSrc->nextSink = &a;
             a.inSrc->ownsNext = false;
@@ -69,12 +71,13 @@ public:
         this->finish_mythread();
 
         for(auto c: chains) {
-            if(c->C != C0) delete c->C;
+            if(&c->C != C0) delete &c->C;
             delete c;
         }
         nextSink->signal(DATASTREAM_END);
     }
 
+    /// single-threaded run mode
     void run_singlethread() {
         C0 = constructCfgObj<Configurable>(Cfg["prev"]);
         tryAdd(C0);
@@ -84,7 +87,11 @@ public:
         C0->run();
     }
 
-    Configurable* C0 = nullptr; ///< representative input
+    /// XML output info
+    void _makeXML(XMLTag& X) override {
+        X.addAttr("nthreads", nthreads);
+
+    }
 };
 
 #endif
