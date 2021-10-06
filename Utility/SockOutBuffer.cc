@@ -16,23 +16,3 @@ void SockOutBuffer::process_item() {
     }
     current.clear();
 }
-
-////////////////////
-////////////////////
-////////////////////
-
-#ifdef SOCKET_BUFFTEST
-int main(int, char **) {
-    SockOutBuffer SIB("localhost", 9999);
-    SIB.launch_mythread();
-    SIB.connect_to_socket();
-
-    for(int i=0; i<10; i++) {
-        printf("Sending some data...\n");
-        auto wp = SIB.get_writepoint();
-        for(int j=0; j<10; j++) wp->push_back('*');
-        SIB.finish_write();
-        usleep(1000000);
-    }
-}
-#endif

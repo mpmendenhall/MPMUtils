@@ -82,14 +82,14 @@ protected:
 
 /// Cluster builder
 template<class C>
-class ClusterBuilder: public DataSink<const typename C::T> {
+class ClusterBuilder: public DataLink<const typename C::T, const C> {
 public:
     typedef C cluster_t;
     typedef typename cluster_t::T T;
     typedef typename cluster_t::ordering_t ordering_t;
 
     /// Constructor
-    explicit ClusterBuilder(ordering_t cdx): cluster_dx(cdx), clustOut(nullptr) {  }
+    explicit ClusterBuilder(ordering_t cdx): cluster_dx(cdx) {  }
 
     /// accept data flow signal
     void signal(datastream_signal_t sig) override {
@@ -97,13 +97,13 @@ public:
             completeCluster();
             t_prev = -C::order_max;
         }
-        if(clustOut) clustOut->signal(sig);
+        if(this->nextSink) this->nextSink->signal(sig);
     }
 
     /// push currentC into window
     void completeCluster() {
         currentC.close();
-        if(checkCluster(currentC) && clustOut) clustOut->push(currentC);
+        if(checkCluster(currentC) && this->nextSink) this->nextSink->push(currentC);
         currentC.clear();
     }
 
@@ -125,7 +125,6 @@ public:
     }
 
     ordering_t cluster_dx{};            ///< time spread for cluster identification
-    DataSink<const cluster_t>* clustOut;///< clustered objects recipient
 
 protected:
     /// examine and decide whether to include cluster
@@ -147,7 +146,7 @@ public:
     /// Constuctor with pass-through args
     template<typename... Args>
     explicit CBWindow(ordering_t dw, Args&&... a):
-    CB(std::forward<Args>(a)...), OrderedWindow<cluster_t, ordering_t>(dw) { CB::clustOut = this; }
+    CB(std::forward<Args>(a)...), OrderedWindow<cluster_t, ordering_t>(dw) { CB::nextSink = this; }
 
     using CB::signal;
     /// special override for non-loopy signalling

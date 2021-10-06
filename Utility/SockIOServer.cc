@@ -6,7 +6,7 @@
 #include <sys/ioctl.h> // for ioctl(...)
 #include <stdexcept>
 
-bool SockIOServer::process_connections() {
+void SockIOServer::threadjob() {
     create_socket();
 
     // listen on socket for connections, allowing a backlog of 10
@@ -14,9 +14,7 @@ bool SockIOServer::process_connections() {
     printf("Listening for connections on port %i (socket fd %i)\n", port, sockfd);
 
     // block until new socket created for connection
-    accept_connections = true;
-    while(accept_connections) {
-        { std::lock_guard<std::mutex> al(acceptLock); }
+    while(!all_done) {
         struct sockaddr cli_addr;
         socklen_t clilen = sizeof(cli_addr); // returns actual size of client address
         auto newsockfd = accept(sockfd, &cli_addr, &clilen);
@@ -28,23 +26,11 @@ bool SockIOServer::process_connections() {
     }
 
     close(sockfd);
-    return true;
 }
 
 void SockIOServer::handle_connection(int csockfd) {
     printf("Accepting new connection %i ... and closing it.\n", csockfd);
     close(csockfd);
-}
-
-void* sockioserver_thread(void* p) {
-    auto& A = *reinterpret_cast<SockIOServer*>(p);
-    auto isListening = A.process_connections();
-    if(!isListening) exit(EXIT_FAILURE);
-    return nullptr;
-}
-
-void SockIOServer::process_connections_thread() {
-    pthread_create(&sockthread, nullptr, sockioserver_thread, this);
 }
 
 ////////////////////
@@ -121,27 +107,23 @@ char* BlockHandler::alloc_block(int32_t bsize) {
 ////////////////////
 ////////////////////
 
-void* run_sockio_thread(void* p) {
-    auto h = reinterpret_cast<ConnHandler*>(p);
-    h->handle();
-    auto ts = dynamic_cast<ThreadedSockIOServer*>(h->myServer);
-    if(ts) ts->handlerClosed(h);
-    close(h->sockfd);
-    delete h;
-    return nullptr;
+void ConnHandler::threadjob() {
+    handle();
+    auto ts = dynamic_cast<ThreadedSockIOServer*>(myServer);
+    if(ts) ts->handlerClosed(this);
+    close(sockfd);
+    delete this;
 }
 
 void ThreadedSockIOServer::handle_connection(int csockfd) {
-    std::lock_guard<std::mutex> cl(connsLock);
-    pthread_t mythread;
+    lock_guard<mutex> cl(connsLock);
     auto h = makeHandler(csockfd);
     myConns.insert(h);
-    pthread_create(&mythread, nullptr, // thread attributes
-                   run_sockio_thread, h);
+    h->launch_mythread();
 }
 
 void ThreadedSockIOServer::handlerClosed(ConnHandler* h) {
-    std::lock_guard<std::mutex> cl(connsLock);
+    lock_guard<mutex> cl(connsLock);
     printf("Removing handler for sockfd %i\n", h->sockfd);
     myConns.erase(h);
 }
@@ -161,18 +143,3 @@ void SockBlockSerializerHandler::return_block() {
     if(theblock) mySBSS->return_allocated(theblock);
     theblock = nullptr;
 }
-
-
-#ifdef SOCKET_TEST
-// make SockIOServer -j4; ./SockIOServer
-class TestIOServer: public ThreadedSockIOServer {
-protected:
-    ConnHandler* makeHandler(int sfd) override { return new BlockHandler(sfd); }
-};
-
-int main(int, char **) {
-    SockBlockSerializerServer SBS;
-    SBS.launch_mythread();
-    SBS.process_connections("localhost",9999);
-}
-#endif

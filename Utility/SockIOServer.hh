@@ -15,34 +15,25 @@ using std::vector;
 class ConnHandler;
 
 /// Base class listening and handling connections to port
-class SockIOServer: public SockConnection {
+class SockIOServer: public SockConnection, public Threadworker {
 public:
-    /// Constructor
-    SockIOServer() { }
-
-    bool accept_connections = false;    ///< whether to accept new connections
-
     /// receive and process connections to host and port
-    bool process_connections();
-    /// launch process_connections in a separate thread
-    void process_connections_thread();
+    void threadjob() override;
 
 protected:
-    std::mutex acceptLock;              ///< lock on accepting new connections
-
     /// handle each new connection --- subclass me!
     virtual void handle_connection(int csockfd);
-    /// handler-creating thread
-    pthread_t sockthread;
 };
 
 /// Base class for handling one accepted connection
-class ConnHandler: public SockConnection {
+class ConnHandler: public SockConnection, public Threadworker {
 public:
     /// Constructor
     explicit ConnHandler(int sfd, SockIOServer* s = nullptr): SockConnection(sfd), myServer(s) { }
     /// Communicate with accepted connection
     virtual void handle();
+    /// register with server, run handle(), delete this
+    void threadjob() override;
 
     SockIOServer* myServer; ///< spawning parent server
 };
@@ -61,7 +52,7 @@ protected:
     void handle_connection(int csockfd) override;
 
     set<ConnHandler*> myConns;  ///< list of active connections
-    std::mutex connsLock;       ///< lock on myConns
+    mutex connsLock;       ///< lock on myConns
 };
 
 //////////////////////////////

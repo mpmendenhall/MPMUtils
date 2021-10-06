@@ -3,30 +3,18 @@
 #ifndef LOCKLESSCIRCULARBUFFER_HH
 #define LOCKLESSCIRCULARBUFFER_HH
 
+#include "Threadworker.hh"
+
 #include <vector>
 #include <unistd.h>     // for usleep
-#include <pthread.h>
-#include <stdexcept>
 #include <chrono>       // for timeouts
-
-/// pthreads function for launching read process
-template<class MyBufferType>
-void* run_buffer_thread(void* p) {
-    auto B = (MyBufferType*)p;
-    while(!B->all_done) { if(!B->flush()) usleep(B->sleep_us); }
-    B->flush();
-    return nullptr;
-}
-
 
 /// Circular buffer base class
 template<typename T>
-class LocklessCircleBuffer {
+class LocklessCircleBuffer: public Threadworker {
 public:
     /// Constructor
     LocklessCircleBuffer(size_t n = 1024): buf(n), ready(n) { }
-    /// Destructor
-    virtual ~LocklessCircleBuffer() { }
 
     /// change buffer size
     virtual void allocate(size_t n) {
@@ -99,31 +87,19 @@ public:
         return iw==ir? 0 : iw - ir - 1;
     }
 
+    /// task to be run in thread
+    void threadjob() override {
+        while(!all_done)
+            if(!flush())
+                usleep(sleep_us);
+        flush();
+    }
+
     /// processing on read item --- override me!
     virtual void process_item() = 0;
 
-    /// launch buffer thread
-    void launch_mythread() {
-        if(is_launched) throw std::logic_error("double launch attempted");
-        is_launched = true;
-        auto rc = pthread_create(&mythread, nullptr, run_buffer_thread<typename std::remove_reference<decltype(*this)>::type>, this);
-        if(rc) throw rc;
-    }
-
-    /// finish clearing buffer thread
-    void finish_mythread() {
-        if(!is_launched) throw std::logic_error("attempt to finish un-begun work");
-        all_done = true;
-        int rc = pthread_join(mythread, NULL);
-        is_launched = false;
-        if(rc) throw rc;
-    }
-
     size_t n_write_fails = 0;       ///< number of buffer-full write failures
-    bool all_done = false;          ///< flag to indicate when all write operations complete
     useconds_t sleep_us = 50000;    ///< recommended sleep time between buffer clearing operations
-    pthread_t mythread;             ///< identifier for buffer-clearing thread
-    bool is_launched = false;       ///< marker for whether thread is launched
 
 protected:
     std::vector<T> buf;             ///< data buffer

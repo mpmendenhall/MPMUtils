@@ -33,9 +33,9 @@ public:
     void sendvector(const vector<T>& v) { sendData((char*)v.data(), v.size()*sizeof(T)); }
 
     // set: host, port
-    // call: void process_connections_thread();
+    // call: launch_mythread();
     // call: sendData(...)
-    // set: accept_connections = false;
+    // call: finish_mythread();
 
 protected:
     /// create correct handler type

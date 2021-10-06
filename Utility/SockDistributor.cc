@@ -5,7 +5,7 @@
 #include <cassert>
 
 void SockDistribServer::sendData(const char* d, size_t n) {
-    std::lock_guard<std::mutex> cl(connsLock);
+    lock_guard<mutex> cl(connsLock);
     //printf("Sending %zu bytes data to %zu connections\n", n, myConns.size());
     for(auto c: myConns) {
         auto cc = static_cast<SockDistribHandler*>(c);

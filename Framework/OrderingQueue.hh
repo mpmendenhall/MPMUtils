@@ -119,7 +119,7 @@ template<
     typename T0 = typename std::remove_const<typename TNext::sink_t>::type,
     typename ordering_t = typename T0::ordering_t
 >
-class InlineOrderingQueue: public OrderingQueue<T0, ordering_t> {
+class InlineOrderingQueue: public OrderingQueue<T0, ordering_t>, public SinkUser<typename TNext::sink_t> {
 public:
     /// parent class type
     typedef OrderingQueue<T0, ordering_t> super;
@@ -127,9 +127,7 @@ public:
     typedef typename super::T T;
 
     /// Constructor, with output target
-    InlineOrderingQueue(TNext* S = nullptr, ordering_t _dt = super::order_max): super(_dt) { nextSink = S; }
-
-    TNext* nextSink = nullptr;
+    InlineOrderingQueue(TNext* S = nullptr, ordering_t _dt = super::order_max): super(_dt) { this->nextSink = S; }
 
     /// clear remaining objects through window
     void signal(datastream_signal_t sig) override {

@@ -3,7 +3,7 @@
 #include "ContextMap.hh"
 
 std::vector<ContextMap*>& ContextMap::getContextStack() {
-    static thread_local std::vector<ContextMap*> v;
+    static std::vector<ContextMap*> v;
     return v;
 }
 
