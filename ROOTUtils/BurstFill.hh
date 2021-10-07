@@ -10,7 +10,7 @@
 #include "OrderedData.hh"
 
 /// Covariance matrix paired to histogram for correlated-bin fills
-class BurstFill: public MultiFill, public ClusterBuilder<Cluster<OrderedData<int>>> {
+class BurstFill: public MultiFill, public Clusterer<OrderedData<int>> {
 public:
     /// Constructor, corresponding to histogram
     BurstFill(const string& _name, TH1& H): MultiFill(_name, H), ClusterBuilder(500e3), OQ(this, 1e9) { }

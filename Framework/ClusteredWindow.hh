@@ -10,9 +10,9 @@ using std::vector;
 
 /// "Cluster" base class
 template<class _T, typename _ordering_t = typename _T::ordering_t>
-class Cluster: public vector<_T> {
+class Cluster: public vector<typename std::remove_const<_T>::type> {
 public:
-    typedef _T T;
+    typedef typename std::remove_const<_T>::type T;
     typedef _ordering_t ordering_t;
     typedef vector<T> super;
     using super::size;
@@ -131,6 +131,10 @@ protected:
     cluster_t currentC{};               ///< cluster currently being built
     ordering_t t_prev = -C::order_max;  ///< previous item arrival
 };
+
+/// Default clustering type
+template<class T>
+using Clusterer = ClusterBuilder<Cluster<T>>;
 
 /// Wrap ClusterBuilder in OrderedWindow
 template<class CB>
