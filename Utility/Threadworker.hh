@@ -26,6 +26,8 @@ public:
     void launch_mythread();
     /// request and wait for completion of worker thread (error if not launched)
     void finish_mythread();
+    /// get launch status
+    bool checkRunning() const { return is_launched; }
 
 protected:
     /// pthreads function for launching processing loop

@@ -4,45 +4,48 @@
 #ifndef CONFIGCOLLATOR_HH
 #define CONFIGCOLLATOR_HH
 
-#include "Collator.hh"
-#include "ConfigFactory.hh"
+#include "_Collator.hh"
+#include "ConfigThreader.hh"
 #include "GlobalArgs.hh"
 #include "XMLTag.hh"
-#include "fftwx.hh"
 
-/// wrapper to run Configurable in its own thread
-class ConfigThreader: public Threadworker {
+/// Type-independent re-casting base
+class _ConfigCollator: public Configurable, public XMLProvider, virtual public _Collator {
 public:
     /// Constructor
-    ConfigThreader(Configurable& _C): C(_C) { }
-    /// run in thread
-    void threadjob() override { C.run(); }
-    /// the Configurable to run
-    Configurable& C;
-};
+    explicit _ConfigCollator(const Setting& S):
+    Configurable(S), XMLProvider("Collator") {
+        S.lookupValue("ninputs", nthreads);
+        optionalGlobalArg("nCollimate", nthreads, "number of parallel collated processes (0 for single-threaded)");
+    }
 
-/// Configturation-buildable Collator object
-template<class T>
-class ConfigCollator: public Collator<T>, public Configurable, public XMLProvider  {
-public:
-    using Collator<T>::nextSink;
-    typedef typename Collator<T>::MOqInput qadaptor_t;
+    /// Destructor
+    ~_ConfigCollator() { delete C0; }
+
     int nthreads = 0;           ///< number of separate input threads (0 for single-threaded)
     Configurable* C0 = nullptr; ///< representative input chain head
 
+    /// XML output info
+    void _makeXML(XMLTag& X) override {
+        X.addAttr("nthreads", nthreads);
+    }
+};
+
+#include "Collator.hh"
+
+/// Configturation-buildable Collator object
+template<class T>
+class ConfigCollator: public _ConfigCollator, public Collator<T> {
+public:
+    using Collator<T>::nextSink;
+
     /// Constructor
-    explicit ConfigCollator(const Setting& S): Configurable(S), XMLProvider("Collator") {
+    explicit ConfigCollator(const Setting& S): _ConfigCollator(S) {
         if(S.exists("next")) {
             nextSink = constructCfgObj<DataSink<T>>(S["next"]);
             tryAdd(nextSink);
         }
-        S.lookupValue("ninputs", nthreads);
-        optionalGlobalArg("nCollimate", nthreads, "number of parallel collated processes (0 for single-threaded)");
-
     }
-
-    /// Destructor
-    ~ConfigCollator() { delete C0; }
 
     /// Run as top-level object
     void run() override {
@@ -53,15 +56,11 @@ public:
         if(nthreads <= 0) { run_singlethread(); return; }
 
         vector<ConfigThreader*> chains;
-        vector<qadaptor_t> adapters;
-        for(int i = 0; i < nthreads; ++i) adapters.emplace_back(*this);
-        for(auto& a: adapters) {
+        for(int i = 0; i < nthreads; ++i) {
             auto C = constructCfgObj<Configurable>(Cfg["prev"]);
             if(!chains.size()) { C0 = C; tryAdd(C0); }
             chains.push_back(new ConfigThreader(*C));
-            a.inSrc = find_lastSink<T>(C);
-            a.inSrc->nextSink = &a;
-            a.inSrc->ownsNext = false;
+            connect_input(*find_lastSinkUser<T>(C));
         }
 
         nextSink->signal(DATASTREAM_START);
@@ -81,17 +80,15 @@ public:
     void run_singlethread() {
         C0 = constructCfgObj<Configurable>(Cfg["prev"]);
         tryAdd(C0);
-        auto inSrc = find_lastSink<T>(C0);
-        inSrc->nextSink = nextSink;
+        auto inSrc = find_lastSinkUser<T>(C0);
+        inSrc->getNext() = nextSink;
         inSrc->ownsNext = false;
         C0->run();
     }
-
-    /// XML output info
-    void _makeXML(XMLTag& X) override {
-        X.addAttr("nthreads", nthreads);
-
-    }
 };
+
+/// Registration in AnaIndex
+template<typename T>
+_ConfigCollator* AnaIndex<T>::makeConfigCollator(const Setting& S) const { return new ConfigCollator<T>(S); }
 
 #endif

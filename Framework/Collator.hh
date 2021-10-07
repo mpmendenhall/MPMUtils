@@ -4,69 +4,52 @@
 #ifndef COLLATOR_HH
 #define COLLATOR_HH
 
+#include "_Collator.hh"
 #include "DataSink.hh"
-#include "Threadworker.hh"
-#include "deref_if_ptr.hh"
 
-#include <cstddef> // for size_t on some systems
+#include "deref_if_ptr.hh"
 #include <queue>
-#include <vector>
-using std::vector;
-#include <utility>
 #include <stdio.h>
 #include <cassert>
 #include <unistd.h>
 
 /// Combine ordered items received from multiple "push" sources
 template<class T, typename ordering_t = typename T::ordering_t>
-class Collator: public SinkUser<T>, public Threadworker {
+class Collator: virtual public _Collator, public SinkUser<T> {
 public:
     typedef typename std::remove_const<T>::type Tmut_t;
     using SinkUser<T>::nextSink;
 
-    /// polymorphic destructor: remember final flush.
-    virtual ~Collator() {
-        if(!PQ.empty()) printf("Warning: %zu items left in un-flushed collator queue\n", PQ.size());
+    /// Destructor: remember final flush.
+    ~Collator() {
+        if(!PQ.empty())
+            printf("Warning: %zu items left in un-flushed collator queue\n", PQ.size());
+        for(auto i: vInputs) delete i;
     }
-
-    /// add enumerated input
-    size_t add_input(int nreq = 0) {
-        ++inputs_waiting;
-        size_t nI = input_n.size();
-        input_n.emplace_back(0,0);
-        if(nreq) change_required(nI, nreq);
-        return nI;
-    }
-
-    /// change minimum number required from input
-    void change_required(size_t nI, int i) {
-        auto& n = input_n.at(nI).first;
-        if(n <= 0 && n-i > 0) {
-            if(inputs_waiting <= 0) throw std::logic_error("invalid inputs reduction");
-            --inputs_waiting;
-        }
-        if(n > 0 && n-i <= 0) ++inputs_waiting;
-        input_n[nI].second += i;
-        n -= i;
-    }
-    /// get requirement threshold for input
-    int get_required(size_t nI) const { return input_n.at(nI).second; }
-    /// set minimum required from input
-    void set_required(size_t nI, int i) { change_required(nI, i-get_required(nI)); }
 
     /// convenience input handle for this orderer
     class MOInput: public DataSink<T> {
     public:
         /// constructor
-        MOInput(Collator& _M): M(_M), n(M.add_input()) { }
+        MOInput(Collator& _M, SinkUser<T>* s = nullptr):
+        inSrc(s), n(_M.add_input()), M(&_M) {
+            if(inSrc) {
+                auto& nxt = inSrc->getNext();
+                if(nxt) throw std::logic_error("output already connected");
+                nxt = this;
+                inSrc->ownsNext = false;
+            }
+        }
         /// DataSink push
-        void push(T& o) override { M.push(n,o); }
+        void push(T& o) override { M->push(n,o); }
         /// bulk push
-        void push(vector<T>& os) { M.push(n,os); }
+        virtual void push(const vector<Tmut_t>& os) { M->push(n,os); }
+
+        SinkUser<T>* inSrc = nullptr;   ///< input to this collator slot
+        const size_t n;                 ///< input enumeration
 
     protected:
-        Collator& M;    ///< orderer
-        size_t n;       ///< input enumeration
+        Collator* M;    ///< orderer
     };
 
     /// output all available collated items
@@ -77,41 +60,15 @@ public:
     void push(size_t nI, const vector<Tmut_t>& os) { _push(nI, os); process_ready(); }
 
     /// handle signals, including flush
-    virtual void signal(datastream_signal_t sig) {
-        if(sig >= DATASTREAM_FLUSH) while(!PQ.empty()) pop();
-        if(this->nextSink) this->nextSink->signal(sig);
-    }
-
-    /// clear all inputs
-    virtual void reset() {
-        signal(DATASTREAM_FLUSH);
-        inputs_waiting = 0;
-        input_n.clear();
-    }
-
-    /// get list of ``waiting'' inputs
-    vector<size_t> get_waiting() const {
-        vector<size_t> v;
-        for(size_t i=0; i<input_n.size(); ++i)
-            if(input_n[i].first <= 0)
-                v.push_back(i);
-        return v;
-    }
-
-    /// get list of ``free'' inputs with no wait threshold
-    vector<size_t> get_free() const {
-        vector<size_t> v;
-        for(size_t i=0; i<input_n.size(); ++i)
-            if(input_n[i].second < 0)
-                v.push_back(i);
-        return v;
-    }
-
-    /// stop waiting on any "stuck" inputs
-    vector<size_t> unstick() {
-        auto v = get_waiting();
-        for(auto nI: v) set_required(nI,-1);
-        return v;
+    void signal(datastream_signal_t sig) override {
+        lock_guard<mutex> lk(inputMut);
+        if(sig >= DATASTREAM_FLUSH) {
+            while(!PQ.empty()) {
+                pop();
+                sched_yield();
+            }
+        }
+        if(nextSink) nextSink->signal(sig);
     }
 
     // --- multithreading support ---
@@ -146,7 +103,6 @@ public:
     void threadjob() override {
         do {
             vector<Tmut_t> v;
-
             {
                 unique_lock<mutex> lk(inputMut);  // acquire unique_lock on queue in this scope
                 inputReady.wait(lk, [this]{ return !inputs_waiting || all_done; });  // unlock until notified
@@ -157,8 +113,12 @@ public:
                     PQ.pop();
                 }
             }
-
-            if(nextSink) for(auto& o: v) nextSink->push(o);
+            if(nextSink) {
+                for(auto& o: v) {
+                    nextSink->push(o);
+                    sched_yield();
+                }
+            }
 
         } while(!all_done);
 
@@ -166,20 +126,26 @@ public:
     }
 
     /// convenience threaded input handle for this orderer
-    class MOqInput: public DataSink<T> {
+    class MOqInput: public MOInput {
     public:
+        using MOInput::M;
+        using MOInput::n;
+
         /// constructor
-        MOqInput(Collator& _M): M(&_M), n(M->add_input()) { }
+        MOqInput(Collator& _M, SinkUser<T>* s = nullptr): MOInput(_M, s) { }
         /// DataSink push
         void push(T& o) override { M->qpush(n,o); }
         /// bulk push
-        void push(const vector<Tmut_t>& os) { M->qpush(n,os); }
-
-        SinkUser<T>* inSrc = nullptr;   ///< input to this collator slot
-    protected:
-        Collator* M;    ///< orderer
-        const size_t n; ///< input enumeration
+        void push(const vector<Tmut_t>& os) override { M->qpush(n,os); }
     };
+
+    /// connect SinkUser as input
+    void connect_input(_SinkUser& s, int nreq = 0) override {
+        vInputs.push_back(new MOqInput(*this, &dynamic_cast<SinkUser<T>&>(s)));
+        change_required(vInputs.back()->n, nreq);
+    }
+
+    vector<MOInput*> vInputs;  ///< input adapters
 
 protected:
 
@@ -212,10 +178,6 @@ protected:
         if(nextSink) nextSink->push(const_cast<Tmut_t&>(o.second));
         PQ.pop();
     }
-
-    int inputs_waiting = 0; ///< number of inputs with input_n.first <= 0
-    /// counter for (required number, waiting threshold) of datapoints from each input
-    vector<std::pair<int,int>> input_n;
 
     /// one item from enumerated source
     struct iT: public std::pair<size_t,Tmut_t> {

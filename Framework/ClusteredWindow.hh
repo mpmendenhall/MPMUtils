@@ -26,8 +26,6 @@ public:
 
     /// Constructor
     explicit Cluster(ordering_t w = {}): dx(w) { }
-    /// forbid direct assignment
-    const Cluster& operator=(const Cluster& C) = delete;
     /// Polymorphic destructor
     virtual ~Cluster() { }
 
