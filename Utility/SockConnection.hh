@@ -5,6 +5,7 @@
 
 #include <netdb.h>  // for sockaddr_in, hostent
 #include <unistd.h> // for write(...), close(...), usleep(n)
+#include <stdexcept>
 #include <string>
 using std::string;
 
