@@ -8,6 +8,9 @@
 #include "XMLTag.hh"
 #include "CodeVersion.hh"
 #include <time.h>
+#include <chrono>
+using std::chrono::steady_clock;
+typedef std::chrono::time_point<steady_clock> sclock_time;
 
 /// get md5sum hash for file
 string md5sum(const string& f);
@@ -24,7 +27,9 @@ public:
     vector<string> infiles;     ///< list of input files
     string outfilename;         ///< output file name
     string codename;            ///< name of this analysis code
-    time_t t0;                  ///< start of process
+    time_t t0;                  ///< start of process (UNIX timestamp)
+    sclock_time pt0;            ///< precision start time
+
     string anatag;              ///< outermost tag for analysis
 
     /// initialize output XML file by copy from first input file; return success

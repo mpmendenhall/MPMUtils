@@ -23,7 +23,8 @@ string md5sum(const string& f) {
 }
 
 AnalysisStep::AnalysisStep(const string& cd): XMLProvider("AnalysisStep"),
-codename(cd), t0(time(nullptr)), anatag(PROJ_ENV_PFX()+"-Analysis") { }
+codename(cd), t0(time(nullptr)), pt0(steady_clock::now()),
+anatag(PROJ_ENV_PFX()+"-Analysis") { }
 
 bool AnalysisStep::make_xmlout() {
     if(!outfilename.size()) {
@@ -83,8 +84,8 @@ void AnalysisStep::_makeXML(XMLTag& X) {
     X.attrs["git_hash"] = CodeVersion::repo_version;
     X.attrs["git_tag"] = CodeVersion::repo_tagname;
     X.attrs["compiler"] = CodeVersion::compiler;
-    X.addAttr("time", time(nullptr));
-    X.addAttr("dtime", time(nullptr)-t0);
+    X.addAttr("start_time", t0);
+    X.addAttr("running_time", std::chrono::duration<double>(steady_clock::now()-pt0).count());
     X.attrs["host"] = CodeVersion::host;
     X.attrs["user"] = CodeVersion::user;
 

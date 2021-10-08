@@ -8,13 +8,14 @@
 #include "ConfigThreader.hh"
 #include "GlobalArgs.hh"
 #include "XMLTag.hh"
+#include <thread>
 
 /// Type-independent re-casting base
 class _ConfigCollator: public Configurable, public XMLProvider, virtual public _Collator {
 public:
     /// Constructor
     explicit _ConfigCollator(const Setting& S):
-    Configurable(S), XMLProvider("Collator") {
+    Configurable(S), XMLProvider("Collator"), nthreads(std::thread::hardware_concurrency()) {
         S.lookupValue("ninputs", nthreads);
         optionalGlobalArg("nCollimate", nthreads, "number of parallel collated processes (0 for single-threaded)");
     }
@@ -22,7 +23,7 @@ public:
     /// Destructor
     ~_ConfigCollator() { delete C0; }
 
-    int nthreads = 0;           ///< number of separate input threads (0 for single-threaded)
+    int nthreads;               ///< number of separate input threads (0 for single-threaded)
     Configurable* C0 = nullptr; ///< representative input chain head
 
     /// XML output info
