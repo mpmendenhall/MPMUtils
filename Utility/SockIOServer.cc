@@ -14,7 +14,7 @@ void SockIOServer::threadjob() {
     printf("Listening for connections on port %i (socket fd %i)\n", port, sockfd);
 
     // block until new socket created for connection
-    while(!all_done) {
+    while(runstat != STOP_REQUESTED) {
         struct sockaddr cli_addr;
         socklen_t clilen = sizeof(cli_addr); // returns actual size of client address
         auto newsockfd = accept(sockfd, &cli_addr, &clilen);
@@ -29,15 +29,25 @@ void SockIOServer::threadjob() {
 }
 
 void SockIOServer::handle_connection(int csockfd) {
-    printf("Accepting new connection %i ... and closing it.\n", csockfd);
-    close(csockfd);
+    printf("Accepting new connection %i ...\n", csockfd);
+    auto h = makeHandler(csockfd);
+    add_thread(h, false);
+    h->launch_mythread();
 }
 
+void SockIOServer::on_thread_completed(Threadworker* t) {
+    printf("Removing handler for sockfd %i\n", t->worker_id);
+    close(t->worker_id);
+    delete t;
+}
+
+ConnHandler* SockIOServer::makeHandler(int sfd) { return new ConnHandler(sfd, this); }
+
 ////////////////////
 ////////////////////
 ////////////////////
 
-void ConnHandler::handle() {
+void ConnHandler::threadjob() {
     printf("Echoing responses from socket fd %i...\n", sockfd);
     int ntries = 0;
     while(ntries++ < 100) {
@@ -59,10 +69,9 @@ void ConnHandler::handle() {
 ////////////////////
 ////////////////////
 
-void BlockHandler::handle() {
+void BlockHandler::threadjob() {
     int32_t bsize;
-    while(1) {
-        if(abort) break;
+    while(runstat != STOP_REQUESTED) {
         bsize = 0;
         sockread(reinterpret_cast<char*>(&bsize), sizeof(bsize));
         if(bsize > 0) {
@@ -101,45 +110,4 @@ char* BlockHandler::alloc_block(int32_t bsize) {
     theblock->H = this;
     theblock->data.resize(bsize);
     return theblock->data.data();
-}
-
-////////////////////
-////////////////////
-////////////////////
-
-void ConnHandler::threadjob() {
-    handle();
-    auto ts = dynamic_cast<ThreadedSockIOServer*>(myServer);
-    if(ts) ts->handlerClosed(this);
-    close(sockfd);
-    delete this;
-}
-
-void ThreadedSockIOServer::handle_connection(int csockfd) {
-    lock_guard<mutex> cl(connsLock);
-    auto h = makeHandler(csockfd);
-    myConns.insert(h);
-    h->launch_mythread();
-}
-
-void ThreadedSockIOServer::handlerClosed(ConnHandler* h) {
-    lock_guard<mutex> cl(connsLock);
-    printf("Removing handler for sockfd %i\n", h->sockfd);
-    myConns.erase(h);
-}
-
-////////////////////
-////////////////////
-////////////////////
-
-SockBlockSerializerHandler::SockBlockSerializerHandler(int sfd, SockBlockSerializerServer* SBS):
-BlockHandler(sfd, SBS), mySBSS(SBS) { }
-
-void SockBlockSerializerHandler::request_block(int32_t /*bsize*/) {
-    theblock = mySBSS->get_allocated();
-}
-
-void SockBlockSerializerHandler::return_block() {
-    if(theblock) mySBSS->return_allocated(theblock);
-    theblock = nullptr;
 }

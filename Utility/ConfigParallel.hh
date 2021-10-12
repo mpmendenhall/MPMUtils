@@ -10,14 +10,31 @@
 #include <thread>
 
 /// Type-independent re-casting base
-class _ConfigParallel: public Configurable, public XMLProvider, public _SubSinkUser {
+class _ConfigParallel: public Configurable, public ThreadManager, public XMLProvider, public _SubSinkUser {
 public:
     /// Constructor
-    explicit _ConfigParallel(const Setting& S):
-    Configurable(S), XMLProvider("Parallel") { }
+    explicit _ConfigParallel(const Setting& S);
+
+    /// Destructor
+    ~_ConfigParallel() { delete keep_me; delete myColl; }
+
+    /// if run at top scope...
+    void run() override;
 
 protected:
-    _ConfigCollator* myColl = nullptr;   ///< output collator
+    int nparallel = 0;                  ///< number of parallel threads to run
+    vector<_SinkUser*> vends;           ///< ends of parallel chains
+    _ConfigCollator* myColl = nullptr;  ///< output collator
+    Threadworker* keep_me = nullptr;    ///< keep one example chain for XML output
+
+    /// Callback on thread completion
+    void on_thread_completed(Threadworker* t) override { if(t != keep_me) delete t; }
+
+    /// construct and attach appropriate myColl to vends
+    void makeCollator();
+
+    /// XML metadata output
+    void _makeXML(XMLTag& X) override { X.addAttr("nparallel", nparallel); }
 };
 
 /// Configurable parallelize-and-collate process
@@ -31,32 +48,22 @@ public:
         if(S.exists("next")) { // collated mode
 
             addParallel();
+            for(int i = 0; i < nparallel; ++i) addParallel();
             tryAdd(vout.back()->getNext());
-
-            subSinker = myColl = vends.back()->getSinkIdx().makeConfigCollator(S);
-
-            if(myColl->nthreads <= 0) {
-                vends.back()->_setNext(myColl->_getNext());
-                subSinker = vout.back();
-                return;
-            }
-
-            tryAdd(myColl);
-
-            for(int i = 1; i < myColl->nthreads; ++i) addParallel();
-            for(auto c: vends) myColl->connect_input(*c);
+            makeCollator();
+            if(nparallel > 0) subSinker = myColl;
+            else subSinker = vout.back();
 
             myColl->launch_mythread();
             for(auto c: vout) c->launch_mythread();
 
         } else { // end in parallel chains without collation back to single thread
 
-            int nth = std::thread::hardware_concurrency();
-            S.lookupValue("nthreads", nth);
-            optionalGlobalArg("nParallel", nth, "number of parallel chains (0 for unbuffered single-threaded mode)");
+            int nth = nparallel;
             do {
                 vout.push_back(new ThreadBufferSink<T>(constructCfgObj<DataSink<T>>(Cfg["parallel"])));
-            } while(--nth > 0);
+                vout.back()->worker_id = --nth;
+            } while(nth > 0);
 
             if(!nth) for(auto c: vout) c->launch_mythread();
         }
@@ -70,15 +77,14 @@ public:
             if(o->checkRunning()) o->finish_mythread();
             delete o;
         }
-        if(myColl && myColl->checkRunning()) myColl->finish_mythread();
-        delete myColl;
     }
 
     /// add new parallel stream
     void addParallel() {
         vout.push_back(new ThreadBufferSink<T>(constructCfgObj<DataSink<T>>(Cfg["parallel"])));
+        vout.back()->worker_id = vout.size()-1;
         vends.push_back(_find_lastSink(vout.back()));
-        vends.back()->ownsNext = false;
+        vends.back()->setOwnsNext(false);
     }
 
     /// pass clustered inputs round-robin to parallel chains
@@ -96,13 +102,7 @@ public:
 
 protected:
     size_t outn = 0;                    ///< round-robin output index
-    vector<ThreadBufferSink<T>*> vout;  ///< outputs
-    vector<_SinkUser*> vends;           ///< ends of parallel chains
-
-    /// XML metadata output
-    void _makeXML(XMLTag& X) override {
-        if(!myColl) X.addAttr("nparallel", vout.size());
-    }
+    vector<ThreadBufferSink<T>*> vout;  ///< outputs to parallel chains
 };
 
 #endif

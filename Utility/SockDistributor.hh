@@ -8,20 +8,20 @@
 #include "SockOutBuffer.hh"
 
 /// Output distribution handler; uses SockOutBuffer to send data
-class SockDistribHandler: public ConnHandler, public SockOutBuffer {
+class SockDistribHandler: public ConnHandler {
 public:
     /// Constructor
-    explicit SockDistribHandler(int sfd, SockIOServer* s = nullptr): ConnHandler(sfd,s), SockOutBuffer(sfd) { SockOutBuffer::launch_mythread(); }
+    explicit SockDistribHandler(int sfd, SockIOServer* s = nullptr):
+    ConnHandler(sfd,s), SOB(sfd) {  }
 
     /// handle responses from client (do nothing; wait for output to break)
-    void handle() override {
-        while(SockOutBuffer::sockfd) usleep(10000);
-        SockOutBuffer::finish_mythread();
-    }
+    void threadjob() override { SOB.launch_mythread(); SOB.finish_mythread(); }
+
+    SockOutBuffer SOB;  ///< output buffer (in yet another thread)
 };
 
 /// Server for distributing block data to listening clients
-class SockDistribServer: public ThreadedSockIOServer {
+class SockDistribServer: public SockIOServer {
 public:
     /// Constructor
     SockDistribServer() { }

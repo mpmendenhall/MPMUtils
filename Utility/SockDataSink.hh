@@ -3,7 +3,7 @@
 
 #include "SockBinIO.hh"
 #include "DataSink.hh"
-#include "ConfigFactory.hh"
+#include "ConfigThreader.hh"
 #include "GlobalArgs.hh"
 #include "XMLTag.hh"
 
@@ -41,19 +41,47 @@ protected:
     vector<typename std::remove_const<T>::type> vbuff;  ///< collect multiple items to buffer
 };
 
-
-/// Receive items for datasink over socket connection
-template<typename T>
-class SockDSReceiver: public Configurable, public SockConnection, public XMLProvider, public SinkUser<T> {
+/// Base class configurable multithreaded socket server
+class ConfigSockServer: public ConfigThreader, public SockConnection {
 public:
     /// Constructor
-    explicit SockDSReceiver(const Setting& S):
-    Configurable(S) {
+    explicit ConfigSockServer(const Setting& S):
+    XMLProvider("ConfigSockServer"), ConfigThreader(S, -2) {
         S.lookupValue("host", host);
         optionalGlobalArg("inhost", host, "data source host");
         S.lookupValue("port", port);
         optionalGlobalArg("inport", port, "data source port");
+    }
 
+    /// Destructor
+    ~ConfigSockServer() { for(auto kv: myCTs) delete kv.second; }
+
+    /// Receive data stream
+    void run() override {
+        create_socket();
+        launch_mythread();
+
+        while(runstat != STOP_REQUESTED) {
+            int c = awaitConnection();
+            lock_guard<mutex> l(inputMut);
+            //myCTs[c] = constructCfgObj<ConfigThreader>(Cfg["thread"], c);
+            myCTs[c]->launch_mythread();
+        }
+
+        for(auto kv: myCTs) kv.second->finish_mythread();
+    }
+
+protected:
+    map<int, ConfigThreader*> myCTs;
+};
+
+/// Receive items for datasink over socket connection
+template<typename T>
+class SockDSReceiver: public ConfigSockServer, public SinkUser<T> {
+public:
+    /// Constructor
+    explicit SockDSReceiver(const Setting& S):
+    ConfigSockServer(S) {
         if(S.exists("next")) this->nextSink = constructCfgObj<DataSink<T>>(S["next"]);
         tryAdd(this->nextSink);
     }

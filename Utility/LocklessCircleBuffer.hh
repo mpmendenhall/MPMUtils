@@ -5,7 +5,6 @@
 
 #include "Threadworker.hh"
 
-#include <vector>
 #include <unistd.h>     // for usleep
 #include <chrono>       // for timeouts
 
@@ -34,12 +33,18 @@ public:
     /// get pointer to next buffer space, with timeout in s; nullptr if unavailable
     T* get_writepoint(double t_s) {
         if(writept) throw std::logic_error("Unfinished write in progress");
-        auto t = std::chrono::steady_clock::now() + std::chrono::milliseconds(int(1e3*t_s));
-        do {
-            if(ready[write_idx]) { usleep(sleep_us); continue; }
-            writept = &buf[write_idx];
-        } while(!writept && std::chrono::steady_clock::now() < t);
-        if(!writept) n_write_fails++;
+
+        if(!t_s) {
+            if(!ready[write_idx]) writept = &buf[write_idx];
+        } else {
+            auto t = std::chrono::steady_clock::now() + std::chrono::milliseconds(int(1e3*t_s));
+            do {
+                if(ready[write_idx]) { usleep(1000); continue; }
+                writept = &buf[write_idx];
+            } while(!writept && std::chrono::steady_clock::now() < t);
+        }
+
+        if(!writept) ++n_write_fails;
         return writept;
     }
 
@@ -50,6 +55,7 @@ public:
         ready[write_idx] = true;
         write_idx = (write_idx + 1)%buf.size();
         writept = nullptr;
+        inputReady.notify_one();
     }
 
     /// write to next buffer space, failing if unavailable
@@ -89,26 +95,26 @@ public:
 
     /// task to be run in thread
     void threadjob() override {
-        while(!all_done)
-            if(!flush())
-                usleep(sleep_us);
+        while(runstat != STOP_REQUESTED) {
+            flush();
+            unique_lock<mutex> lk(inputMut);
+            inputReady.wait(lk);
+        }
         flush();
     }
 
     /// processing on read item --- override me!
     virtual void process_item() = 0;
 
-    size_t n_write_fails = 0;       ///< number of buffer-full write failures
-    useconds_t sleep_us = 50000;    ///< recommended sleep time between buffer clearing operations
+    size_t n_write_fails = 0;   ///< number of buffer-full write failures
 
 protected:
-    std::vector<T> buf;             ///< data buffer
-    std::vector<int> ready;         ///< read indicator; int to encourage atomic updating
-    T* writept = nullptr;           ///< current item being modified
-    T current;                      ///< current item to process
-    size_t write_idx = 0;           ///< write point marker
-    size_t read_idx = 0;            ///< read point marker
+    vector<T> buf;          ///< data buffer
+    vector<int> ready;      ///< read indicator; int to encourage atomic updating
+    T* writept = nullptr;   ///< current item being modified
+    T current;              ///< current item to process
+    size_t write_idx = 0;   ///< write point marker
+    size_t read_idx = 0;    ///< read point marker
 };
 
 #endif
-

@@ -13,7 +13,7 @@ public:
     /// inherit constructors
     using SockConnection::SockConnection;
     /// Destructor: finished buffered writes
-    ~SockOutBuffer() { if(is_launched) finish_mythread(); }
+    ~SockOutBuffer() { if(checkRunning()) finish_mythread(); }
 
     /// Establish output socket connection and start buffer pusher
     void connect_to_socket() override {

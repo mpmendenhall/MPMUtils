@@ -36,9 +36,11 @@ class _DataSink: public SignalSink { };
 class _SinkUser {
 public:
     /// get nextSink output
-    virtual _DataSink* _getNext() = 0;
+    virtual _DataSink* _getNext() { return nullptr; }
     /// set nextSink output (throw if wrong type)
-    virtual void _setNext(_DataSink* n) = 0;
+    virtual void _setNext(_DataSink*) { throw std::logic_error("Need specific data type to _setNext"); }
+    /// set ownership of nextSink
+    virtual void setOwnsNext(bool) { throw std::logic_error("Need specific data type to setOwnsNext"); }
 
     /// traverse chain to get last connected output
     virtual _SinkUser* lastSink() {
@@ -49,22 +51,36 @@ public:
         return nn->lastSink();
     }
 
-    /// get AnaIndex<T> fot ouput datasink T
-    virtual const _AnaIndex& getSinkIdx() const = 0;
+    /// signal "nextSink"
+    virtual void sigNext(datastream_signal_t s) {
+        auto n = _getNext();
+        if(n) n->signal(s);
+    }
 
-    bool ownsNext = true;   ///< responsible for deleting output?
+    /// get AnaIndex<T> fot ouput datasink T
+    virtual const _AnaIndex& getSinkIdx() const { static _AnaIndex I; return I; }
+
+    /// construct and attach configured output sink
+    virtual void createOutput(const Setting& S) { _setNext(getSinkIdx().makeDataSink(S)); }
 };
 
-/// attempt to find output lastSink from any input
+/// find output lastSink from any input
 template<typename T>
-_SinkUser* _find_lastSink(T* s) {
+_SinkUser* _find_lastSink(T* s, bool can_return_nullptr = false) {
     auto i = dynamic_cast<_SinkUser*>(s);
-    if(!i) throw std::runtime_error("Invalid input chain top class");
-    return i->lastSink();
+    if(!i) {
+        if(can_return_nullptr) return nullptr;
+        throw std::runtime_error("Invalid input chain top class");
+    }
+    try { return i->lastSink(); }
+    catch(...) {
+        if(!can_return_nullptr) throw;
+        return nullptr;
+    }
 }
 
 /// Redirection to a subsidiary sink output
-class _SubSinkUser: virtual public _SinkUser {
+class _SubSinkUser: public _SinkUser {
 public:
     /// Constructor
     _SubSinkUser(_SinkUser* s = nullptr): subSinker(s) { }
@@ -81,12 +97,18 @@ public:
     /// traverse chain to get last connected output
     _SinkUser* lastSink() override {
         if(!subSinker) throw std::logic_error("undefined subSinker");
-        return subSinker->lastSink();
+        auto o = subSinker->lastSink();
+        return o == subSinker? this : o;
     }
     /// get AnaIndex<T> fot ouput datasink T
     const _AnaIndex& getSinkIdx() const override {
         if(!subSinker) throw std::logic_error("undefined subSinker");
         return subSinker->getSinkIdx();
+    }
+    /// set ownership of nextSink
+    void setOwnsNext(bool b) override {
+        if(!subSinker) throw std::logic_error("undefined subSinker");
+        subSinker->setOwnsNext(b);
     }
 
 protected:

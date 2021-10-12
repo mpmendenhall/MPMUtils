@@ -18,7 +18,9 @@ public:
     /// add enumerated input slot (return enumeration number)
     size_t add_input(int nreq = 0);
     /// connect SinkUser as input
-    virtual void connect_input(_SinkUser& s, int nreq = 0) = 0;
+    virtual void connect_input(_SinkUser&, int /* nreq */ = 0) {
+        throw std::logic_error("Type-specific subclass required to connect inputs");
+    }
 
     /// change minimum number required from input
     void change_required(size_t nI, int i);

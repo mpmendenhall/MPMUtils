@@ -6,6 +6,8 @@
 
 #include "_DataSink.hh"
 #include "AnaIndex.hh"
+#include "ConfigFactory.hh"
+#include "XMLTag.hh"
 
 /// Virtual base class for accepting a stream of objects
 template<typename T>
@@ -16,6 +18,10 @@ public:
     /// take instance of object
     virtual void push(sink_t&) = 0;
 };
+
+/// Registration in AnaIndex
+template<typename T>
+_DataSink* AnaIndex<T>::makeDataSink(const Setting& S) const { return constructCfgObj<DataSink<T>>(S); }
 
 /// Base class outputting to a sink
 template<typename T>
@@ -31,15 +37,25 @@ public:
 
     /// get nextSink
     _DataSink* _getNext() override { return getNext(); }
+    /// set ownership of nextSink
+    void setOwnsNext(bool b) override { ownsNext = b; }
+
+    /// set output
+    virtual void setNext(dsink_t* n) {
+        auto& nxt = getNext();
+        if(nxt) throw std::logic_error("nextSink already assigned");
+        nxt = n;
+        auto x = dynamic_cast<XMLProvider*>(this);
+        if(x) x->tryAdd(nxt);
+    }
 
     /// set nextSink output (throw if wrong type)
     void _setNext(_DataSink* n) override {
-        auto& nxt = getNext();
-        if(!n) nxt = nullptr;
+        if(!n) setNext(nullptr);
         else {
             auto nn = dynamic_cast<dsink_t*>(n);
             if(!nn) throw std::logic_error("incompatible nextSink assignment");
-            nxt = nn;
+            setNext(nn);
         }
     }
 
@@ -56,17 +72,16 @@ public:
     virtual void su_signal(datastream_signal_t s) { if(nextSink) nextSink->signal(s); }
 
 protected:
+    bool ownsNext = true;           ///< responsible for deleting output?
     dsink_t* nextSink = nullptr;    ///< recipient of output
 };
 
 /// attempt to find output lastSink from any input
-template<typename T, typename U>
-SinkUser<T>* find_lastSinkUser(U* s) {
+template<typename T>
+_SinkUser* find_lastSink(T* s) {
     auto i = dynamic_cast<_SinkUser*>(s);
     if(!i) throw std::runtime_error("Invalid input chain top class");
-    auto j = dynamic_cast<SinkUser<T>*>(i->lastSink());
-    if(!j) throw std::runtime_error("Incorrect output type for input chain");
-    return j;
+    return i->lastSink();
 }
 
 /// Combined input/output link in analysis chain
@@ -105,7 +120,7 @@ public:
     template<typename... Args>
     explicit PreSink(Args&&... a): PreTransform(std::forward<Args>(a)...), myXfer(*this) {
         PreTransform.getNext() = &myXfer;
-        PreTransform.ownsNext = false;
+        PreTransform.setOwnsNext(false);
     }
 
     /// pass input to pre-filter

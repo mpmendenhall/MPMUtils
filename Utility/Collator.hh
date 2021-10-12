@@ -31,13 +31,11 @@ public:
     class MOInput: public DataSink<T> {
     public:
         /// constructor
-        MOInput(Collator& _M, SinkUser<T>* s = nullptr):
+        MOInput(Collator& _M, _SinkUser* s = nullptr):
         inSrc(s), n(_M.add_input()), M(&_M) {
             if(inSrc) {
-                auto& nxt = inSrc->getNext();
-                if(nxt) throw std::logic_error("output already connected");
-                nxt = this;
-                inSrc->ownsNext = false;
+                inSrc->_setNext(this);
+                inSrc->setOwnsNext(false);
             }
         }
         /// DataSink push
@@ -45,8 +43,8 @@ public:
         /// bulk push
         virtual void push(const vector<Tmut_t>& os) { M->push(n,os); }
 
-        SinkUser<T>* inSrc = nullptr;   ///< input to this collator slot
-        const size_t n;                 ///< input enumeration
+        _SinkUser* inSrc = nullptr; ///< input to this collator slot
+        const size_t n;             ///< input enumeration
 
     protected:
         Collator* M;    ///< orderer
@@ -105,7 +103,7 @@ public:
             vector<Tmut_t> v;
             {
                 unique_lock<mutex> lk(inputMut);  // acquire unique_lock on queue in this scope
-                inputReady.wait(lk, [this]{ return !inputs_waiting || all_done; });  // unlock until notified
+                inputReady.wait(lk, [this]{ return !inputs_waiting || runstat == STOP_REQUESTED; });  // unlock until notified
                 while(!inputs_waiting && !PQ.empty()) {
                     auto& o = PQ.top();
                     if(!--input_n[o.first].first) ++inputs_waiting;
@@ -120,7 +118,7 @@ public:
                 }
             }
 
-        } while(!all_done);
+        } while(runstat != STOP_REQUESTED);
 
         signal(DATASTREAM_FLUSH);
     }
@@ -132,7 +130,7 @@ public:
         using MOInput::n;
 
         /// constructor
-        MOqInput(Collator& _M, SinkUser<T>* s = nullptr): MOInput(_M, s) { }
+        MOqInput(Collator& _M, _SinkUser* s = nullptr): MOInput(_M, s) { }
         /// DataSink push
         void push(T& o) override { M->qpush(n,o); }
         /// bulk push
@@ -141,7 +139,7 @@ public:
 
     /// connect SinkUser as input
     void connect_input(_SinkUser& s, int nreq = 0) override {
-        vInputs.push_back(new MOqInput(*this, &dynamic_cast<SinkUser<T>&>(s)));
+        vInputs.push_back(new MOqInput(*this, &s));
         change_required(vInputs.back()->n, nreq);
     }
 
