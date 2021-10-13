@@ -13,7 +13,10 @@
 template<typename T>
 class DataSink: public _DataSink {
 public:
+    /// received data type
     typedef T sink_t;
+    /// mutable variant of received data type
+    typedef typename std::remove_const<T>::type mutsink_t;
 
     /// take instance of object
     virtual void push(sink_t&) = 0;
@@ -93,7 +96,7 @@ public:
 };
 
 
-/// Hidden input transform stage helper (PT -> DataLink)
+/// Mix-in to add an input transform stage to a DataSink
 template<class PT>
 class PreSink: public DataSink<typename PT::sink_t> {
 public:
@@ -128,22 +131,11 @@ public:
     /// pass through signals
     void signal(datastream_signal_t s) override { PreTransform.signal(s); }
 
+protected:
     /// Override to handle pre-transformed input:
-    virtual void _push(mid_t&) { }
+    virtual void _push(mid_t&) = 0;
     /// Override to handle signals through pre-transform
-    virtual void _signal(datastream_signal_t) { }
-};
-
-/// DataLink with Pre-Filter
-template<class PT, class U>
-class PSDataLink: public PreSink<PT>, public SinkUser<U> {
-public:
-    /// pass-through constructor
-    template<typename... Args>
-    explicit PSDataLink(Args&&... a): PreSink<PT>(std::forward<Args>(a)...) { }
-
-    /// receive back signals
-    void _signal(datastream_signal_t s) override { SinkUser<U>::su_signal(s); }
+    virtual void _signal(datastream_signal_t) = 0;
 };
 
 #include "ConfigCollator.hh"

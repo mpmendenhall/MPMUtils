@@ -88,14 +88,14 @@ public:
     }
 
     /// pass clustered inputs round-robin to parallel chains
-    void _push(const typename CLUST::cluster_t& C) override {
+    void _push(typename CLUST::cluster_t& C) override {
         if(!vout.size()) return;
         auto o = vout[(outn++) % vout.size()];
         for(auto& p: C) o->push(p);
     }
 
-    /// receive signal: pass to data chains, repeat to collator
-    void signal(datastream_signal_t s) override {
+    /// handle signals through pre-transform
+    void _signal(datastream_signal_t s) override {
         for(auto& o: vout) o->signal(s);
         if(myColl) myColl->signal(s);
     }

@@ -31,17 +31,22 @@ public:
 };
 
 /// Flow-through analysis on a ``window'' of ordered objects
+/// input is always const T; inspection functions depend on const-ness of T
 template<class T, typename _ordering_t = typename std::remove_pointer<T>::type::ordering_t>
-class OrderedWindow: protected deque<T>, public DataSink<const T> {
+class OrderedWindow: protected deque<typename std::remove_const<T>::type>, public DataSink<const T> {
 public:
+    /// internal mutable type
+    typedef typename std::remove_const<T>::type Tmut_t;
     /// ordering type
     typedef _ordering_t ordering_t;
+    /// internal queue type
+    typedef deque<Tmut_t> deque_t;
     /// iterator type
-    typedef typename deque<T>::iterator iterator;
+    typedef typename deque_t::iterator iterator;
     /// iterator range
     typedef ItRange<iterator> itrange_t;
     /// const_iterator type
-    typedef typename deque<T>::const_iterator const_iterator;
+    typedef typename deque_t::const_iterator const_iterator;
     /// const_iterator range
     typedef ItRange<const_iterator> const_itrange_t;
 
@@ -90,9 +95,9 @@ public:
     }
 
     /// number of objects in window
-    using deque<T>::size;
-    using deque<T>::front;
-    using deque<T>::back;
+    using deque_t::size;
+    using deque_t::front;
+    using deque_t::back;
 
     /// get current middle element
     const T& getMid() const { return this->at(imid); }
@@ -188,7 +193,7 @@ public:
         } else {
             if(!hwidth) while(size()) nextmid();
             else flushHi(x);
-            deque<T>::push_back(o);
+            deque_t::push_back(o);
             processNew(back());
         }
 
@@ -202,9 +207,9 @@ protected:
 
     ordering_t hwidth;  ///< half-length of analysis window kept around "mid" object
 
-    using deque<T>::begin;
-    using deque<T>::end;
-    using deque<T>::pop_front;
+    using deque_t::begin;
+    using deque_t::end;
+    using deque_t::pop_front;
 
     // Subclass me to do the interesting stuff!
 

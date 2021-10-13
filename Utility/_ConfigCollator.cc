@@ -1,6 +1,6 @@
 /// \file _ConfigCollator.cc
 
-#include "ConfigCollator.hh"
+#include "_ConfigCollator.hh"
 
 void _ConfigCollator::run() {
     if(!Cfg.exists("prev")) throw std::runtime_error("Collator requires prev: input chain");
@@ -23,13 +23,16 @@ void _ConfigCollator::run_multithread() {
         auto C = constructCfgObj<Configurable>(Cfg["prev"]);
         if(!chains.size()) { C0 = C; tryAdd(C0); }
         chains.push_back(new ConfigThreadWrapper(C, i));
-        connect_input(*find_lastSink(C));
+        connect_input(*_find_lastSink(C));
     }
 
     sigNext(DATASTREAM_START);
     this->launch_mythread();
+    printf("Starting collation threads...\n");
     for(auto c: chains) c->launch_mythread();
+    printf("Collation threads running until finished.\n");
     for(auto c: chains) c->finish_mythread();
+    printf("Collation threads all complete.\n");
     this->finish_mythread();
 
     for(auto c: chains) {

@@ -23,8 +23,7 @@ class ThreadManager;
 class Threadworker {
 public:
     /// Constructor
-    explicit Threadworker(int i = 0, ThreadManager* m = nullptr):
-    worker_id(i), myManager(m) { }
+    explicit Threadworker(int i = 0, ThreadManager* m = nullptr);
     /// Destructor
     virtual ~Threadworker();
 
@@ -59,6 +58,7 @@ public:
 
     int worker_id;              ///< assignable identification number
     ThreadManager* myManager;   ///< link back to manager
+    int verbose = 0;            ///< debugging verbosity level
     static int thread_id();     ///< worker_id that launched current thread
 
 protected:

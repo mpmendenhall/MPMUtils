@@ -18,4 +18,8 @@ auto disp_imp(const T& o, long) -> decltype(o, void()) { printf("object\n"); }
 template<typename T>
 auto dispObj(const T& o) -> decltype(disp_imp(o,0), void()) { disp_imp(o,0); }
 
+/// handle pointers
+template<typename T>
+void dispObj(const T* o) { if(o) dispObj(*o); else printf("nullptr\n"); }
+
 #endif

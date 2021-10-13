@@ -5,8 +5,8 @@
 #define ORDERINGQUEUE_HH
 
 #include "DataSink.hh"
-#include "deref_if_ptr.hh"
 #include "SFINAEFuncs.hh" // for dispObj
+
 #include <vector>
 using std::vector;
 #include <queue>
@@ -16,29 +16,41 @@ using std::priority_queue;
 #include <cmath> // for std::isfinite
 #include <stdexcept>
 #include <csignal> // for SIGINT breakpoint
+#include <type_traits>  // for std::remove_pointer
 
 /// Sort slightly-out-of-order items into proper order
-template<class T0, typename ordering_t = typename T0::ordering_t>
-class OrderingQueue: public DataSink<const T0>, public priority_queue<T0, vector<T0>, reverse_ordering_deref<T0, ordering_t>> {
+template<class T, typename _ordering_t = typename std::remove_pointer<T>::type::ordering_t>
+class OrderingQueue: public DataLink<const T, T> {
 public:
-
-    /// parent type
-    typedef priority_queue<T0, vector<T0>, reverse_ordering_deref<T0, ordering_t>> PQ;
-    /// un-pointered class being ordered
-    typedef typename std::remove_pointer<T0>::type T;
+    /// input type
+    using typename DataSink<const T>::sink_t;
+    /// ordering operator
+    typedef _ordering_t ordering_t;
+    /// output type
+    using typename SinkUser<T>::output_t;
+    /// mutable data
+    using typename DataSink<sink_t>::mutsink_t;
+    /// queue type
+    typedef priority_queue<mutsink_t, vector<mutsink_t>, reverse_ordering_deref<mutsink_t, ordering_t>> PQ_t;
 
     static constexpr ordering_t order_max = std::numeric_limits<ordering_t>::max();
 
     /// Constructor
-    OrderingQueue(ordering_t _dt = order_max): dt(_dt) { }
+    explicit OrderingQueue(DataSink<T>* S = nullptr, ordering_t _dt = order_max): dt(_dt) { this->nextSink = S; }
     /// Destructor --- please leave cleared!
     ~OrderingQueue() {
-        if(!PQ::empty()) {
-            fprintf(stderr, "\n*** WARNING:  OrderingQueue destructed with %zu elements remaining\n\n", PQ::size());
+        if(!PQ.empty()) {
+            fprintf(stderr, "\n*** WARNING:  OrderingQueue destructed with %zu elements remaining:\n", PQ.size());
+            while(!PQ.empty()) {
+                dispObj(PQ.top());
+                PQ.pop();
+            }
             std::raise(SIGINT);
-            //throw std::logic_error("OrderingQueue destructed without flush");
         }
     }
+
+    /// number of items in queue
+    size_t size() const { return PQ.size(); }
 
     /// get ordering parameter of object
     template<typename U>
@@ -46,39 +58,42 @@ public:
 
     /// clear remaining objects through window
     void signal(datastream_signal_t sig) override {
-        if(sig < DATASTREAM_FLUSH) return;
-        while(!PQ::empty()) {
-            auto o = PQ::top();
-            processOrdered(deref_if_ptr(o));
-            PQ::pop();
+        if(sig >= DATASTREAM_FLUSH) {
+            while(!PQ.empty()) {
+                auto o = PQ.top();
+                processOrdered(o);
+                PQ.pop();
+            }
+            t0 = -order_max;
         }
-        t0 = -order_max;
+        if(this->nextSink) this->nextSink->signal(sig);
     }
 
     /// flush events up to specified point
     void flushTo(ordering_t t) {
         t0 = t;
-        while(!PQ::empty()) {
-            auto o = PQ::top();
+        while(!PQ.empty()) {
+            auto o = PQ.top();
             if(order(o) >= t0) break;
-            PQ::pop();
-            processOrdered(deref_if_ptr(o));
+            PQ.pop();
+            processOrdered(o);
         }
     }
 
     /// add new item to sorted queue, with auto-flush
-    void push(const T0& o) override { push(o, true); }
+    void push(sink_t& o) override { push(o, true); }
 
     /// add new item to sorted queue; optionally flush
-    void push(T0 o, bool doFlush) {
+    void push(sink_t& o, bool doFlush) {
 
         ordering_t t = order(o);
 
         if(!std::isfinite(t)) {
             printf("Passing through un-orderable object!\n");
-            dispObj(deref_if_ptr(o));
+            dispObj(o);
             if(skip_disordered) return;
-            processOrdered(deref_if_ptr(o));
+            output_t oo = o;
+            processOrdered(oo);
             return;
         }
 
@@ -86,17 +101,18 @@ public:
             if(!--ndis) {
                 printf("Warning: out-of-order queue event at %g < %g (%g)!\n",
                        double(t), double(t0), double(t0-t));
-                dispObj(deref_if_ptr(o));
+                dispObj(o);
                 ndis = warn_ndis;
                 throw std::logic_error("OrderingQueue input before minimum");
             }
 
             if(skip_disordered) return;
-            processOrdered(deref_if_ptr(o));
+            output_t oo = o;
+            processOrdered(oo);
             return;
         }
 
-        PQ::push(o);
+        PQ.push(o);
 
         if(doFlush) flushTo(t-dt);
     }
@@ -108,36 +124,10 @@ public:
     bool skip_disordered = true;///< skip over disordered events
 
 protected:
-    // -------------- subclass me! ------------------
-    /// process outgoing ordered objects
-    virtual void processOrdered(T&) = 0;
-};
+    PQ_t PQ;
 
-/// Ordering queue passing directly to DataSink
-template<
-    class TNext,
-    typename T0 = typename std::remove_const<typename TNext::sink_t>::type,
-    typename ordering_t = typename T0::ordering_t
->
-class InlineOrderingQueue: public OrderingQueue<T0, ordering_t>, public SinkUser<typename TNext::sink_t> {
-public:
-    /// parent class type
-    typedef OrderingQueue<T0, ordering_t> super;
-    /// inherit useful typedef
-    typedef typename super::T T;
-
-    /// Constructor, with output target
-    InlineOrderingQueue(TNext* S = nullptr, ordering_t _dt = super::order_max): super(_dt) { this->nextSink = S; }
-
-    /// clear remaining objects through window
-    void signal(datastream_signal_t sig) override {
-        super::signal(sig);
-        if(this->nextSink) this->nextSink->signal(sig);
-    }
-
-protected:
     /// pass down chain
-    void processOrdered(T& o) override { if(this->nextSink) this->nextSink->push(o); }
+    virtual void processOrdered(output_t& o) { if(this->nextSink) this->nextSink->push(o); }
 };
 
 #endif

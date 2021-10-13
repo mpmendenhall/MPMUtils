@@ -14,11 +14,12 @@
 #include <unistd.h>
 
 /// Combine ordered items received from multiple "push" sources
-template<class T, typename ordering_t = typename T::ordering_t>
-class Collator: virtual public _Collator, public SinkUser<T> {
+template<typename T, typename _ordering_t = typename std::remove_pointer<T>::type::ordering_t>
+class Collator: virtual public _Collator, public SinkUser<const T> {
 public:
+    typedef _ordering_t ordering_t;
     typedef typename std::remove_const<T>::type Tmut_t;
-    using SinkUser<T>::nextSink;
+    using SinkUser<const T>::nextSink;
 
     /// Destructor: remember final flush.
     ~Collator() {
@@ -42,6 +43,8 @@ public:
         void push(T& o) override { M->push(n,o); }
         /// bulk push
         virtual void push(const vector<Tmut_t>& os) { M->push(n,os); }
+        /// ignore signals
+        void signal(datastream_signal_t) override { }
 
         _SinkUser* inSrc = nullptr; ///< input to this collator slot
         const size_t n;             ///< input enumeration

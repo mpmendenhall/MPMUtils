@@ -8,6 +8,12 @@
 #include "Threadworker.hh"
 #include <unistd.h>
 
+/// Typeless base
+class _ThreadBufferSink: public Configurable, public XMLProvider,
+virtual public _DataSink, virtual public _SinkUser {
+
+};
+
 /// Buffered input to sink running in independent thread
 template<typename T>
 class ThreadBufferSink: public DataLink<T,T>, public Threadworker {

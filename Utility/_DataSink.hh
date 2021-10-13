@@ -26,11 +26,15 @@ public:
     /// Polymorphic Destructor
     virtual ~SignalSink() { }
     /// accept data flow signal
-    virtual void signal(datastream_signal_t) { }
+    virtual void signal(datastream_signal_t) = 0;
 };
 
 /// Base marker for dynamic casting
-class _DataSink: public SignalSink { };
+class _DataSink: public SignalSink {
+public:
+    /// ignore signals
+    void signal(datastream_signal_t) override { }
+};
 
 /// Base marker for dynamic casting
 class _SinkUser {
@@ -114,5 +118,8 @@ public:
 protected:
     _SinkUser* subSinker; ///< where to find output SinkUser
 };
+
+/// Input + Output sink combo
+class _DataLink: virtual public _DataSink, virtual public _SinkUser { };
 
 #endif

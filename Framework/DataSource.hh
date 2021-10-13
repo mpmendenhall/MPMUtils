@@ -14,7 +14,7 @@ template<class C>
 class DataSource {
 public:
     /// retrieved value type
-    typedef C val_t;
+    typedef typename std::remove_const<C>::type val_t;
 
     /// maximum "infinite" entries
     static constexpr size_t max_entries = std::numeric_limits<size_t>::max();
@@ -39,9 +39,6 @@ public:
     bool doLoop = false;
     /// next with optional looping
     bool next_optloop(val_t& o) { return doLoop? next_loop(o) : next(o); }
-
-    /// Feed data sink
-    void fillSink(DataSink<val_t>& S) { val_t o{}; while(next(o)) S.push(o); }
 };
 
 /// Sequence of DS ~ DataSource

@@ -108,7 +108,6 @@ using std::map;
 template<typename T>
 class TransformPlan: public fftwx<T> {
 public:
-    typedef T real_data_t;
     typedef typename fftwx<T>::plan_t plan_t;
 
     /// Constructor

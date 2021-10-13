@@ -13,7 +13,7 @@ using std::vector;
 #include <utility> // for std::pair
 
 /// Type-independent re-casting base
-class _Collator: public Threadworker, virtual public _SinkUser, virtual public SignalSink {
+class _Collator: public Threadworker, virtual public _SinkUser, public SignalSink {
 public:
     /// add enumerated input slot (return enumeration number)
     size_t add_input(int nreq = 0);
@@ -37,6 +37,9 @@ public:
     vector<size_t> get_free() const;
     /// stop waiting on any "stuck" inputs
     vector<size_t> unstick();
+
+    /// ignore signals
+    void signal(datastream_signal_t) override { }
 
 protected:
     int inputs_waiting = 0; ///< number of inputs with input_n.first <= 0
