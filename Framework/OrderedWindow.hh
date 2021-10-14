@@ -62,7 +62,8 @@ public:
     /// Destructor: must be cleared before reaching here!
     virtual ~OrderedWindow() {
         if(size()) {
-            printf("Potential memory leak: unflushed window of %zu objects.\n", size());
+            printf("Warning: unflushed window of %zu objects.\n", size());
+            for(auto& o: *this) dispObj(o);
             if(enforceClear) abort();
         }
     }

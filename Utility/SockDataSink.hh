@@ -81,10 +81,7 @@ class SockDSReceiver: public ConfigSockServer, public SinkUser<T> {
 public:
     /// Constructor
     explicit SockDSReceiver(const Setting& S):
-    ConfigSockServer(S) {
-        if(S.exists("next")) this->nextSink = constructCfgObj<DataSink<T>>(S["next"]);
-        tryAdd(this->nextSink);
-    }
+    ConfigSockServer(S) { if(S.exists("next")) this->createOutput(S["next"]); }
 
     /// Receive data stream
     void run() override {

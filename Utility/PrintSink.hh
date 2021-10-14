@@ -20,8 +20,7 @@ public:
     explicit PrintSink(const Setting& S): XMLProvider("PrintSink") {
         S.lookupValue("nskip", nskip);
         optionalGlobalArg("printskip", nskip, "printout decimation factor");
-        if(S.exists("next")) nextSink = constructCfgObj<DataSink<T>>(S["next"]);
-        tryAdd(nextSink);
+        if(S.exists("next")) this->createOutput(S["next"]);
     }
     /// take instance of object
     void push(T& o) override {

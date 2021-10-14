@@ -8,6 +8,8 @@
 #include "DataSink.hh"
 
 #include "deref_if_ptr.hh"
+#include "SFINAEFuncs.hh"
+
 #include <queue>
 #include <stdio.h>
 #include <cassert>
@@ -23,8 +25,13 @@ public:
 
     /// Destructor: remember final flush.
     ~Collator() {
-        if(!PQ.empty())
+        if(!PQ.empty()) {
             printf("Warning: %zu items left in un-flushed collator queue\n", PQ.size());
+            while(!PQ.empty()) {
+                dispObj(PQ.top());
+                PQ.pop();
+            }
+        }
         for(auto i: vInputs) delete i;
     }
 

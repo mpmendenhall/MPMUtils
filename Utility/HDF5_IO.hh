@@ -56,7 +56,7 @@ public:
 class HDF5_OutputFile {
 public:
     /// Destructor: please close file before destructing
-    virtual ~HDF5_OutputFile() { if(outfile_id) abort(); }
+    virtual ~HDF5_OutputFile();
     /// Open named output file; connect table writers in subclass!
     virtual void openOutput(const string& filename);
     /// Finalize/close file output; close writers in subclass first!
@@ -81,10 +81,11 @@ public:
     HDF5_TableOutput(const string& tname = "", int v = 0, int nch = 1024):
     HDF5_Table_Writer<T>(HDF5_table_setup<T>(tname, v),nch) { }
 
-    /// write double-valued attribute
-    void writeAttribute(const string& attrname, double value) { HDF5_OutputFile::writeAttribute(this->Tspec.table_name, attrname, value); }
-    /// write string-valued attrivute
-    void writeAttribute(const string& attrname, const string& value) { HDF5_OutputFile::writeAttribute(this->Tspec.table_name, attrname, value); }
+    /// write attributes to this table's name
+    template<typename U>
+    void writeAttribute(const string& attrname, const U& value) {
+        HDF5_OutputFile::writeAttribute(this->Tspec.table_name, attrname, value);
+    }
 
     /// Open named output file
     void openOutput(const string& filename) override {

@@ -30,7 +30,7 @@ const Config* lookupConfig(const Setting* S);
 /// place after try { ... } block for more helpful configuration error printouts
 #define SHOW_CFG_ERRORS \
     catch(SettingNotFoundException& e) { \
-        printf("Setting not found thrown at '%s'\n", e.getPath()); throw; \
+        printf("Required setting not found: '%s'\n", e.getPath()); throw; \
     } catch(SettingException& e) { \
         printf("Configuration SettingException (wrong type) at '%s'\n", e.getPath()); throw; \
     } catch(ConfigException& e) { \

@@ -119,7 +119,4 @@ protected:
     _SinkUser* subSinker; ///< where to find output SinkUser
 };
 
-/// Input + Output sink combo
-class _DataLink: virtual public _DataSink, virtual public _SinkUser { };
-
 #endif

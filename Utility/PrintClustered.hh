@@ -24,7 +24,7 @@ public:
     super_t(20), XMLProvider("PrintClustered") {
         S.lookupValue("nskip", nskip);
         optionalGlobalArg("printskip", nskip, "cluster printout decimation factor");
-        if(S.exists("next")) nextSink = constructCfgObj<DataSink<T>>(S["next"]);
+        if(S.exists("next")) this->createOutput(S["next"]);
     }
 
     /// intercept and pass input objects

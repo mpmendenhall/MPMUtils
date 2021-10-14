@@ -11,8 +11,10 @@
 template<class T>
 class ConfigCollator: public _ConfigCollator, public Collator<T> {
 public:
-    /// inherit constructor
-    using _ConfigCollator::_ConfigCollator;
+    /// Constructor
+    explicit ConfigCollator(const Setting& S): _ConfigCollator(S) {
+        if(S.exists("next")) createOutput(S["next"]);
+    }
 };
 
 /// Registration in AnaIndex

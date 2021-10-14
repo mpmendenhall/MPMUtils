@@ -74,6 +74,15 @@ hsize_t HDF5_InputFile::getTableEntries(const string& table, hsize_t* nfields) {
     return nrecords;
 }
 
+//------------------------
+
+HDF5_OutputFile::~HDF5_OutputFile() {
+    if(outfile_id) {
+        printf("Need to HDF5_OutputFile::writeFile() before deleting!\n");
+        abort();
+    }
+}
+
 void HDF5_OutputFile::writeAttribute(const string& table, const string& attrname, double value) {
     if(!outfile_id) throw std::logic_error("Cannot write attribute " + table + ":" + attrname + " without file");
     herr_t err = H5LTset_attribute_double(outfile_id, table.c_str(), attrname.c_str(), &value, 1);

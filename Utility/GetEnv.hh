@@ -7,7 +7,7 @@
 using std::string;
 
 /// project-specific prefix for environment vars
-inline string PROJ_ENV_PFX() { return "DAFT"; }
+inline string PROJ_ENV_PFX() { return "MPMUTILS"; }
 
 /// update `val` with env[name] if existing; return whether found; optional throw error if missing
 bool getEnv(const string& name, string& val, bool fail_if_missing = false);
