@@ -3,59 +3,59 @@
 
 #include "ConfigFactory.hh"
 #include "GlobalArgs.hh"
+#include "libconfig_readerr.hh"
 #include "AnalysisStep.hh"
+#include "AnaGlobals.hh"
 #include "Exegete.hh"
+#include "TermColor.hh"
 
+#include <stdlib.h>
 #include <stdio.h>
 
 /// Execute configured analysis routine
 int main(int argc, char** argv) {
-    _EXPLAIN("Executing mpmexamples");
+    _EXPLAIN("Executing analysis code");
+
+    printf(TERMSGR_ITALIC "\n");
     CodeVersion::display_code_version();
+    printf(TERMSGR_RESET);
 
     if(argc < 2) {
-        printf("Arguments: ./mpmexamples <config file | class> [-argname argval(s) ...]\n");
-        printf("Available class options:\n");
+        printf(TERMSGR_BOLD "\nArguments: mpmexamples <config file | class> [-argname argval(s) ...]\n\n" TERMSGR_RESET);
+        printf("Available top-level classes:\n");
         BaseFactory<Configurable>::displayConstructionOpts<const Setting&>();
         return EXIT_FAILURE;
     }
 
     loadGlobalArgs(argc - 2, argv + 2);
 
-    auto A = constructCfgClass<Configurable>(argv[1], true);
-    AnalysisStep AS("mpmexamples");
-    Config cfg;
+    try {
+        auto A = BaseFactory<Configurable>::try_construct(argv[1], NullSetting);
+        AnalysisStep AS("mpmexamples");
+        Config cfg;
 
-    if(A) {
-        printf("Executing command-line-specified class '%s'\n", argv[1]);
-        AS.codename = argv[1];
-    } else {
-        _EXPLAINVAL("Loading configuration file", argv[1]);
-        readConfigFile(cfg, argv[1]);
-        auto& S = registerConfig(cfg);
+        if(A) {
+            printf(TERMSGR_BOLD TERMFG_YELLOW "\n-- Executing command-line-specified class '%s'\n" TERMSGR_RESET, argv[1]);
+            AS.codename = argv[1];
+        } else {
+            printf(TERMFG_GREEN "\n-- Configuring from '%s'" TERMSGR_RESET "\n\n", argv[1]);
+            readConfigFile(cfg, argv[1]);
+            auto& S = registerConfig(cfg);
 
-        try {
-            A = constructCfgObj<Configurable>(S);
+            A = constructCfgObj<Configurable>(S, "");
             S.lookupValue("class", AS.codename);
-            _EXPLAINVAL("Executing class", AS.codename);
-        } catch(SettingException& e) {
-            printf("Configuration SettingException (wrong type) at '%s'\n", e.getPath());
-            throw;
-        } catch(ConfigException& e) {
-            printf("Exiting on configuration error.\n");
-            throw;
         }
-    }
 
-    A->run();
+        printf(TERMSGR_BOLD TERMFG_YELLOW "\n-- Begin analysis --" TERMSGR_RESET "\n\n");
+        A->run();
 
-    _EXPLAIN("Generating .xml metadata file");
-    AS.tryAdd(A);
-    AS.make_xmlout();
+        AS.tryAdd(A);
+        AS.make_xmlout();
 
-    _EXPLAIN("Cleanup");
-    delete A;
-    printf("Analysis complete!\n");
+        delete A;
+        printf(TERMSGR_BOLD TERMFG_GREEN "\n-- Analysis complete! --" TERMSGR_RESET "\n\n");
+
+    } SHOW_CFG_ERRORS
 
     return EXIT_SUCCESS;
 }

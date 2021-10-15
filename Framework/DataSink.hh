@@ -24,7 +24,9 @@ public:
 
 /// Registration in AnaIndex
 template<typename T>
-_DataSink* AnaIndex<T>::makeDataSink(const Setting& S) const { return constructCfgObj<DataSink<T>>(S); }
+_DataSink* AnaIndex<T>::makeDataSink(const Setting& S, const string& dfltclass) const {
+    return constructCfgObj<DataSink<T>>(S, dfltclass);
+}
 
 /// Base class outputting to a sink
 template<typename T>

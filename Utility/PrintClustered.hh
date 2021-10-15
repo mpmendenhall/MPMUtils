@@ -24,6 +24,8 @@ public:
     super_t(20), XMLProvider("PrintClustered") {
         S.lookupValue("nskip", nskip);
         optionalGlobalArg("printskip", nskip, "cluster printout decimation factor");
+        S.lookupValue("npause", npause);
+        optionalGlobalArg("npause", npause, "pause display after every n clusters shown");
         if(S.exists("next")) this->createOutput(S["next"]);
     }
 
@@ -42,7 +44,8 @@ public:
         SinkUser<T>::su_signal(sig);
     }
 
-    int nskip = 1;          ///< skip fraction for less verbose output
+    int nskip = 1;  ///< skip fraction for less verbose output
+    int npause = 0; ///< pause after showing this many (if nonzero)
 
 protected:
     ordering_t t_prev_clust = {}; ///< previous cluster time
@@ -53,18 +56,26 @@ protected:
     /// select clusters to view
     void _push(C& o) override {
         static int nc = 0;
-        if(!(++nc % nskip)) {
-            if(o.size()) {
-                printf(TERMFG_BLUE "\n-- gap of %.3f us --\n\n" TERMSGR_RESET, (ordering_t(o[0]) - t_prev_clust)*1e-3);
-                t_prev_clust = ordering_t(o.back());
-            } else printf(TERMFG_RED "\n** empty cluster **\n" TERMSGR_RESET);
+        if(++nc % nskip) return;
 
-            dispClust(o);
+        if(o.size()) {
+            printf(TERMFG_BLUE "\n-- gap of %.3f us --\n" TERMSGR_RESET, (ordering_t(o[0]) - t_prev_clust)*1e-3);
+            t_prev_clust = ordering_t(o.back());
+        } else printf(TERMFG_RED "\n** empty cluster **\n" TERMSGR_RESET);
+
+        dispClust(o);
+
+        if(npause > 0) {
+            static int nshow = 0;
+            if(!(++nshow % npause)) {
+                printf(TERMFG_YELLOW "\n------------------- Press [enter] to continue... -------------------------\n" TERMSGR_RESET);
+                getchar();
+            }
         }
     }
 
     /// display cluster
-    virtual void dispClust(const C& o) { o.display(); }
+    virtual void dispClust(const C& o) { dispObj(o); }
 };
 
 #endif

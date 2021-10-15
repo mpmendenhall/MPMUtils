@@ -26,7 +26,7 @@ void _ConfigParallel::run() {
 
         int nth = nparallel;
         do {
-            auto CT = new ConfigThreadWrapper(constructCfgObj<Configurable>(Cfg["parallel"]), --nth);
+            auto CT = new ConfigThreadWrapper(constructCfgObj<Configurable>(Cfg["parallel"], ""), --nth);
             add_thread(CT);
             if(Cfg.exists("next")) vends.push_back(_find_lastSink(CT->C));
             if(!keep_me) {
@@ -42,11 +42,9 @@ void _ConfigParallel::run() {
     }
 
     if(nparallel <= 0) {
-        printf("Launching one analysis chain in non-threaded mode\n");
         (*mythreads.begin())->run_here();
         purge_pending();
     } else {
-        printf("Launching %zu parallel analysis chains\n", mythreads.size());
         if(myColl) myColl->launch_mythread();
         run_here();
         if(myColl) myColl->finish_mythread();

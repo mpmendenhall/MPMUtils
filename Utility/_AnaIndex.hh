@@ -13,7 +13,7 @@ class _DataSink;
 class _AnaIndex {
 public:
     virtual _ConfigCollator* makeConfigCollator(const Setting& S) const;
-    virtual _DataSink* makeDataSink(const Setting& S) const;
+    virtual _DataSink* makeDataSink(const Setting& S, const string& dfltclass = "") const;
 };
 
 #endif

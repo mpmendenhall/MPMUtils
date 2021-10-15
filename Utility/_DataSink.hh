@@ -65,7 +65,9 @@ public:
     virtual const _AnaIndex& getSinkIdx() const { static _AnaIndex I; return I; }
 
     /// construct and attach configured output sink
-    virtual void createOutput(const Setting& S) { _setNext(getSinkIdx().makeDataSink(S)); }
+    virtual void createOutput(const Setting& S, const string& dfltclass = "") {
+        _setNext(getSinkIdx().makeDataSink(S, dfltclass));
+    }
 };
 
 /// find output lastSink from any input

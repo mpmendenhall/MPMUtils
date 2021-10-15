@@ -13,19 +13,14 @@ SegmentSaver(pnt, nm, inflName) {
 }
 
 void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown) {
-    auto i = FactoriesIndex::hash(pname);
-    auto& m = FactoriesIndex::indexFor<SegmentSaver, SegmentSaver&, const Setting&>();
-    auto it = m.find(i);
-    if(it == m.end()) {
-        if(skipUnknown) {
-            printf("Skipping unknown plugin type '%s'!\n", pname.c_str());
-            return;
-        }
-        fprintf(stderr,"Unknown plugin type '%s' configured! I die!\n", pname.c_str());
-        throw std::runtime_error("Unknown plugin type " + pname);
+    auto o = skipUnknown? BaseFactory<SegmentSaver>::try_construct(pname, (SegmentSaver&)*this, cfg)
+        : BaseFactory<SegmentSaver>::construct(pname, (SegmentSaver&)*this, cfg);
+
+    if(!o) {
+        printf("Skipping unknown plugin type '%s'!\n", pname.c_str());
+        return;
     }
 
-    auto o = BaseFactory<SegmentSaver>::construct(i, (SegmentSaver&)*this, cfg);
     string _rename = pname;
     if(copynum >= 0) _rename += "_"+to_str(copynum);
     string rn0 = _rename;

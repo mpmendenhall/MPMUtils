@@ -22,8 +22,7 @@
 #ifndef EXNOTE_HH
 #define EXNOTE_HH
 
-#include <string>
-using std::string;
+#include "to_str.hh"
 
 namespace EX {
      /// Annotated commentary on a scope
@@ -43,7 +42,6 @@ namespace EX {
         /// Constructor
         explicit Note(const string& s): S(s) { }
     };
-
 }
 
 #endif

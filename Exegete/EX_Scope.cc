@@ -21,11 +21,12 @@
 
 #include "EX_Scope.hh"
 #include "EX_Context.hh"
+
 using namespace EX;
 
 Note*& Scope::getNote(int l) {
     auto it = notes.find(l);
-    if(it != notes.end()) return it->second; 
+    if(it != notes.end()) return it->second;
     return (notes[l] = nullptr);
 }
 

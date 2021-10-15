@@ -13,6 +13,7 @@ using std::string;
 #include <vector>
 using std::vector;
 #include <algorithm>
+#include <stdexcept>
 
 /*
  * _ObjectFactory: base polymorphic pointer for storing factories
@@ -106,6 +107,17 @@ public:
     B* construct(Args&&... a) const override { return new C(std::forward<Args>(a)...); }
 };
 
+/// Error for failed class construction
+class ConstructionError: public std::runtime_error {
+public:
+    /// Constructor
+    ConstructionError(const string& cname):
+    std::runtime_error("Unknown class '" + cname + "' requested"),
+    classname(cname) { }
+
+    string classname;   ///< class name failing construction
+};
+
 /// Static factory for non-void object base types
 template<class B>
 class BaseFactory: protected FactoriesIndex {
@@ -128,9 +140,16 @@ public:
             printf("\t'%s'\n", kv.second.classname.c_str());
     }
 
-    /// construct named-class object with arguments; nullptr if unavailable
+    /// Error for failed class construction of this type
+    class BFConstructionError: public ConstructionError {
+    public:
+        /// Constructor
+        using ConstructionError::ConstructionError;
+    };
+
+    /// construct named-class object with arguments; return nullptr if unavailable
     template<typename... Args>
-    static base* construct(const string& classname, Args&&... a) {
+    static base* try_construct(const string& classname, Args&&... a) {
         auto& mi = indexFor<B, Args...>();
         auto it = mi.find(hash(classname));
         return it == mi.end()?  nullptr : dynamic_cast<_ArgsBaseFactory<B, Args...>&>(it->second).construct(std::forward<Args>(a)...);
@@ -138,12 +157,12 @@ public:
 
     /// construct named-class object with arguments; throw with error message if unavailable
     template<typename... Args>
-    static base* construct_or_throw(const string& classname, Args&&... a) {
-        auto o = construct(classname, std::forward<Args>(a)...);
+    static base* construct(const string& classname, Args&&... a) {
+        auto o = try_construct(classname, std::forward<Args>(a)...);
         if(!o) {
             printf("Available options:\n");
             displayConstructionOpts<Args...>();
-            throw std::runtime_error("Unknown class '" + classname + "' requested");
+            throw BFConstructionError(classname);
         }
         return o;
     }

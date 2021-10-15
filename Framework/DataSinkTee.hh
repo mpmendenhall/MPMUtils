@@ -18,8 +18,8 @@ public:
     explicit DataSinkTee(const Setting& S): XMLProvider("DataSinkTee") {
         if(!S.exists("next")) throw std::runtime_error("DataSinkTee missing 'next' outputs");
         auto& nxt = S["next"];
-        if(nxt.isList()) for(auto& cfg: nxt) sinks.push_back(constructCfgObj<dsink_t>(cfg));
-        else sinks.push_back(constructCfgObj<dsink_t>(nxt));
+        if(nxt.isList()) for(auto& cfg: nxt) sinks.push_back(constructCfgObj<dsink_t>(cfg, ""));
+        else sinks.push_back(constructCfgObj<dsink_t>(nxt, ""));
         for(auto s: sinks) tryAdd(s);
     }
 

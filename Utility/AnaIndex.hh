@@ -13,7 +13,7 @@ public:
     /// make type-appropriate ConfigCollator
     _ConfigCollator* makeConfigCollator(const Setting& S) const override;
     /// make type-appropriate DataSink
-    _DataSink* makeDataSink(const Setting& S) const override;
+    _DataSink* makeDataSink(const Setting& S, const string& dfltclass = "") const override;
 };
 
 #endif

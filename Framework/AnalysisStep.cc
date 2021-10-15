@@ -9,6 +9,7 @@
 #include "PathUtils.hh"
 #include "GetEnv.hh"
 #include "StringManip.hh"
+#include "TermColor.hh"
 #include <fstream>
 #include <stdio.h>
 
@@ -28,10 +29,10 @@ anatag(PROJ_ENV_PFX()+"-Analysis") { }
 
 bool AnalysisStep::make_xmlout() {
     if(!outfilename.size()) {
-        printf("No file specified for .xml output.\n\n");
+        printf(TERMFG_YELLOW "\nNo file specified for .xml output.\n\n" TERMFG_GREEN);
         auto X = makeXML();
         X->write(std::cout);
-        printf("\n\n");
+        printf(TERMSGR_RESET "\n\n");
         delete X;
         return false;
     }
@@ -58,9 +59,9 @@ bool AnalysisStep::make_xmlout() {
             if(append) prevdat += line + "\n";
         }
     }
-    if(!prevdat.size()) printf("No previous xml metadata found!\n");
+    if(!prevdat.size()) printf(TERMFG_YELLOW "No previous xml metadata found!\n");
 
-    printf("Writing .xml metadata to '%s.xml'\n", outfilename.c_str());
+    printf(TERMFG_GREEN "Writing .xml metadata to '%s.xml'\n" TERMSGR_RESET, outfilename.c_str());
     std::ofstream o(outfilename+".xml");
     o << "<?xml version=\"1.0\"?>\n";
     o << "<" << anatag << ">\n";

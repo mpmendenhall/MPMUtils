@@ -61,7 +61,7 @@ public:
 
             int nth = nparallel;
             do {
-                vout.push_back(new ThreadBufferSink<T>(constructCfgObj<DataSink<T>>(Cfg["parallel"])));
+                vout.push_back(new ThreadBufferSink<T>(constructCfgObj<DataSink<T>>(Cfg["parallel"], "")));
                 vout.back()->worker_id = --nth;
             } while(nth > 0);
 
@@ -81,7 +81,7 @@ public:
 
     /// add new parallel stream
     void addParallel() {
-        vout.push_back(new ThreadBufferSink<T>(constructCfgObj<DataSink<T>>(Cfg["parallel"])));
+        vout.push_back(new ThreadBufferSink<T>(constructCfgObj<DataSink<T>>(Cfg["parallel"], "")));
         vout.back()->worker_id = vout.size()-1;
         vends.push_back(_find_lastSink(vout.back()));
         vends.back()->setOwnsNext(false);

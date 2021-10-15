@@ -9,7 +9,7 @@ void _ConfigCollator::run() {
 }
 
 void _ConfigCollator::run_singlethread() {
-    C0 = constructCfgObj<Configurable>(Cfg["prev"]);
+    C0 = constructCfgObj<Configurable>(Cfg["prev"], "");
     tryAdd(C0);
     if(Cfg.exists("next")) _find_lastSink(C0)->createOutput(Cfg["next"]);
     C0->run();
@@ -20,7 +20,7 @@ void _ConfigCollator::run_multithread() {
 
     vector<ConfigThreadWrapper*> chains;
     for(int i = 0; i < nthreads; ++i) {
-        auto C = constructCfgObj<Configurable>(Cfg["prev"]);
+        auto C = constructCfgObj<Configurable>(Cfg["prev"], "");
         if(!chains.size()) { C0 = C; tryAdd(C0); }
         chains.push_back(new ConfigThreadWrapper(C, i));
         connect_input(*_find_lastSink(C));

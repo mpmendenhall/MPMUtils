@@ -23,6 +23,7 @@
 #define EX_SCOPE_HH
 
 #include "EX_Note.hh"
+
 #include "NoCopy.hh"
 #include <map>
 using std::map;
@@ -34,13 +35,6 @@ using std::get;
 #include <string.h>
 
 namespace EX {
-
-    template<typename T>
-    string to_str(T x) {
-        std::stringstream ss;
-        ss << x;
-        return ss.str();
-    }
 
     inline const char* basename(const char* s) { return strrchr(s, '/')? strrchr(s, '/') + 1 : s; }
 

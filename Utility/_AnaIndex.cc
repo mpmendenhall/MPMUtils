@@ -4,4 +4,4 @@
 
 _ConfigCollator* _AnaIndex::makeConfigCollator(const Setting& S) const { return new _ConfigCollator(S); }
 
-_DataSink* _AnaIndex::makeDataSink(const Setting&) const { return new _DataSink(); }
+_DataSink* _AnaIndex::makeDataSink(const Setting&, const string&) const { return new _DataSink(); }

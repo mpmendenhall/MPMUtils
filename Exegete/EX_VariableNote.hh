@@ -19,8 +19,11 @@
  *
  */
 
+#ifndef EXVARNOTE_HH
+#define EXVARNOTE_HH
+
 #include "EX_Note.hh"
-#include "EX_Scope.hh"
+#include "EX_Context.hh"
 #include "TermColor.hh"
 #include <typeinfo>
 #include <cxxabi.h>
@@ -29,10 +32,11 @@ namespace EX {
 
     /// helper for stringizing std::vectors
     template<typename T>
-    string to_str(const vector<T>& v) {
-        string s = "[ ";
-        for(auto& x: v) s += to_str(x)+" ";
-        return s + "]";
+    std::ostream& operator<<(std::ostream& i, const vector<T>& v) {
+        i << "[ ";
+        for(auto& x: v) i << ::to_str(x) << " ";
+        i << "] ";
+        return i;
     }
 
     /// Annotated commentary on a variable
@@ -58,7 +62,7 @@ namespace EX {
             int status;
             auto realname = string(abi::__cxa_demangle(typeid(*var).name(), 0, 0, &status));
             if(!status && realname.size() <= 20) t += "("+ string(realname) + ") ";
-            return t + varname + " = " + TERMFG_MAGENTA + (var? to_str(*var) : "NULL");
+            return t + varname + " = " + TERMFG_MAGENTA + (var? ::to_str(*var) : "NULL");
         }
 
         string varname;         ///< name of variable
@@ -82,7 +86,7 @@ namespace EX {
         }
 
         /// Get text representation
-        string getText() override { return  S+": " + TERMFG_MAGENTA + to_str(val); }
+        string getText() override { return  S+": " + TERMFG_MAGENTA + ::to_str(val); }
         T val;  ///< referenced value
 
     protected:
@@ -90,3 +94,5 @@ namespace EX {
         ValNote(const string& s, const T& v): Note(s), val(v) { }
     };
 }
+
+#endif

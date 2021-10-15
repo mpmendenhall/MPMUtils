@@ -6,24 +6,25 @@
 
 #include "ObjectFactory.hh"
 #include "libconfig_readerr.hh"
-#include <stdexcept>
 
-/// Compile-time registration of configuration-file-constructed classes
+/// Compile-time registration of BASE object constructed from const Setting&
 #define REGISTER_CONFIG(NAME, BASE) static ObjectFactory<BASE, NAME, const Setting&> the_##NAME##_CfgFactory(#NAME);
 
-/// Construct class-named (possibly-null-configured) object
+/// Construct configured object looked up from setting; return nullptr if unavailable
 template<typename BASE, typename... Args>
-BASE* constructCfgClass(const string& classname, bool failOK = false, const Setting& S = NullSetting,  Args&&... a) {
-    return failOK? BaseFactory<BASE>::construct(classname, S, std::forward<Args>(a)...)
-        : BaseFactory<BASE>::construct_or_throw(classname, S, std::forward<Args>(a)...);
+BASE* try_constructCfgObj(const Setting& S, const string& dfltclass,  Args&&... a) {
+    string defaultclass = dfltclass;
+    S.lookupValue("class", defaultclass);
+    return BaseFactory<BASE>::try_construct(defaultclass, S, std::forward<Args>(a)...);
 }
 
-/// Construct configured object
+/// Construct configured object looked up from setting
 template<typename BASE, typename... Args>
-BASE* constructCfgObj(const Setting& S, string defaultclass = "", bool failOK = false,  Args&&... a) {
+BASE* constructCfgObj(const Setting& S, const string& dfltclass, Args&&... a) {
+    string defaultclass = dfltclass;
     S.lookupValue("class", defaultclass);
     if(!defaultclass.size()) throw std::runtime_error("'class' not set in configuration");
-    return constructCfgClass<BASE>(defaultclass, failOK, S, std::forward<Args>(a)...);
+    return BaseFactory<BASE>::construct(defaultclass, S, std::forward<Args>(a)...);
 }
 
 /// Base class for a generic top-level configurable object

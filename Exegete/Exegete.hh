@@ -53,7 +53,7 @@
 #define _EXPLAINVAR(S,v) _EXREQSC; EX::VariableNote<typename std::remove_reference<decltype(v)>::type>::makeVariableNote(S, __LINE__, #v, v)
 
 /// Text comment on anonymous value
-#define _EXPLAINVAL(S,v) _EXREQSC; EX::ValNote<std::remove_reference<decltype(v)>::type>::makeValNote(S, __LINE__, v)
+#define _EXPLAINVAL(S,v) _EXREQSC; EX::ValNote<typename std::remove_reference<decltype(v)>::type>::makeValNote(S, __LINE__, v)
 
 /// Optional, memory cleanup at end of program --- must occur after all annotated scopes have closed
 #define _EXEXIT() EX::Context::DeleteContext()

@@ -2,6 +2,7 @@
 
 #include "GlobalArgs.hh"
 #include "ContextMap.hh"
+#include "TermColor.hh"
 #include "to_str.hh"
 
 std::map<std::string, std::vector<std::string>>& GlobalArgs() {
@@ -32,23 +33,23 @@ size_t numGlobalArg(const std::string& argname) {
 }
 
 bool wasArgGiven(const std::string& argname, const std::string& help) {
-    printf("* Argument '+%s' [%s] ", argname.c_str(), help.c_str());
+    printf("* Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' [%s] ", argname.c_str(), help.c_str());
     if(numGlobalArg(argname)) {
-        printf("enabled\n");
+        printf(TERMFG_GREEN "enabled\n" TERMSGR_RESET);
         return true;
     }
-    printf("disabled\n");
+    printf(TERMFG_YELLOW "disabled\n" TERMSGR_RESET);
     return false;
 }
 
 const std::string& requiredGlobalArg(const std::string& argname, const std::string& help) {
-    printf("* Required argument '-%s <%s>' ", argname.c_str(), help.c_str());
+    printf("* Required argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     auto& v = GlobalArgs()[argname];
     if(v.size() != 1) {
-        printf("MISSING!\n");
+        printf(TERMFG_GREEN "MISSING!\n" TERMSGR_RESET);
         throw std::runtime_error("Expected one '-"+argname+"' argument");
     }
-    printf("-> '%s'\n", v[0].c_str());
+    printf(TERMFG_GREEN "-> '%s'\n" TERMSGR_RESET, v[0].c_str());
     return v[0];
 }
 
@@ -61,19 +62,16 @@ std::string popGlobalArg(const std::string& argname) {
 }
 
 bool optionalGlobalArg(const std::string& argname, std::string& v, const std::string& help) {
-    printf("* Optional argument '-%s <%s>' ", argname.c_str(), help.c_str());
+    printf("* Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     auto& GA = GlobalArgs();
     auto it = GA.find(argname);
     if(it == GA.end() || !it->second.size()) {
-        printf("defaulted to '%s'\n", v.c_str());
+        printf(TERMFG_GREEN "defaulted to" TERMSGR_RESET " '%s'\n", v.c_str());
         return false;
     }
-    if(it->second.size() > 1) {
-        printf(" specified too many times!\n");
-        throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
-    }
+    if(it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
     v = it->second[0];
-    printf("-> '%s'\n", v.c_str());
+    printf(TERMFG_GREEN "-> '%s'\n" TERMSGR_RESET, v.c_str());
     return true;
 }
 

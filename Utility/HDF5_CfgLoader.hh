@@ -58,7 +58,7 @@ protected:
         else {
             string nxt;
             if(optionalGlobalArg("h5next", nxt, "HDF5 reader next output class"))
-                nextSink = constructCfgClass<DataSink<const T>>(nxt);
+                nextSink = BaseFactory<DataSink<const T>>::construct(nxt);
             tryAdd(nextSink);
         }
     }
