@@ -169,6 +169,6 @@ public:
 };
 
 /// Compile-time registration of dynamically-constructable objects, default constructors
-#define REGISTER_FACTORYOBJECT(NAME,BASE) static ObjectFactory<BASE,NAME> the_##BASE##_##NAME##_Factory(#NAME);
+#define REGISTER_FACTORYOBJECT(NAME,BASE) static const ObjectFactory<BASE,NAME> the_##BASE##_##NAME##_Factory(#NAME);
 
 #endif

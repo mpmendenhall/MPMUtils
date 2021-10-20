@@ -8,7 +8,7 @@
 #include "libconfig_readerr.hh"
 
 /// Compile-time registration of BASE object constructed from const Setting&
-#define REGISTER_CONFIG(NAME, BASE) static ObjectFactory<BASE, NAME, const Setting&> the_##NAME##_CfgFactory(#NAME);
+#define REGISTER_CONFIG(NAME, BASE) static const ObjectFactory<BASE, NAME, const Setting&> the_##NAME##_CfgFactory(#NAME);
 
 /// Construct configured object looked up from setting; return nullptr if unavailable
 template<typename BASE, typename... Args>
