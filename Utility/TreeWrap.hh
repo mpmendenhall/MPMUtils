@@ -8,6 +8,7 @@
 using std::vector;
 #include <array>
 using std::array;
+#include <cstddef> // for size_t
 
 /// Tree wrapper class
 template<class T>
