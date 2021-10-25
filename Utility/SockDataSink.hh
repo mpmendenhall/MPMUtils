@@ -1,4 +1,4 @@
-/// \file SockDatasink.hh DataSink<> transmitting over socket
+/// \file SockDataSink.hh DataSink<> transmitting over socket
 // Michael P. Mendenhall, LLNL 2021
 
 #include "SockBinIO.hh"
@@ -9,11 +9,11 @@
 
 /// DataSink<> transmission link over socket connection
 template<typename T>
-class SockDatasink: public Configurable, public DataSink<T>, public SockBinWrite, public XMLProvider {
+class SockDataSink: public Configurable, public DataSink<T>, public SockBinWrite, public XMLProvider {
 public:
     /// Constructor
-    explicit SockDatasink(const Setting& S):
-    Configurable(S), SockBinWrite("localhost", 50000), XMLProvider("SockDatasink") {
+    explicit SockDataSink(const Setting& S):
+    Configurable(S), SockBinWrite("localhost", 50000), XMLProvider("SockDataSink") {
         S.lookupValue("host", host);
         optionalGlobalArg("outhost", host, "data output host");
         S.lookupValue("port", port);

@@ -186,15 +186,14 @@ target_link_libraries(MPM ${EXTLIBS})
 add_dependencies(MPM update_codeversion)
 
 # test programs
-file(GLOB TESTEXEC Test/mpmexamples.cc Test/Delta.cc)
-file(GLOB TESTMODULES Test/modules/*.cc)
-#add_library(MPMtests SHARED ${TESTMODULES})
-#target_link_libraries(MPMtests MPM ${EXTLIBS})
+file(GLOB TESTEXEC Test/*.cc)
 foreach(E ${TESTEXEC})
 get_filename_component(EXN ${E} NAME_WE)
     add_executable(${EXN} ${E} ${TESTMODULES})
     target_link_libraries(${EXN} MPM ${EXTLIBS})
 endforeach(E)
+file(GLOB TESTMODULES Test/modules/*.cc)
+target_sources(mpmexamples PUBLIC ${TESTMODULES})
 
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(Doc)

@@ -28,16 +28,16 @@
 #include <typeinfo>
 #include <cxxabi.h>
 
-namespace EX {
+/// helper for stringizing std::vectors
+template<typename T>
+std::ostream& operator<<(std::ostream& i, const vector<T>& v) {
+    i << "[ ";
+    for(auto& x: v) i << ::to_str(x) << " ";
+    i << "] ";
+    return i;
+}
 
-    /// helper for stringizing std::vectors
-    template<typename T>
-    std::ostream& operator<<(std::ostream& i, const vector<T>& v) {
-        i << "[ ";
-        for(auto& x: v) i << ::to_str(x) << " ";
-        i << "] ";
-        return i;
-    }
+namespace EX {
 
     /// Annotated commentary on a variable
     template<typename T>
