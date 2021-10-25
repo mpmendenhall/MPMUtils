@@ -111,7 +111,7 @@ public:
 class ConstructionError: public std::runtime_error {
 public:
     /// Constructor
-    ConstructionError(const string& cname):
+    explicit ConstructionError(const string& cname):
     std::runtime_error("Unknown class '" + cname + "' requested"),
     classname(cname) { }
 

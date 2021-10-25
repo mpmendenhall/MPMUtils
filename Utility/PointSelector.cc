@@ -14,7 +14,7 @@ void PointSelector::addPart(size_t N, size_t npts) {
     parts.emplace_back(N,npts);
     v0.resize(v0.size() + N);
     Ntot += N;
-    if(Ntot != v0.size()) throw;
+    if(Ntot != v0.size()) throw std::logic_error("Invalid Ntot");
 }
 
 void PointSelector::skipTo(size_t i) {

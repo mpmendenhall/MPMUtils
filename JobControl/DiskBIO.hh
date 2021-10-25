@@ -42,7 +42,7 @@ public:
     /// Constructor with filenames
     explicit FDBinaryWriter(const string& nOut) { openOut(nOut); }
     /// Destructor
-    ~FDBinaryWriter() { flush(); closeOut(); }
+    ~FDBinaryWriter() { FDBinaryWriter::flush(); closeOut(); }
 
     /// open output file
     void openOut(const string& s);

@@ -39,7 +39,7 @@ public:
     class MOInput: public DataSink<T> {
     public:
         /// constructor
-        MOInput(Collator& _M, _SinkUser* s = nullptr):
+        explicit MOInput(Collator& _M, _SinkUser* s = nullptr):
         inSrc(s), n(_M.add_input()), M(&_M) {
             if(inSrc) {
                 inSrc->_setNext(this);
@@ -140,7 +140,7 @@ public:
         using MOInput::n;
 
         /// constructor
-        MOqInput(Collator& _M, _SinkUser* s = nullptr): MOInput(_M, s) { }
+        explicit MOqInput(Collator& _M, _SinkUser* s = nullptr): MOInput(_M, s) { }
         /// DataSink push
         void push(T& o) override { M->qpush(n,o); }
         /// bulk push

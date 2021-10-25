@@ -92,7 +92,6 @@ DST-IV [RODFT11] N = 4*n, odd around j=-0.5 and even around j=n-0.5
 
 #include "fftwx.hh"
 #include "VectorUtils.hh"
-#include "Exegete.hh"
 
 #include <cmath>
 #include <map>
@@ -112,20 +111,13 @@ public:
 
     /// Constructor
     TransformPlan(size_t m, size_t nl, size_t k):
-    M(m), Nlog(nl), K(k) {
-        _EXPLAINVAR("Initializing transform plan for input array size", M);
-        _EXPLAINVAR("... logical size", Nlog);
-        _EXPLAINVAR("... output size", K);
-    }
+    M(m), Nlog(nl), K(k) { }
 
     /// Polymorphic Destructor
     virtual ~TransformPlan() { }
 
     /// execute plan
-    void execute() {
-        _EXPLAIN("Executing FFT");
-        fftwx<T>::execute(p);
-    }
+    void execute() { fftwx<T>::execute(p); }
 
     plan_t p;           ///< plan
 
@@ -415,7 +407,6 @@ public:
 
     /// multiply k-space kernel (with any appropriate shifts) --- specialize as needed
     virtual void kmul(const kvec_t& k) {
-        _EXPLAIN("Multiplying k-space kernel");
         if(k.size() != this->v_k.size() || k.size() != this->K) throw std::logic_error("Mismatched k-space kernel size");
         auto it = this->v_k.begin();
         for(auto x: k) *(it++) *= x;
@@ -423,7 +414,6 @@ public:
 
     /// perform convolution using pre-calculated k-space kernel
     void kconvolve(const kvec_t& kkern) {
-        _EXPLAIN("Convolving with k-space kernel");
         this->execute();
         kmul(kkern);
         revPlan.execute();
@@ -439,7 +429,6 @@ public:
     /// calculate (pre-normalized) k-space kernel
     template<typename V>
     void calcKkern(const V& k) {
-        _EXPLAIN("Calculating k-space kernel from real input");
         if(k.size() != kernPlan.M) throw std::logic_error("Mismatched convolution kernel size");
         load(k);
         kernPlan.execute();
@@ -458,7 +447,6 @@ public:
     /// full convolution sequence
     template<typename V, typename U>
     void convolve(V& v, const U& k) {
-        _EXPLAIN("Convolving vector pair");
         calcKkern(k);
         auto kk = this->v_k;
         load(v);

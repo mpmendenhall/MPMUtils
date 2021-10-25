@@ -66,7 +66,7 @@ struct Averager {
     /// unary minus
     const Averager operator-() const { return Averager(sw, -swx, sw2S); }
     /// inplace subtraction
-    Averager& operator-=(const Averager& rhs) { *this += -rhs; }
+    Averager& operator-=(const Averager& rhs) { *this += -rhs; return *this; }
     /// subtraction
     const Averager operator-(const Averager& rhs) const { auto p = *this; p -= rhs; return p; }
 

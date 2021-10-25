@@ -16,9 +16,8 @@ int runSysCmd(const string& cmd) {
 }
 
 void FDBinaryWriter::_send(void* vptr, int size) {
-    if(!vptr || fOut < 0 || size == -1) throw;
-    if(fOut >= 0 && size != write(fOut, vptr, size))
-        throw std::runtime_error("Can't write file!");
+    if(!vptr || fOut < 0 || size == -1) throw std::logic_error("invalid object write");
+    if(size != write(fOut, vptr, size)) throw std::runtime_error("Can't write file");
 }
 
 void FDBinaryReader::openIn(const string& s) {

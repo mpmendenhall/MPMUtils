@@ -22,7 +22,6 @@ Threadworker::~Threadworker() {
     if(runstat && runstat != INDETERMINATE) {
         printf("Warning: thread id %i deleted from thread %i in state %i\n",
                worker_id, _thread_id, runstat);
-        kill_mythread(1e-3);
     }
 }
 
@@ -125,15 +124,9 @@ void Threadworker::kill_mythread(double timeout_s) {
 
 
 ThreadManager::~ThreadManager() {
-    if(nrunning || mythreads.size())
-        printf("Warning: ThreadManager deleted with nrunning = %i (%zu Threadworkers)\n",
-               nrunning, mythreads.size());
-
-    for(auto t: mythreads) t->kill_mythread(1e-3);
-
-    if(verbose && pendingDone.size())
-        printf("Deleting Threadmanager after purging %zu pending completed jobs.\n", pendingDone.size());
-    purge_pending();
+    if(nrunning || mythreads.size() || pendingDone.size())
+        printf("Warning: ThreadManager deleted with nrunning = %i (%zu Threadworkers), %zu pending done\n",
+               nrunning, mythreads.size(), pendingDone.size());
 }
 
 void ThreadManager::await_threads_completion() {

@@ -29,7 +29,8 @@
 class LinMin: protected EigSymmWorkspace {
 public:
     /// Constructor, for n variables with m equations
-    explicit LinMin(size_t nvar, size_t neq = 0): EigSymmWorkspace(nvar), Nvar(nvar) { setNeq(neq); }
+    explicit LinMin(size_t nvar, size_t neq = 0):
+    EigSymmWorkspace(nvar), Nvar(nvar), Neq(neq), M(Neq, Nvar) { }
 
     /// set number of equations (resize M)
     void setNeq(size_t neq);

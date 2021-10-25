@@ -54,9 +54,6 @@ public:
         vector<char> data;  ///< data location
     };
 
-    int block_timeout_ms = 10000;   ///< timeout between receiving blocks [ms]
-    int read_timeout_ms = 2000;     ///< timeout for read after getting block header
-
 protected:
     /// Allocate block buffer space (default: allocate in theblock->data)
     virtual char* alloc_block(int32_t bsize);

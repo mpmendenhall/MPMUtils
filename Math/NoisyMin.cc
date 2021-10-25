@@ -3,6 +3,7 @@
 #include "NoisyMin.hh"
 #include <gsl/gsl_cblas.h>
 #include <sstream>
+#include <stdexcept>
 
 NoisyMin::NoisyMin(size_t n): N(n),
 NTERMS(Quadratic::nterms(N)), x0(N) {
@@ -45,7 +46,7 @@ void NoisyMin::initMinStep() {
 }
 
 NoisyMin::vec_t NoisyMin::nextSample(double nsigma) {
-    if(Ntot > N) throw;
+    if(Ntot > N) throw std::logic_error("Ntot out of range");
     if(Ntot < N) addPart(N-Ntot, Quadratic::nterms(N-Ntot));
 
     vec_t p0 = next();

@@ -112,7 +112,7 @@ protected:
     /// data transfer helper
     class _xfer: public DataSink<mid_t> {
     public:
-        _xfer(PreSink& _out): out(_out) { }
+        explicit _xfer(PreSink& _out): out(_out) { }
         void push(mid_t& o) override { out._push(o); }
         void signal(datastream_signal_t s) override { out._signal(s); }
     protected:
