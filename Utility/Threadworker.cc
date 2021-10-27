@@ -15,7 +15,7 @@ worker_id(i), myManager(m) { }
 
 Threadworker::~Threadworker() {
     if(verbose > 3) {
-        printf(TERMFG_BLUE "Deleting Threadworker [%i] in state %i\n" TERMSGR_RESET,
+        printf(TERMFG_BLUE "Deleting Threadworker [%i] in state %i" TERMSGR_RESET "\n",
                worker_id, runstat);
         fflush(stdout);
     }
@@ -36,21 +36,21 @@ void Threadworker::threadjob() {
 }
 
 void Threadworker::run_here() {
-    if(verbose > 1) printf(TERMFG_GREEN "Running Threadworker [%i] locally.\n" TERMSGR_RESET, worker_id);
+    if(verbose > 1) printf(TERMFG_GREEN "Running Threadworker [%i] locally." TERMSGR_RESET "\n", worker_id);
     if(checkRunning()) throw std::logic_error("Double launch attempted");
     runstat = RUNLOCAL;
     threadjob();
     runstat = IDLE;
-    if(verbose > 2) printf(TERMFG_RED "Threadworker [%i] completed locally.\n" TERMSGR_RESET, worker_id);
+    if(verbose > 2) printf(TERMFG_RED "Threadworker [%i] completed locally." TERMSGR_RESET "\n", worker_id);
     if(myManager) myManager->notify_thread_completed(this);
 }
 
 void* Threadworker::run_Threadworker_thread(void* p) {
     auto w = static_cast<Threadworker*>(p);
-    if(w->verbose) printf(TERMFG_GREEN "Threadworker [%i] threadjob started.\n" TERMSGR_RESET, w->worker_id);
+    if(w->verbose) printf(TERMFG_GREEN "Threadworker [%i] threadjob started." TERMSGR_RESET "\n", w->worker_id);
     _thread_id = w->worker_id;
     w->threadjob();
-    if(w->verbose) printf(TERMFG_RED "Threadworker [%i] threadjob completed.\n" TERMSGR_RESET, w->worker_id);
+    if(w->verbose) printf(TERMFG_RED "Threadworker [%i] threadjob completed." TERMSGR_RESET "\n", w->worker_id);
     if(w->myManager) w->myManager->notify_thread_completed(w);
     return nullptr;
 }
@@ -86,23 +86,23 @@ void Threadworker::unpause() {
 }
 
 void Threadworker::request_stop() {
-    if(verbose > 3) printf(TERMFG_YELLOW "Asking Threadworker [%i] to stop...\n" TERMSGR_RESET, worker_id);
+    if(verbose > 3) printf(TERMFG_YELLOW "Asking Threadworker [%i] to stop..." TERMSGR_RESET "\n", worker_id);
     if(runstat == IDLE) throw std::logic_error("Attempt to stop in idle state");
     runstat = STOP_REQUESTED;
     inputReady.notify_one(); // notification to catch STOP_REQUESTED
 }
 
 void Threadworker::finish_mythread() {
-    if(verbose > 2) printf(TERMFG_YELLOW "Threadworker [%i] asked to finish...\n" TERMSGR_RESET, worker_id);
+    if(verbose > 2) printf(TERMFG_YELLOW "Threadworker [%i] asked to finish..." TERMSGR_RESET "\n", worker_id);
     request_stop();
     int rc = pthread_join(mythread, nullptr);
     runstat = IDLE;
     if(rc) printf("Warning: thread %i joined with code %i\n", worker_id, rc);
-    if(verbose > 2) printf(TERMFG_RED "Threadworker [%i] is finished.\n" TERMSGR_RESET, worker_id);
+    if(verbose > 2) printf(TERMFG_RED "Threadworker [%i] is finished." TERMSGR_RESET "\n", worker_id);
 }
 
 void Threadworker::kill_mythread(double timeout_s) {
-    if(verbose > 2) printf(TERMFG_YELLOW "Threadworker [%i] demanded to finish...\n" TERMSGR_RESET, worker_id);
+    if(verbose > 2) printf(TERMFG_YELLOW "Threadworker [%i] demanded to finish..." TERMSGR_RESET "\n", worker_id);
     request_stop();
 
     struct timespec ts;
@@ -131,7 +131,7 @@ ThreadManager::~ThreadManager() {
 
 void ThreadManager::await_threads_completion() {
     if(verbose)
-        printf(TERMFG_GREEN "---- ThreadManager [%i] waiting for %zu jobs to complete. ----\n" TERMSGR_RESET,
+        printf(TERMFG_GREEN "---- ThreadManager [%i] waiting for %zu jobs to complete. ----" TERMSGR_RESET "\n",
                worker_id, mythreads.size());
 
     if(runstat == RUNLOCAL) runstat = STOP_REQUESTED;
@@ -143,7 +143,7 @@ void ThreadManager::await_threads_completion() {
 
         if(pendingDone.size()) {
             if(verbose > 2)
-                printf(TERMFG_BLUE "ThreadManager purging %zu completed threads.\n" TERMSGR_RESET,
+                printf(TERMFG_BLUE "ThreadManager purging %zu completed threads." TERMSGR_RESET "\n",
                        pendingDone.size());
             vector<Threadworker*> pdone;
             std::swap(pdone, pendingDone);
@@ -177,7 +177,7 @@ void ThreadManager::add_thread(Threadworker* t, bool autoid) {
         static int wid = 1;
         t->worker_id = wid++;
     }
-    if(verbose > 1) printf(TERMFG_GREEN "ThreadManager adding thread [%i].\n" TERMSGR_RESET, t->worker_id);
+    if(verbose > 1) printf(TERMFG_GREEN "ThreadManager adding thread [%i]." TERMSGR_RESET "\n", t->worker_id);
     t->myManager = this;
 
     {
@@ -191,7 +191,7 @@ void ThreadManager::add_thread(Threadworker* t, bool autoid) {
 
 void ThreadManager::notify_thread_completed(Threadworker* t) {
     if(!t) throw std::logic_error("nullptr thread completed");
-    if(verbose > 3) printf(TERMFG_RED "ThreadManager notified thread [%i] is completed.\n" TERMSGR_RESET, t->worker_id);
+    if(verbose > 3) printf(TERMFG_RED "ThreadManager notified thread [%i] is completed." TERMSGR_RESET "\n", t->worker_id);
     lock_guard<mutex> lk(inputMut);
     pendingDone.push_back(t);
     inputReady.notify_one();
@@ -199,7 +199,7 @@ void ThreadManager::notify_thread_completed(Threadworker* t) {
 
 void ThreadManager::remove_thread(Threadworker* t) {
     if(!t) throw std::logic_error("attempt to remove nullptr thread");
-    if(verbose > 3) printf(TERMFG_YELLOW "ThreadManager removing thread [%i].\n" TERMSGR_RESET, t->worker_id);
+    if(verbose > 3) printf(TERMFG_YELLOW "ThreadManager removing thread [%i]." TERMSGR_RESET "\n", t->worker_id);
     {
         lock_guard<mutex> lk(inputMut);
         mythreads.erase(t);

@@ -35,10 +35,10 @@ size_t numGlobalArg(const std::string& argname) {
 bool wasArgGiven(const std::string& argname, const std::string& help) {
     printf("* Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' [%s] ", argname.c_str(), help.c_str());
     if(numGlobalArg(argname)) {
-        printf(TERMFG_GREEN "enabled\n" TERMSGR_RESET);
+        printf(TERMFG_GREEN "enabled" TERMSGR_RESET "\n");
         return true;
     }
-    printf(TERMFG_YELLOW "disabled\n" TERMSGR_RESET);
+    printf(TERMFG_YELLOW "disabled" TERMSGR_RESET "\n");
     return false;
 }
 
@@ -46,10 +46,10 @@ const std::string& requiredGlobalArg(const std::string& argname, const std::stri
     printf("* Required argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     auto& v = GlobalArgs()[argname];
     if(v.size() != 1) {
-        printf(TERMFG_GREEN "MISSING!\n" TERMSGR_RESET);
+        printf(TERMFG_GREEN "MISSING!" TERMSGR_RESET "\n");
         throw std::runtime_error("Expected one '-"+argname+"' argument");
     }
-    printf(TERMFG_GREEN "-> '%s'\n" TERMSGR_RESET, v[0].c_str());
+    printf(TERMFG_GREEN "-> '%s'" TERMSGR_RESET "\n", v[0].c_str());
     return v[0];
 }
 
@@ -71,7 +71,7 @@ bool optionalGlobalArg(const std::string& argname, std::string& v, const std::st
     }
     if(it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
     v = it->second[0];
-    printf(TERMFG_GREEN "-> '%s'\n" TERMSGR_RESET, v.c_str());
+    printf(TERMFG_GREEN "-> '%s'" TERMSGR_RESET "\n", v.c_str());
     return true;
 }
 

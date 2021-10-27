@@ -139,7 +139,7 @@ void Context::addNote(int l) {
         current->dispbracket();
         printf(TERMFG_BLUE " [%s:%i", basename(get<0>(current->S->id)), l);
         if(nrpt > 1) printf(" #%i", nrpt);
-        printf("] " TERMFG_GREEN "%s\n" TERMSGR_RESET, n->getText().c_str());
+        printf("] " TERMFG_GREEN "%s" TERMSGR_RESET "\n", n->getText().c_str());
     }
 }
 

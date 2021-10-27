@@ -59,16 +59,16 @@ protected:
         if(++nc % nskip) return;
 
         if(o.size()) {
-            printf(TERMFG_BLUE "\n-- gap of %.3f us --\n" TERMSGR_RESET, (ordering_t(o[0]) - t_prev_clust)*1e-3);
+            printf(TERMFG_BLUE "\n-- gap of %.3f us --" TERMSGR_RESET "\n", (ordering_t(o[0]) - t_prev_clust)*1e-3);
             t_prev_clust = ordering_t(o.back());
-        } else printf(TERMFG_RED "\n** empty cluster **\n" TERMSGR_RESET);
+        } else printf(TERMFG_RED "\n** empty cluster **" TERMSGR_RESET "\n");
 
         dispClust(o);
 
         if(npause > 0) {
             static int nshow = 0;
             if(!(++nshow % npause)) {
-                printf(TERMFG_YELLOW "\n------------------- Press [enter] to continue... -------------------------\n" TERMSGR_RESET);
+                printf(TERMFG_YELLOW "\n------------------- Press [enter] to continue... -------------------------" TERMSGR_RESET "\n");
                 getchar();
             }
         }

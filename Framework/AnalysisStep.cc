@@ -61,7 +61,7 @@ bool AnalysisStep::make_xmlout() {
     }
     if(!prevdat.size()) printf(TERMFG_YELLOW "No previous xml metadata found!\n");
 
-    printf(TERMFG_GREEN "Writing .xml metadata to '%s.xml'\n" TERMSGR_RESET, outfilename.c_str());
+    printf(TERMFG_GREEN "Writing .xml metadata to '%s.xml'" TERMSGR_RESET "\n", outfilename.c_str());
     std::ofstream o(outfilename+".xml");
     o << "<?xml version=\"1.0\"?>\n";
     o << "<" << anatag << ">\n";
