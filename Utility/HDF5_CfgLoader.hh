@@ -14,6 +14,7 @@ template<typename T>
 class HDF5_CfgLoader: public Configurable, public HDF5_TableInput<T>, virtual public XMLProvider, public SinkUser<const T> {
 public:
     using SinkUser<const T>::nextSink;
+    using HDF5_TableInput<T>::nLoad;
 
     /// Constructor
     explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", bool doMakeNext = true, const string& tname = "", int v = 0):
@@ -37,19 +38,17 @@ public:
         auto AS = AnalysisStep::instance();
         if(AS) AS->infiles.push_back(this->infile_name);
 
-        fRows = this->getNRows();
+        auto fRows = this->getNRows();
+        if(nLoad >= 0 && hsize_t(nLoad) < fRows) fRows = nLoad;
         {
             T P;
-            ProgressBar PB(nLoad >= 0? nLoad : fRows);
+            ProgressBar PB(fRows);
             nextSink->signal(DATASTREAM_INIT);
             while(this->next(P) && !++PB) { nextSink->push(P); }
         }
         nextSink->signal(DATASTREAM_FLUSH);
         nextSink->signal(DATASTREAM_END);
     }
-
-    int nLoad = -1;                     ///< maximum events to load
-    hsize_t fRows = 0;                  ///< number of rows in input file
 
 protected:
     /// configure nextSink
@@ -64,7 +63,7 @@ protected:
     }
     /// build XML output data
     void _makeXML(XMLTag& X) override {
-        X.addAttr("nRows", fRows);
+        X.addAttr("nRows", this->getNRows());
         if(nLoad >= 0) X.addAttr("nLoad", nLoad);
     }
 };

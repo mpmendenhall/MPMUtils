@@ -33,8 +33,6 @@ const Config* lookupConfig(const Setting* S);
         printf("Required setting not found: '%s'\n", e.getPath()); throw; \
     } catch(SettingException& e) { \
         printf("Configuration SettingException (wrong type) at '%s'\n", e.getPath()); throw; \
-    } catch(ConfigException& e) { \
-        printf("Exiting on configuration error.\n"); throw; \
     }
 
 #endif

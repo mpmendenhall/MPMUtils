@@ -39,8 +39,6 @@ public:
         this->setFile(infile_id);
     }
 
-    /// get number of records in input table
-    hsize_t getEntries() { return getTableEntries(this->Tspec.table_name); }
     /// read double-valued attribute
     double getAttributeD(const string& attrname, double dflt = 0) {
         return HDF5_InputFile::getAttributeD(this->Tspec.table_name, attrname, dflt);

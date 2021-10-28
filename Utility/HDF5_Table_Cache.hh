@@ -27,14 +27,14 @@ public:
     /// Re-start at beginning of stream
     void reset() override { setFile(_infile_id); }
     /// Remaining entries estimate
-    size_t entries() override { return maxread-nread; }
+    size_t entries() override { return nLoad >= 0 && hsize_t(nLoad) < nRows? nLoad - nread : nRows - nread; }
 
     /// (re)set read file
     void setFile(hid_t f);
     /// get number of rows read
     hsize_t getNRead() const { return nread; }
     /// get number of rows available
-    hsize_t getNRows() const { return maxread; }
+    hsize_t getNRows() const { return nRows; }
     /// get identifying number for value type
     static int64_t getIdentifier(const T& i) { return i.evt; }
     /// set identifying number for value type
@@ -46,6 +46,7 @@ public:
     void loadAll(multimap<int64_t, T>& dat);
 
     HDF5_Table_Spec Tspec;      ///< configuration for table to read
+    int nLoad = -1;             ///< entries loading limit; set >= 0 to apply
 
 protected:
     hid_t _infile_id = 0;       ///< file to read from
@@ -55,7 +56,7 @@ protected:
     vector<T> cached;           ///< cached read data
     size_t cache_idx = 0;       ///< index in cached data
     hsize_t nread = 0;          ///< number of rows read
-    hsize_t maxread = 0;        ///< number of rows in table
+    hsize_t nRows = 0;          ///< number of rows in table
     hsize_t nfields = 0;        ///< number of fields in table
     hsize_t nchunk;             ///< cacheing chunk size
 };
@@ -151,10 +152,10 @@ template<typename T>
 void HDF5_Table_Cache<T>::setFile(hid_t f) {
     _infile_id = f;
     cached.clear();
-    cache_idx = nread = maxread = 0;
+    cache_idx = nread = nRows = 0;
     if(f) {
         if(H5Lexists(_infile_id,  Tspec.table_name.c_str(), H5P_DEFAULT)) {
-            herr_t err = H5TBget_table_info(_infile_id,  Tspec.table_name.c_str(), &nfields, &maxread);
+            herr_t err = H5TBget_table_info(_infile_id,  Tspec.table_name.c_str(), &nfields, &nRows);
             if(err < 0) throw std::exception();
         } else {
             printf("Warning: table '%s' not present in file.\n", Tspec.table_name.c_str());
@@ -169,14 +170,14 @@ bool HDF5_Table_Cache<T>::next(T& val) {
     if(!_infile_id) return false;
 
     if(cache_idx >= cached.size()) { // cache exhausted, needs new data
-        if(nread == maxread) {  // file fully exhausted.
+        if(nread == nRows || nread == hsize_t(nLoad)) {  // input exhausted.
             nread = 0;          // Next `next()` call will return to start of file.
             cache_idx = 0;
             cached.clear();
             return false;
         }
 
-        hsize_t nToRead = std::min(nchunk, maxread-nread);
+        hsize_t nToRead = std::min(nchunk, hsize_t(entries()));
         if(!nToRead) return false;
 
         cached.resize(nToRead);
@@ -208,8 +209,8 @@ bool HDF5_Table_Cache<T>::skip(size_t n) {
         cached.clear();
     }
 
-    if(nread + n > maxread) {
-        nread = maxread;
+    if(nread + n > nRows) {
+        nread = nRows;
         return false;
     }
     nread += n;
