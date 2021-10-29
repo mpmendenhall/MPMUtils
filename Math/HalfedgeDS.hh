@@ -8,6 +8,7 @@
 using std::forward_list;
 #include <set>
 using std::set;
+#include <stdlib.h> // for size_t
 
 /// Halfedge data structure
 class HalfedgeDS {
