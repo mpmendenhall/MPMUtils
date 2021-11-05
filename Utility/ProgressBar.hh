@@ -41,6 +41,8 @@ public:
     ProgressBar& operator++() { increment(); return *this; }
     /// check if completed
     operator bool() const { return c_nstp == nstp_ntot; }
+    /// current item number
+    operator uint64_t() const { return c_nstp/nsteps; }
 
     const uint64_t ntotal;  ///< total number of items to completion
     const uint64_t nsteps;  ///< number of steps to mark

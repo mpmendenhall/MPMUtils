@@ -1,73 +1,69 @@
 /// \file PointCloudHistogram.cc
-#include "PointCloudHistogram.hh"
-#include <Math/QuasiRandom.h>
-#include <TRandom3.h>
 
-//-------------------------
+#include "PointCloudHistogram.hh"
 
 void KDTreeSet::finalize() {
-    printf("Building %zu-point, %u-dimensional kd-tree...\n", fData[0].size(), ndim);
-    T = new TKDTree<int,float>(fData[0].size(), ndim, 1);
-    for(unsigned int j=0; j<ndim; j++) T->SetData(j, &fData[j][0]);
+    if(T) throw std::logic_error("KDTreeSet T already constructed");
+
+    printf("Building %zu-point, %zu-dimensional kd-tree...\n", nPts(), nDim());
+
+    T = new TKDTree<int,float>(nPts(), nDim(), 1);
+    int i = 0;
+    for(auto& v: *this) {
+        if(v.size() < nPts()) throw std::logic_error("mismatched data array sizes");
+        T->SetData(i++, v.data());
+    }
     T->Build();
-    T->SetOwner(kTRUE);
 }
 
-void KDTreeSet::fillPointRange(unsigned int npts, const float* xlo, const float* xhi, const float* dens) {
-
-    assert(!T);
-
-    ROOT::Math::QuasiRandomNiederreiter r(ndim);
-    TRandom3 r0;
-    vector<double> x(ndim);
-
-    // generate bin points
-    printf("Generating %u point %u-dimensional cloud...\n", npts, ndim);
-    unsigned int i = 0;
-    while(i<npts) {
-        if(false)
-            r.Next(&x[0]);
-        else
-            r0.RndmArray(ndim,&x[0]);
-        if(dens) {
-            unsigned int j = 0;
-            for(; j<ndim; j++) if(x[j]>dens[j]) break;
-            if(j==ndim) continue;
-        }
-        for(unsigned int j=0; j<ndim; j++) fData[j].push_back(xlo[j] + (xhi[j]-xlo[j])*x[j]);
-        i++;
+void KDTreeSet::remove_points(const vector<size_t>& vidx) {
+    clearTree();
+    auto npts = nPts();
+    size_t i0 = 0;
+    auto e = vidx.begin();
+    for(size_t i = 0; i < npts; ++i) {
+        if(e != vidx.end() && i == *e) { ++e; continue; }
+        for(auto& v: *this) v[i0] = v[i];
+        ++i0;
     }
+    for(auto& v: *this) v.resize(i0);
+}
+
+float KDTreeSet::project(size_t i, const float* v) const {
+    float s = 0;
+    for(unsigned int j=0; j<nDim(); ++j) s += (*this)[j][i] * v[j];
+    return s;
 }
 
 //---------------------------
 
 void PointCloudHistogram::Fill(const float* x, float v) {
-    int idx;
-    float dist;
+    if(!myTree->T) throw std::logic_error("Binning KDTree undefined");
+    int idx = -1;
+    float dist = -1;
     myTree->T->FindNearestNeighbors(x, 1, &idx, &dist);
-    auto it = bins.find(idx);
-    if(it != bins.end()) it->second += v;
-    else bins.emplace(idx,v);
+    if(idx < 0) {
+        printf("Failed to locate point {");
+        for(size_t i = 0; i < myTree->nDim(); ++i) printf("%g ", x[i]);
+        printf(" }\n");
+        return;
+    }
+    at(idx) += v;
 }
 
 void PointCloudHistogram::project(const float* v, TGraph& g) const {
-    unsigned int i=0;
-    for(auto const& b: bins) {
-        double s = 0;
-        for(unsigned int j=0; j<myTree->ndim; j++) s += myTree->fData[j][b.first] * v[j];
-        g.SetPoint(i++, s, b.second);
+    size_t b = 0;
+    for(auto x: *this) {
+        auto s = myTree->project(b,v);
+        g.SetPoint(b++, s, x);
     }
     g.Sort();
 }
 
 void PointCloudHistogram::project(const float* v, TH1& h) const {
-    for(auto const& b: bins) {
-        double s = 0;
-        for(unsigned int j=0; j<myTree->ndim; j++) s += myTree->fData[j][b.first] * v[j];
-        h.Fill(s, b.second);
+    size_t b = 0;
+    for(auto x: *this) {
+        auto s = myTree->project(b++, v);
+        h.Fill(s, x);
     }
-}
-
-void PointCloudHistogram::getPoint(unsigned int i, float* x) const {
-    for(unsigned int j=0; j<myTree->ndim; j++) x[j] = myTree->fData[j][i];
 }
