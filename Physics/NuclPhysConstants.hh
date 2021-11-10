@@ -28,8 +28,8 @@ namespace physconst {
 
     const double N_A = 6.02214076e23;               ///< exact Avogadro constant         [mol^-1]  CODATA 2018
 
-    const double hbar = 1.054571817e-34             ///< exact reduced Planck constant [J s] CODATA 2018
-    const double hbar_c = 197.3269804               ///< exact hbar*c [MeV fm] CODATA 2018
+    const double hbar = 1.054571817e-34;            ///< exact reduced Planck constant [J s] CODATA 2018
+    const double hbar_c = 197.3269804;              ///< exact hbar*c [MeV fm] CODATA 2018
 
     const double c_mps = 299792458.;                ///< exact speed of light in vacuum  [m/s]     CODATA 2018
 

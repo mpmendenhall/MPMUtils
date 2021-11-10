@@ -15,12 +15,15 @@ class HDF5_CfgLoader: public Configurable, public HDF5_TableInput<T>, virtual pu
 public:
     using SinkUser<const T>::nextSink;
     using HDF5_TableInput<T>::nLoad;
+    using HDF5_TableInput<T>::id_current_evt;
+    using HDF5_TableInput<T>::getIdentifier;
 
     /// Constructor
     explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", bool doMakeNext = true, const string& tname = "", int v = 0):
     XMLProvider("HDF5_CfgLoader"), Configurable(S), HDF5_TableInput<T>(tname, v) {
         S.lookupValue("nLoad", nLoad);
         optionalGlobalArg("nload", nLoad, "entry loading limit");
+        S.lookupValue("eventwise", eventwise);
 
         if(farg.size()){
             auto& fn = requiredGlobalArg(farg);
@@ -38,17 +41,30 @@ public:
         auto AS = AnalysisStep::instance();
         if(AS) AS->infiles.push_back(this->infile_name);
 
+        nextSink->signal(DATASTREAM_INIT);
+
         auto fRows = this->getNRows();
         if(nLoad >= 0 && hsize_t(nLoad) < fRows) fRows = nLoad;
         {
             T P;
             ProgressBar PB(fRows);
-            nextSink->signal(DATASTREAM_INIT);
-            while(this->next(P) && !++PB) { nextSink->push(P); }
+            while(this->next(P) && !++PB) {
+                if(eventwise) {
+                    auto idP = getIdentifier(P);
+                    if(idP != id_current_evt) {
+                        nextSink->signal(DATASTREAM_FLUSH);
+                        id_current_evt = idP;
+                    }
+                }
+                nextSink->push(P);
+            }
         }
+
         nextSink->signal(DATASTREAM_FLUSH);
         nextSink->signal(DATASTREAM_END);
     }
+
+    bool eventwise = false; ///< whether to flush on event number changes
 
 protected:
     /// configure nextSink
@@ -61,10 +77,12 @@ protected:
             tryAdd(nextSink);
         }
     }
+
     /// build XML output data
     void _makeXML(XMLTag& X) override {
         X.addAttr("nRows", this->getNRows());
         if(nLoad >= 0) X.addAttr("nLoad", nLoad);
+        if(eventwise) X.addAttr("eventwise", "true");
     }
 };
 

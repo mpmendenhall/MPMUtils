@@ -23,10 +23,11 @@ public:
     PreSink<CB>(std::forward<Args>(a)...), window_t(dw) { }
 
     using PreSink<CB>::push;
+    using PreSink<CB>::signal;
 
 protected:
     using OrderedWindow<cluster_t>::push;
-    using OrderedWindow<cluster_t>::signal;
+    //using OrderedWindow<cluster_t>::signal;
 
     /// examine and decide whether to include cluster
     virtual bool checkCluster(cluster_t& o) { return o.size(); }

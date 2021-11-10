@@ -42,26 +42,34 @@ void HDF5_OutputFile::writeFile() {
     outfile_id = 0;
 }
 
-string HDF5_InputFile::getAttribute(const string& table, const string& attrname, const string& dflt) {
+bool HDF5_InputFile::doesAttrExist(const string& objname, const string& attrname) {
     if(!infile_id) throw std::runtime_error("Cannot read attribute without file");
+    auto res = H5Aexists_by_name(infile_id, objname.c_str(), attrname.c_str(), H5P_DEFAULT);
+    if(res < 0) throw std::runtime_error("H5Aexists_by_name failed");
+    return res;
+}
+
+string HDF5_InputFile::getAttribute(const string& table, const string& attrname, const string& dflt) {
+    if(!doesAttrExist(table, attrname)) return dflt;
 
     hsize_t dims;
     H5T_class_t type_class;
     size_t type_size;
-    herr_t err = H5LTget_attribute_info(infile_id, table.c_str(), attrname.c_str(),  &dims, &type_class, &type_size);
-    if(err < 0) return dflt;
+    if(H5LTget_attribute_info(infile_id, table.c_str(), attrname.c_str(),  &dims, &type_class, &type_size) < 0)
+        throw std::runtime_error("H5LTget_attribute_info error");
 
     vector<char> sdata(type_size);
-    err = H5LTget_attribute_string(infile_id, table.c_str(), attrname.c_str(),  &sdata[0]);
-    if(err < 0) throw std::runtime_error("H5LTget_attribute_string error");
+    if(H5LTget_attribute_string(infile_id, table.c_str(), attrname.c_str(),  &sdata[0]) < 0)
+        throw std::runtime_error("H5LTget_attribute_string error");
     return string(&sdata[0]);
 }
 
 double HDF5_InputFile::getAttributeD(const string& table, const string& attrname, double dflt) {
-    if(!infile_id) throw std::runtime_error("Cannot read attribute without file");
+    if(!doesAttrExist(table, attrname)) return dflt;
+
     double d = dflt;
-    herr_t err = H5LTget_attribute_double(infile_id, table.c_str(), attrname.c_str(),  &d);
-    if(err < 0) return dflt;
+    if(H5LTget_attribute_double(infile_id, table.c_str(), attrname.c_str(),  &d) < 0)
+        throw std::runtime_error("H5LTget_attribute_double error");
     return d;
 }
 

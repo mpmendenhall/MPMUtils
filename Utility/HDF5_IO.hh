@@ -16,6 +16,8 @@ public:
 
     /// get number of records in input table
     hsize_t getTableEntries(const string& table, hsize_t* nfields = nullptr);
+    /// check whether named object has named attribute
+    bool doesAttrExist(const string& objname, const string& attrname);
     /// read double-valued attribute
     double getAttributeD(const string& table, const string& attrname, double dflt);
     /// read string-valued attribute
@@ -99,10 +101,7 @@ public:
     /// Handle datastream signals
     void signal(datastream_signal_t sig) override {
         HDF5_Table_Writer<T>::signal(sig);
-        if(sig == DATASTREAM_END) {
-            printf("writeFile() at DATASTREAM_END\n");
-            writeFile();
-        }
+        if(sig == DATASTREAM_END) writeFile();
     }
 };
 
