@@ -14,7 +14,7 @@ public:
     typedef vector<vector<float>> super_t;
 
     /// constructor
-    KDTreeSet(unsigned int n): super_t(n) { }
+    explicit KDTreeSet(unsigned int n): super_t(n) { }
     /// destructor
     ~KDTreeSet() { clearTree(); }
 
@@ -50,7 +50,7 @@ public:
     typedef vector<float> super_t;
 
     /// constructor
-    PointCloudHistogram(KDTreeSet& T): super_t(T.nPts()), myTree(&T) {
+    explicit PointCloudHistogram(KDTreeSet& T): super_t(T.nPts()), myTree(&T) {
         if(!T.T) throw std::logic_error("PointCloudHistogram requires constructed KDTree");
     }
 

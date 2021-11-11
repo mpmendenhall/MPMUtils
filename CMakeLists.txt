@@ -128,7 +128,7 @@ LIST(APPEND EXTLIBS ${Geant4_LIBRARIES})
 # Choose objects to build
 
 foreach(dir IN ITEMS Delta Deprecated External Exegete Framework HDF5 JobControl
-        Math Matrix Physics ROOTUtils Socket Utility Visualization )
+        Math Matrix Physics Physics/MCNParse ROOTUtils Socket Utility Visualization )
 include_directories(${PROJECT_SOURCE_DIR}/${dir})
 file(GLOB DIRSRC ${dir}/*.c*)
 LIST(APPEND SOURCE_FILES ${DIRSRC})
