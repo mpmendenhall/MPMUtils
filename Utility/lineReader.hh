@@ -4,15 +4,11 @@
 #ifndef LINEREADER_HH
 #define LINEREADER_HH
 
-#include <istream>
+#include "char_istream.hh"
 using std::istream;
-#include <string>
-using std::string;
-#include <sstream>
-using std::stringstream;
 
 /// load istream line-by-line
-class lineReader: public stringstream {
+class lineReader: public char_istream {
 public:
     /// Constructor
     explicit lineReader(istream& _i): lineSrc(_i) { }
@@ -20,8 +16,7 @@ public:
     /// load next line
     lineReader& next(char delim = '\n') {
         std::getline(lineSrc, lstr, delim);
-        str(lstr);
-        clear();
+        set_str(lstr);
         ++lno;
         return *this;
     }

@@ -61,5 +61,4 @@ void MCTAL_IntAx::load(lineReader& i) {
             i >> x;
         }
     }
-    display();
 }
