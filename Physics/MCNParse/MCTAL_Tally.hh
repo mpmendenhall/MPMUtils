@@ -17,10 +17,10 @@ struct valerr_t {
 class MCTAL_Tally: public vector<valerr_t> {
 public:
     /// Constructor
-    MCTAL_Tally(istream* i = nullptr);
+    MCTAL_Tally(lineReader* i = nullptr);
 
     /// read from file
-    void load(istream& i);
+    void load(lineReader& i);
 
     /// get particle type name
     static string ptype_name(ptype_t p);

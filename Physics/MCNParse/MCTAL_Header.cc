@@ -4,22 +4,25 @@
 #include <stdio.h>
 #include <inttypes.h>
 
-MCTAL_Header::MCTAL_Header(istream& i) {
-    i >> kod >> ver >> prob_date >> prob_time >> knod >> nps >> rnr;
-    i.ignore(256, '\n');
-    char _c;
-    i.get(_c);
-    check_expected(_c, " ");
-    getline(i, probid);
-    string s_tmp;
-    i >> s_tmp;
-    check_expected(upper(s_tmp), "NTAL");
-    i >> ntal;
-    // TODO handle NPERT if present
-    i.ignore(256, '\n');
-    tallynums.resize(ntal);
-    for(int n=0; n < ntal; ++n) i >> tallynums[n];
-    i.ignore(256, '\n');
+MCTAL_Header::MCTAL_Header(lineReader& i) {
+    try {
+        i.next() >> kod >> ver >> prob_date >> prob_time >> knod >> nps >> rnr;
+
+        probid = i.next().lstr;
+        check_expected(probid.at(0), " ");
+
+        string s_tmp;
+        i.next() >> s_tmp >> ntal;
+        check_expected(upper(s_tmp), "NTAL");
+        // TODO handle NPERT if presterminate called after throwing an instance of 'std::runtime_error'ent
+
+        i.next();
+        tallynums.resize(ntal);
+        for(int n=0; n < ntal; ++n) i >> tallynums[n];
+    } catch(std::runtime_error& e) {
+        printf("Problem parsing MCTAL header at line %i [%s]\n", i.lno, i.lstr.c_str());
+        throw e;
+    }
 }
 
 void MCTAL_Header::display() const {

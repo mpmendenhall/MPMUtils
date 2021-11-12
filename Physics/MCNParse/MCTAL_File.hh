@@ -14,7 +14,9 @@ public:
     explicit MCTAL_File(istream& i);
     /// print summary to stdout
     void display() const;
-
+protected:
+    lineReader lr;      ///< line-by-line reader
+public:
     MCTAL_Header hdr;   ///< file header
 };
 

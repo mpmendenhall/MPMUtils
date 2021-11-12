@@ -3,16 +3,15 @@
 #include "MCTAL_Axis.hh"
 #include <stdio.h>
 
-void MCTAL_Axis::load(const string& cs, istream& i, bool to_endline) {
+void MCTAL_Axis::load(const string& cs, lineReader& i) {
     char _c;
-    i.get(_c);
+    i.next().get(_c);
     check_expected(::toupper(_c), cs);
     i.get(_c);
     _c = ::toupper(_c);
     check_expected(_c," TC");
     bintype = bintype_t(_c);
     i >> nbins;
-    if(to_endline) i.ignore(256, '\n');
 }
 
 void MCTAL_Axis::display() const {
@@ -34,30 +33,33 @@ void MCTAL_Axis::showbins() const {
     printf("}");
 }
 
-void MCTAL_AxBins::load(const string& cs, istream& i) {
+void MCTAL_AxBins::load(const string& cs, lineReader& i) {
 
-    MCTAL_Axis::load(cs, i, false);
+    MCTAL_Axis::load(cs, i);
 
     // TODO check for 'f' being present
     int f = 0;
-    //i >> f;
+    i >> f;
     is_bin_lowedge = !f;
 
-    i.ignore(256, '\n');
     if(nbins) {
         resize(nbins - (bintype == BINTP_TOTAL? 1 : 0));
-        for(auto& x: *this) i >> x;
-        i.ignore(256, '\n');
+        for(auto& x: *this) {
+            i.checkEnd();
+            i >> x;
+        }
     }
 }
 
-void MCTAL_IntAx::load(istream& i) {
+void MCTAL_IntAx::load(lineReader& i) {
     MCTAL_Axis::load("F", i);
-    if(bintype != BINTP_NONE)
-        throw std::runtime_error("Invalid bin type for F");
+    if(bintype != BINTP_NONE) throw std::runtime_error("Invalid bin type for F");
     if(nbins) {
         resize(nbins);
-        for(auto& x: *this) i >> x;
-        i.ignore(256, '\n');
+        for(auto& x: *this) {
+            i.checkEnd();
+            i >> x;
+        }
     }
+    display();
 }

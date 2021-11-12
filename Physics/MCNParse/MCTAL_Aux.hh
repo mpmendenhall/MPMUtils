@@ -18,7 +18,7 @@ struct s_tfc {
 class MCTAL_TFC: public vector<s_tfc> {
 public:
     /// read from file
-    void load(istream& i);
+    void load(lineReader& i);
 
     int j_tf[8];    ///< bin indexes of the tally fluctuation chart bin
 
@@ -36,7 +36,7 @@ struct s_kcyc {
 class MCTAL_KCODE: public vector<s_kcyc> {
 public:
     /// read from file
-    void load(istream& i);
+    void load(lineReader& i);
 
     int n_cyc = 0;  ///< number of code cycles
     int n_scyc = 0; ///< number of settle cycles

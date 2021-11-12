@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "to_str.hh"
 
-MCTAL_Tally::MCTAL_Tally(istream* i):
+MCTAL_Tally::MCTAL_Tally(lineReader* i):
 Fbins("Object Number"),
 Dbins("Total/Direct"),
 Ubins("User Bin"),
@@ -14,36 +14,29 @@ Cbins("cosine"),
 Ebins("Energy [MeV]"),
 Tbins("Time [shakes]") { if(i) load(*i); }
 
-void MCTAL_Tally::load(istream& i) {
+void MCTAL_Tally::load(lineReader& i) {
     string s_tmp;
-    i >> s_tmp;
-    check_expected(upper(s_tmp), "TALLY");
+    int p, _int;
 
-    i >> probnum;
+    i.next() >> s_tmp >> probnum >> p >> _int;
+    check_expected(upper(s_tmp), "TALLY");
     tally = tally_t(probnum % 10);
-    int p;
-    i >> p;
-    int _int;
-    i >> _int;
     detector = detector_t(_int);
-    while(i.peek() == ' ') i.ignore(1);
-    if(i.peek() != '\n') {
-        i >> _int;
-        tallymod = tallymod_t(_int);
-    }
-    i.ignore(256, '\n');
+    tallymod = tallymod_t(_int);
 
     if(p == 1 || p == 3 || p == 5 || p == 7) ptype.insert(PTYPE_N);
     if(p == 2 || p == 3 || p == 6 || p == 7) ptype.insert(PTYPE_P);
     if(p == 4 || p == 5 || p == 6 || p == 7) ptype.insert(PTYPE_E);
-    if(p < 0) for(ptype_t n = PTYPE_N; n <= PTYPE_ION; ++n) {
-        i >> p;
-        if(p) ptype.insert(n);
+    if(p < 0) {
+        i.next();
+        for(ptype_t n = PTYPE_N; n <= PTYPE_ION; ++n) {
+            i >> p;
+            if(p) ptype.insert(n);
+        }
     }
-    i.ignore(256, '\n');
 
     // The FC card lines, if any, each starting with 5 blanks}
-    while(i.peek() == ' ') i.ignore(256, '\n');
+    while(i.lineSrc.peek() == ' ') i.next();
 
     Fbins.load(i);
     Dbins.load("D", i);
@@ -57,10 +50,10 @@ void MCTAL_Tally::load(istream& i) {
     Ebins.load("E", i);
     Tbins.load("T", i);
 
-    getline(i, s_tmp);
-    s_tmp = upper(s_tmp);
-    if(!(s_tmp == "VALS" || s_tmp == "VALS_PERT"))
-        throw std::runtime_error("Expected 'VALS [PERT]', got '" + s_tmp + "'");
+    i.next();
+    i.lstr = upper(i.lstr);
+    if(!(i.lstr == "VALS" || i.lstr == "VALS_PERT"))
+        throw std::runtime_error("Expected 'VALS [PERT]', got '" + i.lstr + "'");
 
     int nentries = 1;
     for(auto a = AXIS_T; a < AXIS_END; ++a) {
@@ -72,16 +65,17 @@ void MCTAL_Tally::load(istream& i) {
         }
     }
 
+    i.next();
     while(nentries--) {
+        i.checkEnd();
         valerr_t v;
         i >> v.val >> v.rel_err;
         push_back(v);
     }
-    i.ignore(256, '\n');
 
     tfc.load(i);
 
-    if(toupper(i.peek()) == 'K') kcyc.load(i);
+    if(toupper(i.lineSrc.peek()) == 'K') kcyc.load(i);
 }
 
 string MCTAL_Tally::ptype_name(ptype_t p) {

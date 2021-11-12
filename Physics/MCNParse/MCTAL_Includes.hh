@@ -4,10 +4,7 @@
 #ifndef MCTAL_INCLUDES_HH
 #define MCTAL_INCLUDES_HH
 
-#include <iostream>
-using std::istream;
-#include <string>
-using std::string;
+#include "lineReader.hh"
 #include <vector>
 using std::vector;
 #include <set>

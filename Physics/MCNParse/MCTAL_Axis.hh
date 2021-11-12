@@ -12,7 +12,7 @@ public:
     explicit MCTAL_Axis(const string& t = "Axis"): title(t) { }
 
     /// read from file
-    void load(const string& cs, istream& i, bool to_endline = true);
+    void load(const string& cs, lineReader& i);
     /// print summary info to stdout
     void display() const;
 
@@ -46,7 +46,7 @@ public:
     using MCTAL_Axis::MCTAL_Axis;
 
     /// read from file
-    void load(const string& cs, istream& i);
+    void load(const string& cs, lineReader& i);
     /// bin value access
     double operator()(size_t i) const override { return at(i); }
     /// number of bin value entries
@@ -61,7 +61,7 @@ public:
     using MCTAL_Axis::MCTAL_Axis;
 
     /// read from file
-    void load(istream& i);
+    void load(lineReader& i);
     /// bin value access
     double operator()(size_t i) const override { return at(i); }
     /// number of bin value entries

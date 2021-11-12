@@ -11,7 +11,7 @@
 class MCTAL_Header {
 public:
     /// Constructor
-    explicit MCTAL_Header(istream& i);
+    explicit MCTAL_Header(lineReader& i);
 
     string kod;         ///< name of the code, e.g. "MCNP6"
     string ver;         ///< code version, e.g. "6.2"
