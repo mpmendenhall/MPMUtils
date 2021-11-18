@@ -11,8 +11,8 @@ MCNP 6.2 user manual).
 
 --------------------------------------------------------------------------------
 
-To use this parser, compile the `MCTAL_*` source files (plus `to_str.hh`) into
-your own code, and:
+To use this parser, compile the `MCTAL_*` source files (plus `to_str.hh`,
+`char_istream.hh`, and `lineReader.hh`) into your own code, and:
 
 #include "MCTAL_File.hh"
 #include <fstream>

@@ -25,10 +25,12 @@ struct char_membuf: std::basic_streambuf<char> {
 };
 
 /// istream over char buffer
-class char_istream: public std::basic_istream<char>, private char_membuf {
+class char_istream: private char_membuf, public std::basic_istream<char> {
 public:
     /// Constructor
-    char_istream(): basic_istream(this) { }
+    explicit char_istream(const char* s = nullptr, size_t n = 0):
+    char_membuf(s,n), basic_istream(this) { }
+
     /// Set contents
     void set_str(const char* s, size_t n) { set(s,n); init(this); }
     /// Set contents
