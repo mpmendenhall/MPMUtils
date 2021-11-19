@@ -8,11 +8,9 @@
 #include "SFINAEFuncs.hh" // for dispObj
 
 #include <cmath>        // for std::fabs
-#include <algorithm>    // for std::lower_bound
 #include <type_traits>  // for std::remove_pointer
 #include <iterator>     // for std::distance
 #include <utility>      // for std::pair
-#include <stdexcept>
 #include <deque>
 using std::deque;
 

@@ -6,12 +6,7 @@
 
 #include "HDF5_StructInfo.hh"
 #include "DataSource.hh"
-
-#include <map>
 using std::multimap;
-#include <algorithm>
-#include <cassert>
-#include <stdexcept>
 
 /// Cacheing HDF5 table reader
 template<typename T>
@@ -188,8 +183,7 @@ bool HDF5_Table_Cache<T>::next(T& val) {
         nread += nToRead;
     }
 
-    assert(cache_idx < cached.size());
-    val = cached[cache_idx++];
+    val = cached.at(cache_idx++);
     return true;
 }
 

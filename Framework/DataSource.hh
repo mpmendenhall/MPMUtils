@@ -6,8 +6,6 @@
 
 #include "DataSink.hh"
 #include <limits>
-#include <vector>
-using std::vector;
 
 /// Virtual base class for loading a stream of objects
 template<class C>
@@ -81,8 +79,8 @@ protected:
     /// Called when switching to next source
     virtual void nextSource() { }
 
-    vector<dsrc_t*> v;  ///< underlying sources
-    size_t i = 0;       ///< current position in sources list
+    std::vector<dsrc_t*> v; ///< underlying sources
+    size_t i = 0;           ///< current position in sources list
 };
 
 #endif

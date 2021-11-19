@@ -7,7 +7,6 @@
 #include "_Collator.hh"
 #include "ConfigThreader.hh"
 #include "GlobalArgs.hh"
-#include "XMLTag.hh"
 #include <thread>
 
 /// Type-independent re-casting base

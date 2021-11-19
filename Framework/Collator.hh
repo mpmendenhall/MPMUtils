@@ -11,7 +11,6 @@
 #include "SFINAEFuncs.hh"
 
 #include <queue>
-#include <stdio.h>
 #include <cassert>
 #include <unistd.h>
 
