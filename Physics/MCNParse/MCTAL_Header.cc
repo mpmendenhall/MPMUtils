@@ -21,7 +21,7 @@ MCTAL_Header::MCTAL_Header(lineReader& i) {
         for(int n=0; n < ntal; ++n) i >> tallynums[n];
     } catch(std::runtime_error& e) {
         printf("Problem parsing MCTAL header at line %i [%s]\n", i.lno, i.lstr.c_str());
-        throw e;
+        throw;
     }
 }
 
