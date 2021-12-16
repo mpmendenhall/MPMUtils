@@ -165,7 +165,12 @@ public:
     }
 
     /// debugging display
-    void display() const { printf("KeyData[%zu/%i] type %i\n", wsize, BufferSize(), What()); }
+    void display() const {
+        auto w = What();
+        printf("KeyData[%i: %zu/%i]", w, wsize, BufferSize());
+        if(w/10000 == 2 && ((w/1000) & 1)) printf(" -> %g", Get<double>());
+        printf("\n");
+    }
     /// debugging binary display
     void bdisplay() const {
         display();
@@ -259,6 +264,16 @@ public:
     /// Get modifiable pointer to array contents
     template<typename T>
     T* GetArrayPtr(const string& k) const { auto v = FindKey(k); return v? v->GetArrayPtr<T>() : nullptr; }
+
+    /// debugging dump to stdout
+    void display() const {
+        printf("KeyTable with %zu entries\n", size());
+        for(auto& kv: *this) {
+            printf("\t* %s: ", kv.first.c_str());
+            if(kv.second) kv.second->display();
+            else printf("<NULL>\n");
+        }
+    }
 };
 
 /// Send KeyData buffered object

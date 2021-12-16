@@ -137,7 +137,7 @@ public:
     template<typename... Args>
     static void displayConstructionOpts() {
         for(auto& kv: indexFor<B, Args...>())
-            printf("\t'%s'\n", kv.second.classname.c_str());
+            printf("\t* %s\n", kv.second.classname.c_str());
     }
 
     /// Error for failed class construction of this type

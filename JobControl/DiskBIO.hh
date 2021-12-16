@@ -55,7 +55,7 @@ protected:
     /// blocking data send
     void _send(void* vptr, int size) override;
     /// flush output
-    void flush() override { if(fOut >= 0 && fsync(fOut)) throw("Failed to fsync output file!"); }
+    void flush() override { if(fOut >= 0 && fsync(fOut)) throw std::runtime_error("failed to fsync output file"); }
 
     int fOut = -1;   ///< output file descriptor
 };
