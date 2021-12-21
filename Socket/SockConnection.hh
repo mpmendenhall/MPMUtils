@@ -6,8 +6,8 @@
 #include <netdb.h>  // for sockaddr_in, hostent
 #include <unistd.h> // for write(...), close(...), usleep(n)
 #include <stdexcept>
-#include <string>
-using std::string;
+
+#include "to_str.hh"
 
 /// read/write from a socket file descriptor
 class SockFD {
@@ -20,16 +20,24 @@ public:
     /// close socket
     void close_socket() { if(sockfd) close(sockfd); sockfd = 0; }
 
-    /// write to socket; throw on failure
-    void sockwrite(char* buff, size_t nbytes);
+    /// write to socket; throw on failure unless fail_ok
+    void sockwrite(const char* buff, size_t nbytes, bool fail_ok = false);
     /// blocking read from socket
-    void sockread(char* buff, size_t nbytes);
+    size_t sockread(char* buff, size_t nbytes, bool fail_ok = false);
 
     int sockfd = 0; ///< file descriptor number for socket
     int read_timeout_ms = -1; ///< read timeout [ms]; negative for infinite
 
     /// blocking wait for one new connection; return connection file descriptor
     int awaitConnection();
+
+    /// error reporting for socket operations
+    class sockFDerror: public std::runtime_error {
+    public:
+        /// Constructor
+        sockFDerror(const SockFD& S, const string& m):
+        std::runtime_error("(" + to_str(S.sockfd) + ") " + m) { }
+    };
 
 protected:
     /// open socket file descriptor
@@ -39,6 +47,7 @@ protected:
 /// Socket connection wrapper
 class SockConnection: public SockFD {
 public:
+
     /// Constructor
     explicit SockConnection(const string& _host = "", int _port = 0): host(_host), port(_port) { }
     /// Constrcutor with (already open) file descriptor
@@ -53,6 +62,14 @@ public:
 
     string host;    ///< hostname
     int port = 0;   ///< socket port
+
+    /// error reporting for socket operations
+    class sockerror: public sockFDerror {
+    public:
+        /// Constructor
+        sockerror(const SockConnection& S, const string& m):
+        sockFDerror(S, "[" + S.host + ":" + to_str(S.port) + "] " + m) { }
+    };
 
 protected:
     /// get host info for server

@@ -23,6 +23,7 @@ int RunCfgCmd::main(int argc, char** argv, const char* execname) {
         printf(TERMSGR_BOLD "\nArguments: %s <config file | class> [-argname argval(s) ...]" TERMSGR_RESET "\n\n", execname);
         printf("Available top-level classes:\n");
         BaseFactory<Configurable>::displayConstructionOpts<const Setting&>();
+        printf("\n");
         return EXIT_FAILURE;
     }
 

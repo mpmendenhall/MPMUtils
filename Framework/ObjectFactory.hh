@@ -136,8 +136,10 @@ public:
     /// show available options for construction
     template<typename... Args>
     static void displayConstructionOpts() {
-        for(auto& kv: indexFor<B, Args...>())
-            printf("\t* %s\n", kv.second.classname.c_str());
+        vector<string> vnames;
+        for(auto& kv: indexFor<B, Args...>()) vnames.push_back(kv.second.classname);
+        std::sort(vnames.begin(), vnames.end());
+        for(auto& n: vnames) printf("\t* %s\n", n.c_str());
     }
 
     /// Error for failed class construction of this type
