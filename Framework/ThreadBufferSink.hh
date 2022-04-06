@@ -10,7 +10,7 @@
 
 /// Typeless base
 class _ThreadBufferSink: public Configurable, public XMLProvider,
-virtual public _DataSink, virtual public _SinkUser {
+virtual public SignalSink, virtual public _SinkUser {
 
 };
 

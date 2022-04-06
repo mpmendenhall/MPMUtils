@@ -11,7 +11,7 @@
 
 /// Virtual base class for accepting a stream of objects
 template<typename T>
-class DataSink: public _DataSink {
+class DataSink: public SignalSink {
 public:
     /// received data type
     typedef T sink_t;
@@ -24,7 +24,7 @@ public:
 
 /// Registration in AnaIndex
 template<typename T>
-_DataSink* AnaIndex<T>::makeDataSink(const Setting& S, const string& dfltclass) const {
+SignalSink* AnaIndex<T>::makeDataSink(const Setting& S, const string& dfltclass) const {
     return constructCfgObj<DataSink<T>>(S, dfltclass);
 }
 
@@ -41,7 +41,7 @@ public:
     ~SinkUser() { if(ownsNext) delete nextSink; }
 
     /// get nextSink
-    _DataSink* _getNext() override { return getNext(); }
+    SignalSink* _getNext() override { return getNext(); }
     /// set ownership of nextSink
     void setOwnsNext(bool b) override { ownsNext = b; }
 
@@ -55,7 +55,7 @@ public:
     }
 
     /// set nextSink output (throw if wrong type)
-    void _setNext(_DataSink* n) override {
+    void _setNext(SignalSink* n) override {
         if(!n) setNext(nullptr);
         else {
             auto nn = dynamic_cast<dsink_t*>(n);

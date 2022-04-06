@@ -26,23 +26,16 @@ public:
     /// Polymorphic Destructor
     virtual ~SignalSink() { }
     /// accept data flow signal
-    virtual void signal(datastream_signal_t) = 0;
-};
-
-/// Base marker for dynamic casting
-class _DataSink: public SignalSink {
-public:
-    /// ignore signals
-    void signal(datastream_signal_t) override { }
+    virtual void signal(datastream_signal_t) { }
 };
 
 /// Base marker for dynamic casting
 class _SinkUser {
 public:
     /// get nextSink output
-    virtual _DataSink* _getNext() { return nullptr; }
+    virtual SignalSink* _getNext() { return nullptr; }
     /// set nextSink output (throw if wrong type)
-    virtual void _setNext(_DataSink*) { throw std::logic_error("Need specific data type to _setNext"); }
+    virtual void _setNext(SignalSink*) { throw std::logic_error("Need specific data type to _setNext"); }
     /// set ownership of nextSink
     virtual void setOwnsNext(bool) { throw std::logic_error("Need specific data type to setOwnsNext"); }
 
@@ -91,12 +84,12 @@ public:
     /// Constructor
     _SubSinkUser(_SinkUser* s = nullptr): subSinker(s) { }
     /// get nextSink output
-    _DataSink* _getNext() override {
+    SignalSink* _getNext() override {
         if(!subSinker) throw std::logic_error("undefined subSinker");
         return subSinker->_getNext();
     }
     /// set nextSink output (throw if wrong type)
-    void _setNext(_DataSink* n) override {
+    void _setNext(SignalSink* n) override {
         if(!subSinker) throw std::logic_error("undefined subSinker");
         subSinker->_setNext(n);
     }
