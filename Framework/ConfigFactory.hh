@@ -41,6 +41,21 @@ protected:
     const Setting& Cfg; ///< input configuration
 };
 
+/// Pass-through Configurable generating "next"
+class ConfigurableStage: public Configurable {
+public:
+    /// Constructor
+    explicit ConfigurableStage(const Setting& S): Configurable(S) {
+        if(S.exists("next")) next = constructCfgObj<Configurable>(S["next"], "");
+    }
+    /// Destructor
+    ~ConfigurableStage() { delete next; }
+    /// Run configured operation
+    void run() override { if(next) next->run(); }
+
+    Configurable* next = nullptr;   ///<   next run stage
+};
+
 /// register Configurable subclass
 #define REGISTER_CONFIGURABLE(NAME) static ObjectFactory<Configurable, NAME, const Setting&> the_##NAME##_CfgblFactory(#NAME);
 

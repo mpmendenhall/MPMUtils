@@ -10,6 +10,7 @@
 #include "GetEnv.hh"
 #include "StringManip.hh"
 #include "TermColor.hh"
+#include "GlobalArgs.hh"
 #include <fstream>
 #include <stdio.h>
 
@@ -94,4 +95,16 @@ void AnalysisStep::_makeXML(XMLTag& X) {
     auto Xfout = new XMLTag("output");
     Xfout->attrs["file"] = outfilename;
     X.addChild(Xfout);
+
+    auto Xgargs = new XMLTag("cmdargs");
+    for(auto& kv: GlobalArgs()) {
+        for(auto& s: kv.second) {
+            auto Xa = new XMLTag(kv.first);
+            Xa->addChild(new XMLText(s));
+            Xa->oneline = true;
+            Xgargs->addChild(Xa);
+        }
+    }
+    X.addChild(Xgargs);
+
 }

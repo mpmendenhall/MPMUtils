@@ -42,30 +42,20 @@ sqlite3_int64 AnalysisDB::createAnaRun(const string& dataname) {
     busyRetry(stmt);
     sqlite3_reset(stmt);
 
-    auto stmt2 = loadStatement("SELECT run_id FROM analysis_runs WHERE rowid = last_insert_rowid()");
-    busyRetry(stmt2);
-    auto r = sqlite3_column_int64(stmt2, 0);
-    sqlite3_reset(stmt2);
-
-    return r;
+    return runid;
 }
 
 sqlite3_int64 AnalysisDB::getAnaVar(const string& name, const string& unit, const string& descrip) {
     auto stmt = loadStatement("INSERT OR IGNORE INTO analysis_vars(var_id,name,unit,descrip) VALUES (?1,?2,?3,?4)");
-    sqlite3_bind_int64(stmt, 1, std::hash<string>{}(name));
+    auto varid = std::hash<string>{}(name);
+    sqlite3_bind_int64(stmt, 1, varid);
     sqlite3_bind_text(stmt, 2, name.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 3, unit.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 4, descrip.c_str(), -1, SQLITE_STATIC);
     busyRetry(stmt);
     sqlite3_reset(stmt);
 
-    auto stmt2 = loadStatement("SELECT var_id FROM analysis_vars WHERE name = ?1 AND descrip = ?2");
-    sqlite3_bind_text(stmt2, 1, name.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt2, 2, descrip.c_str(), -1, SQLITE_STATIC);
-    busyRetry(stmt2);
-    sqlite3_int64 var_id = sqlite3_column_int64(stmt2, 0);
-    sqlite3_reset(stmt2);
-    return var_id;
+    return varid;
 }
 
 void AnalysisDB::uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, double val, double err) {

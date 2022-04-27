@@ -89,6 +89,13 @@ bool optionalGlobalArg(const std::string& argname, int& v, const string& help) {
     return true;
 }
 
+bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
+    string s(v? "1" : "0");
+    if(!optionalGlobalArg(argname, s, help)) return false;
+    v = atoi(s.c_str());
+    return true;
+}
+
 void displayGlobalArgs() {
     printf("Global Arguments:\n");
     for(auto& kv: GlobalArgs()) {

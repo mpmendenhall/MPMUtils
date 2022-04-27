@@ -37,6 +37,8 @@ bool optionalGlobalArg(const string& argname, string& v, const string& help = ""
 bool optionalGlobalArg(const string& argname, double& v, const string& help = "");
 /// update value with optional global floating-point argument
 bool optionalGlobalArg(const string& argname, int& v, const string& help = "");
+/// update value with optional global boolean argument
+bool optionalGlobalArg(const string& argname, bool& v, const string& help = "");
 
 /// debugging printout of global args
 void displayGlobalArgs();
