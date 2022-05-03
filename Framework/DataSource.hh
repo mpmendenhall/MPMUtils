@@ -1,5 +1,5 @@
 /// \file DataSource.hh Base class for providing a stream of objects
-// -- Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef DATASOURCE_HH
 #define DATASOURCE_HH
@@ -27,16 +27,31 @@ public:
     /// pop with infinite looping
     bool next_loop(val_t& o) { if(next(o)) return true; reset(); return next(o); }
     /// Reset to start
-    virtual void reset() { }
+    virtual void reset() { nread = 0; id_current_evt = -1; }
     /// Estimate remaining data size (including loop)
-    size_t entries_optloop() { return doLoop? max_entries  : entries(); }
+    size_t entries_optloop() { return doLoop? max_entries : entries_remaining(); }
     /// Estimate remaining data size (no loop)
-    virtual size_t entries() { return 0; }
+    virtual size_t entries() const { return 0; }
+    /// Remaining entries, including load limit
+    size_t entries_remaining() const { auto n0 = entries(); return nLoad >= 0 && size_t(nLoad) < n0? nLoad - nread : n0 - nread; }
+    /// get number of rows already read
+    size_t getNRead() const { return nread; }
 
     /// whether to do infinite looping
     bool doLoop = false;
     /// next with optional looping
     bool next_optloop(val_t& o) { return doLoop? next_loop(o) : next(o); }
+
+    int nLoad = -1;         ///< entries loading limit; set >= 0 to apply
+    /// get identifying number for value type
+    static int64_t getIdentifier(const val_t& i) { return i.evt; }
+    /// open input file
+    virtual void openInput(const string& f) { nread = 0; id_current_evt = -1; infile_name = f; }
+
+protected:
+    size_t nread = 0;               ///< number of items already read
+    int64_t id_current_evt = -1;    ///< event identifier of next_read
+    string infile_name = "";        ///< input file name
 };
 
 /// Sequence of DS ~ DataSource
@@ -64,7 +79,7 @@ public:
     void reset() override { while(i) v[--i]->reset(); }
 
     /// Estimate remaining data size (no loop)
-    size_t entries() override {
+    size_t entries() const override {
         size_t e = 0;
         for(auto j = i; j < v.size(); ++j) {
             auto ee = v[j]->entries();

@@ -6,15 +6,12 @@
 #include "libconfig_readerr.hh"
 #include "AnalysisStep.hh"
 #include "AnaGlobals.hh"
-#include "Exegete.hh"
 #include "TermColor.hh"
 
 #include <stdlib.h>
 #include <stdio.h>
 
 int RunCfgCmd::main(int argc, char** argv, const char* execname) {
-    _EXPLAIN("Executing analysis code");
-
     printf(TERMSGR_ITALIC "\n");
     CodeVersion::display_code_version();
     printf(TERMSGR_RESET);

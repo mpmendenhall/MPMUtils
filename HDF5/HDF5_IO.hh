@@ -12,7 +12,7 @@ public:
     /// Destructor
     virtual ~HDF5_InputFile() { if(infile_id) H5Fclose(infile_id); }
     /// Open named input file; connect table readers in subclass!
-    virtual void openInput(const string& filename);
+    virtual void _openInput(const string& filename);
 
     /// get number of records in input table
     hsize_t getTableEntries(const string& table, hsize_t* nfields = nullptr);
@@ -24,7 +24,6 @@ public:
     string getAttribute(const string& table, const string& attrname, const string& dflt);
 
     hid_t infile_id = 0;    ///< input HDF5 file ID
-    string infile_name = "";///< input HDF5 file name
 };
 
 /// HDF5_InputFile with specific table
@@ -37,7 +36,8 @@ public:
 
     /// Open named input file
     void openInput(const string& filename) override {
-        HDF5_InputFile::openInput(filename);
+        _openInput(filename);
+        HDF5_Table_Cache<T>::openInput(filename);
         this->setFile(infile_id);
     }
 

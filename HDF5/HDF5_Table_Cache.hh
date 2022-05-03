@@ -12,6 +12,11 @@ using std::multimap;
 template<typename T>
 class HDF5_Table_Cache: virtual public DataSource<T> {
 public:
+    using DataSource<T>::nLoad;
+    using DataSource<T>::nread;
+    using DataSource<T>::id_current_evt;
+    using DataSource<T>::getIdentifier;
+
     /// Constructor, from name of table and struct offsets/sizes
     HDF5_Table_Cache(const HDF5_Table_Spec& ts = HDF5_table_setup<T>(), hsize_t nc = 1024): Tspec(ts), nchunk(nc)  { }
 
@@ -21,17 +26,11 @@ public:
     bool skip(size_t n) override;
     /// Re-start at beginning of stream
     void reset() override { setFile(_infile_id); }
-    /// Remaining entries estimate
-    size_t entries() override { return nLoad >= 0 && hsize_t(nLoad) < nRows? nLoad - nread : nRows - nread; }
 
     /// (re)set read file
     void setFile(hid_t f);
-    /// get number of rows read
-    hsize_t getNRead() const { return nread; }
-    /// get number of rows available
-    hsize_t getNRows() const { return nRows; }
-    /// get identifying number for value type
-    static int64_t getIdentifier(const T& i) { return i.evt; }
+    /// Estimate remaining data size (no loop)
+    size_t entries() const override { return nRows; }
     /// set identifying number for value type
     static void setIdentifier(T& i, int64_t n) { i.evt = n; }
 
@@ -41,16 +40,13 @@ public:
     void loadAll(multimap<int64_t, T>& dat);
 
     HDF5_Table_Spec Tspec;      ///< configuration for table to read
-    int nLoad = -1;             ///< entries loading limit; set >= 0 to apply
 
 protected:
     hid_t _infile_id = 0;       ///< file to read from
     T next_read;                ///< next item read in for event list reads
-    int64_t id_current_evt = -1;  ///< event identifier of next_read
 
     vector<T> cached;           ///< cached read data
     size_t cache_idx = 0;       ///< index in cached data
-    hsize_t nread = 0;          ///< number of rows read
     hsize_t nRows = 0;          ///< number of rows in table
     hsize_t nfields = 0;        ///< number of fields in table
     hsize_t nchunk;             ///< cacheing chunk size
@@ -172,7 +168,7 @@ bool HDF5_Table_Cache<T>::next(T& val) {
             return false;
         }
 
-        hsize_t nToRead = std::min(nchunk, hsize_t(entries()));
+        hsize_t nToRead = std::min(nchunk, hsize_t(this->entries_remaining()));
         if(!nToRead) return false;
 
         cached.resize(nToRead);

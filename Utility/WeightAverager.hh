@@ -11,8 +11,6 @@ using std::array;
 template<unsigned int N>
 class WeightAverager {
 public:
-    /// Constructor
-    WeightAverager() { c.fill(0); clear(); }
     /// Destructor
     virtual ~WeightAverager() { }
 
@@ -54,11 +52,11 @@ protected:
         }
     }
 
-    array<double,N> x_in;   ///< input for each variable
-    double sum_w;           ///< sum of weights
-    array<double,N> sum_wx; ///< weighted sum
-    array<double,N> c;      ///< central values for second moment calculation
-    array<double,N> sum_wxx;///< weighted sum of (x-c)^2
+    array<double,N> x_in{};     ///< input for each variable
+    double sum_w = 0;           ///< sum of weights
+    array<double,N> sum_wx{};   ///< weighted sum
+    array<double,N> c{};        ///< central values for second moment calculation
+    array<double,N> sum_wxx{};  ///< weighted sum of (x-c)^2
 };
 
 #endif

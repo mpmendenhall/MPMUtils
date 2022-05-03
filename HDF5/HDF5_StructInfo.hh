@@ -11,15 +11,15 @@ using std::string;
 
 /// info for setting up HDF5 tables
 struct HDF5_Table_Spec {
-    int version = 0;            ///< version number
-    hsize_t n_fields;           ///< number of fields
-    size_t struct_size;         ///< size of struct
-    const size_t* offsets;      ///< field offsets
-    const size_t* field_sizes;  ///< field sizes
-    const hid_t* field_types;   ///< field data types
-    const char** field_names;   ///< field names
-    string table_name;          ///< table name
-    string table_descrip;       ///< description string for table
+    int version = 0;                        ///< version number
+    hsize_t n_fields = 0;                   ///< number of fields
+    size_t struct_size = 0;                 ///< size of struct
+    const size_t* offsets = nullptr;        ///< field offsets
+    const size_t* field_sizes = nullptr;    ///< field sizes
+    const hid_t* field_types = nullptr;     ///< field data types
+    const char** field_names = nullptr;     ///< field names
+    string table_name;                      ///< table name
+    string table_descrip;                   ///< description string for table
 };
 
 /// set up specified table
