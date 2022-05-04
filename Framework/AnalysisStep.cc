@@ -28,15 +28,9 @@ AnalysisStep::AnalysisStep(const string& cd): XMLProvider("AnalysisStep"),
 codename(cd), t0(time(nullptr)), pt0(steady_clock::now()),
 anatag(PROJ_ENV_PFX()+"-Analysis") { }
 
-bool AnalysisStep::make_xmlout() {
-    if(!outfilename.size()) {
-        printf(TERMFG_YELLOW "\nNo file specified for .xml output.\n\n" TERMFG_GREEN);
-        auto X = makeXML();
-        X->write(std::cout);
-        printf(TERMSGR_RESET "\n\n");
-        delete X;
-        return false;
-    }
+void AnalysisStep::make_xmlout() {
+    if(!outfilename.size()) printf(TERMFG_YELLOW "\nNo file specified for .xml output.\n\n" TERMFG_GREEN);
+    else printf(TERMFG_GREEN "Writing .xml metadata to '%s.xml'\n", outfilename.c_str());
 
     string xmlin = "";
     for(auto const& f: infiles) {
@@ -60,9 +54,8 @@ bool AnalysisStep::make_xmlout() {
             if(append) prevdat += line + "\n";
         }
     }
-    if(!prevdat.size()) printf(TERMFG_YELLOW "No previous xml metadata found!\n");
+    if(!prevdat.size()) printf(TERMFG_YELLOW "No previous xml metadata found!\n" TERMFG_GREEN);
 
-    printf(TERMFG_GREEN "Writing .xml metadata to '%s.xml'" TERMSGR_RESET "\n", outfilename.c_str());
     std::ofstream o(outfilename+".xml");
     o << "<?xml version=\"1.0\"?>\n";
     o << "<" << anatag << ">\n";
@@ -71,7 +64,9 @@ bool AnalysisStep::make_xmlout() {
     X->write(o,1);
     o << "\n</" << anatag << ">\n";
 
-    return true;
+    X->write(std::cout);
+    printf(TERMSGR_RESET "\n\n");
+    delete X;
 }
 
 XMLTag* infileEntry(const string& f) {

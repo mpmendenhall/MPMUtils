@@ -119,13 +119,13 @@ double integralAndError(TH1* h, double x0, double x1, Double_t& err, const strin
 double integralAndErrorInterp(TH1* h, double x0, double x1, Double_t& err, bool dxmul = true);
 
 /// create 1D histogram binned with axis from higher-dimensional histogram
-TH1F* axisHist(const TH2& h, const string& hname, AxisDirection d);
+TH1F* axisHist(const TH2& h, const string& hname, AxisDirection_t d);
 
 /// slice a TH3 into a stack of TH2Fs
-vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d = Z_DIRECTION);
+vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection_t d = Z_DIRECTION);
 
 /// slice a TH2 into a stack of TH1Fs
-vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection d, bool includeOverflow = false);
+vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection_t d, bool includeOverflow = false);
 
 /// split a list of counts into approximately equal segments
 vector<unsigned int> equipartition(const vector<float>& elems, unsigned int n);

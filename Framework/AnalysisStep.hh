@@ -32,8 +32,8 @@ public:
 
     string anatag;              ///< outermost tag for analysis
 
-    /// initialize output XML file by copy from first input file; return success
-    bool make_xmlout();
+    /// initialize output XML file by copy from first input file
+    void make_xmlout();
 
 protected:
     /// construct XML output

@@ -451,7 +451,7 @@ void fixNaNs(TH1* h) {
     }
 }
 
-TH1F* axisHist(const TH2& h, const string& hname,  AxisDirection d) {
+TH1F* axisHist(const TH2& h, const string& hname,  AxisDirection_t d) {
     const TAxis* Ax = (d==X_DIRECTION? h.GetXaxis() : d ==Y_DIRECTION?  h.GetYaxis() : h.GetZaxis());
     int nbins = Ax->GetNbins();
     TH1F* h1;
@@ -468,7 +468,7 @@ TH1F* axisHist(const TH2& h, const string& hname,  AxisDirection d) {
     return h1;
 }
 
-vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d) {
+vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection_t d) {
     const TAxis* Ax1 = d==X_DIRECTION? h3.GetYaxis() : h3.GetXaxis();
     const TAxis* Ax2 = d==Z_DIRECTION? h3.GetYaxis() : h3.GetZaxis();
     const TAxis* Ax3 = d==X_DIRECTION? h3.GetXaxis() : d==Y_DIRECTION? h3.GetYaxis() : h3.GetZaxis();
@@ -508,7 +508,7 @@ vector<TH2F*> sliceTH3(const TH3& h3, AxisDirection d) {
     return h2s;
 }
 
-vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection d, bool includeOverflow) {
+vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection_t d, bool includeOverflow) {
     vector<TH1F*> h1s;
     const unsigned int nx = h2.GetNbinsX();
     const unsigned int ny = h2.GetNbinsY();
