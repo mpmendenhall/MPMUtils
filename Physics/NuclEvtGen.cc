@@ -24,22 +24,22 @@ double PSelector::getProb(unsigned int n) const { return (cumprob.at(n+1)-cumpro
 
 //-----------------------------------------
 
-string particleName(DecayType_t t) {
-    if(t==D_GAMMA) return "gamma";
-    if(t==D_ELECTRON) return "e-";
-    if(t==D_POSITRON) return "e+";
-    if(t==D_NUEBAR) return "neutrino";
-    if(t==D_ALPHA) return "alpha";
+string particleName(PDGid_t t) {
+    if(t==PDG_GAMMA) return "gamma";
+    if(t==PDG_ELECTRON) return "e-";
+    if(t==PDG_POSITRON) return "e+";
+    if(t==PDG_NUEBAR) return "neutrino";
+    if(t==PDG_ALPHA) return "alpha";
     return "UNKNOWN";
 }
 
-DecayType_t particleType(const std::string& s) {
-    if(s=="gamma") return D_GAMMA;
-    if(s=="e-") return D_ELECTRON;
-    if(s=="e+") return D_POSITRON;
-    if(s=="neutrino") return D_NUEBAR;
-    if(s=="alpha") return D_ALPHA;
-    return D_NONEVENT;
+PDGid_t particleType(const std::string& s) {
+    if(s=="gamma") return PDG_GAMMA;
+    if(s=="e-") return PDG_ELECTRON;
+    if(s=="e+") return PDG_POSITRON;
+    if(s=="neutrino") return PDG_NUEBAR;
+    if(s=="alpha") return PDG_ALPHA;
+    return PDG_X;
 }
 
 void randomDirection(double& x, double& y, double& z, double* rnd) {
@@ -94,7 +94,7 @@ void DecayAtom::load(const Stringmap& m) {
 void DecayAtom::genAuger(vector<NucDecayEvent>& v) {
     if(gRandom->Uniform(0,1) > pAuger) return;
     NucDecayEvent evt;
-    evt.d = D_ELECTRON;
+    evt.d = PDG_ELECTRON;
     evt.E = Eauger;
     evt.randp();
     v.push_back(evt);
@@ -146,9 +146,9 @@ void ConversionGamma::run(vector<NucDecayEvent>& v, double* rnd) {
     else shell = subshell = -1;
     NucDecayEvent evt;
     evt.E = Egamma;
-    if(shell < 0) evt.d = D_GAMMA;
+    if(shell < 0) evt.d = PDG_GAMMA;
     else {
-        evt.d = D_ELECTRON;
+        evt.d = PDG_ELECTRON;
         if(toAtom->BET) evt.E -= 1e-3 * toAtom->BET->getSubshellBinding(shell,subshell);
     }
     evt.randp(rnd);
@@ -240,7 +240,7 @@ void AlphaDecayTrans::display(bool verbose) const {
 
 void AlphaDecayTrans::run(vector<NucDecayEvent>& v, double* rnd) {
     NucDecayEvent evt;
-    evt.d = D_ALPHA;
+    evt.d = PDG_ALPHA;
     evt.randp(rnd);
     evt.E = Ealpha;
     v.push_back(evt);
@@ -267,7 +267,7 @@ void BetaDecayTrans::display(bool verbose) const {
 
 void BetaDecayTrans::run(vector<NucDecayEvent>& v, double* rnd) {
     NucDecayEvent evt;
-    evt.d = positron?D_POSITRON:D_ELECTRON;
+    evt.d = positron?PDG_POSITRON:PDG_ELECTRON;
     evt.randp(rnd);
     if(rnd) evt.E = betaQuantiles->eval(rnd[2]);
     else evt.E = betaTF1.GetRandom();
@@ -571,7 +571,7 @@ GammaForest::GammaForest(const std::string& fname, double E2MeV) {
 void GammaForest::genDecays(vector<NucDecayEvent>& v, double n) {
     while(n >= 1. || gRandom->Uniform(0,1) < n) {
         NucDecayEvent evt;
-        evt.d = D_GAMMA;
+        evt.d = PDG_GAMMA;
         evt.t = 0;
         evt.E = gammaE[gammaProb.select()];
         v.push_back(evt);

@@ -8,6 +8,7 @@
 #include "BetaSpectrumGenerator.hh"
 #include "TF1_Quantiles.hh"
 #include "FloatErr.hh"
+#include "PDGid.hh"
 
 #include <set>
 using std::set;
@@ -63,21 +64,10 @@ public:
     double fluxOut;     ///< net flux out of level
 };
 
-/// primary particle types
-/// using PDG numbering scheme, http://pdg.lbl.gov/2012/reviews/rpp2012-rev-monte-carlo-numbering.pdf
-enum DecayType_t {
-    D_GAMMA = 22,
-    D_ELECTRON = 11,
-    D_POSITRON = -11,
-    D_NUEBAR = -12,
-    D_ALPHA = 1000020040,
-    D_NONEVENT = 0
-};
-
 /// string name of particle types
-string particleName(DecayType_t t);
+string particleName(PDGid_t t);
 /// decay type from particle name
-DecayType_t particleType(const string& s);
+PDGid_t particleType(const string& s);
 
 
 /// specification for a decay particle
@@ -89,7 +79,7 @@ struct NucDecayEvent {
     double E = 0;               ///< particle energy [MeV]
     double p[3];                ///< particle momentum direction
     double x[3];                ///< vertex position [arb.]
-    DecayType_t d = D_NONEVENT; ///< particle type [PDG/Geant PID]
+    PDGid_t d = PDG_X; ///< particle type [PDG/Geant PID]
     double t = 0;               ///< time of event [s]
     double w = 1;               ///< weighting for event
 };
