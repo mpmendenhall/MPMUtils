@@ -3,7 +3,7 @@
 #include "PDGid.hh"
 #include "to_str.hh"
 
-string isot_name(unsigned int A, unsigned int Z) {
+string isot_name_ZA(unsigned int Z, unsigned int A) {
     const size_t maxel = 19;
     static const char* const elnames[maxel+1] = {"?","H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K"};
     if(A==1 && Z==0) return "n";
@@ -16,6 +16,7 @@ string PDG_PID_name(PDGid_t i) {
         case PDG_TRITON:   return "triton";
         case PDG_ELECTRON: return "e-";
         case PDG_POSITRON: return "e+";
+        case PDG_NUEBAR:   return "antinu_e";
         case PDG_MUMINUS:  return "mu-";
         case PDG_MUPLUS:   return "mu+";
         case PDG_GAMMA:    return "gamma";
@@ -28,7 +29,7 @@ string PDG_PID_name(PDGid_t i) {
         auto A =  (i % PDG_ION_Z)/PDG_ION_A;
         auto A1 = i % PDG_ION_A;
         auto Z = (i % 1000000)/PDG_ION_Z;
-        string nm = isot_name(A,Z);
+        string nm = isot_name_ZA(Z,A);
         return A1? nm + "-" + to_str(A1) : nm;
     }
     else return "PID:"+to_str(i);

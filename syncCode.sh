@@ -13,7 +13,7 @@ f=`basename "$f0"`
 ext="${f##*.}"
 
 if [ "$f" == "Makefile" ] || [ "$f" == "CMakeLists.txt" ] || [ "$f" == "__pycache__" ] || [ "$ext" == "pyc" ] \
-|| [ "$f" == "LinkDef.h" ] || [  "$f" == "Doxyfile" ] || [  "$f" == "AnaGlobals.hh" ] || [  "$f" == "README.txt" ]; then
+|| [ "$f" == "LinkDef.h" ] || [  "$f" == "Doxyfile" ] || [  "$f" == "README.txt" ]; then
 continue; fi
 
 showdiff() {

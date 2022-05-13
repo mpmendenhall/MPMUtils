@@ -30,12 +30,12 @@ enum PDGid_t: int32_t {
 };
 
 /// identifier for an ion
-inline PDGid_t PDG_Ion(int Z, int A, int L = 0) { return PDGid_t(PDG_ION + PDG_ION_Z*Z + PDG_ION_A*A + L); }
+constexpr PDGid_t PDG_IonZA(int Z, int A, int L = 0) { return PDGid_t(PDG_ION + PDG_ION_Z*Z + PDG_ION_A*A + L); }
 
 /// PDG/Geant4 particle type to "human-readable" name
 string PDG_PID_name(PDGid_t i);
 
 /// display name for isotope A, Z
-string isot_name(unsigned int A, unsigned int Z);
+string isot_name_ZA(unsigned int Z, unsigned int A);
 
 #endif
