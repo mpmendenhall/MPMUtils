@@ -27,12 +27,19 @@ void loadGlobalArgs(int argc, char** argv) {
     }
 }
 
-size_t numGlobalArg(const std::string& argname) {
+bool string_to_bool(const string& s) {
+    if(!s.size()) return false;
+    if(atoi(s.c_str())) return true;
+    auto c = s[0];
+    return c=='Y' || c == 'y' || c == 'T' || c == 't';
+}
+
+size_t numGlobalArg(const string& argname) {
     auto it = GlobalArgs().find(argname);
     return it == GlobalArgs().end()? 0 : it->second.size();
 }
 
-bool wasArgGiven(const std::string& argname, const std::string& help) {
+bool wasArgGiven(const string& argname, const string& help) {
     printf("* Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' [%s] ", argname.c_str(), help.c_str());
     if(numGlobalArg(argname)) {
         printf(TERMFG_GREEN "enabled" TERMSGR_RESET "\n");
@@ -42,8 +49,8 @@ bool wasArgGiven(const std::string& argname, const std::string& help) {
     return false;
 }
 
-const std::string& requiredGlobalArg(const std::string& argname, const std::string& help) {
-    printf("* Required argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
+const string& requiredGlobalArg(const string& argname, const string& help) {
+    printf("* Required argument " TERMFG_GREEN "-%s" TERMSGR_RESET "' <%s>' ", argname.c_str(), help.c_str());
     auto& v = GlobalArgs()[argname];
     if(v.size() != 1) {
         printf(TERMFG_GREEN "MISSING!" TERMSGR_RESET "\n");
@@ -53,7 +60,7 @@ const std::string& requiredGlobalArg(const std::string& argname, const std::stri
     return v[0];
 }
 
-std::string popGlobalArg(const std::string& argname) {
+string popGlobalArg(const string& argname) {
     auto& v = GlobalArgs()[argname];
     if(!v.size()) throw std::runtime_error("Missing expected '-"+argname+"' argument");
     auto s = v.back();
@@ -61,8 +68,8 @@ std::string popGlobalArg(const std::string& argname) {
     return s;
 }
 
-bool optionalGlobalArg(const std::string& argname, std::string& v, const std::string& help) {
-    printf("* Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
+bool optionalGlobalArg(const string& argname, string& v, const string& help) {
+    printf("* Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET "' <%s> ", argname.c_str(), help.c_str());
     auto& GA = GlobalArgs();
     auto it = GA.find(argname);
     if(it == GA.end() || !it->second.size()) {
@@ -75,14 +82,14 @@ bool optionalGlobalArg(const std::string& argname, std::string& v, const std::st
     return true;
 }
 
-bool optionalGlobalArg(const std::string& argname, double& v, const string& help) {
+bool optionalGlobalArg(const string& argname, double& v, const string& help) {
     string s = to_str(v);
     if(!optionalGlobalArg(argname, s, help)) return false;
     v = atof(s.c_str());
     return true;
 }
 
-bool optionalGlobalArg(const std::string& argname, int& v, const string& help) {
+bool optionalGlobalArg(const string& argname, int& v, const string& help) {
     string s = to_str(v);
     if(!optionalGlobalArg(argname, s, help)) return false;
     v = atoi(s.c_str());
@@ -90,10 +97,23 @@ bool optionalGlobalArg(const std::string& argname, int& v, const string& help) {
 }
 
 bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
-    string s(v? "1" : "0");
-    if(!optionalGlobalArg(argname, s, help)) return false;
-    v = atoi(s.c_str());
-    return true;
+    auto& GA = GlobalArgs();
+    auto it = GA.find(argname);
+    bool noarg = it == GA.end() || !it->second.size();
+    if(!noarg && it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
+
+    printf("* Optional argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' <%s> ", argname.c_str(), help.c_str());
+    if(noarg) {
+        printf(TERMFG_GREEN "defaulted to ");
+    } else {
+        v = string_to_bool(it->second[0]);
+        printf(TERMFG_GREEN "-> ");
+    }
+    printf(TERMSGR_RESET "'");
+    if(v) printf(TERMFG_GREEN "true");
+    else printf(TERMFG_YELLOW "false");
+    printf(TERMSGR_RESET "'\n");
+    return !noarg;
 }
 
 void displayGlobalArgs() {

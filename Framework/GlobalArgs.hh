@@ -37,8 +37,11 @@ bool optionalGlobalArg(const string& argname, string& v, const string& help = ""
 bool optionalGlobalArg(const string& argname, double& v, const string& help = "");
 /// update value with optional global floating-point argument
 bool optionalGlobalArg(const string& argname, int& v, const string& help = "");
-/// update value with optional global boolean argument
+/// update value with optional global bool argument (accept '+' form for true)
 bool optionalGlobalArg(const string& argname, bool& v, const string& help = "");
+
+/// intepret string as bool: nonzero number or start char in 'TtYy' -> true
+bool string_to_bool(const string& s);
 
 /// debugging printout of global args
 void displayGlobalArgs();
