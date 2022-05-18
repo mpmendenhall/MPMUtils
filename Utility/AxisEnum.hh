@@ -3,6 +3,7 @@
 #define AXISENUM_HH
 
 #include <array>
+#include "BitflagEnums.hh"
 
 /// axis directions
 enum AxisDirection_t {
@@ -17,5 +18,8 @@ inline AxisDirection_t& operator++(AxisDirection_t& d) { return d = AxisDirectio
 constexpr std::array<AxisDirection_t, 2> Axes_2D{X_DIRECTION,Y_DIRECTION};
 /// Iterable axes for 3 dimensions
 constexpr std::array<AxisDirection_t, 3> Axes_3D{X_DIRECTION,Y_DIRECTION,Z_DIRECTION};
+
+/// axis direction combination bitflags
+BITFLAGIZE(AxisDirection_t, AxisSelection_t)
 
 #endif
