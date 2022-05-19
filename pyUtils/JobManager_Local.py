@@ -4,7 +4,6 @@
 
 from JobManager_Interface import *
 import subprocess
-from multiprocessing import cpu_count
 
 class LocalInterface(BatchQueueInterface):
     """Launch jobs locally without batch manager"""

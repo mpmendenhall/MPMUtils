@@ -8,6 +8,7 @@ import os
 import shlex
 import bisect
 import heapq
+from multiprocessing import cpu_count
 
 # Job state identifiers and corresponding names
 statenames = {-1:"hold", 0:"waiting", 1:"submitted", 2:"queued", 3:"running", 4: "done", 5:"???", 6:"removed", 7:"bundled", 8:"unbundled" }
@@ -171,7 +172,11 @@ def connect_JobsDB(fname, remake = True):
         os.makedirs(os.path.dirname(fname), exist_ok=True)
         os.system("sqlite3 " + fname + " < " + os.path.dirname(os.path.abspath(__file__)) + "/JobsDB_Schema.sql")
     conn = sqlite3.connect(fname, timeout = 60, isolation_level = "DEFERRED")
-    conn.cursor().execute("PRAGMA foreign_keys = ON")
+    curs = conn.cursor()
+    curs.execute("PRAGMA foreign_keys = ON")
+    if remake:
+        cores_resource_id = get_resource_id(curs, "cores", "number of cores")
+        set_resource_limit(curs, cores_resource_id, cpu_count())
     #if remake: conn.cursor().execute("PRAGMA journal_mode = WAL")
     dbfile = fname
     return conn

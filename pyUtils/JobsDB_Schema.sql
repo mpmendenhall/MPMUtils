@@ -1,5 +1,4 @@
 -- sqlite3 database schema for job submission management
--- sqlite3 Jobs.db < $MPMUTILS/pyUtils/JobManager/JobsDB.sql
 
 PRAGMA foreign_keys = ON;
 --PRAGMA journal_mode = WAL; -- for local jobs to report back

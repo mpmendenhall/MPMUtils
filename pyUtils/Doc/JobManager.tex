@@ -1,0 +1,294 @@
+\documentclass[12pt,english]{article}
+
+\usepackage{geometry}
+\geometry{letterpaper, margin=0.75in}
+
+\usepackage{setspace}
+\onehalfspacing
+
+% sections on new page
+\usepackage{titlesec}
+\newcommand{\sectionbreak}{\clearpage}
+
+\pagestyle{headings}
+
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{
+    bookmarksnumbered,
+    colorlinks,
+    linkcolor=[rgb]{.4,0,0.4}
+}
+\usepackage{amssymb,amsmath}
+\usepackage{subfig}
+\usepackage{fancyvrb}
+
+\usepackage[T1]{fontenc} % properly copyable underscore characters
+\usepackage[usenames]{xcolor} % colored text options
+
+% code listings
+\usepackage{listings}
+\usepackage{color}
+\lstset{ %
+  %basicstyle=\tiny,
+  language=python,
+  commentstyle=\itshape\color{blue},
+  keywordstyle=\color{purple},
+  identifierstyle=\color{orange},
+  stringstyle=\color{red},
+  keepspaces=true,
+  showstringspaces=false,
+  columns=flexible,
+  % avoid turning code minus into hyphen em dash:
+  literate=*{-}{{-}}1
+}
+
+%%%%%%%%%%%%%%%%%%%%
+% boxed environments
+\usepackage{framed}
+
+% for configuration files
+\newenvironment{cfgnote}[1][{}]{
+\lstset{language=python}
+\begin{oframed}
+{\color{gray}\# configuration example: #1}
+
+}{\end{oframed}}
+
+% for code internals
+\newenvironment{codenote}[1][{}]{
+\lstset{language=python}
+\begin{oframed}
+{\color{blue}// code note: #1}
+
+}{\end{oframed}}
+
+% detail warnings
+\newenvironment{warning}[1][{}]{
+\definecolor{shadecolor}{rgb}{1,1,.7}
+\begin{shaded}
+{\color{red}! warning: #1}
+
+}{\end{shaded}}
+
+% hints
+\newenvironment{hint}[1][{}]{
+%\colorlet{shadecolor}{lightgray}
+\definecolor{shadecolor}{rgb}{.9,.9,.9}
+\begin{shaded}
+{\color{purple}--- Hint: #1}
+
+}{\end{shaded}}
+
+%%%%%%%%%%%%%%%%
+% To-do comment, with second optional "asignee" argument
+% e.g. \todo{somebody ought to do this} or \todo[MPM]{Michael ought to do this}
+\newcommand{\todo}[2][ToDo]{{\color{purple} [\textbf{#1}: #2]}}
+
+%%%%%%%%%%%%%%%%
+\newcommand{\cd}[1]{\texorpdfstring{{\color{blue} \texttt{#1}}}{#1}}
+\newcommand{\cmd}[1]{`\cd{#1}'}
+\newcommand{\eg}{{\em e.g.}}
+\newcommand{\ie}{{\em i.e.}}
+\newcommand{\tld}{\textasciitilde}
+\newcommand{\vc}[1]{\ensuremath{\vec{\mathbf{#1}}}}
+\newcommand{\floor}[1]{\ensuremath{\left\lfloor #1 \right\rfloor}}
+\newcommand{\avg}[1]{\ensuremath{\left\langle #1 \right\rangle}}
+
+\begin{document}
+
+\title{\cd{JobManager.py} batch job management}
+\author{Michael P. Mendenhall (LLNL)}
+\maketitle
+
+\cd{JobManager.py} provides helper utilities for submitting, tracking,
+    and managing jobs through various batch submission system ``back ends,''
+    or even managing parallel jobs on your local machine.
+A local \cd{sqlite3} database file holds descriptions of jobs to run,
+    along with tracking information on job completion status.
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{File locations}
+
+\begin{hint}[include JobManager on your paths]
+To let \cd{python3} find the necessary include files,
+    the directory containing the job manager scripts should be added to
+    the \cd{\$PYTHONPATH} environment variable, by: \newline
+\cd{export PYTHONPATH=\$PYTHONPATH:<path to>/JobManager/} \newline
+which you can place in your login script (\eg\ \cd{\tld/.bashrc}) to be set
+    whenever you open a new terminal.
+Similarly, to let you run \cd{JobManager.py} from any directory without
+    giving its full path, you can add its directory to your executables lookup \cd{\$PATH}: \newline
+\cd{export PATH=\$PATH:<path to>/JobManager/}
+\end{hint}
+
+\cd{JobManager} relies on an \cd{sqlite3} database file for its stored information,
+    along with a directory for batch job submission scripts and logfiles.
+By default, \cd{JobManager} will create a base directory at \cd{\$HOME/\$\{HOSTNAME\}\_jobs/},
+    containing database file \cd{jdb.sql}.
+
+\begin{hint}[\cd{\$JOBSOUT} directory]
+Configure an environment variable you can use to reference the JobManager output direcory by \newline
+\cd{export JOBSOUT=\$HOME/\$\{HOSTNAME\}\_jobs/}
+\end{hint}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Adding jobs to DB}
+
+\begin{hint}[\cd{JobManager.py} arguments summary]
+For a brief summary of \cd{JobsManager.py} command-line options, run: \newline
+\cd{JobsManager.py {-}{-}help}
+\end{hint}
+
+Jobs can be added to the DB (but not submitted to run, yet) by running
+    \cd{JobsManager.py} with some combination of the following commands:
+
+Contents of a job (or multiple jobs from a file) are specified by come combination of:
+\begin{itemize}
+    \item \cd{{-}{-}jobfile <input file>}: submit one job to run each line in file
+    \item \cd{{-}{-}script}: single job script will be supplied on \cd{stdin} (typically useful for other scripts)
+    \item \cd{{-}{-}name <job name>}: optional user-assigned name for job(s)
+    \item \cd{{-}{-}walltime <time, s>}: maximum wall run time per job, in seconds (leave some excess --- batch systems may kill jobs exceeding this) \cd{{-}{-}cores <number>}: number of cores needed by each job; defaults to 1
+    \item \cd{{-}{-}test <number>}: add this many test jobs.
+        Each job is \cd{echo "Hello world <n>!"; sleep 5; echo "Goodbye!"};
+        every fifth job is set to return a \cd{99} failure exit code.
+    \item \cd{{-}{-}queue <qname>}: submission queue name, \eg\ \cd{pbatch},
+        if system default is inappropriate (or missing).
+        Set to \cd{local} to force running on the local machine, instead of through batch system.
+    \item \cd{{-}{-}account <acct>}: cluster resource bank allocation account.
+        If unspecified, user defaults may apply (OK if you only have one bank allocation on system).
+    \item \cd{{-}{-}db <db file>}: optional non-default jobs DB location
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Launching jobs}
+
+After adding jobs to the DB (or in the same command as job submission),
+    interaction with the batch queue system is controlled by:
+\begin{itemize}
+    \item \cd{{-}{-}limit <number>}: set limit to this many active submissions to batch system.
+        If unspecified, the initial default is the number of processor cores available on the local machine
+            --- much less than available on a batch system.
+        When specified, the \cd{cores} resource availability is saved to the DB, and persists
+        in future runs until changed (or the DB is re-created).
+    \item \cd{{-}{-}status}: check and display status of previously-submitted jobs
+    \item \cd{{-}{-}launch}: check status of previously-submitted jobs, and submit new jobs (up to \cd{limit})
+    \item \cd{{-}{-}cycle <wait time, s>}: repeat \cd{launch} operation until all jobs are completed,
+        with specified wait time in seconds between repeats
+    \item \cd{{-}{-}trickle <time, s>}: used with \cd{launch} or \cd{cycle}, spaces out job launch start times
+        by specified number of seconds for a softer ``trickle launch'' of processes
+        (potentially useful if jobs briefly compete for access to a slow resource at the same time)
+\end{itemize}
+
+\begin{hint}[Local test run]
+To try running a batch of test jobs on the local machine, generate them with: \newline
+\cd{JobManager.py {-}{-}test 20 {-}{-}queue local} \newline
+then launch them, and wait for completion with status checks every 5 seconds: \newline
+\cd{JobManager.py {-}{-}launch {-}{-}cycle 5} \newline
+You could also combine the arguments from both commands above into a single \cd{JobsManager.py} call.
+The process should have created a \cd{\$JOBSOUT/test/} directory,
+    containing the scripts, logfile, and output status of each test job.
+You can also view the Jobs DB contents by \newline
+\cd{sqlite3 \$JOBSOUT/jdb.sql 'select job\_id, status, t\_submit, use\_walltime, return\_code from jobs;'}
+\end{hint}
+
+\begin{hint}[Raise batch job submission limit]
+For submitting jobs to a cluster batch queue system, you should raise the limit on how many jobs
+    \cd{JobManager.py} is willing to submit for running at one time by, \eg\newline
+\cd{JobManager.py {-}{-}limit 2000} \newline
+and let the custer batch management system decide on its own how many of these
+    to actually let run (depending on your account's priority)
+\end{hint}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Bundling jobs}
+
+\cd{JobsManager.py} provides options for ``bundling'' multiple jobs together into a single batch queue submission.
+This is useful if you have lots of very short jobs:
+    the batch system will probably take much longer to allocate resources and run 12000 one-minute jobs instead of
+    400 30-minute jobs (each performing 30 one-minute tasks in a row).
+This feature can also be used to parallelize multiple single-core jobs on batch systems
+    allocating multi-core nodes.
+\cd{JobsManager.py} still tracks the individual completion status of each job within the
+    single ``bundled'' job submitted to the queue system.
+
+Job bundling needs to be done somewhere between adding the individual jobs to the Jobs DB
+    and launching them on the batch DB.
+The bundling commands can be run as a separate step between submission and launch,
+    or combined with the command-line arguments for those tasks.
+To bundle jobs, give \cd{JobManager.py} the argument \cd{{-}{-}bundle <total time in seconds>}.
+This will scan all not-yet-launched runs in the database, and pack as many of them as possible
+    into groups up to the total bundle limit.
+
+\begin{hint}[Bundled test run]
+To test bundling with a single command: \newline
+\cd{JobManager.py {-}{-}test 100 {-}{-}bundle 600 {-}{-}queue local {-}{-}launch {-}{-}cycle 5} \newline
+which will bundle the 100 initial nominally-60-second jobs into groups of 10$\cdot$\cd{ncores}
+    (where \cd{ncores} depends on the local machine), to be run as (nominally) 10-minute multi-core jobs.
+\end{hint}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Monitoring progress}
+
+Along with the \cd{status} and \cd{cycle} commands above,
+    the output of each running job is directed to a logfile specified in the DB.
+Default logfiles are placed in \cd{\$JOBSOUT/<jobname>/log\_<jobnum>.txt}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{Tutorial examples}
+
+
+%Add 20 test jobs to default DB, with default queue/account settings:
+
+%\verb#./JobManager.py --name mytest --test 20#
+
+%Show JobsDB jobs table contents:
+
+%\verb#sqlite3 ~/jobs/jdb.sql 'select * from jobs;'#
+
+%Launch the test jobs (setting simultaneous-submissions limit of 200):
+
+%\verb#./JobManager.py --launch --limit 200#
+
+%Wait for completion:
+
+%\verb#./JobManager.py --cycle 30#
+
+%Show logfile for one job:
+
+%\verb#cat $HOME/jobs/mytest/log_3.txt#
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Jobs database}
+
+Job status is stored in an \cd{sqlite3} database file, with table structure defined by \cd{JobsDB\_Schema.sql}.
+The table \cd{jobs} describes the jobs being managed; table \cd{resources} names resource categories jobs may require,
+    and \cd{resource\_use} associates individual jobs with resource requirements.
+
+
+
+%%%%%%%%%%%%%
+%%%% FIN %%%%
+%%%%%%%%%%%%%
+\end{document}
+
+
