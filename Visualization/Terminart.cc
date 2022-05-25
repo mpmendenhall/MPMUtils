@@ -66,11 +66,11 @@ void VPixelBuffer::drawFrame(rectangle_t r,
                              const pixel_t& c, const pixel_t& h, const pixel_t& v,
                              const Compositor& C) {
 
-    r.second = r.second + rowcol_t{-1,-1};
+    r.second += rowcol_t{-1,-1};
     if(r.isNull()) return;
 
     auto d = r.dim();
-    if(!isValidDim(d)) throw std::logic_error("invalid frame dimensions");
+    if(!d.isValidDim()) throw std::logic_error("invalid frame dimensions");
 
     hline(r.first,   d.second, h, C);
     hline(r.second, -d.second, h, C);
@@ -134,6 +134,7 @@ pixelmap_t::pixelmap_t(const string& s) {
 
 void MapViewport::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) const {
 
+    auto p00 = p0;
     auto p1 = p0 + v.dim;
 
     auto it = lower_bound(p0);
@@ -144,7 +145,7 @@ void MapViewport::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) con
             it = lower_bound(p0);
             continue;
         }
-        v.cput(it->first - p0, it->second, C);
+        v.cput(it->first - p00, it->second, C);
         ++it;
     }
 }
@@ -160,8 +161,8 @@ rectangle_t MapViewport::getBounds() const {
 
 pixelarray_t TermViewport::toArray() const {
     auto bb = getBounds();
-    pixelarray_t a(bb.dim());
-    getView(-bb.first, a);
+    pixelarray_t a(bb.dim() + rowcol_t{1,1});
+    getView(bb.first, a);
     return a;
 }
 

@@ -16,8 +16,14 @@ enum AxisDirection_t {
 inline AxisDirection_t& operator++(AxisDirection_t& d) { return d = AxisDirection_t(d+1); }
 /// Iterable axes for 2 dimensions
 constexpr std::array<AxisDirection_t, 2> Axes_2D{X_DIRECTION,Y_DIRECTION};
+/// Other axis for 2 dimensions
+constexpr std::array<AxisDirection_t, 2> Axes_2D_b{Y_DIRECTION,X_DIRECTION};
 /// Iterable axes for 3 dimensions
 constexpr std::array<AxisDirection_t, 3> Axes_3D{X_DIRECTION,Y_DIRECTION,Z_DIRECTION};
+/// First axis permutation, 3 dimensions
+constexpr std::array<AxisDirection_t, 3> Axes_3D_b{Y_DIRECTION,Z_DIRECTION,X_DIRECTION};
+/// Second axis permutation, 3 dimensions
+constexpr std::array<AxisDirection_t, 3> Axes_3D_c{Z_DIRECTION,X_DIRECTION,Y_DIRECTION};
 
 /// axis direction combination bitflags
 BITFLAGIZE(AxisDirection_t, AxisSelection_t)

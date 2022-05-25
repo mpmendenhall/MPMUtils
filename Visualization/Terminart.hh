@@ -30,15 +30,23 @@ namespace Terminart {
     };
 
     /// row,column location, from top left = 0,0
-    typedef std::pair<int,int> rowcol_t;
-    /// sum of row,col coordinates
-    inline rowcol_t operator+(const rowcol_t& a, const rowcol_t& b) { return {a.first+b.first, a.second+b.second}; }
-    /// difference between row,col coordinates
-    inline rowcol_t operator-(const rowcol_t& a, const rowcol_t& b) { return {a.first-b.first, a.second-b.second}; }
-    /// negate rowcol_t
-    inline rowcol_t operator-(const rowcol_t& a) { return {-a.first, -a.second}; }
-    /// valid non-negative finite dimensions?
-    inline bool isValidDim(rowcol_t x) { return x.first >= 0 && x.second >= 0 && std::isfinite(x.first) && std::isfinite(x.second); }
+    struct rowcol_t: public std::pair<int,int> {
+        using pair::pair;
+        /// sum of row,col coordinates
+        constexpr rowcol_t operator+(const rowcol_t& b) const { return {first+b.first, second+b.second}; }
+        /// add-assign
+        void operator+=(const rowcol_t& b) { *this = *this + b; }
+        /// difference between row,col coordinates
+        constexpr rowcol_t operator-(const rowcol_t& b) const { return {first-b.first, second-b.second}; }
+        /// subtract-assign
+        void operator-=(const rowcol_t& b) { *this = *this - b; }
+        /// unary minus
+        constexpr rowcol_t operator-() const { return {-first, -second}; }
+        /// valid non-negative finite dimensions?
+        constexpr bool isValidDim() const { return first >= 0 && second >= 0 && std::isfinite(first) && std::isfinite(second); }
+        /// print to stdout
+        void display() const { printf("(%i,%i)", first, second); }
+    };
 
     /// rectangular pixel range
     struct rectangle_t: public std::pair<rowcol_t, rowcol_t> {
@@ -54,6 +62,9 @@ namespace Terminart {
         void include(rowcol_t p);
         /// enlarge as needed to include rectangle
         void include(rectangle_t r) { if(!r.isNull()) { include(r.first); include(r.second); } }
+
+        /// print to stdout
+        void display() const { first.display(); second.display(); }
     };
 
     /// a null interval rectangle
@@ -80,7 +91,7 @@ namespace Terminart {
         /// default constructor
         VPixelBuffer() { }
         /// valid dimension check constructor
-        VPixelBuffer(rowcol_t dim) { if(!isValidDim(dim)) throw std::logic_error("Invalid pixel buffer dimensions"); }
+        VPixelBuffer(rowcol_t dim) { if(!dim.isValidDim()) throw std::logic_error("Invalid pixel buffer dimensions"); }
         /// polymorphic destructor
         virtual ~VPixelBuffer() { }
 
