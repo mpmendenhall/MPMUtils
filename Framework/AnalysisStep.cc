@@ -29,41 +29,43 @@ codename(cd), t0(time(nullptr)), pt0(steady_clock::now()),
 anatag(PROJ_ENV_PFX()+"-Analysis") { }
 
 void AnalysisStep::make_xmlout() {
-    if(!outfilename.size()) printf(TERMFG_YELLOW "\nNo file specified for .xml output.\n\n" TERMFG_GREEN);
+    if(!outfilename.size()) printf(TERMFG_YELLOW "\nNo file specified for .xml output.\n\n");
     else printf(TERMFG_GREEN "Writing .xml metadata to '%s.xml'\n", outfilename.c_str());
 
-    string xmlin = "";
-    for(auto const& f: infiles) {
-        xmlin = split(f,".").back()=="xml"? f : f+".xml";
-        if(fileExists(xmlin)) break;
-        xmlin = "";
-    }
-
-    makePath(outfilename, true);
-
-    // read previous data (unparsed)
-    string prevdat = "";
-    if(xmlin.size()) {
-        std::ifstream oldf(xmlin);
-        string line;
-        bool append = false;
-        while (std::getline(oldf, line)) {
-            string sline = strip(line);
-            if(sline == "<"+anatag+">") { append = true; continue; }
-            if(sline == "</"+anatag+">") break;
-            if(append) prevdat += line + "\n";
-        }
-    }
-    if(!prevdat.size()) printf(TERMFG_YELLOW "No previous xml metadata found!\n" TERMFG_GREEN);
-
-    std::ofstream o(outfilename+".xml");
-    o << "<?xml version=\"1.0\"?>\n";
-    o << "<" << anatag << ">\n";
-    o << prevdat;
     auto X = makeXML();
-    X->write(o,1);
-    o << "\n</" << anatag << ">\n";
 
+    if(outfilename.size()) {
+        // read previous data (unparsed)
+        string xmlin = "";
+        for(auto const& f: infiles) {
+            xmlin = split(f,".").back()=="xml"? f : f+".xml";
+            if(fileExists(xmlin)) break;
+            xmlin = "";
+        }
+        string prevdat = "";
+        if(xmlin.size()) {
+            std::ifstream oldf(xmlin);
+            string line;
+            bool append = false;
+            while (std::getline(oldf, line)) {
+                string sline = strip(line);
+                if(sline == "<"+anatag+">") { append = true; continue; }
+                if(sline == "</"+anatag+">") break;
+                if(append) prevdat += line + "\n";
+            }
+        }
+        if(!prevdat.size()) printf(TERMFG_YELLOW "No previous xml metadata found!\n");
+
+        makePath(outfilename, true);
+        std::ofstream o(outfilename+".xml");
+        o << "<?xml version=\"1.0\"?>\n";
+        o << "<" << anatag << ">\n";
+        o << prevdat;
+        X->write(o,1);
+        o << "\n</" << anatag << ">\n";
+    }
+
+    printf(TERMFG_GREEN);
     X->write(std::cout);
     printf(TERMSGR_RESET "\n\n");
     delete X;
