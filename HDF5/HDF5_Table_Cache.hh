@@ -6,7 +6,11 @@
 
 #include "HDF5_StructInfo.hh"
 #include "DataSource.hh"
+#include "DataSink.hh"
+#include <map>
 using std::multimap;
+#include <vector>
+using std::vector;
 
 /// Cacheing HDF5 table reader
 template<typename T>
@@ -43,7 +47,7 @@ public:
 
 protected:
     hid_t _infile_id = 0;       ///< file to read from
-    T next_read;                ///< next item read in for event list reads
+    T next_read{};              ///< next item read in for event list reads
 
     vector<T> cached;           ///< cached read data
     size_t cache_idx = 0;       ///< index in cached data

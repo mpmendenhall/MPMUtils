@@ -7,6 +7,7 @@
 #include "ConfigCollator.hh"
 #include "ThreadBufferSink.hh"
 #include "ClusteredWindow.hh"
+#include "AnaIndex.hh"
 #include <thread>
 
 /// Type-independent re-casting base

@@ -5,7 +5,7 @@
 #define COLLATOR_HH
 
 #include "_Collator.hh"
-#include "DataSink.hh"
+#include "SinkUser.hh"
 
 #include "deref_if_ptr.hh"
 #include "SFINAEFuncs.hh"

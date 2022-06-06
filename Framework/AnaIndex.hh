@@ -12,8 +12,8 @@ class AnaIndex: virtual public _AnaIndex {
 public:
     /// make type-appropriate ConfigCollator
     _ConfigCollator* makeConfigCollator(const Setting& S) const override;
-    /// make type-appropriate DataSink
-    SignalSink* makeDataSink(const Setting& S, const string& dfltclass = "") const override;
 };
+
+#include "ConfigCollator.hh"
 
 #endif

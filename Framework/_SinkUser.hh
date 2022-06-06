@@ -1,33 +1,15 @@
-/// \file _DataSink.hh Non-typed generic bases
+/// \file _SinkUser.hh Non-typed generic bases
 // -- Michael P. Mendenhall, LLNL 2021
 
-#ifndef _DATASINK_HH
-#define _DATASINK_HH
+#ifndef _SINKUSER_HH
+#define _SINKUSER_HH
 
+#include "SignalSink.hh"
 #include <stdexcept>
 #include <typeinfo>
-#include "_AnaIndex.hh"
+#include "ConfigFactory.hh"
 
-/// Data processing signals side-channel info
-enum datastream_signal_t {
-    DATASTREAM_NOOP     = 0,    ///< ignore me!
-    DATASTREAM_INIT     = 1,    ///< once-per-analysis initialization
-    DATASTREAM_START    = 2,    ///< start of data block
-    DATASTREAM_CHECKPT  = 3,    ///< mid-calculation "checkpoint" request
-
-    DATASTREAM_FLUSH    = 99994,///< "breakpoint" data flush
-    DATASTREAM_REINIT   = 99995,///< initialize for new upstream source
-    DATASTREAM_END      = 99996 ///< once-per-analysis end of data
-};
-
-/// Base class passing signals
-class SignalSink {
-public:
-    /// Polymorphic Destructor
-    virtual ~SignalSink() { }
-    /// accept data flow signal
-    virtual void signal(datastream_signal_t) { }
-};
+class _AnaIndex;
 
 /// Base marker for dynamic casting
 class _SinkUser {
@@ -55,11 +37,14 @@ public:
     }
 
     /// get AnaIndex<T> fot ouput datasink T
-    virtual const _AnaIndex& getSinkIdx() const { static _AnaIndex I; return I; }
+    virtual const _AnaIndex& getSinkIdx() const;
+
+    /// generate appropriat configured data sink type
+    virtual SignalSink* makeDataSink(const Setting&, const string& = "") const { return new SignalSink(); }
 
     /// construct and attach configured output sink
     virtual void createOutput(const Setting& S, const string& dfltclass = "") {
-        _setNext(getSinkIdx().makeDataSink(S, dfltclass));
+        _setNext(makeDataSink(S, dfltclass));
     }
 };
 
@@ -113,5 +98,9 @@ public:
 protected:
     _SinkUser* subSinker; ///< where to find output SinkUser
 };
+
+#include "_AnaIndex.hh"
+/// get AnaIndex<T> fot ouput datasink T
+inline const _AnaIndex& _SinkUser::getSinkIdx() const { static _AnaIndex I; return I; }
 
 #endif

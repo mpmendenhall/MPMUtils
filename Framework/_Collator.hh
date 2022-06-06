@@ -4,7 +4,7 @@
 #ifndef _COLLATOR_HH
 #define _COLLATOR_HH
 
-#include "_DataSink.hh"
+#include "_SinkUser.hh"
 #include "Threadworker.hh"
 
 #include <cstddef> // for size_t on some systems

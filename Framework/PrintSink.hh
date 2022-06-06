@@ -4,9 +4,8 @@
 #ifndef PRINTSINK_HH
 #define PRINTSINK_HH
 
-#include "DataSink.hh"
+#include "SinkUser.hh"
 #include "TermColor.hh"
-#include "ConfigFactory.hh"
 #include "XMLTag.hh"
 #include "GlobalArgs.hh"
 
@@ -31,9 +30,8 @@ public:
 
     /// show signals
     void signal(datastream_signal_t sig) override {
-        printf(TERMFG_MAGENTA
-        "-- datastream signal %i\n"
-        TERMSGR_RESET, sig);
+        printf(TERMFG_MAGENTA "-- datastream signal '%s'\n"
+               TERMSGR_RESET, signal_name(sig).c_str());
         DataLink<T,T>::signal(sig);
     }
 

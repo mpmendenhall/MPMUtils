@@ -4,7 +4,8 @@
 #ifndef ORDERINGQUEUE_HH
 #define ORDERINGQUEUE_HH
 
-#include "DataSink.hh"
+#include "SinkUser.hh"
+#include "deref_if_ptr.hh"
 #include "SFINAEFuncs.hh" // for dispObj
 
 #include <vector>

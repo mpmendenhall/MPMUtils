@@ -37,9 +37,8 @@ public:
 
     /// show signals
     void signal(datastream_signal_t sig) override {
-        printf(TERMFG_MAGENTA
-        "-- datastream signal %i\n"
-        TERMSGR_RESET, sig);
+        printf(TERMFG_MAGENTA "-- datastream signal '%s'\n"
+               TERMSGR_RESET, signal_name(sig).c_str());
         this->PreTransform.signal(sig);
         SinkUser<T>::su_signal(sig);
     }

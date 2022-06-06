@@ -4,7 +4,7 @@
 #ifndef CLUSTERED_HH
 #define CLUSTERED_HH
 
-#include "DataSink.hh"
+#include "SinkUser.hh"
 #include <cmath> // for fabs()
 
 /// "Cluster" base class
