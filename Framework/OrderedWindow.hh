@@ -7,6 +7,7 @@
 #include "DataSink.hh"
 #include "SFINAEFuncs.hh" // for dispObj
 
+#include <algorithm>	// for std::lower_bound
 #include <cmath>        // for std::fabs
 #include <type_traits>  // for std::remove_pointer
 #include <iterator>     // for std::distance
