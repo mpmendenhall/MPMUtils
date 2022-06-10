@@ -12,6 +12,7 @@
 #include <errno.h>  // for errno
 #include <poll.h>   // for poll(...)
 #include <signal.h> // for SIGPIPE
+#include <sys/ioctl.h>
 
 #ifdef __APPLE__
 #define OR_POLLRDHUP
@@ -23,7 +24,7 @@ void SockFD::open_sockfd() {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0) {
         sockfd = 0;
-        throw sockFDerror(*this, "Cannot open any socket");
+        throw SockFDerror(*this, "Cannot open any socket");
     }
 }
 
@@ -37,46 +38,47 @@ void SockFD::sockwrite(const char* buff, size_t nbytes, bool fail_ok) {
                 continue;
             }
             if(fail_ok) return;
-            throw sockFDerror(*this, "Failed writing " + to_str(nbytes) + " to socket, error " + to_str(ret));
+            throw SockFDerror(*this, "Failed writing " + to_str(nbytes) + " to socket, error " + to_str(ret));
         }
         nbytes -= ret;
         buff += ret;
     }
 }
 
-size_t SockFD::sockread(char* buff, size_t nbytes, bool fail_ok) {
-    size_t nread = 0;
+bool SockFD::do_poll(bool fail_ok) {
     struct pollfd pfd;
     pfd.fd = sockfd;
     pfd.events = POLLIN OR_POLLRDHUP;
 
+    int ret = poll(&pfd, 1 /*entries in pfd[]*/, read_timeout_ms);
+    if(ret != 1) {
+        if(fail_ok) return false;
+        if(ret < 0) throw SockFDerror(*this, "poll() failure, error " + to_str(errno));
+        if(!ret) throw SockFDerror(*this, "socket read timeout");
+        throw SockFDerror(*this, "poll() unexpectedly returned " + to_str(ret));
+    }
+
+    if(!(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL OR_POLLRDHUP))) {
+        if(fail_ok) return false;
+        if(!(pfd.revents & POLLIN)) throw SockFDerror(*this, "poll() results lack POLLIN");
+        if(pfd.revents & POLLERR) throw SockFDerror(*this, "poll() returned POLERR");
+        if(pfd.revents & POLLHUP) throw SockFDerror(*this, "poll() returned POLHUP");
+        if(pfd.revents & POLLNVAL) throw SockFDerror(*this, "poll() returned POLLNVAL");
+        throw SockFDerror(*this, "poll() returned POLLRDHUP");
+    }
+
+    return true;
+}
+
+size_t SockFD::sockread(char* buff, size_t nbytes, bool fail_ok) {
+    size_t nread = 0;
     while(nread < nbytes) {
-        int ret = poll(&pfd, 1 /*entries in pfd[]*/, read_timeout_ms);
-        if(ret < 0) {
-            if(fail_ok) return nread;
-            throw sockFDerror(*this, "poll() failure, error " + to_str(errno));
-        }
-        if(!ret) {
-            if(fail_ok) return nread;
-            throw sockFDerror(*this, "socket read timeout");
-        }
-        if(ret != 1) {
-            if(fail_ok) return nread;
-            throw sockFDerror(*this, "poll() returned " + to_str(ret));
-        }
-        if(!(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL OR_POLLRDHUP))) {
-            if(fail_ok) return nread;
-            if(!(pfd.revents & POLLIN)) throw sockFDerror(*this, "poll() results lack POLLIN");
-            if(pfd.revents & POLLERR) throw sockFDerror(*this, "poll() returned POLERR");
-            if(pfd.revents & POLLHUP) throw sockFDerror(*this, "poll() returned POLHUP");
-            if(pfd.revents & POLLNVAL) throw sockFDerror(*this, "poll() returned POLLNVAL");
-            throw sockFDerror(*this, "poll() returned POLLRDHUP");
-        }
+        if(!do_poll(fail_ok)) return nread;
 
         auto len = read(sockfd, buff+nread, nbytes-nread);
         if(len < 0) {
             if(fail_ok) return nread;
-            throw sockFDerror(*this, "Failed socket read, error " + to_str(len));
+            throw SockFDerror(*this, "Failed socket read, error " + to_str(len));
         }
         nread += len;
         if(nread != nbytes) usleep(1000);
@@ -85,12 +87,26 @@ size_t SockFD::sockread(char* buff, size_t nbytes, bool fail_ok) {
     return nread;
 }
 
+void SockFD::vecread(vector<char>& v, bool fail_ok) {
+    v.clear();
+    if(!do_poll(fail_ok)) return;
+    int count;
+    ioctl(sockfd, FIONREAD, &count);
+    v.resize(count);
+    auto len = read(sockfd, v.data(), count);
+    if(len < 0) {
+        if(fail_ok) return;
+        throw SockFDerror(*this, "Failed socket read, error " + to_str(len));
+    }
+    v.resize(len);
+}
+
 int SockFD::awaitConnection() {
     listen(sockfd, 1);
     struct sockaddr cli_addr;
     socklen_t clilen = sizeof(cli_addr); // returns actual size of client address
     auto newsockfd = accept(sockfd, &cli_addr, &clilen);
-    if(newsockfd < 0) throw sockFDerror(*this, "failed to accept connection");
+    if(newsockfd < 0) throw SockFDerror(*this, "failed to accept connection");
     return newsockfd;
 }
 

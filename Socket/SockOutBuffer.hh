@@ -20,8 +20,6 @@ public:
         SockConnection::connect_to_socket();
         launch_mythread();
     }
-    /// avoid hiding alternate version
-    using SockConnection::connect_to_socket;
 
     // set SocketConnection::host, port
     // use SockIOData* LocklessCircleBuffer::get_writepoint() and finish_write()

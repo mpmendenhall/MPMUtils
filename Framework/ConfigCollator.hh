@@ -19,6 +19,6 @@ public:
 
 /// Registration in AnaIndex
 template<typename T>
-_ConfigCollator* AnaIndex<T>::makeConfigCollator(const Setting& S) const { return new ConfigCollator<T>(S); }
+_ConfigCollator* AnaIndex<T,typename T::ordering_t>::makeConfigCollator(const Setting& S) const { return new ConfigCollator<T>(S); }
 
 #endif

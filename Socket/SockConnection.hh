@@ -6,6 +6,8 @@
 #include <netdb.h>  // for sockaddr_in, hostent
 #include <unistd.h> // for write(...), close(...), usleep(n)
 #include <stdexcept>
+#include <vector>
+using std::vector;
 
 #include "to_str.hh"
 
@@ -20,10 +22,15 @@ public:
     /// close socket
     void close_socket() { if(sockfd) close(sockfd); sockfd = 0; }
 
+    /// poll to wait for new available data
+    bool do_poll(bool fail_ok = false);
     /// write to socket; throw on failure unless fail_ok
     void sockwrite(const char* buff, size_t nbytes, bool fail_ok = false);
     /// blocking read from socket
     size_t sockread(char* buff, size_t nbytes, bool fail_ok = false);
+    /// poll and read next available data chunk into supplied vector
+    void vecread(vector<char>& v, bool fail_ok = false);
+
 
     int sockfd = 0; ///< file descriptor number for socket
     int read_timeout_ms = -1; ///< read timeout [ms]; negative for infinite
@@ -32,10 +39,10 @@ public:
     int awaitConnection();
 
     /// error reporting for socket operations
-    class sockFDerror: public std::runtime_error {
+    class SockFDerror: public std::runtime_error {
     public:
         /// Constructor
-        sockFDerror(const SockFD& S, const string& m):
+        SockFDerror(const SockFD& S, const string& m):
         std::runtime_error("(" + to_str(S.sockfd) + ") " + m) { }
     };
 
@@ -64,11 +71,11 @@ public:
     int port = 0;   ///< socket port
 
     /// error reporting for socket operations
-    class sockerror: public sockFDerror {
+    class sockerror: public SockFDerror {
     public:
         /// Constructor
         sockerror(const SockConnection& S, const string& m):
-        sockFDerror(S, "[" + S.host + ":" + to_str(S.port) + "] " + m) { }
+        SockFDerror(S, "[" + S.host + ":" + to_str(S.port) + "] " + m) { }
     };
 
 protected:

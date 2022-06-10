@@ -15,6 +15,8 @@ class SinkUser: virtual public _SinkUser {
 public:
     /// output data type
     typedef T output_t;
+    /// mutable variant of received data type
+    typedef typename std::remove_const<output_t>::type outmut_t;
     /// output sink type
     typedef DataSink<output_t> dsink_t;
 

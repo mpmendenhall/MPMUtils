@@ -75,17 +75,19 @@ protected:
     map<int, ConfigThreader*> myCTs;
 };
 
-/// Receive items for datasink over socket connection
+/// Receive items for datasink over socket connection, in format vector(items, ...),signal
 template<typename T>
-class SockDSReceiver: public ConfigSockServer, public SinkUser<T> {
+class SockDSVecReceiver: public ConfigSockServer, public SinkUser<T> {
 public:
     /// Constructor
-    explicit SockDSReceiver(const Setting& S):
+    explicit SockDSVecReceiver(const Setting& S): XMLProvider("SockDSVecReceiver"),
     ConfigSockServer(S) { if(S.exists("next")) this->createOutput(S["next"]); }
+
+    using SinkUser<T>::nextSink;
 
     /// Receive data stream
     void run() override {
-        if(!this->nextSink) throw std::runtime_error("missing next output");
+        if(!nextSink) throw std::runtime_error("missing next output");
         create_socket();
         SockBinRead SBR(awaitConnection());
 
@@ -95,9 +97,74 @@ public:
             SBR.receive(v);
             SBR.receive(s);
             for(auto& i: v) this->nextSink->push(i);
-            if(s != DATASTREAM_NOOP) this->nextSink->signal(s);
+            if(s != DATASTREAM_NOOP) nextSink->signal(s);
         }
     }
 };
 
+/// Receive items for DataSink over socket
+template<typename T>
+class SockDSReceiver: public ConfigSockServer, public SinkUser<T> {
+public:
+    /// Constructor
+    explicit SockDSReceiver(const Setting& S):
+    ConfigSockServer(S) { if(S.exists("next")) this->createOutput(S["next"]); }
 
+    using SinkUser<T>::nextSink;
+
+    // Receive data stream
+    void run() override {
+        if(!nextSink) throw std::runtime_error("missing next output");
+
+        create_socket();
+        printf("Awaiting data connection on '%s:%i'\n", host.c_str(), port);
+        SockBinRead SBR(awaitConnection());
+        printf("Receiving data on '%s:%i'\n", host.c_str(), port);
+
+        nextSink->signal(DATASTREAM_INIT);
+
+        typename SinkUser<T>::outmut_t o;
+        while(true) {
+            try { SBR.receive(o); }
+            catch(SockFDerror& e) {
+                printf("Ending socket input on '%s'\n", e.what());
+                break;
+            }
+            nextSink->push(o);
+        }
+
+        nextSink->signal(DATASTREAM_FLUSH);
+        nextSink->signal(DATASTREAM_END);
+    }
+};
+
+/// Opaque blob receiver
+class SockDSBlobReceiver: public ConfigSockServer,
+public SinkUser<const vector<char>> {
+public:
+    /// Constructor
+    explicit SockDSBlobReceiver(const Setting& S):
+    ConfigSockServer(S) { if(S.exists("next")) this->createOutput(S["next"]); }
+
+    // Receive data stream
+    void run() override {
+        if(!nextSink) throw std::runtime_error("missing next output");
+
+        create_socket();
+        printf("Awaiting data connection on '%s:%i'\n", host.c_str(), port);
+        SockFD S(awaitConnection());
+        printf("Got connection descriptor %i\n", S.sockfd);
+
+        nextSink->signal(DATASTREAM_INIT);
+
+        vector<char> v;
+        while(true) {
+            S.vecread(v);
+            if(v.size()) nextSink->push(v);
+            else break;
+        }
+
+        nextSink->signal(DATASTREAM_FLUSH);
+        nextSink->signal(DATASTREAM_END);
+    }
+};

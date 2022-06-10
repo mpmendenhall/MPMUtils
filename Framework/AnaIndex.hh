@@ -6,9 +6,13 @@
 
 #include "_AnaIndex.hh"
 
-/// Type-specific functions index
+/// Type-specific functions index,
+template<typename T, typename = void>
+class AnaIndex: virtual public _AnaIndex { };
+
+/// Specialize when ordering available
 template<typename T>
-class AnaIndex: virtual public _AnaIndex {
+class AnaIndex<T, typename T::ordering_t>: virtual public _AnaIndex {
 public:
     /// make type-appropriate ConfigCollator
     _ConfigCollator* makeConfigCollator(const Setting& S) const override;
