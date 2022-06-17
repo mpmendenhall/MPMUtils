@@ -4,53 +4,31 @@
 #ifndef HDF5_IO_HH
 #define HDF5_IO_HH
 
-#include "HDF5_Table_Cache.hh"
+#include "hdf5.h"
+#include "hdf5_hl.h"
+#include <string>
+using std::string;
+#include <stdexcept>
 
 /// base class for HDF5 file input
 class HDF5_InputFile {
 public:
     /// Destructor
     virtual ~HDF5_InputFile() { if(infile_id) H5Fclose(infile_id); }
-    /// Open named input file; connect table readers in subclass!
-    virtual void _openInput(const string& filename);
+    /// Open named input file
+    virtual void openInput(const string& filename);
 
     /// get number of records in input table
     hsize_t getTableEntries(const string& table, hsize_t* nfields = nullptr);
     /// check whether named object has named attribute
-    bool doesAttrExist(const string& objname, const string& attrname);
+    bool doesAttrExist(const string& objname, const string& attrname) const;
     /// read double-valued attribute
-    double getAttributeD(const string& table, const string& attrname, double dflt);
+    double getAttributeD(const string& table, const string& attrname, double dflt) const;
     /// read string-valued attribute
-    string getAttribute(const string& table, const string& attrname, const string& dflt);
+    string getAttribute(const string& table, const string& attrname, const string& dflt) const;
 
     hid_t infile_id = 0;    ///< input HDF5 file ID
 };
-
-/// HDF5_InputFile with specific table
-template<class T>
-class HDF5_TableInput: public HDF5_InputFile, public HDF5_Table_Cache<T> {
-public:
-    /// Constructor
-    HDF5_TableInput(const string& tname = "", int v = 0, int nch = 1024):
-    HDF5_Table_Cache<T>(HDF5_table_setup<T>(tname, v), nch) { }
-
-    /// Open named input file
-    void openInput(const string& filename) override {
-        _openInput(filename);
-        HDF5_Table_Cache<T>::openInput(filename);
-        this->setFile(infile_id);
-    }
-
-    /// read double-valued attribute
-    double getAttributeD(const string& attrname, double dflt = 0) {
-        return HDF5_InputFile::getAttributeD(this->Tspec.table_name, attrname, dflt);
-    }
-    /// read string-valued attribute
-    string getAttribute(const string& attrname, const string& dflt = "") {
-        return HDF5_InputFile::getAttribute(this->Tspec.table_name, attrname, dflt);
-    }
-};
-
 
 /// base class for HDF5 file output
 class HDF5_OutputFile {
@@ -71,38 +49,6 @@ public:
 
     string outfile_name;        ///< output filename
     hid_t outfile_id = 0;       ///< output HDF5 file ID
-};
-
-/// HDF5_OutputFile with specific table
-template<class T>
-class HDF5_TableOutput: public HDF5_OutputFile, public HDF5_Table_Writer<T> {
-public:
-    /// Constructor
-    HDF5_TableOutput(const string& tname = "", int v = 0, int nch = 1024):
-    HDF5_Table_Writer<T>(HDF5_table_setup<T>(tname, v),nch) { }
-
-    /// write attributes to this table's name
-    template<typename U>
-    void writeAttribute(const string& attrname, const U& value) {
-        HDF5_OutputFile::writeAttribute(this->Tspec.table_name, attrname, value);
-    }
-
-    /// Open named output file
-    void openOutput(const string& filename) override {
-        HDF5_OutputFile::openOutput(filename);
-        this->setFile(outfile_id);
-        if(outfile_id) this->initTable();
-    }
-    /// Finalize/close file output
-    void writeFile() override {
-        HDF5_Table_Writer<T>::_outfile_id = 0;
-        HDF5_OutputFile::writeFile();
-    }
-    /// Handle datastream signals
-    void signal(datastream_signal_t sig) override {
-        HDF5_Table_Writer<T>::signal(sig);
-        if(sig == DATASTREAM_END) writeFile();
-    }
 };
 
 #endif

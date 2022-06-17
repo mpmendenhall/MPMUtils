@@ -9,7 +9,6 @@
 #define ANALYSISDB_HH
 
 #include "SQLite_Helper.hh"
-#include <stdio.h>
 
 /// Calibration database interface
 class AnalysisDB: public SQLite_Helper {
@@ -19,14 +18,19 @@ public:
     /// close and delete instance
     static void closeDB() { if(myDB) { delete myDB; myDB = nullptr; } }
 
+    /// DB identifier for run
+    enum anarun_id_t: sqlite3_int64 { };
+    /// DB identifier for variable
+    enum anavar_id_t: sqlite3_int64 { };
+
     /// create analysis run identifier
-    sqlite3_int64 createAnaRun(const string& dataname);
+    anarun_id_t createAnaRun(const string& dataname);
     /// get (or create) analysis variable identifier
-    sqlite3_int64 getAnaVar(const string& name, const string& unit, const string& descrip);
+    anavar_id_t getAnaVar(const string& name, const string& unit, const string& descrip);
     /// upload analysis result
-    void uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, double val, double err);
+    void uploadAnaResult(anarun_id_t run_id, anavar_id_t var_id, double val, double err);
     /// upload text analysis result
-    void uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, const string& val);
+    void uploadAnaResult(anarun_id_t run_id, anavar_id_t var_id, const string& val);
 
 protected:
     /// Constructor
@@ -38,9 +42,11 @@ protected:
 /// Struct for holding analysis results until upload
 struct AnaResult {
     /// Constructor
-    AnaResult(const string& nm, const string& u, const string& dsc, double v, double e): name(nm), unit(u), descrip(dsc), val(v), err(e) { }
+    AnaResult(const string& nm, const string& u, const string& dsc, double v, double e):
+    name(nm), unit(u), descrip(dsc), val(v), err(e) { }
     /// Constructor for text value
-    AnaResult(const string& nm, const string& u, const string& dsc, const string& v): name(nm), unit(u), descrip(dsc), val(0), err(0), xval(v) { }
+    AnaResult(const string& nm, const string& u, const string& dsc, const string& v):
+    name(nm), unit(u), descrip(dsc), val(0), err(0), xval(v) { }
     /// Display contents
     void display() const;
 

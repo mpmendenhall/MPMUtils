@@ -5,7 +5,7 @@
 #include "PathUtils.hh" // for makePath
 #include <climits>
 
-void HDF5_InputFile::_openInput(const string& filename) {
+void HDF5_InputFile::openInput(const string& filename) {
     if(infile_id) {
         printf("Closing previous input file.\n");
         H5Fclose(infile_id);
@@ -41,14 +41,14 @@ void HDF5_OutputFile::writeFile() {
     outfile_id = 0;
 }
 
-bool HDF5_InputFile::doesAttrExist(const string& objname, const string& attrname) {
+bool HDF5_InputFile::doesAttrExist(const string& objname, const string& attrname) const {
     if(!infile_id) throw std::runtime_error("Cannot read attribute without file");
     auto res = H5Aexists_by_name(infile_id, objname.c_str(), attrname.c_str(), H5P_DEFAULT);
     if(res < 0) throw std::runtime_error("H5Aexists_by_name failed");
     return res;
 }
 
-string HDF5_InputFile::getAttribute(const string& table, const string& attrname, const string& dflt) {
+string HDF5_InputFile::getAttribute(const string& table, const string& attrname, const string& dflt) const {
     if(!doesAttrExist(table, attrname)) return dflt;
 
     hsize_t dims;
@@ -63,7 +63,7 @@ string HDF5_InputFile::getAttribute(const string& table, const string& attrname,
     return string(&sdata[0]);
 }
 
-double HDF5_InputFile::getAttributeD(const string& table, const string& attrname, double dflt) {
+double HDF5_InputFile::getAttributeD(const string& table, const string& attrname, double dflt) const {
     if(!doesAttrExist(table, attrname)) return dflt;
 
     double d = dflt;

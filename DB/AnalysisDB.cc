@@ -12,6 +12,7 @@
 #include "PathUtils.hh"
 #include <time.h>
 #include <functional>
+#include <stdio.h>
 
 AnalysisDB* AnalysisDB::myDB = nullptr;
 
@@ -32,12 +33,12 @@ string ADBfile() {
 
 AnalysisDB::AnalysisDB(): SQLite_Helper(ADBfile()) { }
 
-sqlite3_int64 AnalysisDB::createAnaRun(const string& dataname) {
+AnalysisDB::anarun_id_t AnalysisDB::createAnaRun(const string& dataname) {
     auto t = time(nullptr);
-    auto runid = std::hash<string>{}(dataname + to_str(t));
+    auto runid = anarun_id_t(std::hash<string>{}(dataname + to_str(t)));
     auto stmt = loadStatement("INSERT INTO analysis_runs(run_id,dataname,anatime) VALUES (?1,?2,?3)");
     sqlite3_bind_int64(stmt, 1, runid);
-    sqlite3_bind_text(stmt, 2, dataname.c_str(), -1, SQLITE_STATIC);
+    bind_string(stmt, 2, dataname);
     sqlite3_bind_double(stmt, 3, t);
     busyRetry(stmt);
     sqlite3_reset(stmt);
@@ -45,20 +46,20 @@ sqlite3_int64 AnalysisDB::createAnaRun(const string& dataname) {
     return runid;
 }
 
-sqlite3_int64 AnalysisDB::getAnaVar(const string& name, const string& unit, const string& descrip) {
+AnalysisDB::anavar_id_t AnalysisDB::getAnaVar(const string& name, const string& unit, const string& descrip) {
     auto stmt = loadStatement("INSERT OR IGNORE INTO analysis_vars(var_id,name,unit,descrip) VALUES (?1,?2,?3,?4)");
-    auto varid = std::hash<string>{}(name);
+    auto varid = anavar_id_t(std::hash<string>{}(name));
     sqlite3_bind_int64(stmt, 1, varid);
-    sqlite3_bind_text(stmt, 2, name.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, unit.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 4, descrip.c_str(), -1, SQLITE_STATIC);
+    bind_string(stmt, 2, name);
+    bind_string(stmt, 3, unit);
+    bind_string(stmt, 4, descrip);
     busyRetry(stmt);
     sqlite3_reset(stmt);
 
     return varid;
 }
 
-void AnalysisDB::uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, double val, double err) {
+void AnalysisDB::uploadAnaResult(anarun_id_t run_id, anavar_id_t var_id, double val, double err) {
     auto stmt = loadStatement("INSERT INTO analysis_results(run_id,var_id,val,err) VALUES (?1,?2,?3,?4)");
 
     sqlite3_bind_int64(stmt, 1, run_id);
@@ -70,12 +71,12 @@ void AnalysisDB::uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, dou
     sqlite3_reset(stmt);
 }
 
-void AnalysisDB::uploadAnaResult(sqlite3_int64 run_id, sqlite3_int64 var_id, const string& val) {
+void AnalysisDB::uploadAnaResult(anarun_id_t run_id, anavar_id_t var_id, const string& val) {
     auto stmt = loadStatement("INSERT INTO analysis_xresults(run_id,var_id,val) VALUES (?1,?2,?3)");
 
     sqlite3_bind_int64(stmt, 1, run_id);
     sqlite3_bind_int64(stmt, 2, var_id);
-    sqlite3_bind_text(stmt, 3, val.c_str(), -1, SQLITE_STATIC);
+    bind_string(stmt, 3, val);
 
     busyRetry(stmt);
     sqlite3_reset(stmt);

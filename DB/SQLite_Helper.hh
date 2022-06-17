@@ -16,6 +16,25 @@ using std::map;
 using std::string;
 #include <vector>
 using std::vector;
+#include <stdexcept>
+
+/// Base for SQLite_Helper exceptions
+class SQLiteHelper_Exception: public std::runtime_error {
+    /// inherit constructor
+    using runtime_error::runtime_error;
+};
+
+/// Exception for when query fails to execute
+class QueryFailError: public SQLiteHelper_Exception {
+    /// inherit constructor
+    using SQLiteHelper_Exception::SQLiteHelper_Exception;
+};
+
+/// Exception for when query fails to find expected results
+class BadQueryResultError: public SQLiteHelper_Exception {
+    /// inherit constructor
+    using SQLiteHelper_Exception::SQLiteHelper_Exception;
+};
 
 /// Convenience wrapper for SQLite3 database interface
 class SQLite_Helper {
@@ -38,10 +57,15 @@ public:
     sqlite3_stmt* loadStatement(const string& qry);
     /// retry a query until DB is available
     int busyRetry(sqlite3_stmt* stmt);
+    /// run and reset a statement expecting no return values (using busyRetry); optionally, throw error if not SQLITE_OK
+    int exec(sqlite3_stmt* stmt, bool checkOK = true);
     /// run a statement expecting no return values (using busyRetry); optionally, throw error if not SQLITE_OK
-    int exec(const string& qry, bool checkOK = true);
+    int exec(const string& qry, bool checkOK = true) { return exec(loadStatement(qry), checkOK); }
+    /// bind std::string to query
+    static void bind_string(sqlite3_stmt* stmt, int i, const string& s);
     /// put column i string into rslt, or leave unchanged if null; return whether non-nullptr
     static bool get_string(sqlite3_stmt* stmt, unsigned int i, string& rslt);
+
 
     /// extract a vector<double> from a blob column
     void getVecBlob(vector<double>& v, sqlite3_stmt* stmt, int col);

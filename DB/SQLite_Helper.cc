@@ -14,13 +14,10 @@
 #include <stdexcept>
 #include <fcntl.h>
 
-using std::pair;
-
 /// callback function to display SQLite3 errors
 void errorLogCallback(void*, int iErrCode, const char* zMsg){
     printf("SQL error (%d): %s\n", iErrCode, zMsg);
 }
-
 
 extern "C" {
     int sqlite3_memvfs_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_routines *pApi);
@@ -33,7 +30,7 @@ static int memvfs_init = sqlite3_auto_extension((void(*)(void)) &sqlite3_memvfs_
 
 SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create) {
     if(memvfs_init != SQLITE_OK)
-        throw std::logic_error("failed initialization of sqlite3 memvfs: "
+        throw SQLiteHelper_Exception("failed initialization of sqlite3 memvfs: "
         + string(sqlite3_errstr(memvfs_init)));
 
     printf("Opening SQLite3 DB '%s'...\n", dbname.c_str());
@@ -42,7 +39,7 @@ SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create) {
                               SQLITE_OPEN_READWRITE | (create? SQLITE_OPEN_CREATE : 0),
                               nullptr);
     if(err) {
-        std::runtime_error e("Failed to open DB " + dbname + " error " + sqlite3_errmsg(db));
+        SQLiteHelper_Exception e("Failed to open DB " + dbname + " error " + sqlite3_errmsg(db));
         sqlite3_close(db);
         db = nullptr;
         throw e;
@@ -52,7 +49,7 @@ SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create) {
 }
 
 SQLite_Helper::SQLite_Helper(sqlite3* _db): db(_db) {
-    if(!db) throw std::logic_error("SQLite_Helper initialized with nullptr DB");
+    if(!db) throw SQLiteHelper_Exception("SQLite_Helper initialized with nullptr DB");
     sqlite3_busy_timeout(db, 100);
 }
 
@@ -70,7 +67,7 @@ int SQLite_Helper::setQuery(const char* qry, sqlite3_stmt*& stmt) {
         fflush(stdout);
         usleep(500000+(rand()%500000));
     }
-    if(rc != SQLITE_OK) throw std::runtime_error(string("Failed query '") + qry + "' => '" + sqlite3_errmsg(db) + "'");
+    if(rc != SQLITE_OK) throw QueryFailError(string("Failed query '") + qry + "' => '" + sqlite3_errmsg(db) + "'");
     return rc;
 }
 
@@ -94,12 +91,11 @@ int SQLite_Helper::busyRetry(sqlite3_stmt* stmt) {
     return rc;
 }
 
-int SQLite_Helper::exec(const string& qry, bool checkOK) {
-    auto stmt = loadStatement(qry);
+int SQLite_Helper::exec(sqlite3_stmt* stmt, bool checkOK) {
     int rc = busyRetry(stmt);
     sqlite3_reset(stmt);
     if(checkOK && !(rc == SQLITE_OK || rc == SQLITE_DONE)) {
-        throw std::runtime_error(string("Failed exec '") + qry + "' => '" + sqlite3_errmsg(db) + "'");
+        throw QueryFailError("Failed exec '" + string(sqlite3_errmsg(db)) + "'");
     }
     return rc;
 }
@@ -155,15 +151,19 @@ vector<char> SQLite_Helper::toBlob() {
     snprintf(memname, 1024, "file:/whatever?ptr=%p&sz=0&max=%zu&freeonclose=0", v.data(), v.size());
     int err = sqlite3_open_v2(memname, &dbb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_URI, "memvfs");
     if(err != SQLITE_OK) {
-        std::runtime_error e("Failed to open memdb '" + string(memname) + "', error " + sqlite3_errmsg(dbb));
+        SQLiteHelper_Exception e("Failed to open memdb '" + string(memname) + "', error " + sqlite3_errmsg(dbb));
         sqlite3_close(dbb);
         throw e;
     }
     SQLite_Helper H(dbb);
     H.exec("PRAGMA journal_mode=OFF", false);
     backupTo(dbb);
-    if(H.db_size() != (int)v.size()) throw std::logic_error("Unexpected database binary size");
+    if(H.db_size() != (int)v.size()) throw SQLiteHelper_Exception("Unexpected database binary size");
     return v;
+}
+
+void SQLite_Helper::bind_string(sqlite3_stmt* stmt, int i, const string& s) {
+    sqlite3_bind_text(stmt, i, s.c_str(), s.size(), SQLITE_TRANSIENT);
 }
 
 void SQLite_Helper::fromBlob(const void* dat, size_t sz) {
@@ -172,7 +172,7 @@ void SQLite_Helper::fromBlob(const void* dat, size_t sz) {
     snprintf(memname, 1024, "file:/whatever?ptr=%p&sz=%zu&max=%zu&freeonclose=0", dat, sz, sz);
     int err = sqlite3_open_v2(memname, &dbb, SQLITE_OPEN_READWRITE | SQLITE_OPEN_URI, "memvfs");
     if(err != SQLITE_OK) {
-        std::runtime_error e("Failed to open memdb '" + string(memname) + "', error " + sqlite3_errmsg(dbb));
+        SQLiteHelper_Exception e("Failed to open memdb '" + string(memname) + "', error " + sqlite3_errmsg(dbb));
         sqlite3_close(dbb);
         throw e;
     }
