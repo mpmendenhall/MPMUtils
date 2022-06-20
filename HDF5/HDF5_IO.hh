@@ -9,14 +9,15 @@
 #include <string>
 using std::string;
 #include <stdexcept>
+#include "DataSource.hh"
 
 /// base class for HDF5 file input
-class HDF5_InputFile {
+class HDF5_InputFile: virtual public _FileSource {
 public:
     /// Destructor
     virtual ~HDF5_InputFile() { if(infile_id) H5Fclose(infile_id); }
     /// Open named input file
-    virtual void openInput(const string& filename);
+    void openInput(const string& filename) override;
 
     /// get number of records in input table
     hsize_t getTableEntries(const string& table, hsize_t* nfields = nullptr);

@@ -19,7 +19,7 @@ public:
     /// Constructor, from name of table and struct offsets/sizes
     _HDF5_Table_Cache(const HDF5_Table_Spec& ts, hsize_t nc = 1024): Tspec(ts), nchunk(nc)  { }
 
-    /// check whether named object has named attribute
+    /// check whether attribute exists in this table
     bool doesAttrExist(const string& attrname) const
     { return HDF5_InputFile::doesAttrExist(Tspec.table_name, attrname); }
     /// read double-valued attribute
@@ -42,9 +42,9 @@ protected:
 template<typename T>
 class HDF5_Table_Cache: public _HDF5_Table_Cache, virtual public DataSource<T> {
 public:
-    using DataSource<T>::nLoad;
-    using DataSource<T>::nread;
-    using DataSource<T>::id_current_evt;
+    using _DataSource::nLoad;
+    using _DataSource::nread;
+    using _DataSource::id_current_evt;
     using DataSource<T>::getIdentifier;
 
     /// inherit base constructor

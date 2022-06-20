@@ -8,51 +8,61 @@
 #include <vector>
 using std::vector;
 
-/// Virtual base class for loading a stream of objects
-template<class C>
-class DataSource {
+/// Reader from a file
+class _FileSource {
 public:
-    /// retrieved value type
-    typedef typename std::remove_const<C>::type val_t;
+    virtual void openInput(const string& f) { infile_name = f; }
+    string infile_name;     ///< input filename
+};
 
+/// Type-independent DataSource base class
+class _DataSource {
+public:
     /// maximum "infinite" entries
     static constexpr size_t max_entries = std::numeric_limits<size_t>::max();
 
     /// Polymorphic destructor
-    virtual ~DataSource() { }
+    virtual ~_DataSource() { }
 
-    /// Fill supplied item with next object; return whether item has been updated
-    virtual bool next(val_t&) = 0;
-    /// Skip ahead n items
-    virtual bool skip(size_t n) { val_t x; while(n--) if(!next(x)) return false; return true; }
-    /// pop with infinite looping
-    bool next_loop(val_t& o) { if(next(o)) return true; reset(); return next(o); }
     /// Reset to start
     virtual void reset() { nread = 0; id_current_evt = -1; }
-    /// Estimate remaining data size (including loop)
-    size_t entries_optloop() { return doLoop? max_entries : entries_remaining(); }
+    /// Skip ahead n items
+    virtual bool skip(size_t n) = 0;
+
     /// Estimate remaining data size (no loop)
     virtual size_t entries() const { return 0; }
     /// Remaining entries, including load limit
     size_t entries_remaining() const { auto n0 = entries(); return nLoad >= 0 && size_t(nLoad) < n0? nLoad - nread : n0 - nread; }
+    /// Estimate remaining data size (including loop)
+    size_t entries_optloop() { return doLoop? max_entries : entries_remaining(); }
     /// get number of rows already read
     size_t getNRead() const { return nread; }
 
-    /// whether to do infinite looping
-    bool doLoop = false;
-    /// next with optional looping
-    bool next_optloop(val_t& o) { return doLoop? next_loop(o) : next(o); }
-
+    bool doLoop = false;    /// whether to do infinite looping
     int nLoad = -1;         ///< entries loading limit; set >= 0 to apply
-    /// get identifying number for value type
-    static int64_t getIdentifier(const val_t& i) { return i.evt; }
-    /// open input file
-    virtual void openInput(const string& f) { nread = 0; id_current_evt = -1; infile_name = f; }
 
 protected:
     size_t nread = 0;               ///< number of items already read
     int64_t id_current_evt = -1;    ///< event identifier of next_read
-    string infile_name = "";        ///< input file name
+};
+
+/// Virtual base class for loading a stream of objects
+template<class C>
+class DataSource: public _DataSource {
+public:
+    /// retrieved value type
+    typedef typename std::remove_const<C>::type val_t;
+
+    /// Fill supplied item with next object; return whether item has been updated
+    virtual bool next(val_t&) = 0;
+    /// Skip ahead n items
+    bool skip(size_t n) override { val_t x; while(n--) if(!next(x)) return false; return true; }
+    /// pop with infinite looping
+    bool next_loop(val_t& o) { if(next(o)) return true; reset(); return next(o); }
+    /// next with optional looping
+    bool next_optloop(val_t& o) { return doLoop? next_loop(o) : next(o); }
+    /// get identifying number for value type
+    static int64_t getIdentifier(const val_t& i) { return i.evt; }
 };
 
 /// Sequence of DS ~ DataSource

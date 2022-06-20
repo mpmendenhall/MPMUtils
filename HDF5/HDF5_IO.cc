@@ -6,6 +6,7 @@
 #include <climits>
 
 void HDF5_InputFile::openInput(const string& filename) {
+    _FileSource::openInput(filename);
     if(infile_id) {
         printf("Closing previous input file.\n");
         H5Fclose(infile_id);
