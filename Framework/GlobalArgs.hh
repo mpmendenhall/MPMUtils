@@ -7,11 +7,12 @@
 #include <string>
 using std::string;
 #include <vector>
+using std::vector;
 #include <map>
 #include <stdlib.h> // for atof, atoi
 
 /// string-tagged arguments context singleton
-std::map<string, std::vector<string>>& GlobalArgs();
+std::map<string, vector<string>>& GlobalArgs();
 
 /// load command-line arguments into GlobalArgs() list
 void loadGlobalArgs(int argc, char** argv);
@@ -23,6 +24,8 @@ bool wasArgGiven(const string& argname, const string& help = "");
 
 /// get required single-valued command line argument or throw error
 const string& requiredGlobalArg(const string& argname, const string& help = "");
+/// get required one-or-more-valued command-line argument
+const vector<string>& requiredGlobalMulti(const string& argname, const string& help = "", size_t nmin = 1);
 /// get required single-valued command line argument or throw error
 inline void requiredGlobalArg(const string& argname, double& v, const string& help = "") { v = atof(requiredGlobalArg(argname,help).c_str()); }
 /// get required single-valued command line argument or throw error

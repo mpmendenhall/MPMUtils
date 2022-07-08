@@ -40,7 +40,7 @@ size_t numGlobalArg(const string& argname) {
 }
 
 bool wasArgGiven(const string& argname, const string& help) {
-    printf("* Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' [%s] ", argname.c_str(), help.c_str());
+    printf("* Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
     if(numGlobalArg(argname)) {
         printf(TERMFG_GREEN "enabled" TERMSGR_RESET "\n");
         return true;
@@ -50,14 +50,28 @@ bool wasArgGiven(const string& argname, const string& help) {
 }
 
 const string& requiredGlobalArg(const string& argname, const string& help) {
-    printf("* Required argument " TERMFG_GREEN "-%s" TERMSGR_RESET "' <%s>' ", argname.c_str(), help.c_str());
+    printf("* Required argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     auto& v = GlobalArgs()[argname];
     if(v.size() != 1) {
-        printf(TERMFG_GREEN "MISSING!" TERMSGR_RESET "\n");
+        printf(TERMFG_RED "MISSING!" TERMSGR_RESET "\n");
         throw std::runtime_error("Expected one '-"+argname+"' argument");
     }
     printf(TERMFG_GREEN "-> '%s'" TERMSGR_RESET "\n", v[0].c_str());
     return v[0];
+}
+
+const vector<string>& requiredGlobalMulti(const string& argname, const string& help, size_t nmin) {
+    auto& v = GlobalArgs()[argname];
+    printf("* Required (at least %zu) argument '" TERMFG_GREEN "-%s"
+    TERMSGR_RESET " <%s>' ", nmin, argname.c_str(), help.c_str());
+    if(v.size() < nmin) {
+        printf(TERMFG_RED "MISSING!" TERMSGR_RESET "\n");
+        throw std::runtime_error("Expected at least " + to_str(nmin) + " '-"+argname+"' arguments, got " + to_str(v.size()));
+    }
+    printf(TERMFG_GREEN "->");
+    for(auto& s: v) printf(" '%s'", s.c_str());
+    printf(TERMSGR_RESET "\n");
+    return v;
 }
 
 string popGlobalArg(const string& argname) {
@@ -69,7 +83,7 @@ string popGlobalArg(const string& argname) {
 }
 
 bool optionalGlobalArg(const string& argname, string& v, const string& help) {
-    printf("* Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET "' <%s> ", argname.c_str(), help.c_str());
+    printf("* Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     auto& GA = GlobalArgs();
     auto it = GA.find(argname);
     if(it == GA.end() || !it->second.size()) {
@@ -102,7 +116,7 @@ bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
     bool noarg = it == GA.end() || !it->second.size();
     if(!noarg && it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
 
-    printf("* Optional argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' <%s> ", argname.c_str(), help.c_str());
+    printf("* Optional argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
     if(noarg) {
         printf(TERMFG_GREEN "defaulted to ");
     } else {

@@ -17,7 +17,7 @@ using std::vector;
 class _HDF5_Table_Cache: public HDF5_InputFile {
 public:
     /// Constructor, from name of table and struct offsets/sizes
-    _HDF5_Table_Cache(const HDF5_Table_Spec& ts, hsize_t nc = 1024): Tspec(ts), nchunk(nc)  { }
+    explicit _HDF5_Table_Cache(const HDF5_Table_Spec& ts, hsize_t nc = 1024): Tspec(ts), nchunk(nc)  { }
 
     /// check whether attribute exists in this table
     bool doesAttrExist(const string& attrname) const
