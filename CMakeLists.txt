@@ -157,10 +157,7 @@ endif()
 ################
 
 INCLUDE(GitRepoTag.cmake)
-SET_SOURCE_FILES_PROPERTIES(Framework/CodeVersion.cc PROPERTIES COMPILE_FLAGS ${CODEVERSION_COMPILE_FLAGS})
-# force rebuild of CodeVersion
-add_custom_command(OUTPUT codeversion COMMAND touch ${PROJECT_SOURCE_DIR}/Framework/CodeVersion.cc)
-add_custom_target(update_codeversion DEPENDS codeversion)
+SET_SOURCE_FILES_PROPERTIES(Framework/CodeVersion.cc PROPERTIES COMPILE_DEFINITIONS "${CODEVERSION_COMPILE_DEFS}")
 
 ################
 # build targets
@@ -184,7 +181,6 @@ endforeach(l)
 add_library(MPM SHARED ${SOURCE_FILES})
 target_compile_features(MPM PUBLIC cxx_std_14)
 target_link_libraries(MPM ${EXTLIBS})
-add_dependencies(MPM update_codeversion)
 
 # test programs
 file(GLOB TESTEXEC Test/*.cc)

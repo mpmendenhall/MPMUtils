@@ -4,30 +4,11 @@
 #ifndef INTERVALSET_HH
 #define INTERVALSET_HH
 
+#include "Interval.hh"
 #include <set>
 using std::set;
 #include <stdlib.h> // for size_t
 #include <numeric>  // for std::accumulate
-#include <limits>
-
-/// An interval
-template<typename T = double>
-class Interval: public std::pair<T,T> {
-public:
-    /// Default constructor
-    Interval(T a = {}, T b = {}): std::pair<T,T>(a,b) { }
-
-    /// intersection of intervals
-    const Interval& operator&=(Interval b) {
-        if(this->second <= b.first || this->first >= b.second) *this = {};
-        else *this = {std::max(this->first, b.first), std::min(this->second, b.second)};
-        return *this;
-    }
-    /// intersection of intervals
-    Interval operator&(Interval b) const { return b &= *this; }
-    /// interval length
-    operator T() const { return this->second - this->first; }
-};
 
 /// Collection of disjoint intervals
 template<typename T = double>
@@ -49,28 +30,28 @@ public:
 
     /// add interval to set, merging with any overlapping intervals
     void operator+=(interval_t i) {
-        if(i.second < i.first) std::swap(i.first, i.second); // assure end >= start
+        if(i.isNull()) return; // do not keep null intervals
         ++nIndividual;
-        tIndividual += i.second - i.first;
+        tIndividual += i.dl();
 
         // completely outside of existing range?
-        if(!size() || i.second < begin()->first || i.first > rbegin()->second) { insert(i); return; }
+        if(!size() || i.hi < begin()->lo || i.lo > rbegin()->hi) { insert(i); return; }
 
         // find first interval after or overlapping start of i
         auto it0 = lower_bound(i);
-        if(it0 != begin() && std::prev(it0)->second >= i.first) it0--;
-        if(it0 != end() && i.second >= it0->first) i.first = std::min(i.first, it0->first);
+        if(it0 != begin() && std::prev(it0)->hi >= i.lo) it0--;
+        if(it0 != end() && i.hi >= it0->lo) i.lo = std::min(i.lo, it0->lo);
 
         // find first interval after end of i
-        auto it1 = upper_bound({i.second, i.second});
-        i.second = std::max(i.second, std::prev(it1)->second);
-        if(it1 != begin() && std::prev(it1)->second >= i.first) i.second = std::max(i.second, std::prev(it1)->second);
+        auto it1 = upper_bound({i.hi, i.hi});
+        i.hi = std::max(i.hi, std::prev(it1)->hi);
+        if(it1 != begin() && std::prev(it1)->hi >= i.lo) i.hi = std::max(i.hi, std::prev(it1)->hi);
 
         erase(it0, it1);
         insert(i);
 
         // summarize old intervals
-        if(dtMax) summarize(i.first - dtMax);
+        if(dtMax) summarize(i.lo - dtMax);
     }
 
     /// combine (OR) with other intervals
@@ -104,15 +85,15 @@ public:
         auto it = lower_bound({t0,t0});
         for(auto i = begin(); i != it; ++i) {
             ++nSummary;
-            tSummary += i->second - i->first;
+            tSummary += i->dl();
         }
         erase(begin(), it);
     }
 
     size_t nSummary = 0;    /// number of summarized non-tracked intervals
     size_t dtMax = 0;       ///< maximum length to store (0 to disable)
-    T tSummary = 0;         /// content of summarized non-tracked intervals
-    T tIndividual = 0;      /// span of individual intervals added before overlap
+    T tSummary = {};         /// content of summarized non-tracked intervals
+    T tIndividual = {};      /// span of individual intervals added before overlap
     size_t nIndividual = 0; /// number of individual intervals before merge
 
     /// number of intervals
@@ -121,7 +102,7 @@ public:
     /// total of all intervals
     T total() const {
         return std::accumulate(begin(), end(), tSummary,
-                               [](T a, interval_t b) { return a + b.second - b.first; });
+                               [](T a, interval_t b) { return a + b.dl(); });
     }
 };
 

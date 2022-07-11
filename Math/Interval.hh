@@ -6,16 +6,44 @@
 
 #include <limits>
 
-/// 1-dimensional interval
+/// An interval
 template<typename T = double>
 class Interval {
 public:
     /// value type
     typedef T value_t;
 
-    value_t lo = std::numeric_limits<T>::max();     /// lower bound
-    value_t hi{-std::numeric_limits<T>::max()};     /// upper bound
+    value_t lo; ///< lower end of interval
+    value_t hi; ///< upper end of interval
 
+    /// Default null-interval constructor
+    Interval():
+    lo(std::numeric_limits<T>::max()),
+    hi(-std::numeric_limits<T>::max()) { }
+
+    /// Constructor with range
+    Interval(T a, T b): lo(a), hi(b) { }
+
+    /// check if null interval
+    bool isNull() const { return !(hi >= lo); }
+    /// check if point in half-open [lo, hi) interior
+    bool inside(T x) const { return lo <= x && x() < hi; }
+    /// interval length
+    T dl() const { return isNull()? T{} : hi - lo; }
+    /// local coordinate along axis, 0->lo and 1->hi
+    double pos(double x) const { return lo + x*dl(); }
+
+    /// ordering comparison
+    bool operator<(const Interval& r) const { return lo < r.lo || (lo == r.lo && hi < r.hi); }
+
+    /// intersection of intervals
+    const Interval& operator&=(Interval b) {
+        if(hi <= b.lo || lo >= b.hi) *this = {};
+        else *this = {std::max(lo, b.lo), std::min(hi, b.hi)};
+        return *this;
+    }
+    /// intersection of intervals
+    Interval operator&(Interval b) const { return b &= *this; }
     /// expand to include point
     void expand(T x) {
         if(x < lo) lo = x;
@@ -27,17 +55,8 @@ public:
         expand(B.lo);
         expand(B.hi);
     }
-    /// offset by vector
+    /// offset interval
     void offset(T dx) { lo += dx; hi += dx; }
-
-    /// check if point in half-open [lo, hi) interior
-    bool inside(T x) const { return lo <= x && x < hi; }
-    /// width along axis
-    T dl() const { return hi - lo; }
-    /// local coordinate along axis, 0->lo and 1->hi
-    T pos(T x) const { return lo + x*dl(); }
-    /// check if null interval
-    bool isNull() const { return !(hi >= lo); }
 };
 
 #endif
