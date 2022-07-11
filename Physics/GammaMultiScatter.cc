@@ -1,7 +1,7 @@
 /// \file GammaMultiScatter.cc
 
 #include "GammaMultiScatter.hh"
-#include <gsl/gsl_integration.h>
+#include "SmearingIntegral.hh"
 #include <TAxis.h>
 
 GammaScatterSteps::GammaScatterSteps(double _E0, double _eDens, int _npts):
@@ -23,10 +23,12 @@ E0(_E0), eDens(_eDens), npts(_npts), steps(1) {
     gEsc.SetMinimum(0);
     gEsc.GetYaxis()->SetTitle("unscattered fraction");
     gEsc.GetXaxis()->SetTitle("gamma energy [MeV]");
+    sEsc = TSpline3("sEsc", &gEsc);
 
     gCx.SetMinimum(0);
     gCx.GetXaxis()->SetTitle("gamma energy [MeV]");
     gCx.GetYaxis()->SetTitle("total scattering cross-section [barn]");
+    sCx = TSpline3("sCx", &gCx);
 
     // first scattering step from delta-function input
     const double Em = E0/m_e;
@@ -43,7 +45,7 @@ E0(_E0), eDens(_eDens), npts(_npts), steps(1) {
     gI.GetYaxis()->SetTitle("incident spectrum [/gamma/MeV]");
     gI.SetBit(TGraph::kIsSortedX);
     splitIncident();
-    Escape = steps.at(0).Escape;
+    Escape = steps.at(0).EscapeSum = steps.at(0).Escape;
 }
 
 TGraph GammaScatterSteps::Egamma_to_Ee(const TGraph& g) const {
@@ -54,24 +56,6 @@ TGraph GammaScatterSteps::Egamma_to_Ee(const TGraph& g) const {
     ge.GetYaxis()->SetTitle(g.GetYaxis()->GetTitle());
     ge.GetXaxis()->SetTitle("scattered electron energy [MeV]");
     return ge;
-}
-
-double _eval_tgraph(double x, void* p) { return static_cast<tgraph_integrator*>(p)->g.Eval(x); }
-
-double tgraph_integrator::integrate(double x0, double x1, double epsab, double epsrel) {
-    gsl_function f;
-    f.params = this;
-    f.function = &_eval_tgraph;
-
-    if(nadaptive) {
-        auto iw = gsl_integration_workspace_alloc(nadaptive);
-        gsl_integration_qags(&f, x0, x1, epsab, epsrel, nadaptive, iw, &res, &abserr);
-        gsl_integration_workspace_free(iw);
-    } else {
-        gsl_integration_qng(&f, x0, x1, epsab, epsrel, &res, &abserr, &neval);
-    }
-
-    return res;
 }
 
 struct scatter_integ_params {
@@ -130,7 +114,7 @@ void GammaScatterSteps::scatter_step() {
 
     gsl_integration_workspace_free(iw);
 
-    steps.push_back({gI, {}, {}, {}, {}, Emin});
+    steps.emplace_back(gI, Emin);
     splitIncident();
     sumEscaped();
 }
@@ -141,7 +125,7 @@ void GammaScatterSteps::splitIncident() {
     auto& gE = S.Escape = gI;
     auto& gS = S.Scatter = gI;
     for(int i=0; i < gI.GetN(); ++i) {
-        auto f = gEsc.Eval(gI.GetX()[i]);
+        auto f = sEsc.Eval(gI.GetX()[i]);
         gE.GetY()[i] *= f;
         gS.GetY()[i] *= 1 - f;
     }
@@ -154,7 +138,7 @@ void GammaScatterSteps::splitIncident() {
     // "normalize scattering distribution to unit area dE"
     for(int i=0; i < gS.GetN(); ++i) {
         auto x = gS.GetX()[i];
-        gS.GetY()[i] /=  x * gCx.Eval(x);
+        gS.GetY()[i] /=  x * sCx.Eval(x);
     }
 
     S.sScatter = TSpline3("sScatter", &gS);
@@ -165,16 +149,58 @@ void GammaScatterSteps::splitIncident() {
 
 void GammaScatterSteps::sumEscaped() {
     auto& gE = steps.back().Escape;
+
+    // new values up to previous lowest energy x0
     double x0 = Escape.GetX()[0];
     TGraph g = gE;
     int i = 0;
     for(; i < gE.GetN(); ++i) if(gE.GetX()[i] >= x0) break;
     g.Set(i);
     g.SetPoint(i++, x0, gE.Eval(x0));
+    steps.back().EscapeSum = g;
 
+    // sum into previous sub-segments
+    for(auto& S: steps) {
+        if(&S == &steps.back()) break;
+        auto& gSeg = S.EscapeSum;
+        for(int j = 0; j < gSeg.GetN(); ++j)
+            gSeg.GetY()[j] += gE.Eval(gSeg.GetX()[j]);
+    }
+
+    // sum in previous Escape values
     for(int j = 0; j < Escape.GetN(); ++j) {
         auto x = Escape.GetX()[j];
         g.SetPoint(i++, x, Escape.GetY()[j] + gE.Eval(x));
     }
     Escape = g;
+}
+
+TGraph GammaScatterSteps::eSpectrum(double PE_per_MeV) const {
+    if(!PE_per_MeV) {
+        auto gC = Egamma_to_Ee(Escape);
+        gC.GetYaxis()->SetTitle("Electron scattering [/gamma/MeV]");
+        return gC;
+    }
+
+    TGraph gSmear;
+    gaussian_smearing_integral GSI(PE_per_MeV);
+
+    vector<TGraph> csegs;
+    for(auto& S: steps) csegs.push_back(Egamma_to_Ee(S.EscapeSum));
+
+    double Erange = E0 + 4 * sqrt(E0/PE_per_MeV);
+    for(int i = 0; i < npts; ++i) {
+        double x = i * Erange/(npts-1);
+
+        // full capture peak
+        double dx = x - E0;
+        double s2 = E0 / PE_per_MeV;
+        double y = exp(-dx*dx/(2*s2))/sqrt(2*M_PI*s2) * steps.back().nScatter;
+
+        // separately integrate each segment to avoid singularities
+        for(auto& gs: csegs) y += GSI.apply(gs, x);
+
+        gSmear.SetPoint(i, x, y);
+    }
+    return gSmear;
 }
