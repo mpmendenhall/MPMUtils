@@ -7,6 +7,7 @@
 #include <cmath>
 #include <limits>
 #include "NuclPhysConstants.hh"
+#include <stdio.h>
 
 using namespace physconst;
 /// electron radius cross section [barn]
@@ -29,6 +30,13 @@ inline double gamma_escatter_fmin(double Ein_per_m_e) { return 1/(1 + 2*Ein_per_
 /// Compton scattering maximimum E_in / m_e that can scatter down to E_out
 inline double gamma_escatter_Emax_per_m_e(double Eout_per_m_e) {
     return Eout_per_m_e < 0.5? Eout_per_m_e/(1 - 2*Eout_per_m_e) : std::numeric_limits<double>::infinity();
+}
+
+/// Photoelectric cross-section approximation for E << m_e (Davisson 1965)
+inline double photoelectric_cx_1965(double E_per_m_e, double Z = 6) {
+    if(!E_per_m_e) return std::numeric_limits<double>::infinity();
+    static const double k0 = 16*sqrt(2)/3 * cx_e * pow(alpha, 4);
+    return k0 * pow(Z,5) / pow(E_per_m_e, 3.5);
 }
 
 /// Unpolarized Klein–Nishina gamma-electron angular scattering cross-section ds/dx [barn / cos theta]

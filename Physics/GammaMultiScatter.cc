@@ -4,31 +4,49 @@
 #include "SmearingIntegral.hh"
 #include <TAxis.h>
 
-GammaScatterSteps::GammaScatterSteps(double _E0, double _eDens, int _npts):
-E0(_E0), eDens(_eDens), npts(_npts), steps(1) {
+GammaScatterSteps::s_Interactions GammaScatterSteps::interactionsAt(double E) {
+        auto x = E/m_e;
+        s_Interactions I;
+        I.s_Compt = KN_total_xs(x);
+        I.s_PE = photoelectric_cx_1965(x, Z);
+        I.p_Ixn = 1 - exp(-eDens * N_A * (I.s_Compt + I.s_PE) * 1e-24);
+        I.f_Compt = I.s_Compt / (I.s_Compt + I.s_PE);
+        return I;
+}
+
+GammaScatterSteps::GammaScatterSteps(double _E0, double _eDens, double _Z, int _npts):
+E0(_E0), eDens(_eDens), Z(_Z), npts(_npts), steps(1) {
 
     // calculate cross-section, escape fractions over relevant energy range
-    double s_tot = 0;
+    s_Interactions I;
     for(int i=0; i<npts; ++i) {
-        auto E1 = i*E0/(npts - 1);
-        s_tot = KN_total_xs(E1/m_e);
-        gCx.SetPoint(i, E1, s_tot);
-        Escape_0 = exp(-eDens * N_A * s_tot * 1e-24);
-        gEsc.SetPoint(i, E1, Escape_0);
+        double l = double(i)/(npts - 1);
+        auto E1 = l*l*E0;
+        I = interactionsAt(E1);
+        if(E1) gPE.SetPoint(i-1, E1, I.s_PE);
+        gCx.SetPoint(i, E1, I.s_Compt);
+        gInteract.SetPoint(i, E1, I.p_Ixn);
     }
     gCx.SetBit(TGraph::kIsSortedX);
-    gEsc.SetBit(TGraph::kIsSortedX);
-    Scatter_0 = 1. - Escape_0;
+    gInteract.SetBit(TGraph::kIsSortedX);
+    // distribute initial events between Photoelectric, Compton
+    FullCapt = I.p_Ixn * (1. - I.f_Compt);
+    Scatter_0 = I.p_Ixn * I.f_Compt;
+    Escape_0 = 1 - I.p_Ixn;
 
-    gEsc.SetMinimum(0);
-    gEsc.GetYaxis()->SetTitle("unscattered fraction");
-    gEsc.GetXaxis()->SetTitle("gamma energy [MeV]");
-    sEsc = TSpline3("sEsc", &gEsc);
+    gInteract.SetMinimum(0);
+    gInteract.SetMaximum(1);
+    gInteract.GetYaxis()->SetTitle("interaction probability");
+    gInteract.GetXaxis()->SetTitle("gamma energy [MeV]");
 
     gCx.SetMinimum(0);
     gCx.GetXaxis()->SetTitle("gamma energy [MeV]");
-    gCx.GetYaxis()->SetTitle("total scattering cross-section [barn]");
-    sCx = TSpline3("sCx", &gCx);
+    gCx.GetYaxis()->SetTitle("total Compton scattering cross-section [barn]");
+
+    gPE.SetMinimum(0);
+    gPE.GetXaxis()->SetTitle("gamma energy [MeV]");
+    gPE.GetYaxis()->SetTitle("Photoelectric cross-section [barn]");
+    sPE = TSpline3("sPE", &gPE);
 
     // first scattering step from delta-function input
     const double Em = E0/m_e;
@@ -36,10 +54,9 @@ E0(_E0), eDens(_eDens), npts(_npts), steps(1) {
     auto& gI = steps.at(0).Incident;
     steps.at(0).Emin = fmin * E0;
     for(int i = 0; i < npts; ++i) {
-        auto f = exp((1-i/double(npts - 1))*log(fmin));
-        //auto f = fmin + i*(1-fmin)/(npts-1);
+        auto f = exp((1-i/double(npts - 1))*log(fmin)); // log spacing
         double s = KN_ds_df(Em, f);
-        gI.SetPoint(i, f*E0, Scatter_0 * s/(s_tot * E0));
+        gI.SetPoint(i, f*E0, Scatter_0 * s/(I.s_Compt * E0));
     }
     gI.GetXaxis()->SetTitle("gamma energy [MeV]");
     gI.GetYaxis()->SetTitle("incident spectrum [/gamma/MeV]");
@@ -60,8 +77,6 @@ TGraph GammaScatterSteps::Egamma_to_Ee(const TGraph& g) const {
 
 struct scatter_integ_params {
     const TSpline3& gS;
-    const TGraph& gEsc;
-    const TGraph& gCx;
     double E;
 };
 
@@ -72,7 +87,7 @@ double scatter_integral(double x, void* p) {
 }
 
 void GammaScatterSteps::scatter_step() {
-    scatter_integ_params P{steps.back().sScatter, gEsc, gCx, 0.};
+    scatter_integ_params P{steps.back().sScatter, 0.};
     gsl_function f;
     f.params = &P;
     f.function = &scatter_integral;
@@ -124,21 +139,29 @@ void GammaScatterSteps::splitIncident() {
     const auto& gI = S.Incident;
     auto& gE = S.Escape = gI;
     auto& gS = S.Scatter = gI;
+    TGraph gP = gI;
     for(int i=0; i < gI.GetN(); ++i) {
-        auto f = sEsc.Eval(gI.GetX()[i]);
-        gE.GetY()[i] *= f;
-        gS.GetY()[i] *= 1 - f;
+        auto I = interactionsAt(gI.GetX()[i]);
+        gE.GetY()[i] *= 1 - I.p_Ixn;
+        gS.GetY()[i] *= I.p_Ixn * I.f_Compt;
+        gP.GetY()[i] *= I.p_Ixn * (1 - I.f_Compt);
     }
 
+    // split integration at first Compton edge
     tgraph_integrator tgi(gS, 50);
+    tgraph_integrator tge(gP, 50);
     auto Emin0 = steps.at(0).Emin;
     S.nScatter = tgi.integrate(Emin0, E0);
-    if(S.Emin < Emin0) S.nScatter += tgi.integrate(S.Emin, Emin0);
+    FullCapt += tge.integrate(Emin0, E0);
+    if(S.Emin < Emin0) {
+        S.nScatter += tgi.integrate(S.Emin, Emin0);
+        FullCapt += tge.integrate(S.Emin, Emin0);
+    }
 
     // "normalize scattering distribution to unit area dE"
     for(int i=0; i < gS.GetN(); ++i) {
         auto x = gS.GetX()[i];
-        gS.GetY()[i] /=  x * sCx.Eval(x);
+        gS.GetY()[i] /=  x * KN_total_xs(x/m_e);
     }
 
     S.sScatter = TSpline3("sScatter", &gS);
@@ -179,6 +202,13 @@ TGraph GammaScatterSteps::eSpectrum(double PE_per_MeV) const {
     if(!PE_per_MeV) {
         auto gC = Egamma_to_Ee(Escape);
         gC.GetYaxis()->SetTitle("Electron scattering [/gamma/MeV]");
+        // represent residual full-capture peak
+        auto n = gC.GetN();
+        auto E1 = steps.back().Emin;
+        auto h = (steps.back().nScatter + FullCapt)/E1;
+        gC.SetPoint(n++, E0 - E1, h);
+        gC.SetPoint(n++, E0, h);
+        gC.SetPoint(n++, E0, 0);
         return gC;
     }
 
@@ -195,7 +225,7 @@ TGraph GammaScatterSteps::eSpectrum(double PE_per_MeV) const {
         // full capture peak
         double dx = x - E0;
         double s2 = E0 / PE_per_MeV;
-        double y = exp(-dx*dx/(2*s2))/sqrt(2*M_PI*s2) * steps.back().nScatter;
+        double y = exp(-dx*dx/(2*s2))/sqrt(2*M_PI*s2) * (steps.back().nScatter + FullCapt);
 
         // separately integrate each segment to avoid singularities
         for(auto& gs: csegs) y += GSI.apply(gs, x);
