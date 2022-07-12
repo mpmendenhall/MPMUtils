@@ -9,10 +9,13 @@ using std::string;
 #include <vector>
 using std::vector;
 #include <map>
+#include <set>
 #include <stdlib.h> // for atof, atoi
 
 /// string-tagged arguments context singleton
 std::map<string, vector<string>>& GlobalArgs();
+/// set of arguments that have been queried
+std::set<string>& QueriedArgs();
 
 /// load command-line arguments into GlobalArgs() list
 void loadGlobalArgs(int argc, char** argv);
@@ -48,5 +51,7 @@ bool string_to_bool(const string& s);
 
 /// debugging printout of global args
 void displayGlobalArgs();
+/// printout unused global arg warnings; return number of unused args found
+int checkUnusedArgs();
 
 #endif

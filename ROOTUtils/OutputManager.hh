@@ -33,6 +33,35 @@ public:
 
     /// print current canvas; return filename printed
     virtual string printCanvas(const string& fname, const TPad* P = nullptr, string suffix="") const;
+    /// print array/vector of several objects to same file
+    template<typename ARRAY>
+    void printTogether(ARRAY& itms, const string& fname, const string& dopt = "", string suffix="") const {
+        if(!suffix.size()) suffix = printsfx;
+        if(itms.size() == 1) {
+            (*itms.begin())->Draw(dopt.c_str());
+            printCanvas(fname, nullptr, suffix);
+            return;
+        }
+        for(auto h: itms) {
+            h->Draw(dopt.c_str());
+            printCanvas(fname, nullptr, suffix + (h == *itms.begin()? "(" : h == itms.back()? ")" : ""));
+        }
+    }
+    /// print map of several objects to same file
+    template<typename K, typename V>
+    void printTogether(map<K,V>& itms, const string& fname, const string& dopt = "", string suffix="") const {
+        if(!suffix.size()) suffix = printsfx;
+        if(itms.size() == 1) {
+            itms.begin()->second->Draw(dopt.c_str());
+            printCanvas(fname, nullptr, suffix);
+            return;
+        }
+        for(auto& kv: itms) {
+            auto& h = kv.second;
+            h->Draw(dopt.c_str());
+            printCanvas(fname, nullptr, suffix + (&h == &itms.begin()->second? "(" : &h == &itms.rbegin()->second? ")" : ""));
+        }
+    }
     /// set printCanvas suffix (filetype)
     virtual void setPrintSuffix(const string& sfx) { printsfx = sfx; }
 

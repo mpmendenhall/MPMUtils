@@ -5,8 +5,14 @@
 #include "TermColor.hh"
 #include "to_str.hh"
 
-std::map<std::string, std::vector<std::string>>& GlobalArgs() {
-    return ContextMap::getDefault<std::map<std::string, std::vector<std::string>>>();
+struct gargmap: public std::map<string, std::vector<string>> { };
+std::map<string, std::vector<string>>& GlobalArgs() {
+    return ContextMap::getDefault<gargmap>();
+}
+
+struct qset: public std::set<string> { };
+std::set<string>& QueriedArgs() {
+    return ContextMap::getDefault<qset>();
 }
 
 void loadGlobalArgs(int argc, char** argv) {
@@ -40,6 +46,8 @@ size_t numGlobalArg(const string& argname) {
 }
 
 bool wasArgGiven(const string& argname, const string& help) {
+    QueriedArgs().insert(argname);
+
     printf("* Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
     if(numGlobalArg(argname)) {
         printf(TERMFG_GREEN "enabled" TERMSGR_RESET "\n");
@@ -50,6 +58,8 @@ bool wasArgGiven(const string& argname, const string& help) {
 }
 
 const string& requiredGlobalArg(const string& argname, const string& help) {
+    QueriedArgs().insert(argname);
+
     printf("* Required argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     auto& v = GlobalArgs()[argname];
     if(v.size() != 1) {
@@ -61,6 +71,8 @@ const string& requiredGlobalArg(const string& argname, const string& help) {
 }
 
 const vector<string>& requiredGlobalMulti(const string& argname, const string& help, size_t nmin) {
+    QueriedArgs().insert(argname);
+
     auto& v = GlobalArgs()[argname];
     printf("* Required (at least %zu) argument '" TERMFG_GREEN "-%s"
     TERMSGR_RESET " <%s>' ", nmin, argname.c_str(), help.c_str());
@@ -75,6 +87,8 @@ const vector<string>& requiredGlobalMulti(const string& argname, const string& h
 }
 
 string popGlobalArg(const string& argname) {
+    QueriedArgs().insert(argname);
+
     auto& v = GlobalArgs()[argname];
     if(!v.size()) throw std::runtime_error("Missing expected '-"+argname+"' argument");
     auto s = v.back();
@@ -83,6 +97,8 @@ string popGlobalArg(const string& argname) {
 }
 
 bool optionalGlobalArg(const string& argname, string& v, const string& help) {
+    QueriedArgs().insert(argname);
+
     printf("* Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     auto& GA = GlobalArgs();
     auto it = GA.find(argname);
@@ -111,6 +127,8 @@ bool optionalGlobalArg(const string& argname, int& v, const string& help) {
 }
 
 bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
+    QueriedArgs().insert(argname);
+
     auto& GA = GlobalArgs();
     auto it = GA.find(argname);
     bool noarg = it == GA.end() || !it->second.size();
@@ -136,4 +154,15 @@ void displayGlobalArgs() {
         printf("'%s':\n", kv.first.c_str());
         for(auto& s: kv.second) printf("\t* '%s'\n", s.c_str());
     }
+}
+
+int checkUnusedArgs() {
+    int unused = 0;
+    auto& QA = QueriedArgs();
+    for(auto& kv: GlobalArgs()) {
+        if(QA.count(kv.first)) continue;
+        printf(TERMFG_RED "* Unused command-line argument: " TERMFG_YELLOW "'%s'\n" TERMSGR_RESET, kv.first.c_str());
+        ++unused;
+    }
+    return unused;
 }
