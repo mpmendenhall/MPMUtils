@@ -10,6 +10,7 @@ SegmentSaver(pnt, nm, inflName) {
         setMeta("settingname", S.getPath());
         setMeta("configstr", cfgString(lookupConfig(S)));
     }
+    S.lookupValue("order", order);
 }
 
 void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown) {

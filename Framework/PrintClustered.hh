@@ -11,13 +11,14 @@
 #include "TermColor.hh"
 
 /// Display organized by cluster
-template<class C, typename T = const typename C::contents_t>
-class PrintClustered: public SinkUser<T>, public PreSink<ClusterBuilder<C>>, public XMLProvider {
+template<class CB, typename T = const typename CB::cluster_t::contents_t>
+class PrintClustered: public SinkUser<T>, public PreSink<CB>, public XMLProvider {
 public:
-    typedef ClusterBuilder<C> CB_t;
+    typedef CB CB_t;
     typedef PreSink<CB_t> super_t;
     typedef typename super_t::presink_t::ordering_t ordering_t;
     using SinkUser<T>::nextSink;
+    typedef typename CB_t::cluster_t cluster_t;
 
     /// Constructor
     explicit PrintClustered(const Setting& S):
@@ -53,7 +54,7 @@ protected:
     void _signal(datastream_signal_t) override { }
 
     /// select clusters to view
-    void _push(C& o) override {
+    void _push(cluster_t& o) override {
         static int nc = 0;
         if(++nc % nskip) return;
 
@@ -74,7 +75,7 @@ protected:
     }
 
     /// display cluster
-    virtual void dispClust(const C& o) { dispObj(o); }
+    virtual void dispClust(const cluster_t& o) { dispObj(o); }
 };
 
 #endif

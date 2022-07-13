@@ -101,7 +101,10 @@ class ObjectFactory: public _ArgsBaseFactory<B, Args...> {
 public:
     /// Constructor, registering to list
     explicit ObjectFactory(const string& cname): _ArgsBaseFactory<B, Args...>(cname) {
-        FactoriesIndex::indexFor<B, Args...>().emplace(FactoriesIndex::hash(cname), *this);
+        auto& idx = FactoriesIndex::indexFor<B, Args...>();
+        auto h = FactoriesIndex::hash(cname);
+        if(idx.count(h)) throw std::logic_error("Duplicate registration of class named '" + cname + "'");
+        idx.emplace(h, *this);
     }
     /// Produce an object from arguments
     B* construct(Args&&... a) const override { return new C(std::forward<Args>(a)...); }
