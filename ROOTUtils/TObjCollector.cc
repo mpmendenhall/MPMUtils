@@ -7,6 +7,7 @@
 
 #include "TObjCollector.hh"
 #include "StringManip.hh"
+#include <TH1.h>
 #include <stdexcept>
 
 TDirectory* TObjCollector::writeItems(TDirectory* d) {
@@ -37,6 +38,8 @@ void TObjCollector::deleteAll() {
 }
 
 TObject* TObjCollector::addDeletable(TObject* o) {
+    auto h = dynamic_cast<TH1*>(o);
+    if(h) h->SetDirectory(nullptr);
     deleteItems.push_back(o);
     return o;
 }

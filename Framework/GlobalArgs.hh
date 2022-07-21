@@ -26,7 +26,7 @@ size_t numGlobalArg(const string& argname);
 bool wasArgGiven(const string& argname, const string& help = "");
 
 /// get required single-valued command line argument or throw error
-const string& requiredGlobalArg(const string& argname, const string& help = "");
+string requiredGlobalArg(const string& argname, const string& help = "");
 /// get required one-or-more-valued command-line argument
 const vector<string>& requiredGlobalMulti(const string& argname, const string& help = "", size_t nmin = 1);
 /// get required single-valued command line argument or throw error
@@ -37,6 +37,8 @@ inline void requiredGlobalArg(const string& argname, int& v, const string& help 
 /// pop one of multi-valued global arg (throw if none)
 string popGlobalArg(const string& argname);
 
+/// get optional string argument or default
+string optionalGlobalDefault(const string& argname, const string& dflt, const string& help = "");
 /// get optional argument, or leave with default
 bool optionalGlobalArg(const string& argname, string& v, const string& help = "");
 /// update value with optional global floating-point argument

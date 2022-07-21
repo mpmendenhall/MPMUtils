@@ -6,8 +6,8 @@
 #include <TString.h>
 #include <TObjString.h>
 
-SegmentSaver::SegmentSaver(OutputManager* pnt, const string& nm, const string& inflname):
-OutputManager(nm, pnt) {
+SegmentSaver::SegmentSaver(OutputManager* pnt, const string& _path, const string& inflname):
+OutputManager(_path, pnt) {
     // open file to load existing data
     fIn = (inflname.size())?(new TFile(inflname.c_str(),"READ")) : nullptr;
     if(fIn) {
@@ -15,7 +15,7 @@ OutputManager(nm, pnt) {
         printf("Loading data from %s [%.1f hours old]...\n", inflname.c_str(), fileAge(inflname)/3600.);
     } else { // try sub-directory of parent if file not specified
         auto PSS = dynamic_cast<SegmentSaver*>(parent);
-        if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(nm.c_str());
+        if(PSS && PSS->dirIn) dirIn = PSS->dirIn->GetDirectory(path.c_str());
     }
 
     registerWithName(normalization, "normalization", 0);

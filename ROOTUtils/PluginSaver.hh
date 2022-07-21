@@ -14,7 +14,7 @@ using std::chrono::steady_clock;
 class PluginSaver: public SegmentSaver {
 public:
     /// Constructor, optionally with input filename
-    explicit PluginSaver(OutputManager* pnt, const Setting& S, const string& nm = "PluginSaver", const string& inflName = "");
+    explicit PluginSaver(OutputManager* pnt, const Setting& S, const string& _path = "PluginSaver", const string& inflName = "");
     /// Destructor
     ~PluginSaver() { for(auto p: myPlugins) delete p; }
 
@@ -29,6 +29,9 @@ public:
     void scaleData(double s) override;
     /// add histograms from another SegmentSaver of the same type
     void addSegment(const SegmentSaver& S, double sc = 1.) override;
+    /// background subtract
+    void BGSubtract(SegmentSaver& BG) override;
+
 
     /// optional setup at start of data loading
     void startData() override;

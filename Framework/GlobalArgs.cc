@@ -57,10 +57,10 @@ bool wasArgGiven(const string& argname, const string& help) {
     return false;
 }
 
-const string& requiredGlobalArg(const string& argname, const string& help) {
+string requiredGlobalArg(const string& argname, const string& help) {
     QueriedArgs().insert(argname);
 
-    printf("* Required argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
+    printf(TERMFG_YELLOW "*" TERMSGR_RESET " Required argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     auto& v = GlobalArgs()[argname];
     if(v.size() != 1) {
         printf(TERMFG_RED "MISSING!" TERMSGR_RESET "\n");
@@ -74,7 +74,7 @@ const vector<string>& requiredGlobalMulti(const string& argname, const string& h
     QueriedArgs().insert(argname);
 
     auto& v = GlobalArgs()[argname];
-    printf("* Required (at least %zu) argument '" TERMFG_GREEN "-%s"
+    printf(TERMFG_YELLOW "*" TERMSGR_RESET " Required (at least %zu) argument '" TERMFG_GREEN "-%s"
     TERMSGR_RESET " <%s>' ", nmin, argname.c_str(), help.c_str());
     if(v.size() < nmin) {
         printf(TERMFG_RED "MISSING!" TERMSGR_RESET "\n");
@@ -96,10 +96,16 @@ string popGlobalArg(const string& argname) {
     return s;
 }
 
+string optionalGlobalDefault(const string& argname, const string& dflt, const string& help) {
+    string s = dflt;
+    optionalGlobalArg(argname, s, help);
+    return s;
+}
+
 bool optionalGlobalArg(const string& argname, string& v, const string& help) {
     QueriedArgs().insert(argname);
 
-    printf("* Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
+    printf(TERMFG_BLUE "*" TERMSGR_RESET " Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     auto& GA = GlobalArgs();
     auto it = GA.find(argname);
     if(it == GA.end() || !it->second.size()) {
@@ -134,7 +140,7 @@ bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
     bool noarg = it == GA.end() || !it->second.size();
     if(!noarg && it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
 
-    printf("* Optional argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
+    printf(TERMFG_BLUE "*" TERMSGR_RESET " Optional argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
     if(noarg) {
         printf(TERMFG_GREEN "defaulted to ");
     } else {

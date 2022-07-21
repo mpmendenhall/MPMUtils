@@ -18,6 +18,7 @@ TDirectory* OutputManager::getRootOut() {
     if(!rootDir) {
         if(parent) rootDir = parent->getRootOut()->mkdir(path.c_str());
         else {
+            if(!path.size()) throw std::runtime_error("ROOT output path undefined");
             auto fname = fullPath() + ".root";
             makePath(fname, true);
             printf("Writing to '%s'\n", fname.c_str());

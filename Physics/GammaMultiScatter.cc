@@ -14,8 +14,9 @@ GammaScatterSteps::s_Interactions GammaScatterSteps::interactionsAt(double E) {
         return I;
 }
 
-GammaScatterSteps::GammaScatterSteps(double _E0, double _eDens, double _Z, int _npts):
-E0(_E0), eDens(_eDens), Z(_Z), npts(_npts), steps(1) {
+void GammaScatterSteps::calcIxns() {
+    steps.clear();
+    steps.resize(1);
 
     // calculate cross-section, escape fractions over relevant energy range
     s_Interactions I;
@@ -34,18 +35,6 @@ E0(_E0), eDens(_eDens), Z(_Z), npts(_npts), steps(1) {
     Scatter_0 = I.p_Ixn * I.f_Compt;
     Escape_0 = 1 - I.p_Ixn;
 
-    gInteract.SetMinimum(0);
-    gInteract.SetMaximum(1);
-    gInteract.GetYaxis()->SetTitle("interaction probability");
-    gInteract.GetXaxis()->SetTitle("gamma energy [MeV]");
-
-    gCx.SetMinimum(0);
-    gCx.GetXaxis()->SetTitle("gamma energy [MeV]");
-    gCx.GetYaxis()->SetTitle("total Compton scattering cross-section [barn]");
-
-    gPE.SetMinimum(0);
-    gPE.GetXaxis()->SetTitle("gamma energy [MeV]");
-    gPE.GetYaxis()->SetTitle("Photoelectric cross-section [barn]");
     sPE = TSpline3("sPE", &gPE);
 
     // first scattering step from delta-function input
@@ -58,11 +47,31 @@ E0(_E0), eDens(_eDens), Z(_Z), npts(_npts), steps(1) {
         double s = KN_ds_df(Em, f);
         gI.SetPoint(i, f*E0, Scatter_0 * s/(I.s_Compt * E0));
     }
+    gI.SetBit(TGraph::kIsSortedX);
     gI.GetXaxis()->SetTitle("gamma energy [MeV]");
     gI.GetYaxis()->SetTitle("incident spectrum [/gamma/MeV]");
-    gI.SetBit(TGraph::kIsSortedX);
+
     splitIncident();
     Escape = steps.at(0).EscapeSum = steps.at(0).Escape;
+}
+
+GammaScatterSteps::GammaScatterSteps(double _E0, double _eDens, double _Z, int _npts):
+E0(_E0), eDens(_eDens), Z(_Z), npts(_npts) {
+
+    if(eDens) calcIxns();
+
+    gInteract.SetMinimum(0);
+    gInteract.SetMaximum(1);
+    gInteract.GetYaxis()->SetTitle("interaction probability");
+    gInteract.GetXaxis()->SetTitle("gamma energy [MeV]");
+
+    gCx.SetMinimum(0);
+    gCx.GetXaxis()->SetTitle("gamma energy [MeV]");
+    gCx.GetYaxis()->SetTitle("total Compton scattering cross-section [barn]");
+
+    gPE.SetMinimum(0);
+    gPE.GetXaxis()->SetTitle("gamma energy [MeV]");
+    gPE.GetYaxis()->SetTitle("Photoelectric cross-section [barn]");
 }
 
 TGraph GammaScatterSteps::Egamma_to_Ee(const TGraph& g) const {

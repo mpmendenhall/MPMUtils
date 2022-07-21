@@ -10,6 +10,7 @@
 #include "GlobalArgs.hh"
 #include "GetEnv.hh"
 #include "PathUtils.hh"
+#include "TermColor.hh"
 #include <time.h>
 #include <functional>
 #include <stdio.h>
@@ -83,7 +84,7 @@ void AnalysisDB::uploadAnaResult(anarun_id_t run_id, anavar_id_t var_id, const s
 }
 
 void AnaResult::display() const {
-    printf("%s [%s]:\t", name.c_str(), descrip.c_str());
-    if(xval.size()) printf("%s [%s]\n", xval.c_str(), unit.c_str());
-    else printf("%g ~ %g %s\n", val, err, unit.c_str());
+    printf("%s\t'" TERMFG_GREEN "%s" TERMSGR_RESET "':\t", name.c_str(), descrip.c_str());
+    if(xval.size()) printf("%s\t[%s]\n", xval.c_str(), unit.c_str());
+    else printf("%12g ~ %-12g\t[%s]\n", val, err, unit.c_str());
 }

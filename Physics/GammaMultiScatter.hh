@@ -65,11 +65,12 @@ public:
     TGraph eSpectrum(double PE_per_MeV = 0) const;
 
 protected:
+    /// calculate/update interactions calculation on density change
+    void calcIxns();
     /// generate Escape and Scatter curves from Incident
     void splitIncident();
     /// sum in additional escape step
     void sumEscaped();
-
 };
 
 #endif

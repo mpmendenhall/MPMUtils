@@ -16,7 +16,7 @@ using std::set;
 class SegmentSaver: public OutputManager {
 public:
     /// constructor, optionally with input filename
-    explicit SegmentSaver(OutputManager* pnt, const string& nm = "SegmentSaver", const string& inflName = "");
+    explicit SegmentSaver(OutputManager* pnt, const string& _path = "SegmentSaver", const string& inflName = "");
     /// destructor
     virtual ~SegmentSaver();
 
@@ -105,6 +105,8 @@ public:
 
     /// add histograms, cumulatives from another SegmentSaver of the same type
     virtual void addSegment(const SegmentSaver& S, double sc = 1.);
+    /// background subtract
+    virtual void BGSubtract(SegmentSaver& BG) { BGData = &BG; addSegment(BG,-1.0); }
     /// check if this is equivalent layout to another SegmentSaver
     virtual bool isEquivalent(const SegmentSaver& S, bool throwit = false) const;
     /// statistical test of histogram similarity
@@ -114,6 +116,7 @@ public:
     TFile* fIn = nullptr;               ///< input file to read in histograms from
     TDirectory* dirIn = nullptr;        ///< particular sub-directory for reading histograms
     TVectorD* normalization = nullptr;  ///< normalization information; meaning defined in subclasses
+    SegmentSaver* BGData = nullptr;     ///< optional subtracted background
 
     double tSetup = 0;          ///< performance profiling: time to run constructor
     double tProcess = 0;        ///< permormance profiling: time to process data

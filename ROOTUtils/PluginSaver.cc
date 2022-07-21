@@ -2,10 +2,11 @@
 // -- Michael P. Mendenhall, 2019
 
 #include "PluginSaver.hh"
+#include "TermColor.hh"
 #include "to_str.hh"
 
-PluginSaver::PluginSaver(OutputManager* pnt, const Setting& S, const string& nm, const string& inflName):
-SegmentSaver(pnt, nm, inflName) {
+PluginSaver::PluginSaver(OutputManager* pnt, const Setting& S, const string& _path, const string& inflName):
+SegmentSaver(pnt, _path, inflName) {
     if(S.getLength() && !fIn) {
         setMeta("settingname", S.getPath());
         setMeta("configstr", cfgString(lookupConfig(S)));
@@ -175,11 +176,20 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
     }
 }
 
+void PluginSaver::BGSubtract(SegmentSaver& BG) {
+    SegmentSaver::BGSubtract(BG);
+
+    auto BGp = dynamic_cast<PluginSaver*>(&BG);
+    if(!BGp) return;
+
+    for(auto P: myPlugins) P->BGData = BGp->getPlugin(P->path);
+}
+
 void PluginSaver::calculateResults() {
     SegmentSaver::calculateResults();
     for(auto P: myPlugins) {
         auto t0 = steady_clock::now();
-        printf("\n## PLUGIN %s CalculateResults ##\n\n", P->path.c_str());
+        printf("\n" TERMFG_BLUE "## " TERMFG_GREEN "%s CalculateResults" TERMFG_BLUE " ##" TERMSGR_RESET "\n\n", P->path.c_str());
         P->calculateResults();
         P->tCalc += std::chrono::duration<double>(steady_clock::now()-t0).count();
     }
