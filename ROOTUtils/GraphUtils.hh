@@ -67,8 +67,14 @@ void scale_times_bin_center(TH1* f);
 /// invert a TGraph
 TGraph invertGraph(const TGraph& g);
 
-/// combine a list of TGraphs
-TGraph* combine_graphs(const vector<TGraph*>& gs);
+/// Assert that graph is sorted
+inline void assertSorted(const TGraph& g) {
+    if(g.GetN() && !g.TestBit(TGraph::kIsSortedX))
+        throw std::logic_error("Unexpected unsorted TGraph");
+}
+
+/// sum graphs (must be x-ordered!)
+TGraph sumGraphs(const TGraph& g0, const TGraph& g1);
 
 /// merge a list of TGrapherrors into a larger TGraphError, offsetting x values by given offsets
 TGraphErrors* merge_plots(const vector<TGraphErrors*>& pin, const vector<int>& toffset);

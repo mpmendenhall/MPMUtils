@@ -13,7 +13,7 @@ double _eval_smeared(double x, void* p) {
 }
 
 gaussian_smearing_integral::gaussian_smearing_integral(double _n):
-_integrator_info(100), n_per_x(_n) {
+integrator_wrapper(100), n_per_x(_n) {
     f.params = this;
     f.function = &_eval_smeared;
 }

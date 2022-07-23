@@ -7,7 +7,7 @@
 #include "TGraphIntegrator.hh"
 
 /// Calculator for performing gaussian sqrt(n) smearing calculation
-class gaussian_smearing_integral: protected _integrator_info {
+class gaussian_smearing_integral: protected integrator_wrapper {
 public:
     /// Constructor
     explicit gaussian_smearing_integral(double _n = 1.);

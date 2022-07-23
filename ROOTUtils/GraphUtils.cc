@@ -212,19 +212,39 @@ TGraph invertGraph(const TGraph& g) {
     return gi;
 }
 
-TGraph* combine_graphs(const vector<TGraph*>& gs) {
-    unsigned int npts = 0;
-    for(unsigned int n=0; n<gs.size(); n++)
-        npts += gs[n]->GetN();
-    TGraph* g = new TGraph(npts);
-    npts = 0;
-    double x,y;
-    for(unsigned int n=0; n<gs.size(); n++) {
-        for(int n2 = 0; n2 < gs[n]->GetN(); n2++) {
-            gs[n]->GetPoint(n2,x,y);
-            g->SetPoint(npts++,x,y);
-        }
+TGraph sumGraphs(const TGraph& g0, const TGraph& g1) {
+    auto n0 = g0.GetN();
+    if(!n0) return g1;
+    auto n1 = g1.GetN();
+    if(!n1) return g0;
+
+    assertSorted(g0);
+    assertSorted(g1);
+
+    auto X0 = g0.GetX();
+    auto X1 = g1.GetX();
+    auto Y0 = g0.GetY();
+    auto Y1 = g1.GetY();
+
+    TGraph g;
+
+    // initial non-overlapping range, including last point if exact overlap at ends
+    int i=0, i0=0, i1=0;
+    /**/ if(X0[0] < X1[0]) while(i0 < n0 && X0[i0] <= X1[0]) { g.SetPoint(++i, X0[i0], Y0[i0]); ++i0; }
+    else if(X1[0] < X0[0]) while(i1 < n1 && X1[i1] <= X0[0]) { g.SetPoint(++i, X1[i1], Y1[i1]); ++i1; }
+
+    // overlapping range
+    while(i0 < n0 && i1 < n1) {
+        if(X0[i0] == X1[i1])      { g.SetPoint(++i, X0[i0], Y0[i0] + Y1[i1]);   ++i0;  ++i1; }
+        else if(X0[i0] < X1[i1])  { g.SetPoint(++i, X0[i0], Y0[i0] + g1.Eval(X0[i0])); ++i0; }
+        else                      { g.SetPoint(++i, X1[i1], Y1[i1] + g0.Eval(X1[i1])); ++i1; }
     }
+
+    // final non-overlapping range
+    while(i0 < n0) { g.SetPoint(++i, X0[i0], Y0[i0]); ++i0; }
+    while(i1 < n1) { g.SetPoint(++i, X1[i1], Y1[i1]); ++i1; }
+
+    g.SetBit(TGraph::kIsSortedX);
     return g;
 }
 

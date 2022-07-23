@@ -27,10 +27,16 @@ inline double gamma_escatter_f(double Ein_per_m_e, double cth) { return 1/(1 + (
 inline double gamma_escatter_cth(double Ein_per_m_e, double f) { return 1 - (1/f-1)/Ein_per_m_e; }
 /// Compton scattering minimum f = E_out / E_in (= maximum 1-f transferred to electron)
 inline double gamma_escatter_fmin(double Ein_per_m_e) { return 1/(1 + 2*Ein_per_m_e); }
+/// Minimum gamma energy after Compton scattering [MeV]
+inline double gamma_scatter_Emin(double Eg) { return gamma_escatter_fmin(Eg/m_e)*Eg; }
+/// Maximum Compton-scattered electron from gamma [MeV]
+inline double compton_edge_e_for_gamma(double Eg) { return (1 - gamma_escatter_fmin(Eg/m_e))*Eg; }
 /// Compton scattering maximimum E_in / m_e that can scatter down to E_out
 inline double gamma_escatter_Emax_per_m_e(double Eout_per_m_e) {
     return Eout_per_m_e < 0.5? Eout_per_m_e/(1 - 2*Eout_per_m_e) : std::numeric_limits<double>::infinity();
 }
+/// Minimum energy gamma capable of producing Compton recoil electron energy [MeV]
+inline double gamma_Emin_for_Compton(double Ec) { return 0.5*(Ec + sqrt(Ec*Ec + 2*m_e*Ec)); }
 
 /// Photoelectric cross-section approximation for E << m_e (Davisson 1965)
 inline double photoelectric_cx_1965(double E_per_m_e, double Z = 6) {

@@ -3,6 +3,7 @@
 #include "OutputManager.hh"
 #include "PathUtils.hh"
 #include "to_str.hh"
+#include "TermColor.hh"
 #include <TFile.h>
 #include <TStyle.h>
 
@@ -29,13 +30,13 @@ TDirectory* OutputManager::getRootOut() {
 }
 
 string OutputManager::writeROOT() {
-    printf("\n--------- Building output .root file... ----------\n");
+    if(!parent) printf(TERMFG_BLUE "\n--------- Building output .root file... ----------\n");
     writeItems(getRootOut());
     if(!parent) {
         delete rootDir;
         rootDir = nullptr;
     }
-    printf("---------          Done.          ----------\n");
+    if(!parent) printf(TERMFG_BLUE   "---------   ---  -    Done.   -   ---   ----------" TERMSGR_RESET "\n\n");
     return path + ".root";
 }
 
