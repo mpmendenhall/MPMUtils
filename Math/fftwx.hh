@@ -9,6 +9,7 @@
 #include <limits>      // for std::numeric_limits
 #include <type_traits> // for std::is_same
 #include <mutex>
+#include "fixed_vector.hh"
 
 extern std::mutex fftw_planner_mutex;
 #define FFTWLOCK std::lock_guard<std::mutex> _lk(fftw_planner_mutex)
@@ -187,10 +188,10 @@ struct fftwx_complex_allocator {
 
 /// FFTW-allocated real data
 template <typename T>
-using fftw_real_vec = vector<T, fftwx_real_allocator<T>>;
+using fftw_real_vec = fixed_vector<T, fftwx_real_allocator<T>>;
 
 /// FFTW-allocated complex data
 template <typename T>
-using fftw_cplx_vec = vector<typename fftwx<T>::scplx_t, fftwx_complex_allocator<T>>;
+using fftw_cplx_vec = fixed_vector<typename fftwx<T>::scplx_t, fftwx_complex_allocator<T>>;
 
 #endif

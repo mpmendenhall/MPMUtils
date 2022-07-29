@@ -26,10 +26,10 @@
 
 \usepackage[T1]{fontenc} % properly copyable underscore characters
 \usepackage[usenames]{xcolor} % colored text options
+\usepackage{color}
 
 % code listings
 \usepackage{listings}
-\usepackage{color}
 \lstset{ %
   %basicstyle=\tiny,
   language=python,
@@ -244,36 +244,6 @@ which will bundle the 100 initial nominally-60-second jobs into groups of 10$\cd
 Along with the \cd{status} and \cd{cycle} commands above,
     the output of each running job is directed to a logfile specified in the DB.
 Default logfiles are placed in \cd{\$JOBSOUT/<jobname>/log\_<jobnum>.txt}.
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\section{Tutorial examples}
-
-
-%Add 20 test jobs to default DB, with default queue/account settings:
-
-%\verb#./JobManager.py --name mytest --test 20#
-
-%Show JobsDB jobs table contents:
-
-%\verb#sqlite3 ~/jobs/jdb.sql 'select * from jobs;'#
-
-%Launch the test jobs (setting simultaneous-submissions limit of 200):
-
-%\verb#./JobManager.py --launch --limit 200#
-
-%Wait for completion:
-
-%\verb#./JobManager.py --cycle 30#
-
-%Show logfile for one job:
-
-%\verb#cat $HOME/jobs/mytest/log_3.txt#
-
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

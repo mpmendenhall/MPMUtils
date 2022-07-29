@@ -2,6 +2,7 @@
 
 #include "FFTW_Convolver.hh"
 #include "ConfigFactory.hh"
+#include "TermColor.hh"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,17 +16,15 @@ typedef double calcs_t;      // 64 bit; min_exponent = -1021
 // std::complex type
 typedef fftwx<calcs_t>::scplx_t cplx_t;
 
-/// print real vector
+/// print real or complex
+void printx(calcs_t x) { printf("%5g", x); }
+/// print real or complex
+void printx(cplx_t x) {  printf("(%5g %+5gi)", x.real(), x.imag()); }
+
+/// print real or complex vector
 template<class V>
 void display(const V& v) {
-    for(auto x: v) printf("\t%5g", (double)x);
-    printf("\n");
-}
-
-/// print complex vector
-template<class V>
-void cdisplay(const V& v) {
-    for(auto& x: v) printf("  (%5g %+5gi)", (double)x.real(), (double)x.imag());
+    for(auto x: v) { printf(" "); printx(x); }
     printf("\n");
 }
 
@@ -39,98 +38,31 @@ void test_roundtrip(const vector<calcs_t>& v) {
     printf(" -> "); display(W.v_x);
 }
 
-/// R-to-C using C-to-C
-void show_R_C2C(const vector<calcs_t>& v) {
-    printf("DFT of "); display(v);
-    auto& P = DFTWorkspace<calcs_t>::get_ffter(v.size(), true);
+template<class Plan>
+FFTWorkspace<Plan>& show_xform(const vector<calcs_t>& v) {
+    display(v);
+    auto& P = FFTWorkspace<Plan>::get_ffter(v.size(), true);
     P.v_x.assign(v.begin(), v.end());
     P.execute();
-    printf("is"); cdisplay(P.v_k);
+    printf("is"); display(P.v_k);
+    return P;
+}
+
+/// R-to-C using C-to-C
+void show_R_C2C(const vector<calcs_t>& v) {
+    printf("DFT of "); show_xform<DFTPlan<calcs_t>>(v);
 }
 
 /// Show real-to-complex DFT
-void show_R2C(const vector<calcs_t>& v) {
-    printf("R2C of "); display(v);
-    auto& P = R2CWorkspace<calcs_t>::get_ffter(v.size(), true);
-    P.v_x.assign(v.begin(), v.end());
-    P.execute();
-    printf("is"); cdisplay(P.v_k);
+FFTWorkspace<R2CPlan<calcs_t>>& show_R2C(const vector<calcs_t>& v) {
+    printf("R2C of "); return show_xform<R2CPlan<calcs_t>>(v);
 }
 
 /// Real-to-real symmetric FFT
 template<class RR>
 void show_R2R(const vector<calcs_t>& v) {
-    printf("R2R of "); display(v);
-    FFTWorkspace<RR> P(v.size(), true);
-    P.v_x.assign(v.begin(), v.end());
-    P.execute();
-    printf("is"); display(P.v_k);
+    printf("R2R of "); show_xform<RR>(v);
 }
-
-/// symmetrize around center element abcd -> abc d cb
-template<class V>
-V symmetrize_o(const V& v) {
-    V v2(v);
-    for(int i = int(v.size()-2); i > 0; --i) v2.push_back(v[i]);
-    return v2;
-}
-
-/// mirror-symmetrize abc -> abc cba
-template<class V>
-V symmetrize_e(const V& v) {
-    V v2(v);
-    for(int i = int(v.size()-1); i >= 0; --i) v2.push_back(v[i]);
-    return v2;
-}
-
-/// zero-interleave (half-samples)
-template<class V>
-V interzero(const V& v) {
-    V v2;
-    for(auto x: v) { v2.push_back(0); v2.push_back(x); }
-    return v2;
-}
-
-/// antisymmetrize abc -> abc BCA
-template<class V>
-V asymmetrize_e(const V& v) {
-    V v2(v);
-    for(int i = int(v.size()-1); i >= 0; --i) v2.push_back(-v[i]);
-    return v2;
-}
-
-/// antisymmetrize abc -> abc 0 CBA [0]
-template<class V>
-V asymmetrize_o(const V& v, bool fzero = false) {
-    V v2;
-    if(fzero) v2.push_back(0);
-    for(auto x: v) v2.push_back(x);
-    v2.push_back(0);
-    for(int i = int(v.size()-1); i >= 0; --i) v2.push_back(-v[i]);
-    return v2;
-}
-
-/// duplicate negated abc -> abc ABC
-template<class V>
-V dupneg(const V& v) {
-    V v2(v);
-    for(auto x: v) v2.push_back(-x);
-    return v2;
-}
-
-/// DST-III symmetry abc -> 0 abcba 0 ABCBA
-template<class V>
-V dstIIIsymm(const V& v) {
-    V v2;
-    v2.push_back(0);
-    for(auto x: v) v2.push_back(x);
-    for(int i = int(v.size()-2); i >= 0; --i) v2.push_back(v[i]);
-    return dupneg(v2);
-}
-
-/// DST-IV symmetry
-template<class V>
-V dstIVsymm(const V& v) { return dupneg(interzero(symmetrize_e(v))); }
 
 template<class V>
 void test_roundtrips(const V& v) {
@@ -146,6 +78,44 @@ void test_roundtrips(const V& v) {
     test_roundtrip<DST_IV_Plan<calcs_t>>(v);
 }
 
+void yprint(const char* s) {
+    printf("\n" TERMFG_YELLOW "%s" TERMSGR_RESET "\n\n", s);
+}
+
+/// Apply RC-style time constant tau (sample spacings) to input vector
+template<class V>
+void ZFilter(V& v, double tau, double poles = 1) {
+    // forward calculation, symmetrizing v:
+    auto& P = IFFTWorkspace<DCT_I_Plan<calcs_t>>::get_ffter(v.size(), true);
+    P.v_x = v;
+    P.execute();
+
+    // convert to complex-valued k-space
+    const auto N = v.size();
+    auto& Fi = IFFTWorkspace<R2CPlan<calcs_t>>::get_iffter(2*N - 2);
+    Fi.v_k = P.v_k;
+
+    // apply filter response
+    int k = 0;
+    for(auto& c: Fi.v_k) {
+        auto w = k*2*M_PI/N;
+        cplx_t u(1. - w*w*tau, 0);
+        c *= std::pow(u, poles);
+        k++;
+    }
+    // return to real space; truncate to initial non-symmetrized region
+    Fi.etucexe();
+
+    v.assign(Fi.v_x.begin(), Fi.v_x.end());
+
+    //k = 0;
+    //for(auto& x: v) x = Fi.v_x[k++];
+}
+
+
+#include <TGraph.h>
+#include <TPad.h>
+
 REGISTER_EXECLET(testFFTW) {
     printf("\nsizeof(calcs_t) = %zu, min_exponent = %i\n\n", sizeof(calcs_t),
            std::numeric_limits<calcs_t>::min_exponent);
@@ -160,7 +130,7 @@ REGISTER_EXECLET(testFFTW) {
 
     test_roundtrips(v3);
 
-    printf("\n--- Real DFT as Hermitian-symmetric case of DFT ---\n\n");
+    yprint("--- Real DFT as Hermitian-symmetric case of DFT ---");
 
     show_R_C2C(v4);
     show_R2C(v4);
@@ -170,53 +140,53 @@ REGISTER_EXECLET(testFFTW) {
     show_R_C2C(v5);
     show_R2C(v5);
 
-    printf("\n\n--- DCT-I (a bcd e dcb) : k-space real, symmetric ---\n\n");
+    yprint("--- DCT-I (a bcd e dcb) : k-space real, symmetric ---");
 
     show_R2C(symmetrize_o(v5));
-    show_R2R<DCT_I_Plan<calcs_t>>(v5);
+    printf("DCT I of "); show_xform<DCT_I_Plan<calcs_t>>(v5);
 
     printf("\n--------------------\n\n");
 
     show_R2C(symmetrize_o(v6));
-    show_R2R<DCT_I_Plan<calcs_t>>(v6);
+    printf("DCT I of "); show_xform<DCT_I_Plan<calcs_t>>(v6);
 
-    printf("\n--- DCT-II (0 a 0 b 0 c 0 c 0 b 0 a) : half-sample interleaving ---\n\n");
+    yprint("--- DCT-II (0 a 0 b 0 c 0 c 0 b 0 a) : half-sample interleaving ---");
 
     show_R2C(interzero(symmetrize_e(v3)));
-    show_R2R<DCT_II_Plan<calcs_t>>(v3);
+    printf("DCT II of "); show_xform<DCT_II_Plan<calcs_t>>(v3);
 
-    printf("\n--- DCT-III (abc 0 CB A BC 0 cb): factor-of-0.5 from R2C ---\n\n");
+    yprint("--- DCT-III (abc 0 CB A BC 0 cb): factor-of-0.5 from R2C ---");
 
     show_R2C(symmetrize_o(asymmetrize_o(v3)));
-    show_R2R<DCT_III_Plan<calcs_t>>(v3);
+    printf("DCT III of "); show_xform<DCT_III_Plan<calcs_t>>(v3);
 
-    printf("\n--- DCT-IV (0 a 0 b 0 c 0 C 0 B 0 A 0 A 0 B 0 C 0 c 0 b 0 a): factor-of-0.5 from R2C ---\n\n");
+    yprint("--- DCT-IV (0 a 0 b 0 c 0 C 0 B 0 A 0 A 0 B 0 C 0 c 0 b 0 a): factor-of-0.5 from R2C ---");
 
     show_R2C(interzero(symmetrize_e(asymmetrize_e(v3))));
-    show_R2R<DCT_IV_Plan<calcs_t>>(v3);
+    printf("DCT IV of "); show_xform<DCT_IV_Plan<calcs_t>>(v3);
 
-    printf("\n\n--- DST-I (0 abc 0 CBA) : k-space imaginary, antisymmetric ---\n\n");
+    yprint("--- DST-I (0 abc 0 CBA) : k-space imaginary, antisymmetric ---");
 
     show_R2C(asymmetrize_o(v5, true));
-    show_R2R<DST_I_Plan<calcs_t>>(v5);
+    printf("DST I of "); show_xform<DST_I_Plan<calcs_t>>(v5);
 
-    printf("\n\n--- DST-II (0 a 0 b 0 c 0 C 0 B 0 A) ---\n\n");
+    yprint("--- DST-II (0 a 0 b 0 c 0 C 0 B 0 A) ---");
 
     show_R2C(interzero(asymmetrize_e(v3)));
-    show_R2R<DST_II_Plan<calcs_t>>(v3);
+    printf("DST II of "); show_xform<DST_II_Plan<calcs_t>>(v3);
 
-    printf("\n\n--- DST-III (0 abcba 0 ABCBA) : k-space 0-interleaved, factor of -0.5 ---\n\n");
+    yprint("--- DST-III (0 abcba 0 ABCBA) : k-space 0-interleaved, factor of -0.5 ---");
 
     show_R2C(dstIIIsymm(v3));
-    show_R2R<DST_III_Plan<calcs_t>>(v3);
+    printf("DST III of "); show_xform<DST_III_Plan<calcs_t>>(v3);
 
-    printf("\n\n--- DST-IV ---\n\n");
+    yprint("--- DST-IV ---");
 
     show_R2C(dstIVsymm(v3));
-    show_R2R<DST_IV_Plan<calcs_t>>(v3);
+    printf("DST IV of "); show_xform<DST_IV_Plan<calcs_t>>(v3);
 
 
-    printf("\n\n--- Convolutions ---\n\n");
+    yprint("--- Convolutions ---");
 
     GaussConvolverFactory<calcs_t> GCF(0.5);
     GaussDerivFactory<calcs_t> GDF(0.5);
@@ -232,4 +202,26 @@ REGISTER_EXECLET(testFFTW) {
         GDF.convolve(delta2);
         display(delta2);
     }
+
+    yprint("--- RC filter ---");
+
+    size_t N = 128;
+    vector<calcs_t> d(N); d[N/4] = 1;
+    auto dd = d;
+    ZFilter(dd, 16, 1);
+
+    auto dx = dd;
+    N = dd.size();
+    while(N--) dx[N] = N;
+
+    //display(d);
+    //display(dd);
+
+    //TGraph g1(d.size(), dx.data(), d.data());
+    TGraph g2(dd.size(), dx.data(), dd.data());
+
+    g2.SetLineColor(2);
+    g2.Draw("AL");
+    //g1.Draw("L");
+    gPad->Print("Filtered.pdf");
 }

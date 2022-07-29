@@ -14,10 +14,12 @@ complex entries, symmetric by complex conjugate around center.
 Example: [N = n = 4, even]
 a b c d  < x-space input
 M u V u* < k-space: N//2 + 1 = 3 unique entries (M real, u complex, V == V* real)
+0 1 2    < k-space outputs
 
 Example: [N = n = 5, odd]
 a b c d e   < x-space input
 M u v v*u*  < k-space: N//2 + 1 = 3 unique entries (M real, u,v complex)
+0 1 2       < k-space outpus
 
 -------------------
 - Additional symmetries reflected in k-space results
@@ -91,11 +93,81 @@ DST-IV [RODFT11] N = 4*n, odd around j=-0.5 and even around j=n-0.5
 #define FFTW_CONVOLVER_H
 
 #include "fftwx.hh"
-#include "VectorUtils.hh"
 
 #include <cmath>
 #include <map>
 using std::map;
+
+
+//-----------------------------------------
+//----- Symmetrizing helper utilities -----
+//-----------------------------------------
+
+/// symmetrize around center element abcd -> abc d cb
+template<class V>
+V symmetrize_o(const V& v) {
+    V v2(v);
+    for(int i = int(v.size()-2); i > 0; --i) v2.push_back(v[i]);
+    return v2;
+}
+
+/// mirror-symmetrize abc -> abc cba
+template<class V>
+V symmetrize_e(const V& v) {
+    V v2(v);
+    for(int i = int(v.size()-1); i >= 0; --i) v2.push_back(v[i]);
+    return v2;
+}
+
+/// zero-interleave (half-samples)
+template<class V>
+V interzero(const V& v) {
+    V v2;
+    for(auto x: v) { v2.push_back(0); v2.push_back(x); }
+    return v2;
+}
+
+/// antisymmetrize abc -> abc BCA
+template<class V>
+V asymmetrize_e(const V& v) {
+    V v2(v);
+    for(int i = int(v.size()-1); i >= 0; --i) v2.push_back(-v[i]);
+    return v2;
+}
+
+/// antisymmetrize abc -> abc 0 CBA [0]
+template<class V>
+V asymmetrize_o(const V& v, bool fzero = false) {
+    V v2;
+    if(fzero) v2.push_back(0);
+    for(auto x: v) v2.push_back(x);
+    v2.push_back(0);
+    for(int i = int(v.size()-1); i >= 0; --i) v2.push_back(-v[i]);
+    return v2;
+}
+
+/// duplicate negated abc -> abc ABC
+template<class V>
+V dupneg(const V& v) {
+    V v2(v);
+    for(auto x: v) v2.push_back(-x);
+    return v2;
+}
+
+/// DST-III symmetry abc -> 0 abcba 0 ABCBA
+template<class V>
+V dstIIIsymm(const V& v) {
+    V v2;
+    v2.push_back(0);
+    for(auto x: v) v2.push_back(x);
+    for(int i = int(v.size()-2); i >= 0; --i) v2.push_back(v[i]);
+    return dupneg(v2);
+}
+
+/// DST-IV symmetry
+template<class V>
+V dstIVsymm(const V& v) { return dupneg(interzero(symmetrize_e(v))); }
+
 
 //-----------------
 //-----------------
@@ -306,7 +378,7 @@ public:
 //----------------------
 //----------------------
 
-/// Workspace wrapper for plan
+/// Workspace wrapper for plan, plus cache of pre-calculated workspaces
 template<class Plan>
 class FFTWorkspace: public Plan {
 public:
@@ -319,37 +391,13 @@ public:
                        (typename Plan::xspace_t*)v_x.data(),
                        (typename Plan::kspace_t*)v_k.data());
     }
-};
-
-/// 1D (complex-to-complex) Discrete Fourier Transform plan + workspace
-template<typename T = double>
-class DFTWorkspace: public FFTWorkspace<DFTPlan<T>> {
-public:
-    /// inherit constructor
-    using FFTWorkspace<DFTPlan<T>>::FFTWorkspace;
 
     /// get precalculated FFT workspace for dimension m
-    static DFTWorkspace& get_ffter(size_t m, bool fwd) {
-        static thread_local map<size_t, DFTWorkspace*> ffters[2];
+    static FFTWorkspace& get_ffter(size_t m, bool fwd) {
+        static thread_local map<size_t, FFTWorkspace*> ffters[2];
         auto it = ffters[fwd].find(m);
         if(it != ffters[fwd].end()) return *(it->second);
-        return *(ffters[fwd][m] = new DFTWorkspace(m,fwd));
-    }
-};
-
-/// 1D (real-to-complex) Discrete Fourier Transform plan + workspace
-template<typename T = double>
-class R2CWorkspace: public FFTWorkspace<R2CPlan<T>> {
-public:
-    /// inherit constructor
-    using FFTWorkspace<R2CPlan<T>>::FFTWorkspace;
-
-    /// get precalculated FFT workspace for dimension m
-    static R2CWorkspace& get_ffter(size_t m, bool fwd) {
-        static thread_local map<size_t, R2CWorkspace*> ffters[2];
-        auto it = ffters[fwd].find(m);
-        if(it != ffters[fwd].end()) return *(it->second);
-        return *(ffters[fwd][m] = new R2CWorkspace(m,fwd));
+        return *(ffters[fwd][m] = new FFTWorkspace(m,fwd));
     }
 };
 
@@ -367,14 +415,19 @@ public:
     /// execute reverse, with normalization
     void etucexe() {
         p_rev.execute();
-        divide(this->v_x, this->Nlog);
+        for(auto& x: this->v_x) x /= this->Nlog;
+    }
+
+    /// get precalculated FFT workspace pair
+    static IFFTWorkspace& get_iffter(size_t m) {
+        static thread_local map<size_t, IFFTWorkspace*> iffters;
+        auto it = iffters.find(m);
+        if(it != iffters.end()) return *(it->second);
+        return *(iffters[m] = new IFFTWorkspace(m));
     }
 
     Plan p_rev; ///< reverse plan
 };
-
-
-
 
 //-----------------------------
 //-----------------------------
@@ -432,7 +485,7 @@ public:
         if(k.size() != kernPlan.M) throw std::logic_error("Mismatched convolution kernel size");
         load(k);
         kernPlan.execute();
-        divide(this->v_k, kernPlan.Nlog);
+        for(auto& x: this->v_k) x /= kernPlan.Nlog;
     }
 
     /// fetch real-space result
@@ -535,7 +588,7 @@ protected:
         if(kdata.count(i)) return;
         auto& C = getConvolver(i);
         C.calcKkern(this->calcKernel(i));
-        kdata[i].assign(C.v_k.begin(), C.v_k.begin() + C.kernPlan.M);
+        kdata.emplace(i, C.v_k);
     }
 
     map<size_t, typename Convolver_t::kvec_t> kdata;  ///< cached kspace kernels for each input size
@@ -558,7 +611,7 @@ protected:
             v[n] = exp(-n*n/(2*r*r));
             nrm += (n? 2 : 1)*v[n];
         }
-        divide(v, nrm);
+        for(auto& x: v) x /= nrm;
         return v;
     }
 };
