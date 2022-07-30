@@ -82,40 +82,6 @@ void yprint(const char* s) {
     printf("\n" TERMFG_YELLOW "%s" TERMSGR_RESET "\n\n", s);
 }
 
-/// Apply RC-style time constant tau (sample spacings) to input vector
-template<class V>
-void ZFilter(V& v, double tau, double poles = 1) {
-    // forward calculation, symmetrizing v:
-    auto& P = IFFTWorkspace<DCT_I_Plan<calcs_t>>::get_ffter(v.size(), true);
-    P.v_x = v;
-    P.execute();
-
-    // convert to complex-valued k-space
-    const auto N = v.size();
-    auto& Fi = IFFTWorkspace<R2CPlan<calcs_t>>::get_iffter(2*N - 2);
-    Fi.v_k = P.v_k;
-
-    // apply filter response
-    int k = 0;
-    for(auto& c: Fi.v_k) {
-        auto w = k*2*M_PI/N;
-        cplx_t u(1. - w*w*tau, 0);
-        c *= std::pow(u, poles);
-        k++;
-    }
-    // return to real space; truncate to initial non-symmetrized region
-    Fi.etucexe();
-
-    v.assign(Fi.v_x.begin(), Fi.v_x.end());
-
-    //k = 0;
-    //for(auto& x: v) x = Fi.v_x[k++];
-}
-
-
-#include <TGraph.h>
-#include <TPad.h>
-
 REGISTER_EXECLET(testFFTW) {
     printf("\nsizeof(calcs_t) = %zu, min_exponent = %i\n\n", sizeof(calcs_t),
            std::numeric_limits<calcs_t>::min_exponent);
@@ -202,26 +168,4 @@ REGISTER_EXECLET(testFFTW) {
         GDF.convolve(delta2);
         display(delta2);
     }
-
-    yprint("--- RC filter ---");
-
-    size_t N = 128;
-    vector<calcs_t> d(N); d[N/4] = 1;
-    auto dd = d;
-    ZFilter(dd, 16, 1);
-
-    auto dx = dd;
-    N = dd.size();
-    while(N--) dx[N] = N;
-
-    //display(d);
-    //display(dd);
-
-    //TGraph g1(d.size(), dx.data(), d.data());
-    TGraph g2(dd.size(), dx.data(), dd.data());
-
-    g2.SetLineColor(2);
-    g2.Draw("AL");
-    //g1.Draw("L");
-    gPad->Print("Filtered.pdf");
 }

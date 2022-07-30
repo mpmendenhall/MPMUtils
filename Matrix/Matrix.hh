@@ -183,7 +183,7 @@ ostream& operator<<(ostream& o, const Matrix<M,N,T>& A) {
 
 /// unit/identity value for type
 template<typename T>
-inline T unit() { return 1; }
+inline T unit() { return T{1}; }
 
 template<size_t M, size_t N, typename T>
 Matrix<M,N,T> Matrix<M,N,T>::random() {
@@ -260,7 +260,7 @@ const Vec<N,T> Matrix<M,N,T>::rMultiply(const Vec<M,T>& v) const {
 
 /// Compare magnitudes |a| < |b| --- override for fancier types
 template<typename T>
-bool abs_lt(const T& a, const T& b) { return (a<0? -a:a) < (b<0? -b:b); }
+bool mag_lt(const T& a, const T& b) { return (a<0? -a:a) < (b<0? -b:b); }
 
 /// LUP decomposition of A -> PA = LU, where L=1 on diagonal
 template<size_t N, typename T>
@@ -284,11 +284,11 @@ public:
             // determine maximum-magnitude row in current column
             T mm{};
             auto imax = i;
-            for(size_t k = i; k < N; k++) if(abs_lt(mm,(*this)(k,i))) { mm = (*this)(k,i); imax = k; }
+            for(size_t k = i; k < N; k++) if(mag_lt(mm,(*this)(k,i))) { mm = (*this)(k,i); imax = k; }
             if(!i) cMin = mm;
-            else if(abs_lt(mm, cMin)) cMin = mm;
+            else if(mag_lt(mm, cMin)) cMin = mm;
             // singular?
-            if(!mm) { nP = -1; return; }
+            if(mm == T{}) { nP = -1; return; }
 
             // pivoting as needed
             if(imax != i) {

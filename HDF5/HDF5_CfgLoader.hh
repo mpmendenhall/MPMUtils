@@ -11,8 +11,8 @@ template<typename T>
 class HDF5_CfgLoader: public HDF5_Table_Cache<T>, public CfgLoader<T> {
 public:
     /// Constructor
-    explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", bool doMakeNext = true, const string& tname = "", int v = 0):
-    XMLProvider("HDF5_CfgLoader"), HDF5_Table_Cache<T>(tname, v), CfgLoader<T>(S, farg, doMakeNext) { }
+    explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", const string& tname = "", int v = 0):
+    XMLProvider("HDF5_CfgLoader"), HDF5_Table_Cache<T>(tname, v), CfgLoader<T>(S, farg) { }
 };
 
 /// Write generic data to HDF5 file
