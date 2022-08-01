@@ -7,15 +7,12 @@ using std::vector;
 #include <array>
 using std::array;
 
-/// Network of linear 2-terminal devices with N free nodes
-template<size_t N, typename _val_t>
-class ZCircuit {
+/// Circuit network base class
+template<typename _val_t>
+class ZCircuit_Base {
 public:
-    static constexpr size_t NNodes = N; ///< number of free nodes
-    typedef _val_t val_t;               ///< calculation (complex, maybe symbolic) value type
-    typedef size_t nodeidx_t;           /// node identifier index
-    typedef Matrix<N,N,val_t> Mat_t;    ///< circuit equations matrix
-    typedef Matrix<N,1,val_t> Vec_t;    ///< circuit equations RHS vector
+    typedef _val_t val_t;  ///< calculation (complex, maybe symbolic) value type
+    typedef size_t nodeidx_t;   /// node identifier index
 
     /// linear link between nodes in circuit
     struct link_t {
@@ -23,11 +20,32 @@ public:
         nodeidx_t i1;       ///< device end terminal
         val_t Z;            ///< impedance of device
     };
-    vector<link_t> links;               ///< links between nodes
+    vector<link_t> links;   ///< links between nodes
+    vector<val_t> Vnodes;   ///< additional constrained voltage points, indexed N + i
+
+    /// Helper to add link
+    void addLink(nodeidx_t i0, nodeidx_t i1, val_t Z = {}) {
+        if(i0 > i1) std::swap(i0, i1);
+        links.push_back({i0, i1, Z});
+    }
+};
+
+/// Network of linear 2-terminal devices with N free nodes
+template<size_t N, typename _val_t>
+class ZCircuit: virtual public ZCircuit_Base<_val_t> {
+public:
+    typedef ZCircuit_Base<_val_t> ZC_t;
+    using typename ZC_t::val_t;
+    using typename ZC_t::nodeidx_t;
+    using ZC_t::links;
+    using ZC_t::Vnodes;
+    static constexpr size_t NNodes = N; ///< number of free nodes
+    typedef Matrix<N,N,val_t> Mat_t;    ///< circuit equations matrix
+    typedef Matrix<N,1,val_t> Vec_t;    ///< circuit equations RHS vector
+
     array<nodeidx_t, N> shorted = {};   ///< highest internal node to which each node is shorted
     array<bool, N> Vshorted = {};       ///< whether (shorting group) is shorted to Vnode
     array<val_t, N> Isrc = {};          ///< current source (+) or sink (-) term attached to each node
-    vector<val_t> Vnodes;               ///< additional constrained voltage points, indexed N + i
 
     Mat_t M;                ///< circuit equation matrix M * V = RHS
     Vec_t RHS;              ///< circuit equation M*V = RHS vector
@@ -37,12 +55,6 @@ public:
     /// Constructor
     ZCircuit() {
         for(nodeidx_t i = {}; i < N; ++i) shorted[i] = i;
-    }
-
-    /// Helper to add link
-    void addLink(nodeidx_t i0, nodeidx_t i1, val_t Z = {}) {
-        if(i0 > i1) std::swap(i0, i1);
-        links.push_back({i0, i1, Z});
     }
 
     /// Fill circuit matrix
@@ -223,8 +235,16 @@ public:
 
 /// L/R/C chained filter base class interface
 template<typename _val_t = std::complex<double>>
-class LRCFilterBase {
+class LRCFilterBase: virtual public ZCircuit_Base<_val_t> {
 public:
+    typedef ZCircuit_Base<_val_t> ZC_t;
+    using typename ZC_t::nodeidx_t;
+
+    nodeidx_t iGnd = {};
+    nodeidx_t iV0 = {};
+    nodeidx_t iIn = {};
+    nodeidx_t iOut = {};
+
     /// Set component values and solve, returning output voltage
     virtual _val_t setZ(_val_t Z1, _val_t Z2) = 0;
 };
@@ -241,6 +261,11 @@ public:
 template<size_t N, typename _val_t = std::complex<double>>
 class LRCFilter: public LRCFilterBase<_val_t>, public ZCircuit<N+1, _val_t> {
 public:
+    typedef LRCFilterBase<_val_t> LF_t;
+    using LF_t::iGnd;
+    using LF_t::iV0;
+    using LF_t::iIn;
+    using LF_t::iOut;
     typedef ZCircuit<N+1, _val_t> ZC_t;
     using typename ZC_t::val_t;
     using ZC_t::Vnodes;
@@ -249,18 +274,23 @@ public:
     using ZC_t::addLink;
     using ZC_t::solve;
 
-    static constexpr typename ZC_t::nodeidx_t iGnd = N + 1;
 
     /// Constructor
-    explicit LRCFilter(bool isrc = false) {
+    explicit LRCFilter(bool reverse = false, bool isrc = false) {
+        iGnd = N + 1;
+        iV0  = N + 2;
+        iIn = {};
+        iOut = N;
+
         Vnodes.emplace_back();   // ground, index N + 1
         Vnodes.emplace_back(1);  // input voltage, index N + 2
         for(size_t i=0; i<N; ++i) {
             addLink(i, i+1);     // to next stage
             addLink(i+1, iGnd);  // to ground
         }
-        if(isrc) ZC_t::Isrc[0] = val_t{1};
-        else addLink(0, N+2, {});
+        if(reverse) std::swap(iIn, iOut);
+        if(isrc) ZC_t::Isrc[iIn] = val_t{1};
+        else addLink(iIn, iV0, {});
     }
 
     /// Set component values and solve, returning output voltage
@@ -270,6 +300,6 @@ public:
             links.at(2*i+1).Z = Z2;
         }
         solve();
-        return V[N];
+        return V[iOut];
     }
 };
