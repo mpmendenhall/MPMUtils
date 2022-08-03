@@ -3,22 +3,16 @@
 #include "ConfigFactory.hh"
 #include "GlobalArgs.hh"
 #include "FFTW_Convolver.hh"
-#include "ZCircuit.hh"
+#include "FilterCircuits.hh"
+#include "PoleFinder.hh"
 #include "Rational.hh"
 #include <TGraph.h>
 #include <TAxis.h>
 #include <TPad.h>
 
-struct FiltInfo {
-    LRCFilterBase<>& F;
-    Zcalc<>& Z1;
-    Zcalc<>& Z2;
-};
-
-typedef std::complex<double> cplx_t;
-
-/// Calculate filter response
-void ZFilter(FiltInfo F, const size_t N, double tsamp) {
+/// Plot filter circuit response
+template<class CE_t = CircuitEvaluator<>>
+void plotCircuit(CE_t& CE, const size_t N, double tsamp) {
     tsamp *= 1e-9; // as nanoseconds, in s
 
     // convert to complex-valued k-space
@@ -31,7 +25,7 @@ void ZFilter(FiltInfo F, const size_t N, double tsamp) {
     int k = 0;
     for(auto& c: FFTer.v_k) {
         auto w = 2 * M_PI * k / (N * tsamp);
-        c *= F.F.setZ(F.Z1(w), F.Z2(w));
+        c *= CE({{},w});
         ++k;
     }
     printf("\nFilter integral: %g\n\n", sqrt(std::norm(FFTer.v_k[0])));
@@ -59,12 +53,12 @@ void ZFilter(FiltInfo F, const size_t N, double tsamp) {
     for(k = 0; k < int(2*N); ++k) {
         f[k] = k/(N * tsamp)/1e6;
         auto w = 2e6 * M_PI * f[k];
-        auto u = F.F.setZ(F.Z1(w), F.Z2(w));
+        auto u = CE({{},w});
         R[k] = 10*log10(std::norm(u));
         delay[k] = k? 1e9 * std::arg(u)/w : 0;
     }
 
-    printf("DC attenuation %g dB", R[0]);
+    printf("DC attenuation %g dB\n", R[0]);
 
     TGraph gDelay(delay.size(), f.data(), delay.data());
     gDelay.SetTitle("filter delay");
@@ -89,25 +83,46 @@ void ZFilter(FiltInfo F, const size_t N, double tsamp) {
     gResponse.GetYaxis()->SetTitle("attenuation [dB]");
 
     gPad->Print("FilterFreq.pdf");
-
-
 }
 
 typedef std::complex<Rational> rcplx_t;
-
 template<>
 bool mag_lt<rcplx_t>(const rcplx_t& a, const rcplx_t& b) { return std::norm(a) < std::norm(b); }
+
+/// Stuffer for 2-identical-components ladder circuit
+template<class ZCS_t = ZCircuitStuffer<>>
+class BinaryLadderStuffer: public ZCS_t {
+public:
+    using typename ZCS_t::ZCalc_t;
+    using ZCS_t::ps;
+
+    /// Constructor
+    BinaryLadderStuffer(ZCalc_t& Z1, ZCalc_t& Z2) {
+        ps.emplace_back(&Z1);
+        ps.emplace_back(&Z2);
+    }
+
+    /// Setup stuffing for N-node ladder filter
+    void configure(size_t N) {
+        ps[0].links.clear();
+        ps[1].links.clear();
+
+        for(size_t i=0; i < N-1; ++i) {
+            ps[0].links.push_back(2*i);
+            ps[1].links.push_back(2*i + 1);
+        }
+    }
+};
 
 
 REGISTER_EXECLET(testZCircuit) {
     rcplx_t R100 = {100, 0};
 
     ZCircuit<1, rcplx_t> C;
-    C.addLink(0, 2, R100);
-    C.addLink(0, 1, R100);
-
     C.Vnodes.push_back({0});    // ground
     C.Vnodes.push_back({10,0}); // source voltage
+    C.addLink(0, 2, R100);
+    C.addLink(0, 1, R100);
 
     C.solve();
     std::cout << C;
@@ -115,15 +130,13 @@ REGISTER_EXECLET(testZCircuit) {
 
     //------------------------------------
 
-    double R_in = 10000;
     double R_out = 50;
-    optionalGlobalArg("rin", R_in, "input termination resistor [ohms]; 0 to omit");
     optionalGlobalArg("rout", R_out, "output termination resistor [ohms]");
     double _C = 4;
     double _L = 10;
     double _CR = 0.6;
     double _LR = 0.05;
-    double tgrid = 1;
+    double tgrid = 2;
     int ngrid = 256;
     optionalGlobalArg("C", _C, "filter capcitors capacitance [nF]");
     optionalGlobalArg("L", _L, "filter inductors inductance [nH]");
@@ -132,16 +145,26 @@ REGISTER_EXECLET(testZCircuit) {
     optionalGlobalArg("tgrid", tgrid, "calculation grid spacing [ns]");
     optionalGlobalArg("ngrid", ngrid, "number of calculation gridpoints");
 
-    LRCFilterBase<>* LF = nullptr;
-    if(wasArgGiven("onestage", "Single-stage filter")) LF = new LRCFilter<1>();
-    else LF = new LRCFilter<2>(true, wasArgGiven("Isrc", "Current source input"));
+    ZCircuit_Base<>* Circ = nullptr;
+    if(wasArgGiven("onestage", "Single-stage filter")) Circ = new ZCircuit<2>();
+    else Circ = new ZCircuit<3>();
+    configure_Ladder(*Circ);
+    if(R_out) Circ->addLink(Circ->iOut, Circ->iGnd, {R_out,0});
 
-    if(R_in)  LF->addLink(LF->iIn,  LF->iGnd, R_in);   // input termination
-    if(R_out) LF->addLink(LF->iOut, LF->iGnd, R_out);  // output termination
+    C_ZCalc<> ZC(1e-9 * _C, _CR);
+    L_ZCalc<> ZL(1e-9 * _L, _LR);
+    BinaryLadderStuffer<> BLS(ZL, ZC);
+    BLS.configure(Circ->Ncalc);
+    BLS.setS({{}, 2e7});
+    BLS.stuff(*Circ);
+    std::cout << *Circ;
 
-    C_Zcalc<> ZC(1e-9 * _C, _CR);
-    L_Zcalc<> ZL(1e-9 * _L, _LR);
-    FiltInfo FI{*LF, ZL, ZC};
-
-    ZFilter(FI, ngrid, tgrid);
+    CircuitEvaluator<> CE(BLS, *Circ);
+    if(wasArgGiven("fit", "Fit circuit poles")) {
+        PoleFinder<> PF;
+        PF.scan_grid(CE, {-5e8, 0}, {0, 3e8});
+        PF.fit(CE);
+        plotCircuit(PF, ngrid, tgrid);
+    }
+    else plotCircuit(CE, ngrid, tgrid);
 }

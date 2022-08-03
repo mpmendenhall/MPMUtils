@@ -8,11 +8,13 @@ using std::vector;
 using std::array;
 
 /// Circuit network base class
-template<typename _val_t>
+template<typename _val_t = std::complex<double>>
 class ZCircuit_Base {
 public:
-    typedef _val_t val_t;  ///< calculation (complex, maybe symbolic) value type
-    typedef size_t nodeidx_t;   /// node identifier index
+    typedef _val_t val_t;       ///< calculation (complex, maybe symbolic) value type
+    typedef size_t nodeidx_t;   ///< node identifier index
+
+    nodeidx_t Ncalc = {};       ///< number of internal "free" calculated nodes
 
     /// linear link between nodes in circuit
     struct link_t {
@@ -21,17 +23,38 @@ public:
         val_t Z;            ///< impedance of device
     };
     vector<link_t> links;   ///< links between nodes
-    vector<val_t> Vnodes;   ///< additional constrained voltage points, indexed N + i
+    vector<val_t> Vnodes;   ///< additional constrained voltage points, indexed Ncalc + i
+
+    // common useful nodes, construction dependent interpretation
+    nodeidx_t iV0  = {};    ///< "input" node index
+    nodeidx_t iOut = {};    ///< "output" node index
+    nodeidx_t iGnd = {};    ///< "ground" node index
 
     /// Helper to add link
     void addLink(nodeidx_t i0, nodeidx_t i1, val_t Z = {}) {
         if(i0 > i1) std::swap(i0, i1);
+        if(i1 > Ncalc + Vnodes.size()) throw std::logic_error("Link to invalid node number");
         links.push_back({i0, i1, Z});
     }
+
+    /// Solve circuit; return output node value
+    virtual val_t solve() = 0;
 };
 
+
+/// output representation
+template<typename val_t>
+std::ostream& operator<<(std::ostream& o, const ZCircuit_Base<val_t>& C) {
+    o << "ZCircuit [" << C.Ncalc << " free nodes; input " << C.iV0 << ", output " << C.iOut << ", ground " << C.iGnd << "]" << "\n";
+    size_t i = C.Ncalc;
+    for(auto& v: C.Vnodes) o << "\t+ Constraint [" << i++ << "] V = " << v << "\n";
+    i = 0;
+    for(auto& l: C.links)  o << "\t" << "* Link [" << i++ << "]: " << l.i0 << " -> " << l.Z << " -> " << l.i1 << "\n";
+    return o;
+}
+
 /// Network of linear 2-terminal devices with N free nodes
-template<size_t N, typename _val_t>
+template<size_t N, typename _val_t = std::complex<double>>
 class ZCircuit: virtual public ZCircuit_Base<_val_t> {
 public:
     typedef ZCircuit_Base<_val_t> ZC_t;
@@ -39,7 +62,7 @@ public:
     using typename ZC_t::nodeidx_t;
     using ZC_t::links;
     using ZC_t::Vnodes;
-    static constexpr size_t NNodes = N; ///< number of free nodes
+    using ZC_t::iOut;
     typedef Matrix<N,N,val_t> Mat_t;    ///< circuit equations matrix
     typedef Matrix<N,1,val_t> Vec_t;    ///< circuit equations RHS vector
 
@@ -53,9 +76,7 @@ public:
     Vec_t V;                ///< solution voltages at free nodes
 
     /// Constructor
-    ZCircuit() {
-        for(nodeidx_t i = {}; i < N; ++i) shorted[i] = i;
-    }
+    ZCircuit() { ZC_t::Ncalc = N; }
 
     /// Fill circuit matrix
     void build_M() {
@@ -149,12 +170,13 @@ public:
     /// Solve filled matrix
     void solve_M() { LUPDecomp<N,val_t>(M).inverse(Mi); }
 
-    /// Build and solve
-    void solve() {
+    /// Build and solve, returning at output node
+    val_t solve() override {
         build_M();
         solve_M();
         build_RHS();
         V = Mi*RHS;
+        return iOut < N? V[iOut] : val_t{};
     }
 };
 
@@ -162,14 +184,12 @@ public:
 /// output representation
 template<size_t N, typename val_t>
 std::ostream& operator<<(std::ostream& o, const ZCircuit<N, val_t>& C) {
-    o << "ZCircuit [" << N << " free nodes]" << "\n";
+    o << (ZCircuit_Base<val_t>&)C;
     size_t i = 0;
     for(; i < N; ++i) {
-        if(C.shorted[i] != i) o << "\t* Shorted " << i << " -> " << C.shorted[i] << "\n";
+        if(C.shorted[i] > i) o << "\t* Shorted " << i << " -> " << C.shorted[i] << "\n";
         if(C.Isrc[i] != val_t{})  o << "\t* I_in " << i << " = " << C.Isrc[i] << "\n";
     }
-    for(auto& v: C.Vnodes) o << "\t[" << i++ << "] V = " << v << "\n";
-    for(auto& l: C.links)  o << "\t" << "* "<< l.i0 << " -> " << l.Z << " -> " << l.i1 << "\n";
     return o;
 }
 
@@ -185,121 +205,109 @@ bool mag_lt<std::complex<double>>(const std::complex<double>& a, const std::comp
 //-------------------------------------//
 //-------------------------------------//
 
-/// Circuit element calculating Z(omega)
-template<typename _val_t = std::complex<double>, typename x_t = double>
-class Zcalc {
+
+/// Circuit element calculating Z(s = sigma + i*omega)
+template<typename _val_t = std::complex<double>, typename _x_t = double>
+class ZCalc {
 public:
-    /// (Complex) impedance at specified angular frequency
-    virtual _val_t operator()(x_t omega) const = 0;
+    typedef _val_t val_t;
+    typedef _x_t x_t;
+
+    /// Complex impedance at specified s = sigma + i*omega
+    virtual val_t Z(val_t s) const = 0;
+    /// Complex impedance at specified angular frequency
+    val_t operator()(x_t omega) const { return Z({{}, omega}); }
 };
 
 /// Resistor
-template<typename _val_t = std::complex<double>, typename x_t = double>
-class R_Zcalc: public Zcalc<_val_t, x_t> {
+template<class ZCalc_t = ZCalc<>>
+class R_ZCalc: public ZCalc_t {
 public:
+    using typename ZCalc_t::x_t;
+    using typename ZCalc_t::val_t;
+
     /// Constructor
-    explicit R_Zcalc(x_t _R): R(_R) { }
+    explicit R_ZCalc(x_t _R): R(_R) { }
     x_t R;  ///< Resistance
     /// (Complex) impedance at specified angular frequency
-    _val_t operator()(x_t) const override { return R; }
+    val_t Z(val_t) const override { return R; }
 };
 
 /// Capacitor
-template<typename _val_t = std::complex<double>, typename x_t = double>
-class C_Zcalc: public Zcalc<_val_t, x_t> {
+template<class ZCalc_t = ZCalc<>>
+class C_ZCalc: public ZCalc_t {
 public:
+    using typename ZCalc_t::x_t;
+    using typename ZCalc_t::val_t;
+
     /// Constructor
-    explicit C_Zcalc(x_t _C, x_t _Rs = {}): C(_C), Rs(_Rs) { }
+    explicit C_ZCalc(x_t _C, x_t _Rs = {}): C(_C), Rs(_Rs) { }
     x_t C;  ///< Capacitance
     x_t Rs; ///< series parasitic resistance
     /// (Complex) impedance at specified angular frequency
-    _val_t operator()(x_t omega) const override { return {Rs, -1/(omega*C)}; }
+    val_t Z(val_t s) const override { return Rs + val_t{1}/(C*s); }
 };
 
 /// Inductor
-template<typename _val_t = std::complex<double>, typename x_t = double>
-class L_Zcalc: public Zcalc<_val_t, x_t> {
+template<class ZCalc_t = ZCalc<>>
+class L_ZCalc: public ZCalc_t{
 public:
+    using typename ZCalc_t::x_t;
+    using typename ZCalc_t::val_t;
+
     /// Constructor
-    explicit L_Zcalc(x_t _L, x_t _Rs = {}): L(_L), Rs(_Rs) { }
+    explicit L_ZCalc(x_t _L, x_t _Rs = {}): L(_L), Rs(_Rs) { }
     x_t L;  ///< Resistance
     x_t Rs; ///< series parasitic resistance
     /// (Complex) impedance at specified angular frequency
-    _val_t operator()(x_t omega) const override { return {Rs, omega*L}; }
+    val_t Z(val_t s) const override { return Rs + L*s; }
 };
 
-//-------------------------------------//
-//-------------------------------------//
-//-------------------------------------//
-
-
-/// L/R/C chained filter base class interface
-template<typename _val_t = std::complex<double>>
-class LRCFilterBase: virtual public ZCircuit_Base<_val_t> {
+/// "Circuit stuffer" to update Z values for circuit links
+template<class _ZCalc_t = ZCalc<>>
+class ZCircuitStuffer {
 public:
-    typedef ZCircuit_Base<_val_t> ZC_t;
-    using typename ZC_t::nodeidx_t;
+    typedef _ZCalc_t ZCalc_t;
+    typedef typename ZCalc_t::val_t val_t;
+    typedef typename ZCalc_t::x_t x_t;
 
-    nodeidx_t iGnd = {};
-    nodeidx_t iV0 = {};
-    nodeidx_t iIn = {};
-    nodeidx_t iOut = {};
+    /// placed component specifications
+    struct s_placement {
+        /// Constructor
+        explicit s_placement(ZCalc_t* _C = nullptr): C(_C) { }
+        ZCalc_t* C;             ///< component calculator
+        val_t Z = {};           ///< latest calculated Z
+        vector<size_t> links;   ///< link placements for component
+    };
+    vector<s_placement> ps;     ///< component placements
 
-    /// Set component values and solve, returning output voltage
-    virtual _val_t setZ(_val_t Z1, _val_t Z2) = 0;
+    /// calculate frequency-dependent components Z
+    void setFreq(x_t omega) { for(auto& p: ps) p.Z = p.C? (*p.C)(omega) : val_t{}; }
+    /// calculate Laplace-plane-dependent components Z
+    void setS(val_t s) { for(auto& p: ps) p.Z = p.C? p.C->Z(s) : val_t{}; }
+    /// set Z values in circuit
+    template<class ZCircuit_t>
+    void stuff(ZCircuit_t& ZC) const {
+        for(auto& p: ps) for(auto l: p.links) ZC.links.at(l).Z = p.Z;
+    }
 };
 
-/// N-pole L/R/C chained filter
-/*
- * Vin                        Vout
- * (0) -Z1- (1) -Z1- (2) .... (N)
- *           |        |        |
- *           Z2       Z2       Z2
- *            \       |       /
- *             \_____Gnd_____/
-*/
-template<size_t N, typename _val_t = std::complex<double>>
-class LRCFilter: public LRCFilterBase<_val_t>, public ZCircuit<N+1, _val_t> {
+/// Circuit evaluation function wrapper
+template<class Stuffer_t = ZCircuitStuffer<>, class Circuit_t = ZCircuit_Base<>>
+class CircuitEvaluator {
 public:
-    typedef LRCFilterBase<_val_t> LF_t;
-    using LF_t::iGnd;
-    using LF_t::iV0;
-    using LF_t::iIn;
-    using LF_t::iOut;
-    typedef ZCircuit<N+1, _val_t> ZC_t;
-    using typename ZC_t::val_t;
-    using ZC_t::Vnodes;
-    using ZC_t::V;
-    using ZC_t::links;
-    using ZC_t::addLink;
-    using ZC_t::solve;
-
+    typedef typename Circuit_t::val_t val_t;
 
     /// Constructor
-    explicit LRCFilter(bool reverse = false, bool isrc = false) {
-        iGnd = N + 1;
-        iV0  = N + 2;
-        iIn = {};
-        iOut = N;
+    CircuitEvaluator(Stuffer_t& _S, Circuit_t& _C): S(_S), C(_C) { }
 
-        Vnodes.emplace_back();   // ground, index N + 1
-        Vnodes.emplace_back(1);  // input voltage, index N + 2
-        for(size_t i=0; i<N; ++i) {
-            addLink(i, i+1);     // to next stage
-            addLink(i+1, iGnd);  // to ground
-        }
-        if(reverse) std::swap(iIn, iOut);
-        if(isrc) ZC_t::Isrc[iIn] = val_t{1};
-        else addLink(iIn, iV0, {});
+    /// Evaluate response at point
+    val_t operator()(val_t s) {
+        S.setS(s);
+        S.stuff(C);
+        return C.solve();
     }
 
-    /// Set component values and solve, returning output voltage
-    val_t setZ(val_t Z1, val_t Z2) override {
-        for(size_t i=0; i<N; ++i) {
-            links.at(2*i).Z = Z1;
-            links.at(2*i+1).Z = Z2;
-        }
-        solve();
-        return V[iOut];
-    }
+    Stuffer_t& S;   ///< (frequency-dependent) circuit stuffing instructions
+    Circuit_t& C;   ///< base circuit topology
 };
