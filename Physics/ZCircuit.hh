@@ -21,6 +21,7 @@ public:
         nodeidx_t i0;       ///< device start terminal
         nodeidx_t i1;       ///< device end terminal
         val_t Z;            ///< impedance of device
+        val_t phase;        ///< delay phase shift factor for current reaching other side
     };
     vector<link_t> links;   ///< links between nodes
     vector<val_t> Vnodes;   ///< additional constrained voltage points, indexed Ncalc + i
@@ -31,10 +32,10 @@ public:
     nodeidx_t iGnd = {};    ///< "ground" node index
 
     /// Helper to add link
-    void addLink(nodeidx_t i0, nodeidx_t i1, val_t Z = {}) {
+    void addLink(nodeidx_t i0, nodeidx_t i1, val_t Z = {}, val_t phase = val_t{1}) {
         if(i0 > i1) std::swap(i0, i1);
         if(i1 > Ncalc + Vnodes.size()) throw std::logic_error("Link to invalid node number");
-        links.push_back({i0, i1, Z});
+        links.push_back({i0, i1, Z, phase});
     }
 
     /// Solve circuit; return output node value
@@ -49,7 +50,7 @@ std::ostream& operator<<(std::ostream& o, const ZCircuit_Base<val_t>& C) {
     size_t i = C.Ncalc;
     for(auto& v: C.Vnodes) o << "\t+ Constraint [" << i++ << "] V = " << v << "\n";
     i = 0;
-    for(auto& l: C.links)  o << "\t" << "* Link [" << i++ << "]: " << l.i0 << " -> " << l.Z << " -> " << l.i1 << "\n";
+    for(auto& l: C.links)  o << "\t" << "* Link [" << i++ << "]: " << l.i0 << " -> " << l.Z << " " << std::arg(l.phase) << " -> " << l.i1 << "\n";
     return o;
 }
 
@@ -119,12 +120,13 @@ public:
             if(i0 == i1) continue;          // link to itself (maybe via shorts)
 
             auto c = val_t{1}/l.Z;
-            if(c == val_t{}) continue; // open circuit
+            if(c == val_t{}) continue;      // open circuit
 
             M(i0, i0) += c;
-            M(i0, i1) -= c;
+            M(i0, i1) -= c * l.phase;
+
             M(i1, i1) += c;
-            M(i1, i0) -= c;
+            M(i1, i0) -= c * l.phase;
         }
 
         // connect together mutually-shorted nodes; clear Vshorted rows
@@ -134,6 +136,7 @@ public:
                 continue;
             }
             if(shorted[i] == i) continue;
+            // TODO shorting phases
             M(i, i)          += val_t{1};
             M(i, shorted[i]) += val_t{-1};
         }
@@ -142,8 +145,8 @@ public:
         for(auto& l: links) {
             if(l.i0 >= N || l.i1 < N) continue;
             auto i0 = shorted[l.i0];
-            if(l.Z == val_t{}) M(i0, i0) += val_t{1};
-            else if(!Vshorted[i0]) M(i0, i0) += val_t{1}/l.Z;
+            if(l.Z == val_t{}) M(i0, i0) += l.phase;
+            else if(!Vshorted[i0]) M(i0, i0) += l.phase/l.Z;
         }
     }
 
@@ -213,10 +216,17 @@ public:
     typedef _val_t val_t;
     typedef _x_t x_t;
 
+    /// Constructor
+    explicit ZCalc(x_t _R = {}, x_t _d = {}): R(_R), delay(_d) { }
+    x_t R = {};      ///< constant impedance
+    x_t delay = {};  ///< delay time
+
+    /// Delay phase
+    val_t phase(val_t s) const { return std::exp(-delay*s); }
     /// Complex impedance at specified s = sigma + i*omega
-    virtual val_t Z(val_t s) const = 0;
-    /// Complex impedance at specified angular frequency
-    val_t operator()(x_t omega) const { return Z({{}, omega}); }
+    val_t Z(val_t s) const { return R + _Z(s); }
+    /// Complex impedance at specified s = sigma + i*omega
+    virtual val_t _Z(val_t s) const = 0;
 };
 
 /// Resistor
@@ -227,10 +237,9 @@ public:
     using typename ZCalc_t::val_t;
 
     /// Constructor
-    explicit R_ZCalc(x_t _R): R(_R) { }
-    x_t R;  ///< Resistance
+    explicit R_ZCalc(x_t _R) { ZCalc_t::R = _R; }
     /// (Complex) impedance at specified angular frequency
-    val_t Z(val_t) const override { return R; }
+    val_t _Z(val_t) const override { return val_t{}; }
 };
 
 /// Capacitor
@@ -241,11 +250,10 @@ public:
     using typename ZCalc_t::val_t;
 
     /// Constructor
-    explicit C_ZCalc(x_t _C, x_t _Rs = {}): C(_C), Rs(_Rs) { }
+    explicit C_ZCalc(x_t _C): C(_C) { }
     x_t C;  ///< Capacitance
-    x_t Rs; ///< series parasitic resistance
     /// (Complex) impedance at specified angular frequency
-    val_t Z(val_t s) const override { return Rs + val_t{1}/(C*s); }
+    val_t _Z(val_t s) const override { return val_t{1}/(C*s); }
 };
 
 /// Inductor
@@ -256,11 +264,10 @@ public:
     using typename ZCalc_t::val_t;
 
     /// Constructor
-    explicit L_ZCalc(x_t _L, x_t _Rs = {}): L(_L), Rs(_Rs) { }
+    explicit L_ZCalc(x_t _L): L(_L) { }
     x_t L;  ///< Resistance
-    x_t Rs; ///< series parasitic resistance
     /// (Complex) impedance at specified angular frequency
-    val_t Z(val_t s) const override { return Rs + L*s; }
+    val_t _Z(val_t s) const override { return L*s; }
 };
 
 /// "Circuit stuffer" to update Z values for circuit links
@@ -277,18 +284,29 @@ public:
         explicit s_placement(ZCalc_t* _C = nullptr): C(_C) { }
         ZCalc_t* C;             ///< component calculator
         val_t Z = {};           ///< latest calculated Z
+        val_t phase = {};       ///< latest calculated delay phase
         vector<size_t> links;   ///< link placements for component
     };
     vector<s_placement> ps;     ///< component placements
 
     /// calculate frequency-dependent components Z
-    void setFreq(x_t omega) { for(auto& p: ps) p.Z = p.C? (*p.C)(omega) : val_t{}; }
+    void setFreq(x_t omega) { setS({{}, omega}); }
     /// calculate Laplace-plane-dependent components Z
-    void setS(val_t s) { for(auto& p: ps) p.Z = p.C? p.C->Z(s) : val_t{}; }
+    void setS(val_t s) {
+        for(auto& p: ps) {
+            if(p.C) { p.Z = p.C->Z(s); p.phase = p.C->phase(s); }
+            else {    p.Z = val_t{};   p.phase = val_t{1}; }
+        }
+    }
     /// set Z values in circuit
     template<class ZCircuit_t>
     void stuff(ZCircuit_t& ZC) const {
-        for(auto& p: ps) for(auto l: p.links) ZC.links.at(l).Z = p.Z;
+        for(auto& p: ps) {
+            for(auto l: p.links) {
+                ZC.links.at(l).Z = p.Z;
+                ZC.links.at(l).phase = p.phase;
+            }
+        }
     }
 };
 

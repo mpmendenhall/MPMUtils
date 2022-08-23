@@ -13,23 +13,30 @@
 class BurstFill: public MultiFill, public Clusterer<OrderedData<int>> {
 public:
     /// Constructor, corresponding to histogram
-    BurstFill(const string& _name, TH1& H): MultiFill(_name, H), ClusterBuilder(500e3), OQ(this, 1e9) { }
+    BurstFill(const string& _name, TH1& H): MultiFill(_name, H), ClusterBuilder(500e3), OQ(this, 2e9) { }
     /// Constructor, loaded from file
-    BurstFill(const string& _name, TDirectory& d, TH1& H): MultiFill(_name, d, H), ClusterBuilder(500e3), OQ(this, 1e9) { }
+    BurstFill(const string& _name, TDirectory& d, TH1& H): MultiFill(_name, d, H), ClusterBuilder(500e3), OQ(this, 2e9) { }
 
     /// fill (1D) with event time
     void tFill(double t, double x) { OQ.push({t, h->FindBin(x)}); }
     /// fill (2D) with event time
     void tFill(double t, double x, double y) { OQ.push({t, h->FindBin(x,y)}); }
 
-    /// end-of-data operations
-    void endFill() override { OQ.signal(DATASTREAM_END); MultiFill::endFill(); }
+    /// handle datastream signals
+    void signal(datastream_signal_t sig) override {
+        if(signore) return;
+        signore = true;
+        OQ.signal(sig);
+        signore = false;
+        Clusterer<OrderedData<int>>::signal(sig);
+    }
 
+    /// end-of-data operations
+    void endFill() override { signal(DATASTREAM_END); MultiFill::endFill(); }
 
 protected:
     typedef OrderedData<int> ordbin_t;
     typedef Cluster<ordbin_t> cluster_t;
-    typedef ClusterBuilder<cluster_t> super;
 
     /// pre-ordering buffer
     OrderingQueue<const ordbin_t> OQ;
@@ -39,6 +46,8 @@ protected:
         fillBins(vector<ordbin_t::val_extractor>(o.begin(), o.end()));
         return o.size();
     }
+
+    bool signore = false;   ///< lock to ignore signal loop from OQ
 };
 
 #endif

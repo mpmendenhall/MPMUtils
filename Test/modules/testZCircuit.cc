@@ -5,7 +5,6 @@
 #include "FFTW_Convolver.hh"
 #include "FilterCircuits.hh"
 #include "PoleFinder.hh"
-#include "Rational.hh"
 #include <TGraph.h>
 #include <TAxis.h>
 #include <TPad.h>
@@ -85,9 +84,11 @@ void plotCircuit(CE_t& CE, const size_t N, double tsamp) {
     gPad->Print("FilterFreq.pdf");
 }
 
+/*
 typedef std::complex<Rational> rcplx_t;
 template<>
 bool mag_lt<rcplx_t>(const rcplx_t& a, const rcplx_t& b) { return std::norm(a) < std::norm(b); }
+*/
 
 /// Stuffer for 2-identical-components ladder circuit
 template<class ZCS_t = ZCircuitStuffer<>>
@@ -116,6 +117,7 @@ public:
 
 
 REGISTER_EXECLET(testZCircuit) {
+    /*
     rcplx_t R100 = {100, 0};
 
     ZCircuit<1, rcplx_t> C;
@@ -127,8 +129,68 @@ REGISTER_EXECLET(testZCircuit) {
     C.solve();
     std::cout << C;
     std::cout << C.M << C.RHS << C.Mi << C.V << "\n\n\n";
+    */
 
-    //------------------------------------
+    //---------------------------
+
+    double tgrid = 2;
+    int ngrid = 256;
+    optionalGlobalArg("tgrid", tgrid, "calculation grid spacing [ns]");
+    optionalGlobalArg("ngrid", ngrid, "number of calculation gridpoints");
+
+    //---------------------------
+
+    int nbut = 0;
+    optionalGlobalArg("Butterworth", nbut, "plot n^th order Butterworth filter response");
+    if(nbut > 0) {
+        typedef typename PoleFinder<>::val_t val_t;
+        PoleFinder<> BFP;
+        double w0 = 2*M_PI * 10e9 / (ngrid * tgrid);
+        for(int i = nbut/2; i<nbut; ++i) {
+            auto th =  -M_PI/2 - (i+0.5)*M_PI/nbut;
+            BFP.poles.emplace_back(val_t{w0*cos(th), (i==nbut/2 && nbut%2)? 0 : w0*sin(th)}, -1);
+            std::cout << BFP.poles.back();
+        }
+        BFP.setF0();
+        plotCircuit(BFP, ngrid, tgrid);
+        return;
+    }
+
+    //---------------------------
+
+    if(true) {
+        ZCircuit<2> Cd;
+        Cd.iGnd = Cd.Vnodes.size() + Cd.Ncalc;
+
+        Cd.Vnodes.push_back(0);
+        Cd.iV0 = Cd.Vnodes.size() + Cd.Ncalc;
+        Cd.Vnodes.push_back(1);
+        Cd.iOut = + Cd.Ncalc - 1;
+
+        Cd.addLink(0,1,50);
+        Cd.addLink(0,1,50);
+        Cd.addLink(1, Cd.iGnd, 50);
+        Cd.addLink(0, Cd.iV0, 50);
+        std::cout << Cd;
+
+        R_ZCalc Z1(50);
+        R_ZCalc Z2(50);
+        Z1.delay = 21e-9;
+        Z2.delay = 30e-9;
+
+        ZCircuitStuffer<> ZCS;
+        ZCS.ps.emplace_back(&Z1);
+        ZCS.ps[0].links.push_back(0);
+        ZCS.ps.emplace_back(&Z2);
+        ZCS.ps[1].links.push_back(1);
+
+        CircuitEvaluator<> CEd(ZCS, Cd);
+        plotCircuit(CEd, ngrid, tgrid);
+
+        return;
+    }
+
+    //---------------------------
 
     double R_out = 50;
     optionalGlobalArg("rout", R_out, "output termination resistor [ohms]");
@@ -136,14 +198,10 @@ REGISTER_EXECLET(testZCircuit) {
     double _L = 10;
     double _CR = 0.6;
     double _LR = 0.05;
-    double tgrid = 2;
-    int ngrid = 256;
     optionalGlobalArg("C", _C, "filter capcitors capacitance [nF]");
     optionalGlobalArg("L", _L, "filter inductors inductance [nH]");
     optionalGlobalArg("CR", _CR, "filter capcitors series resistance");
     optionalGlobalArg("LR", _LR, "filter inductors series resistance");
-    optionalGlobalArg("tgrid", tgrid, "calculation grid spacing [ns]");
-    optionalGlobalArg("ngrid", ngrid, "number of calculation gridpoints");
 
     ZCircuit_Base<>* Circ = nullptr;
     if(wasArgGiven("onestage", "Single-stage filter")) Circ = new ZCircuit<2>();
@@ -151,8 +209,8 @@ REGISTER_EXECLET(testZCircuit) {
     configure_Ladder(*Circ);
     if(R_out) Circ->addLink(Circ->iOut, Circ->iGnd, {R_out,0});
 
-    C_ZCalc<> ZC(1e-9 * _C, _CR);
-    L_ZCalc<> ZL(1e-9 * _L, _LR);
+    C_ZCalc<> ZC(1e-9 * _C); ZC.R = _CR;
+    L_ZCalc<> ZL(1e-9 * _L); ZL.R = _LR;
     BinaryLadderStuffer<> BLS(ZL, ZC);
     BLS.configure(Circ->Ncalc);
     BLS.setS({{}, 2e7});

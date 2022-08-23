@@ -87,17 +87,19 @@ struct pole_t {
 };
 
 /// Pole finder for function class F_t implementing val_t F_t(val_t)
-template<typename _val_t = std::complex<double>>
+template<class _pole_t = pole_t<>>
 class PoleFinder {
 public:
+    /// Pole description type
+    typedef _pole_t pole_t;
     /// Function type being evaluated
-    typedef _val_t val_t;
+    typedef typename pole_t::val_t val_t;
     /// mag^2 norm type
     typedef decltype(std::norm(val_t{})) norm_t;
 
     vector<eval_t<val_t>> testgrid; ///< points evaluated on test grid
     set<size_t> checkstart;         ///< points already checked as candidate poles
-    vector<pole_t<val_t>> poles;    ///< candidate poles and zeros
+    vector<pole_t> poles;           ///< candidate poles and zeros
     val_t F0 = {1};                 ///< overall normalization
     int verbose = 1;                ///< printout verbosity
 
@@ -170,7 +172,7 @@ public:
 
     /// Walk in candidate pole
     template<class F_t>
-    void add_pole(F_t& F, pole_t<val_t> p) {
+    void add_pole(F_t& F, pole_t p) {
         polefunc_t PF(F, *this, poles.size());
         p.e1 = {PF, 0.80 * p.s0};
         p.e2 = {PF, 0.90 * p.s0};
@@ -205,7 +207,7 @@ public:
         checkstart.insert(i0);
 
         auto& p0 = testgrid[i0];
-        pole_t<val_t> p = {p0.s, ispole? -1 : 1};
+        pole_t p = {p0.s, ispole? -1 : 1};
 
 
         //if(ispole) p.isReal = false;
@@ -221,7 +223,7 @@ public:
         while(find_new_pole(F)) { }
         int i = 5;
         while(--i && refine_poles(F) > 1e-6) { }
-        setF0(F);
+        setF0(F({}));
 
         if(verbose) {
             auto mm = testgrid_minmax_index();
@@ -244,14 +246,12 @@ public:
         return nmax;
     }
 
-    /// Set overall normalization
-    template<class F_t>
-    void setF0(F_t& F, val_t s = {}) {
+    /// Set overall normalization to value at point
+    void setF0(val_t _F0 = val_t{1}, val_t s = {}) {
         F0 = val_t{1};
-        F0 = F(s)/(*this)(s);
+        F0 = _F0/(*this)(s);
     }
 };
-
 
 /// output representation of evaluated point
 template<typename val_t>
