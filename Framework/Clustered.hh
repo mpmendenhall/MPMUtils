@@ -118,7 +118,7 @@ public:
         currentC.dx = cluster_dx;
         if(!currentC.tryAdd(o)) {
             completeCluster();
-            if(!currentC.tryAdd(o)) throw -1;
+            if(!currentC.tryAdd(o)) throw std::logic_error("Empty cluster refused first item");
         }
     }
 

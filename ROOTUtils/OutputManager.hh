@@ -32,35 +32,29 @@ public:
     ~OutputManager() { if(!parent) delete rootDir; }
 
     /// print current canvas; return filename printed
-    virtual string printCanvas(const string& fname, const TPad* P = nullptr, string suffix="") const;
+    virtual string printCanvas(const string& fname, TPad* P = nullptr, string suffix = "", const string& xsfx = "");
+    /// precede each item of a group of prints to the same named file
+    void nextPrint(const string& fname, const string& suffix = "", TPad* P = nullptr);
+    /// complete grouped set of print commands
+    void endPrintset();
+
     /// print array/vector of several objects to same file
     template<typename ARRAY>
-    void printTogether(ARRAY& itms, const string& fname, const string& dopt = "", string suffix="") const {
-        if(!suffix.size()) suffix = printsfx;
-        if(itms.size() == 1) {
-            (*itms.begin())->Draw(dopt.c_str());
-            printCanvas(fname, nullptr, suffix);
-            return;
-        }
+    void printTogether(ARRAY& itms, const string& fname, const string& dopt = "", string suffix="") {
         for(auto h: itms) {
+            nextPrint(fname, suffix);
             h->Draw(dopt.c_str());
-            printCanvas(fname, nullptr, suffix + (h == *itms.begin()? "(" : h == itms.back()? ")" : ""));
         }
+        endPrintset();
     }
     /// print map of several objects to same file
     template<typename K, typename V>
-    void printTogether(map<K,V>& itms, const string& fname, const string& dopt = "", string suffix="") const {
-        if(!suffix.size()) suffix = printsfx;
-        if(itms.size() == 1) {
-            itms.begin()->second->Draw(dopt.c_str());
-            printCanvas(fname, nullptr, suffix);
-            return;
-        }
+    void printTogether(map<K,V>& itms, const string& fname, const string& dopt = "", string suffix="") {
         for(auto& kv: itms) {
-            auto& h = kv.second;
-            h->Draw(dopt.c_str());
-            printCanvas(fname, nullptr, suffix + (&h == &itms.begin()->second? "(" : &h == &itms.rbegin()->second? ")" : ""));
+            nextPrint(fname, suffix);
+            kv.second->Draw(dopt.c_str());
         }
+        endPrintset();
     }
     /// set printCanvas suffix (filetype)
     virtual void setPrintSuffix(const string& sfx) { printsfx = sfx; }
@@ -81,6 +75,13 @@ public:
 protected:
     string printsfx = ".pdf";           ///< printCanvas default suffix (file type)
     TDirectory* rootDir = nullptr;      ///< ROOT objects output directory
+
+    struct {
+        int n = 0;
+        string fname;
+        string sfx;
+        TPad* P = nullptr;
+    } printset;
 };
 
 #endif

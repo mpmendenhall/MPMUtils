@@ -45,11 +45,33 @@ string OutputManager::fullPath() const {
     return parent->fullPath() + "/" + path;
 }
 
-string OutputManager::printCanvas(const string& fname, const TPad* C, string suffix) const {
+void OutputManager::nextPrint(const string& fname, const string& suffix, TPad* P) {
+    if(printset.n >= 1) printCanvas(printset.fname, printset.P, printset.sfx, printset.n == 1? "(" : "");
+
+    if(!printset.n) {
+        printset.fname = fname;
+        printset.sfx = suffix;
+    } else if(printset.fname != fname || printset.sfx != suffix) throw std::logic_error("Inconsistent printset naming");
+
+    ++printset.n;
+    printset.P = P;
+}
+
+void OutputManager::endPrintset() {
+    if(printset.n == 0) return;
+    if(printset.n == 1) printCanvas(printset.fname, printset.P, printset.sfx);
+    else if(printset.n > 1) printCanvas(printset.fname, printset.P, printset.sfx, ")");
+
+    printset.n = 0;
+    printset.P = nullptr;
+    printset.fname = printset.sfx = "";
+}
+
+string OutputManager::printCanvas(const string& fname, TPad* C, string suffix, const string& xsfx) {
     if(!suffix.size()) suffix = printsfx;
     if(squelchAllPrinting) { printf("Printing squelched!\n"); return ""; }
 
-    string fout = fullPath() + "/" + fname + suffix;
+    string fout = fullPath() + "/" + fname + suffix + xsfx;
     makePath(fout, true);
 
     if(!C) C = &defaultCanvas;
@@ -59,7 +81,7 @@ string OutputManager::printCanvas(const string& fname, const TPad* C, string suf
         int ret = system(("gzip "+svgout+"; mv "+svgout+".gz "+fout).c_str());
         if(ret) printf("Error gzipping svg -> svgz\n");
     } else {
-        C->Print(fout.c_str());
+        C->Print(fout.c_str(), suffix.substr(1, string::npos).c_str());
     }
 
     return fout;

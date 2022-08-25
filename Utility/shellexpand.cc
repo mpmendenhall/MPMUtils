@@ -12,12 +12,14 @@ vector<string> to_vs(wordexp_t w) {
 }
 
 vector<string> shellexpand(const string& s) {
-    wordexp_t w;
-    w.we_wordc = w.we_offs = 0;
+    wordexp_t w = {0,nullptr,0};
     auto ret = wordexp(s.data(), &w, WRDE_SHOWERR | WRDE_UNDEF);
     if(ret) {
         wordfree(&w);
-        throw std::runtime_error("wordexp returned " + to_str(ret));
+        if(ret == WRDE_BADCHAR) throw std::runtime_error("Disallowed character in expansion of '" + s + "'");
+        if(ret == WRDE_BADVAL)  throw std::runtime_error("Undefined shell variable in expansion of '" + s + "'");
+        if(ret == WRDE_SYNTAX)  throw std::runtime_error("Syntax error in expansion of '" + s + "'");
+        throw std::runtime_error("wordexp(" + s + ") returned " + to_str(ret));
     }
     return to_vs(w);
 }
