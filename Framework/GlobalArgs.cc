@@ -41,13 +41,12 @@ bool string_to_bool(const string& s) {
 }
 
 size_t numGlobalArg(const string& argname) {
+    QueriedArgs().insert(argname);
     auto it = GlobalArgs().find(argname);
     return it == GlobalArgs().end()? 0 : it->second.size();
 }
 
 bool wasArgGiven(const string& argname, const string& help) {
-    QueriedArgs().insert(argname);
-
     printf("* Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
     if(numGlobalArg(argname)) {
         printf(TERMFG_GREEN "enabled" TERMSGR_RESET "\n");

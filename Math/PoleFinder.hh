@@ -43,7 +43,7 @@ struct pole_t {
     void step_closer(F_t& F) {
         e2 = e1;
         val_t s3 = (s0 + e1.s)/val_t{2};
-        e1 = eval_t(F, s3);
+        e1 = eval_t<val_t>(F, s3);
     }
 
     /// update estimates for s0 using survey points
@@ -173,7 +173,7 @@ public:
     /// Walk in candidate pole
     template<class F_t>
     void add_pole(F_t& F, pole_t p) {
-        polefunc_t PF(F, *this, poles.size());
+        polefunc_t<F_t> PF(F, *this, poles.size());
         p.e1 = {PF, 0.80 * p.s0};
         p.e2 = {PF, 0.90 * p.s0};
 
@@ -235,7 +235,7 @@ public:
     template<class F_t>
     norm_t refine_poles(F_t& F) {
         if(verbose) std::cout << "\nRefining...\n";
-        polefunc_t PF(F, *this, 0);
+        polefunc_t<F_t> PF(F, *this, 0);
         norm_t nmax = {};
         for(auto& p: poles) {
             auto d = p.refine(PF);
