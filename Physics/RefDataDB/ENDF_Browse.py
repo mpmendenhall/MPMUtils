@@ -47,6 +47,7 @@ if __name__=="__main__":
         f = open(options.browse,"r")
         while f:
             s = load_ENDF_Section(f)
+            if s is None: break
             print("\n--------------------------------------")
             print(s)
             print("--------------------------------------\n")

@@ -24,9 +24,9 @@ int main(int argc, char** argv) {
     optionalGlobalArg("as", astype, "comparison type");
 
     if(astype == "automatic") DB.inferType();
-    else if(astype == "root") DB.comptype = DeltaBase::COMPARE_ROOT;
-    else if(astype == "dir")  DB.comptype = DeltaBase::COMPARE_DIR;
-    else if(astype == "diff") DB.comptype = DeltaBase::COMPARE_DIFF;
+    else if(astype == "root") DB.comptype = DeltaBase::CompareType_t::ROOT;
+    else if(astype == "dir")  DB.comptype = DeltaBase::CompareType_t::Dir;
+    else if(astype == "diff") DB.comptype = DeltaBase::CompareType_t::Diff;
     else throw std::runtime_error("Unknown comparison type '" + astype + "'");
 
     return DB.compare()? EXIT_SUCCESS : EXIT_FAILURE;

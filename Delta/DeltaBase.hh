@@ -18,10 +18,10 @@ public:
 
     /// comparison mode selection
     enum CompareType_t {
-        COMPARE_DIFF,   ///< compare using "diff"
-        COMPARE_DIR,    ///< directories/files comparison
-        COMPARE_ROOT    ///< ROOT file comparison
-    } comptype = COMPARE_DIFF;
+        Diff,   ///< compare using "diff"
+        Dir,    ///< directories/files comparison
+        ROOT    ///< ROOT file comparison
+    } comptype = CompareType_t::Diff;
 
     /// infer comparison type from input files
     CompareType_t inferType();

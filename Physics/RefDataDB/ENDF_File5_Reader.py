@@ -37,7 +37,8 @@ class ENDF_File5_Sec(ENDF_HEAD_Record):
         super().__init__(l0)
         assert self.MF == 5
         self.rectp = "File 5 'Energy distributions of secondary particles' section %i"%self.MT
-        self.rnm("N1","NK") # number of subsections
+        self.NK = self.N1
+        #self.rnm("N1","NK") # number of subsections
 
         self.distribs = [ENDF_File5_Distrib(iterlines) for i in range(self.NK)]
         footer = ENDF_HEAD_Record(next(iterlines))

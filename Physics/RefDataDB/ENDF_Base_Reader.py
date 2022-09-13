@@ -31,7 +31,7 @@ class ENDF_Record(object):
 
     def printid(self):
         """Short-form description"""
-        return "[m%i f%i s%i l%i] "%(self.MAT, self.MF, self.MT, self.NS) + self.rectp
+        return "[MAT %i MF %i MT %i line %i] "%(self.MAT, self.MF, self.MT, self.NS) + self.rectp
 
     def __repr__(self):
         return self.printid() + ' "%s"'%self.TEXT
@@ -99,6 +99,7 @@ class ENDF_List(ENDF_CONT_Record):
 class ENDF_Ranges(ENDF_CONT_Record):
     """Base for tabulated range datastructures"""
     range_reader = ff.FortranRecordReader('(6I11)')
+    INT_names = {1: "nearest", 2: "lin/lin", 3: "log/lin", 4: "lin/log", 5: "log/log"}
 
     def __init__(self, iterlines):
         super().__init__(next(iterlines))
@@ -184,7 +185,7 @@ class ENDF_Tab1(ENDF_Ranges):
         s = '\n' + self.printid() + '\n'
         i0 = 0
         for n,r in enumerate(self.NBT):
-            s += "-- range interpolation %i --\n"%self.INT[n]
+            s += "-- range interpolation %i (%s) --\n"%(self.INT[n], self.INT_names.get(self.INT[n], "???"))
             for i in range(i0, r): s += "\t%3i\t%12g\t%g\n" % (i, self.xs[i], self.ys[i])
             i0 = r
         return s + "------- end TAB1 -------\n"
@@ -202,7 +203,7 @@ class ENDF_Tab2(ENDF_Ranges):
         s = '\n' + self.printid()
         i0 = 0
         for n,r in enumerate(self.NBT):
-            s += "\n-- range interpolation %i --"%self.INT[n]
+            s += "\n-- range interpolation %i (%s) --\n"%(self.INT[n], self.INT_names.get(self.INT[n], "???"))
             if self.entries:
                 for i in range(i0, r): s += "\n%3i:"%i + indent(str(self.entries[i]), '\t')
             i0 = r

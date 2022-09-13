@@ -8,7 +8,8 @@ class ENDFDB:
 
     def __init__(self,dbname = None):
         """Initialize with database filename to open"""
-        if dbname is None: dbname = os.environ["ENDFDB"]
+        if dbname is None: dbname = os.environ.get("ENDFDB", None)
+        if dbname is None: return
         self.conn = sqlite3.connect(dbname)
         self.conn.row_factory = sqlite3.Row # fast name-based access to columns
         self.curs = self.conn.cursor()

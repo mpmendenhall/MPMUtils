@@ -41,13 +41,16 @@ class ENDF_File6_LAW2_List(ENDF_List):
     """List entry in LAW=2 File 6 table [MAT, 6, MT/ 0.0, E_1 ,LANG, 0, NW, NL/ A_l(E)]LIST"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.rnm("C2","E1")     # incident energy
+        self.rnm("C2","E1")     # incident energy [eV]
         self.rnm("L1","LANG")   # angular distribution type
         self.rnm("N2","NL")     # LANG=0: highest Legendre order used; else number of cosines tabulated.
         self.rectp = "LIST.LAW2"
 
     def __repr__(self):
-        return self.printid() +'; E1=%g, LANG=%i, NL=%i'%(self.E1, self.LANG, self.NL)
+        s = self.printid() +'; E1 %g MeV,\tLANG = %i'%(1e-6 * self.E1, self.LANG)
+        if self.LANG == 0:
+            return s + ': Legendre polynomial with NL = %i terms:  \t'%self.NL + str(self.data)
+        return s+',\tNL=%i'%self.NL
 
 class ENDF_File6_LAW2(ENDF_Tab2):
     """LAW=2 angular distribution"""
@@ -132,5 +135,5 @@ class ENDF_File6_Sec(ENDF_HEAD_Record):
 
     def __repr__(self):
         s = self.printid() +', %g AMU; %i products in frame %i'%(self.AWR, self.NK, self.LCT)
-        for t in self.sections: s += '\n'+str(t)
+        for t in self.sections: s += '\n    --- File 6 Section ---' + str(t)
         return s
