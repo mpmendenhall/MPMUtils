@@ -138,24 +138,27 @@ void PluginSaver::makePlots() {
     }
 }
 
-void PluginSaver::startData() {
-    ana_t0 = steady_clock::now();
+void PluginSaver::signal(datastream_signal_t s) {
 
-    for(auto P: myPlugins) {
-        auto t0 = steady_clock::now();
-        P->startData();
-        P->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
-    }
-}
 
-void PluginSaver::processEvent() { for(auto P: myPlugins) P->processEvent(); }
-
-void PluginSaver::finishData(bool f) {
-    SegmentSaver::finishData(f);
-    for(auto P: myPlugins) {
-        auto t0 = steady_clock::now();
-        P->finishData(f);
-        P->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
+    if(s == DATASTREAM_INIT) {
+        SegmentSaver::signal(s);
+        ana_t0 = steady_clock::now();
+        for(auto P: myPlugins) {
+            auto t0 = steady_clock::now();
+            P->signal(s);
+            P->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
+        }
+    } else if(s == DATASTREAM_END) {
+        for(auto P: myPlugins) {
+            auto t0 = steady_clock::now();
+            P->signal(s);
+            P->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
+        }
+        SegmentSaver::signal(s);
+    } else {
+        for(auto P: myPlugins) P->signal(s);
+        SegmentSaver::signal(s);
     }
 }
 

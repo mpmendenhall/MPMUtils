@@ -26,7 +26,12 @@ SegmentSaver::~SegmentSaver() {
         fIn->Close();
         delete fIn;
     }
-    for(auto& kv: cumDat) delete kv.second;
+    //for(auto& kv: cumDat) delete kv.second;
+}
+
+void SegmentSaver::signal(datastream_signal_t s) {
+    if(s >= DATASTREAM_END)
+        for(auto& kv: cumDat) kv.second->endFill();
 }
 
 const string& SegmentSaver::getMeta(const string& k) {

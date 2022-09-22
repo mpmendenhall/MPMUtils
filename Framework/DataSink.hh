@@ -8,7 +8,7 @@
 
 /// Virtual base class for accepting a stream of objects
 template<typename T>
-class DataSink: public SignalSink {
+class DataSink: virtual public SignalSink {
 public:
     /// received data type
     typedef T sink_t;

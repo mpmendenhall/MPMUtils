@@ -1,5 +1,5 @@
 -- sqlite3 database schema for storing ENDF6 information
--- sqlite3 ENDF.db < $MPMUTILS/Physics/RefDataDB/ENDF6_DB_Schema.sql
+-- sqlite3 $ENDFDB < $MPMUTILS/Physics/RefDataDB/ENDF6_DB_Schema.sql
 
 -- File sections, containing a particular type of information about a particular material
 CREATE TABLE ENDF_Sections (

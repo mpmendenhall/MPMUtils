@@ -31,14 +31,19 @@ class ENDF_File33_NI_SSSec(ENDF_List):
             self.rectp += "}"
 
         elif self.LB == 5:      # space-efficient energy-averaged relative covariance matrix representation
-            self.rnm("N2","NE") # number of energy bin edge entries
-            self.rnm("L1","LS") # symmetric matrix flag
+            # [MAT,33,MT/ 0.0, 0.0, LS, LB=5, NT, NE/ {Ek }{Fk,k′ }] LIST
+            self.rnm("NPL", "NT")   # total number of list entries
+            self.rnm("N2","NE")     # number of energy bin edge entries
+            self.rnm("L1","LS")     # symmetric matrix flag
             self.Er = self.data[:self.NE]
-            self.rectp += " {%i^2 %g -- %g%s}"%(self.NE-1, self.Er[0], self.Er[-1], " S" if self.LS else "")
+            self.rectp += " Energy-Averaged Relative Covariance for %i energy divisions, %g -- %g eV%s"%(self.NE, self.Er[0], self.Er[-1], " Symmetric" if self.LS else "")
 
+            # unpack data into square (triangular) arrays for each energy range
             if not self.LS: # asymetric
+                assert self.NT == self.NE * (self.NE - 1) + 1
                 self.data = [self.data[self.NE + i*(self.NE-1) : self.NE + (i+1)*(self.NE-1)] for i in range(self.NE-1)]
             else: # symmtric data packing
+                assert 2*self.NT == self.NE * (self.NE + 1)
                 d = []
                 n = self.NE
                 for i in range(self.NE-1):
@@ -60,7 +65,7 @@ class ENDF_File33_NI_SSSec(ENDF_List):
             pass
 
     def printid(self):
-        return super().printid() + " LB=%i"%self.LB
+        return super().printid() + " (LB=%i)"%self.LB
 
     def __repr__(self):
         s = self.printid()
@@ -79,7 +84,7 @@ class ENDF_File33_SubSec(ENDF_CONT_Record):
         self.rnm("L2","MT1")        # MT for 2nd cross-section
         self.rnm("N1","NC")         # number of NC-type subsubsections
         self.rnm("N2","NI")         # number of NI-type subsubsections
-        self.rectp = "Covariance x [m%i(%i) f%i s%i]"%(self.MAT1, self.XLFS1, self.XMF1, self.MT1)
+        self.rectp = "Covariance versus [MAT %i(Final State %i) MF %i MT %i]"%(self.MAT1, self.XLFS1, self.XMF1, self.MT1)
 
         self.subNC = [ENDF_File33_NC_SSSec(iterlines) for i in range(self.NC)]
         self.subNI = [ENDF_File33_NI_SSSec(iterlines) for i in range(self.NI)]
@@ -87,10 +92,10 @@ class ENDF_File33_SubSec(ENDF_CONT_Record):
     def __repr__(self):
         s = self.printid()
         if self.subNC:
-            s += "\n---- NC subsubsections ----"
+            s += "\n---- %i NC-type (cross-reference) subsubsections ----"%len(self.subNC)
             for ss in self.subNC: s += '\n' + str(ss)
         if self.subNI:
-            s += "\n---- NI subsubsections ----"
+            s += "\n---- %i NI-type (explicit covariance) subsubsections ----"%len(self.subNI)
             for ss in self.subNI: s += '\n' + str(ss)
         return s
 
@@ -114,7 +119,7 @@ class ENDF_File33_Sec(ENDF_HEAD_Record):
         assert footer.rectp == "SEND"
 
     def __repr__(self):
-        s = self.printid()
-        for c in self.contents: s += '\n\n'+str(c)
+        s = self.printid() + " with %i subsections"%len(self.contents)
+        for c in self.contents: s += '\n\n-- Subsection '+str(c)
         s += "\n\n----- End File 33 ------"
         return s

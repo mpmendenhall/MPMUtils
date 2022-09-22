@@ -31,7 +31,7 @@ class ENDF_Record(object):
 
     def printid(self):
         """Short-form description"""
-        return "[MAT %i MF %i MT %i line %i] "%(self.MAT, self.MF, self.MT, self.NS) + self.rectp
+        return "[MAT %i MF %i MT %i line %s] "%(self.MAT, self.MF, self.MT, str(self.NS if self.NS else "-")) + self.rectp
 
     def __repr__(self):
         return self.printid() + ' "%s"'%self.TEXT

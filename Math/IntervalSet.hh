@@ -89,12 +89,18 @@ public:
         }
         erase(begin(), it);
     }
+    /// flush all active intervals into summary
+    void flush() {
+        nSummary += size();
+        for(auto& i: *this)  tSummary += i.dl();
+        super::clear();
+    }
 
-    size_t nSummary = 0;    /// number of summarized non-tracked intervals
+    size_t nSummary = 0;    ///< number of summarized non-tracked intervals
     size_t dtMax = 0;       ///< maximum length to store (0 to disable)
-    T tSummary = {};         /// content of summarized non-tracked intervals
-    T tIndividual = {};      /// span of individual intervals added before overlap
-    size_t nIndividual = 0; /// number of individual intervals before merge
+    T tSummary = {};        ///< content of summarized non-tracked intervals
+    T tIndividual = {};     ///< span of individual intervals added before overlap
+    size_t nIndividual = 0; ///< number of individual intervals before merge
 
     /// number of intervals
     size_t n() const { return size() + nSummary; }

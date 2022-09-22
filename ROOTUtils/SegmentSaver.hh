@@ -6,6 +6,7 @@
 
 #include "OutputManager.hh"
 #include "TCumulative.hh"
+#include "SignalSink.hh"
 #include <TVectorT.h>
 #include <TFile.h>
 #include <stdexcept>
@@ -13,7 +14,7 @@
 using std::set;
 
 /// class for saving, retrieving, and summing data from file
-class SegmentSaver: public OutputManager {
+class SegmentSaver: public OutputManager, virtual public SignalSink {
 public:
     /// constructor, optionally with input filename
     explicit SegmentSaver(OutputManager* pnt, const string& _path = "SegmentSaver", const string& inflName = "");
@@ -118,6 +119,9 @@ public:
     TVectorD* normalization = nullptr;  ///< normalization information; meaning defined in subclasses
     SegmentSaver* BGData = nullptr;     ///< optional subtracted background
 
+    /// handle datastream signals
+    void signal(datastream_signal_t s) override;
+
     double tSetup = 0;          ///< performance profiling: time to run constructor
     double tProcess = 0;        ///< permormance profiling: time to process data
     double tCalc = 0;           ///< performance profiling: time for calculateResults
@@ -127,14 +131,8 @@ public:
 
     // ----- Subclass me! ----- //
 
-    /// optional setup at start of data loading
-    virtual void startData() { }
-    /// optional event processing hook
-    virtual void processEvent() { }
     /// optional mid-processing status check calculations/results/plots
     virtual void checkStatus() { }
-    /// cleanup at end of data loading; set final = false to indicate more data yet to come
-    virtual void finishData(bool /*final*/ = true) { for(auto& kv: cumDat) kv.second->endFill(); }
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
     virtual void normalize() { if(!isNormalized()) { normalization->ResizeTo(1); (*normalization)(0) = 1; }  }
     /// virtual routine for generating calculated hists

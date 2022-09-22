@@ -32,16 +32,12 @@ public:
     /// background subtract
     void BGSubtract(SegmentSaver& BG) override;
 
+    /// handle datastream signals
+    void signal(datastream_signal_t s) override;
 
-    /// optional setup at start of data loading
-    void startData() override;
-    /// optional event processing hook
-    void processEvent() override;
     /// optional mid-processing status updates
     void checkStatus() override;
-    /// optional cleanup at end of data loading
-    void finishData(bool /*final*/ = true) override;
-    /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
+    /// perform normalization on all histograms
     void normalize() override;
     /// self-normalization before plugins
     virtual void _normalize() { SegmentSaver::normalize(); }

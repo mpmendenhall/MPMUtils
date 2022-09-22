@@ -100,3 +100,9 @@ if __name__=="__main__":
             print(s.printid() if s is not None else None)
     if len(sids) and not options.count:  print("\n(%i matching records.)"%len(sids))
 
+
+
+"""
+sqlite3 $ENDFDB < $MPMUTILS/Physics/RefDataDB/ENDF6_DB_Schema.sql
+find . -name "*.endf" -type f -exec $MPMUTILS/Physics/RefDataDB/ENDF_Browse.py --load {} \;
+"""

@@ -23,7 +23,9 @@ public:
     PreSink<CB>(std::forward<Args>(a)...), window_t(dw) { }
 
     using PreSink<CB>::push;
-    using PreSink<CB>::signal;
+
+    /// receive signals
+    void signal(datastream_signal_t s) override { PreSink<CB>::signal(s); }
 
 protected:
     using OrderedWindow<cluster_t>::push;
