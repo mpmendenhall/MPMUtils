@@ -28,6 +28,7 @@ public:
         S.lookupValue("npause", npause);
         optionalGlobalArg("npause", npause, "pause display after every n clusters shown");
         if(S.exists("next")) this->createOutput(S["next"]);
+        S.lookupValue("tcluster", this->PreTransform.cluster_dx);
     }
 
     /// intercept and pass input objects

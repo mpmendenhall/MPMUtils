@@ -38,7 +38,7 @@ void AnalysisStep::make_xmlout() {
         // read previous data (unparsed)
         string xmlin = "";
         for(auto const& f: infiles) {
-            xmlin = split(f,".").back()=="xml"? f : f+".xml";
+            xmlin = split(f,".").back() == "xml"? f : f+".xml";
             if(fileExists(xmlin)) break;
             xmlin = "";
         }

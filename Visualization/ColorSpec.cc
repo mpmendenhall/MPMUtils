@@ -14,7 +14,7 @@ namespace color {
     rgb::operator hsv() const {
         hsv C(0, 0, std::max(r, std::max(g, b)), a);
         double d = C.v - std::min(r, std::min(g, b));
-        if(d==0) return C;
+        if(d == 0) return C;
 
         C.s = d/C.v;
         if(C.v == r) C.h = (g - b)/d;
@@ -37,7 +37,7 @@ namespace color {
     }
 
     hsv::operator rgb() const {
-        if(s==0) return rgb(v,v,v,a);
+        if(s == 0) return rgb(v,v,v,a);
 
         double hh = (h < 0)? 2*M_PI - fmod(fabs(h), 2*M_PI) : fmod(h, 2*M_PI);
         double H = 3*hh/M_PI;

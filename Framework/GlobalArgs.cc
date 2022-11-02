@@ -36,8 +36,8 @@ void loadGlobalArgs(int argc, char** argv) {
 bool string_to_bool(const string& s) {
     if(!s.size()) return false;
     if(atoi(s.c_str())) return true;
-    auto c = s[0];
-    return c=='Y' || c == 'y' || c == 'T' || c == 't';
+    auto c = s.front();
+    return c == 'Y' || c == 'y' || c == 'T' || c == 't';
 }
 
 size_t numGlobalArg(const string& argname) {

@@ -41,20 +41,14 @@ bool dirExists(const string& d) {
 }
 
 void makePath(const string& p, bool forFile) {
-    vector<string> pathels = split(p,"/");
-    if(forFile && pathels.size())
-        pathels.pop_back();
-    if(!pathels.size())
-        return;
-    string thepath;
-    if(p[0]=='/')
-        thepath += "/";
-    for(unsigned int i=0; i<pathels.size(); i++) {
-        thepath += pathels[i] + "/";
+    auto pathels = split(p,"/");
+    if(forFile && pathels.size()) pathels.pop_back();
+    if(!pathels.size()) return;
 
-        static set<string> madepaths;
-        if(madepaths.count(thepath)) continue;
-        madepaths.insert(thepath);
+    string thepath;
+    if(p.front() == '/') thepath += "/";
+    for(auto& e: pathels) {
+        thepath += e + "/";
         if(!dirExists(thepath)) {
             string cmd = "mkdir -p '"+thepath+"'";
             int err = system(cmd.c_str());
@@ -64,24 +58,23 @@ void makePath(const string& p, bool forFile) {
 }
 
 double fileAge(const string& fname) {
-    if(!(fileExists(fname) || dirExists(fname)))
-        return -1.;
+    if(!(fileExists(fname) || dirExists(fname))) return -1.;
     struct stat attrib;
     stat(fname.c_str(), &attrib);
-    time_t timenow = time(nullptr);
-    return timenow - attrib.st_mtime;
+    return time(nullptr) - attrib.st_mtime;
 }
 
 vector<string> listdir(const string& dir, bool includeHidden, bool fullPath) {
     vector<string> dirs;
-    dirent* entry;
     DIR* dp = opendir(dir.c_str());
-    if (dp == nullptr)
-        return dirs;
+    if (dp == nullptr) return dirs;
+
+    dirent* entry;
     while((entry = readdir(dp)))
         if(includeHidden || entry->d_name[0] != '.')
             dirs.push_back((fullPath?dir+"/":"")+entry->d_name);
     closedir(dp);
+
     std::sort(dirs.begin(),dirs.end());
     return dirs;
 }
@@ -89,8 +82,8 @@ vector<string> listdir(const string& dir, bool includeHidden, bool fullPath) {
 void combo_pdf(const vector<string>& namelist, const string& outname) {
     if(!namelist.size()) return;
     makePath(outname, true);
-    if(namelist.size()==1) {
-        string cmd = "mv " + namelist[0] + " " + outname;
+    if(namelist.size() == 1) {
+        string cmd = "mv " + namelist.front() + " " + outname;
         int rc = system(cmd.c_str());
         if(rc) printf("%s: %i\n", cmd.c_str(), rc);
         return;

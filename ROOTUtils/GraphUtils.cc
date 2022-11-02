@@ -149,7 +149,7 @@ void comboErr(double a, double da, double b, double db, double& x, double& dx) {
 }
 
 void accumPoints(TGraphErrors& a, const TGraphErrors& b, bool errorWeight, bool yonly) {
-    assert(a.GetN()==b.GetN());
+    assert(a.GetN() == b.GetN());
     for(int i=0; i<a.GetN(); i++) {
         double ax,ay,bx,by;
         a.GetPoint(i,ax,ay);
@@ -463,7 +463,7 @@ double hcount_from_end(const TH1& h, double c) {
 void fixNaNs(TH1* h) {
     unsigned int nb = h->GetNbinsX();
     for(unsigned int i=0; i<=nb+1; i++) {
-        if(!(h->GetBinContent(i)==h->GetBinContent(i))) {
+        if(!(h->GetBinContent(i) == h->GetBinContent(i))) {
             printf("NaN found in bin %u/%u!\n",i,nb);
             h->SetBinContent(i,0);
             h->SetBinError(i,0);
@@ -536,7 +536,7 @@ vector<TH1F*> sliceTH2(const TH2& h2, AxisDirection_t d, bool includeOverflow) {
     const unsigned int nn = d==X_DIRECTION? ny : nx;
 
     for(unsigned int z = 0; z <= nz+1; z++) {
-        if(!includeOverflow && (z==0 || z==nz+1)) continue;
+        if(!includeOverflow && (z == 0 || z == nz+1)) continue;
         TH1F* h1 = axisHist(h2, h2.GetName()+("_"+to_str(z)), d==X_DIRECTION? Y_DIRECTION : X_DIRECTION);
         h1->GetYaxis()->SetTitle(h2.GetZaxis()->GetTitle());
         for(unsigned int n=0; n <= nn+1; n++) {

@@ -86,10 +86,8 @@ vector<string> split(const string& s, const string& splitchars) {
 }
 
 string join(const vector<string>& ss, const string& sep) {
-    string s = "";
-    if(!ss.size())
-        return s;
-    s = ss[0];
+    if(!ss.size()) return "";
+    auto s = ss.front();
     for(auto it = ss.begin()+1; it < ss.end(); ++it)
         s += sep + *it;
     return s;

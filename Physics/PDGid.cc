@@ -23,7 +23,7 @@ const string& elSymb(unsigned int Z) {
 }
 
 string isot_name_ZA(unsigned int Z, unsigned int A) {
-    if(A==1 && Z==0) return "n";
+    if(A == 1 && Z == 0) return "n";
     return to_str(A)+elSymb(Z);
 }
 
