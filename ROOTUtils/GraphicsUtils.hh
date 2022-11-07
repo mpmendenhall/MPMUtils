@@ -25,15 +25,6 @@ void drawHistoPair(TH1* hRed, TH1* hBlue, const string& opt = "", Int_t c1 = 2, 
 /// draw a pair of histograms, with line and diamond markers
 void drawDataMCPair(TH1* dat, TH1* mc);
 
-/// Draw list of objects into multi-page PDF
-void combo_draw_objs(const vector<TObject*>& hs, const string& outpath, const char* opt = "");
-/// Draw list of objects into multi-page PDF
-template<class T = TObject>
-void combo_draw(const vector<T*>& hs, const string& outpath, const char* opt = "") {
-    vector<TObject*> v(hs.begin(), hs.end());
-    combo_draw_objs(v, outpath, opt);
-}
-
 /// draw vertical line marker
 TLine* drawVLine(Float_t x, TVirtualPad* C = nullptr, Int_t color = 4, Int_t style = 1);
 /// draw horizontal line

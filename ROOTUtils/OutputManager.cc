@@ -45,26 +45,27 @@ string OutputManager::fullPath() const {
     return parent->fullPath() + "/" + path;
 }
 
-void OutputManager::nextPrint(const string& fname, const string& suffix, TPad* P) {
-    if(printset.n >= 1) printCanvas(printset.fname, printset.P, printset.sfx, printset.n == 1? "(" : "");
+void OutputManager::printMulti(const string& fname, const string& suffix, TPad* P) {
+    if(!fname.size()) throw std::logic_error("Printset requires non-empty name");
 
-    if(!printset.n) {
-        printset.fname = fname;
-        printset.sfx = suffix;
-    } else if(printset.fname != fname || printset.sfx != suffix) throw std::logic_error("Inconsistent printset naming");
+    auto& printset = psets[fname];
+    if(!printset.n) printset.sfx = suffix;
+    else if(printset.sfx != suffix) throw std::logic_error("Inconsistent printset naming");
 
+    printCanvas(fname, P, suffix, printset.n? "" : "(");
     ++printset.n;
-    printset.P = P;
 }
 
-void OutputManager::endPrintset() {
-    if(printset.n == 0) return;
-    if(printset.n == 1) printCanvas(printset.fname, printset.P, printset.sfx);
-    else if(printset.n > 1) printCanvas(printset.fname, printset.P, printset.sfx, ")");
+void OutputManager::endPrintMulti(const string& fname) {
+    if(!fname.size()) {
+        while(psets.size()) endPrintMulti(psets.begin()->first);
+        return;
+    }
 
-    printset.n = 0;
-    printset.P = nullptr;
-    printset.fname = printset.sfx = "";
+    auto it = psets.find(fname);
+    if(it == psets.end()) return;
+    printCanvas(fname, nullptr, it->second.sfx, "]");
+    psets.erase(it);
 }
 
 string OutputManager::printCanvas(const string& fname, TPad* C, string suffix, const string& xsfx) {
