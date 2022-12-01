@@ -163,7 +163,7 @@ void displayGlobalArgs() {
 
 int checkUnusedArgs() {
     int unused = 0;
-    auto& QA = QueriedArgs();
+    const auto& QA = QueriedArgs();
     for(auto& kv: GlobalArgs()) {
         if(QA.count(kv.first)) continue;
         printf(TERMFG_RED "* Unused command-line argument: " TERMFG_YELLOW "'%s'\n" TERMSGR_RESET, kv.first.c_str());

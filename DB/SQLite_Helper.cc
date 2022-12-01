@@ -33,6 +33,8 @@ SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create) {
         throw SQLiteHelper_Exception("failed initialization of sqlite3 memvfs: "
         + string(sqlite3_errstr(memvfs_init)));
 
+    if(!dbname.size()) return;
+
     printf("Opening SQLite3 DB '%s'...\n", dbname.c_str());
     int err = sqlite3_open_v2(dbname.c_str(), &db,
                               readonly? SQLITE_OPEN_READONLY :

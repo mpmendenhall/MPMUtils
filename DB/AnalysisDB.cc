@@ -22,6 +22,11 @@ string ADBfile() {
     string res = "$"+dbvar;
     auto dbfile = optionalGlobalArg("AnaDB", res, "Analysis DB file")? res : getEnv(dbvar);
 
+    if(!dbfile.size()) {
+        printf(TERMFG_RED "Warning: no $%s_ANADB file specified" TERMSGR_RESET "\n", PROJ_ENV_PFX().c_str());
+        return "";
+    }
+
     if(!fileExists(dbfile)) {
         printf("Initializing new AnaDB at '%s'\n", dbfile.c_str());
         makePath(dbfile, true);

@@ -46,6 +46,9 @@ public:
     /// Destructor
     virtual ~SQLite_Helper();
 
+    /// check for valid db connection
+    bool isValid() const { return db; }
+
     /// BEGIN TRANSACTION command
     int beginTransaction(bool exclusive=false) { return (txdepth++)? SQLITE_OK : exec(exclusive? "BEGIN EXCLUSIVE TRANSACTION" : "BEGIN TRANSACTION"); }
     /// END TRANSACTION command

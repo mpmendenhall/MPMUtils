@@ -13,7 +13,7 @@ using std::pair;
 class GammaEdgeFitter: public TF1, protected GammaScatterSteps {
 public:
     /// Contructor
-    GammaEdgeFitter(double _E0);
+    explicit GammaEdgeFitter(double _E0);
 
     /// Evaluate with fit parameters
     double Evaluate(double* x, double* p);

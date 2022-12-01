@@ -40,7 +40,7 @@ public:
 
     /// print array/vector of several objects to same file
     template<typename ARRAY>
-    void printTogether(ARRAY& itms, const string& fname, const string& dopt = "", string suffix="") {
+    void printTogether(ARRAY& itms, const string& fname, const string& dopt = "", const string& suffix="") {
         for(auto h: itms) {
             h->Draw(dopt.c_str());
             printMulti(fname, suffix);
@@ -49,7 +49,7 @@ public:
     }
     /// print map of several objects to same file
     template<typename K, typename V>
-    void printTogether(map<K,V>& itms, const string& fname, const string& dopt = "", string suffix="") {
+    void printTogether(map<K,V>& itms, const string& fname, const string& dopt = "", const string& suffix="") {
         for(auto& kv: itms) {
             kv.second->Draw(dopt.c_str());
             printMulti(fname, suffix);
