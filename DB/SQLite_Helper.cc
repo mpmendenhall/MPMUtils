@@ -6,6 +6,7 @@
 // -- Michael P. Mendenhall, 2015
 
 #include "SQLite_Helper.hh"
+#include "StringManip.hh"
 
 #include <stdio.h>
 #include <string.h>
@@ -28,7 +29,7 @@ extern "C" {
 
 static int memvfs_init = sqlite3_auto_extension((void(*)(void)) &sqlite3_memvfs_init);
 
-SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create) {
+SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create, const string& schema) {
     if(memvfs_init != SQLITE_OK)
         throw SQLiteHelper_Exception("failed initialization of sqlite3 memvfs: "
         + string(sqlite3_errstr(memvfs_init)));
@@ -48,6 +49,17 @@ SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create) {
     }
 
     sqlite3_busy_timeout(db, 100);
+
+    if(schema.size()) {
+        auto stmt = loadStatement("SELECT COUNT(*) FROM sqlite_master");
+        busyRetry(stmt);
+        bool ntables = sqlite3_column_int64(stmt, 0);
+        sqlite3_reset(stmt);
+        if(!ntables) {
+            printf("Initializing new DB from schema file '%s'\n", schema.c_str());
+            execFile(schema);
+        }
+    }
 }
 
 SQLite_Helper::SQLite_Helper(sqlite3* _db): db(_db) {
@@ -100,6 +112,18 @@ int SQLite_Helper::exec(sqlite3_stmt* stmt, bool checkOK) {
         throw QueryFailError("Failed exec '" + string(sqlite3_errmsg(db)) + "'");
     }
     return rc;
+}
+
+int SQLite_Helper::execFile(const string& fname) {
+    auto s = loadFileString(fname);
+    char* emsg = nullptr;
+    auto res = sqlite3_exec(db, s.c_str(), nullptr, nullptr, &emsg);
+    if(emsg) {
+        string m(emsg);
+        sqlite3_free(emsg);
+        throw QueryFailError("Failed execFile on '" + fname + "' with error '" + m + "'");
+    }
+    return res;
 }
 
 void SQLite_Helper::getVecBlob(vector<double>& v, sqlite3_stmt* stmt, int col) {

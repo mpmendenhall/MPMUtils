@@ -40,7 +40,7 @@ class BadQueryResultError: public SQLiteHelper_Exception {
 class SQLite_Helper {
 public:
     /// Constructor
-    explicit SQLite_Helper(const string& dbname, bool readonly = false, bool create = true);
+    explicit SQLite_Helper(const string& dbname, bool readonly = false, bool create = true, const string& schema = "");
     /// Constructor, adopting an open DB
     explicit SQLite_Helper(sqlite3* _db);
     /// Destructor
@@ -64,6 +64,8 @@ public:
     int exec(sqlite3_stmt* stmt, bool checkOK = true);
     /// run a statement expecting no return values (using busyRetry); optionally, throw error if not SQLITE_OK
     int exec(const string& qry, bool checkOK = true) { return exec(loadStatement(qry), checkOK); }
+    /// execute from contents of file
+    int execFile(const string& fname);
     /// bind std::string to query
     static void bind_string(sqlite3_stmt* stmt, int i, const string& s);
     /// put column i string into rslt, or leave unchanged if null; return whether non-nullptr

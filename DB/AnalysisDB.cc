@@ -27,17 +27,14 @@ string ADBfile() {
         return "";
     }
 
-    if(!fileExists(dbfile)) {
-        printf("Initializing new AnaDB at '%s'\n", dbfile.c_str());
-        makePath(dbfile, true);
-        string cmd = "sqlite3 '" + dbfile + "' < "+getEnv(PROJ_ENV_PFX()+"_CODE",true)+"/DB/AnalysisDB_Schema.sql";
-        int err = system(cmd.c_str());
-        if(err) throw std::runtime_error("Bad AnaDB path '"+dbfile+"'");
-    }
     return dbfile;
 }
 
-AnalysisDB::AnalysisDB(): SQLite_Helper(ADBfile()) { }
+AnalysisDB::AnalysisDB():
+SQLite_Helper(ADBfile(), false, true,
+              getEnv(PROJ_ENV_PFX()+"_CODE",true)+"/DB/AnalysisDB_Schema.sql") {
+    exec("PRAGMA foreign_keys = ON");
+}
 
 AnalysisDB::anarun_id_t AnalysisDB::createAnaRun(const string& dataname) {
     auto t = time(nullptr);
