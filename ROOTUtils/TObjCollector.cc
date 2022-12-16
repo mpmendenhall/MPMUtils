@@ -23,13 +23,22 @@ TDirectory* TObjCollector::writeItems(TDirectory* d) {
     }
 
     d->cd();
-    for(auto i: namedItems) i->Write();
+    for(auto& kv: namedItems) kv.second->Write();
 
     return d;
 }
 
+void TObjCollector::addNamedObject(TNamed* o) {
+    if(!o) return;
+    string n(o->GetName());
+    if(namedItems.count(n)) throw std::runtime_error("Adding duplicate named item '" + n + "'");
+    namedItems[n] = o;
+}
+
 void TObjCollector::deleteAll() {
-    for(auto i: namedItems) delete i;
+    return; // TODO FIXME sometimes crashes at end of plugin processing!
+
+    for(auto const& kv: namedItems) delete kv.second;
     namedItems.clear();
     for(auto const& kv: anonItems) delete kv.second;
     anonItems.clear();

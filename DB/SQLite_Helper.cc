@@ -7,6 +7,7 @@
 
 #include "SQLite_Helper.hh"
 #include "StringManip.hh"
+#include "PathUtils.hh"
 
 #include <stdio.h>
 #include <string.h>
@@ -30,11 +31,14 @@ extern "C" {
 static int memvfs_init = sqlite3_auto_extension((void(*)(void)) &sqlite3_memvfs_init);
 
 SQLite_Helper::SQLite_Helper(const string& dbname, bool readonly, bool create, const string& schema) {
+    if(create && readonly) throw std::logic_error("Cannot create read-only DB");
+
     if(memvfs_init != SQLITE_OK)
         throw SQLiteHelper_Exception("failed initialization of sqlite3 memvfs: "
         + string(sqlite3_errstr(memvfs_init)));
 
     if(!dbname.size()) return;
+    makePath(dbname, true);
 
     printf("Opening SQLite3 DB '%s'...\n", dbname.c_str());
     int err = sqlite3_open_v2(dbname.c_str(), &db,

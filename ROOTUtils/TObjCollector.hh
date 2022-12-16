@@ -33,7 +33,7 @@ public:
     /// clear (delete) items
     void deleteAll();
     /// register a named ROOT object for output (and eventual deletion)
-    virtual void addNamedObject(TNamed* o) { namedItems.push_back(o); }
+    void addNamedObject(TNamed* o);
     /// convenience pass-through wrapper
     template<class T>
     T* addObject(T* o) { addNamedObject(o); return o; }
@@ -46,8 +46,8 @@ public:
     template<class T>
     T* addWithName(T* o, const string& name) { addAnonymous(o, name); return o; }
 
-    vector<TNamed*> namedItems;         ///< objects with their own names; held until deleted
-    map<string,TObject*> anonItems;     ///< objects assigned a name; held until deleted.
+    map<string, TNamed*> namedItems;    ///< objects with their own names; held until deleted
+    map<string, TObject*> anonItems;    ///< objects assigned a name; held until deleted.
     vector<TObject*> deleteItems;       ///< other objects never written to file
 };
 
