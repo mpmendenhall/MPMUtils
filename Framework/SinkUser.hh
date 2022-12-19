@@ -55,7 +55,9 @@ public:
 
     /// generate appropriat configured data sink type
     SignalSink* makeDataSink(const Setting& S, const string& dfltclass = "") const override {
-        return constructCfgObj<DataSink<T>>(S, dfltclass);
+        auto snk = constructCfgObj<DataSink<T>>(S, dfltclass);
+        if(snk) snk->initialize();
+        return snk;
     }
 
     /// pass through data flow signal

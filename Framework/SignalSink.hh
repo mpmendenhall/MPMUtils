@@ -37,6 +37,8 @@ class SignalSink {
 public:
     /// Polymorphic Destructor
     virtual ~SignalSink() { }
+    /// Initialize after creation (extra "constructor" virtual function calls)
+    virtual void initialize() { }
     /// accept data flow signal
     virtual void signal(datastream_signal_t) { }
 };

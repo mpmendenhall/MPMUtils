@@ -101,7 +101,7 @@ public:
     /// push currentC into window
     void completeCluster() {
         currentC.close();
-        if(checkCluster(currentC) && this->nextSink) this->nextSink->push(currentC);
+        if(currentC.size() && checkCluster(currentC) && this->nextSink) this->nextSink->push(currentC);
         currentC.clear();
     }
 

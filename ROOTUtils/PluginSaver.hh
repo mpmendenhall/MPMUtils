@@ -18,6 +18,9 @@ public:
     /// Destructor
     ~PluginSaver() { for(auto p: myPlugins) delete p; }
 
+    /// initialize, Configure()ing from new settings or restored from file
+    void initialize() override;
+
     /// get plugin by name
     SegmentSaver* getPlugin(const string& nm) const;
 
@@ -59,8 +62,6 @@ public:
     TDirectory* writeItems(TDirectory* d = nullptr) override;
 
 protected:
-    /// initialize, Configure()ing from new settings or restored from file --- call in final class constructor
-    void init();
     /// Configure from libconfig object, dynamically loading plugins
     virtual void Configure(const Setting& S, bool skipUnknown = false);
 

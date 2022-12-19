@@ -39,7 +39,7 @@ public:
     /// get AnaIndex<T> fot ouput datasink T
     virtual const _AnaIndex& getSinkIdx() const;
 
-    /// generate appropriat configured data sink type
+    /// generate appropriate configured data sink type
     virtual SignalSink* makeDataSink(const Setting&, const string& = "") const { return new SignalSink(); }
 
     /// construct and attach configured output sink

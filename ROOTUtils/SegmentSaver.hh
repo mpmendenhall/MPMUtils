@@ -130,7 +130,6 @@ public:
 
 
     // ----- Subclass me! ----- //
-
     /// optional mid-processing status check calculations/results/plots
     virtual void checkStatus() { }
     /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!

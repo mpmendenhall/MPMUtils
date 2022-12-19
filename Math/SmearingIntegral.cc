@@ -5,7 +5,7 @@
 #include <gsl/gsl_integration.h>
 
 double _eval_smeared(double x, void* p) {
-    auto& S = *(gaussian_smearing_integral*)p;
+    auto& S = *static_cast<gaussian_smearing_integral*>(p);
     if(!x) return 0;
     double dx = x - S.x;
     double s2 = x / S.n_per_x;

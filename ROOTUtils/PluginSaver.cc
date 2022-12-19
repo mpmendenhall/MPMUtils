@@ -30,10 +30,17 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& 
     o->rename(_rename);
     byName[_rename] = o;
     myPlugins.push_back(o);
+    {
+        auto t0 = steady_clock::now();
+        o->initialize();
+        o->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
+    }
     if(rn0 == _rename) ++copynum;
 }
 
-void PluginSaver::init() {
+void PluginSaver::initialize() {
+    SegmentSaver::initialize();
+
     Config cfg;
     cfg.setAutoConvert(true);
     auto snm = getMeta("settingname");
