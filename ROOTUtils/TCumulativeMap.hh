@@ -11,6 +11,7 @@
 #include "TCumulative.hh"
 #include <map>
 using std::map;
+#include <iostream>
 
 /// TCumulative wrapper for std::map<key, value>
 template<typename K_, typename V_>
@@ -27,8 +28,13 @@ public:
     void Add(const CumulativeData& CD, Double_t s = 1.) override {
         for(auto& kv: dynamic_cast<const TCumulativeMap<K_,V_>&>(CD)) Insert(kv.first, kv.second*s);
     }
+    /// debugging contents print
+    void display() const override {
+        std::cout << "TCumulativeMap '" << name << "'\n";
+        for(auto& kv: *this) std::cout << "\t" << kv.first << " -> " << kv.second << std::endl;
+    }
     /// clear data contents
-    void Clear(const char* = nullptr) override { this->clear(); }
+    void ClearCumulative() override { this->clear(); }
     /// Insert/add contents
     void Insert(const K_& k, const V_& v) { (*this)[k] += v; }
 

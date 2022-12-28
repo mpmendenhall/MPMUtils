@@ -110,8 +110,13 @@ void PluginSaver::scaleData(double s) {
     for(auto P: myPlugins) P->scaleData(s);
 }
 
+void PluginSaver::normalize_runtime() {
+    SegmentSaver::normalize_runtime();
+    for(auto P: myPlugins) P->normalize_runtime();
+}
+
 void PluginSaver::normalize() {
-    _normalize();
+    SegmentSaver::normalize();
     for(auto P: myPlugins) P->normalize();
 }
 

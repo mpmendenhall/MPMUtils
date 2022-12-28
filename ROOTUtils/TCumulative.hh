@@ -18,8 +18,11 @@ public:
     TCumulative(const TString& nme = "", const TString& ttl = ""): TNamed(nme,ttl), CumulativeData((const char*)(nme)) { }
     /// Destructor
     virtual ~TCumulative() { }
+
     /// Clear contents
-    void Clear(const char* o = 0) override { TNamed::Clear(o); Scale(0); }
+    void ClearCumulative() override { TNamed::Clear(); CumulativeData::ClearCumulative(); }
+    /// debugging contents print
+    void display() const override { printf("TCumulative '%s'\n", name.c_str()); }
 
     ClassDefOverride(TCumulative, 2);
 };

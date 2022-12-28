@@ -31,6 +31,7 @@ TDirectory* TObjCollector::writeItems(TDirectory* d) {
 void TObjCollector::addNamedObject(TNamed* o) {
     if(!o) return;
     string n(o->GetName());
+    if(!n.size()) throw std::runtime_error("Adding item with empty name");
     if(namedItems.count(n)) throw std::runtime_error("Adding duplicate named item '" + n + "'");
     namedItems[n] = o;
 }
@@ -55,6 +56,7 @@ TObject* TObjCollector::addDeletable(TObject* o) {
 
 TObject* TObjCollector::addAnonymous(TObject* o, const string& name) {
     if(anonItems.count(name)) throw std::runtime_error("Duplicate name '"+name+"' registered!");
+    if(!name.size()) throw std::runtime_error("Adding anonymous item with empty name");
     anonItems[name] = o;
     return o;
 }

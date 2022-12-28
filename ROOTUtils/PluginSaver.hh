@@ -40,10 +40,10 @@ public:
 
     /// optional mid-processing status updates
     void checkStatus() override;
+    /// divide all (scaled) distributions by run time; should only be done once!
+    void normalize_runtime() override;
     /// perform normalization on all histograms
     void normalize() override;
-    /// self-normalization before plugins
-    virtual void _normalize() { SegmentSaver::normalize(); }
     /// virtual routine for generating calculated hists
     void calculateResults() override;
     /// virtual routine for generating output plots

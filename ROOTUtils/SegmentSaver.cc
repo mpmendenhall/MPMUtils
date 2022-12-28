@@ -19,6 +19,12 @@ OutputManager(_path, pnt) {
     }
 
     registerWithName(normalization, "normalization", 0);
+
+    registerTCumulative(runTimes, "runTimes");
+    runTimes->scalable = false;
+
+    registerTCumulative(liveTimes, "liveTimes");
+    liveTimes->scalable = false;
 }
 
 SegmentSaver::~SegmentSaver() {
@@ -56,6 +62,39 @@ TDirectory* SegmentSaver::writeItems(TDirectory* d) {
     return d;
 }
 
+
+void SegmentSaver::normalize_runtime() {
+    if(isNormalized()) throw std::logic_error("Normalization already applied");
+
+    double rt = getRuntime();
+    printf("Normalizing to %g seconds runtime\n", rt);
+    if(!rt) throw std::logic_error("normalizing to zero runtime");
+    normalization->ResizeTo(1);
+    (*normalization)(0) = rt;
+
+    for(auto& kv: saveHists) {
+        if(doNotScale.count(kv.second)) continue;
+        if(!kv.second->GetSumw2()) kv.second->Sumw2();
+        auto it = liveTimes->find(kv.first);
+        if(it == liveTimes->end()) kv.second->Scale(1./rt);
+        else kv.second->Scale(1./it->second);
+    }
+    for(auto& kv: cumDat) {
+        if(!kv.second->scalable) continue;
+        auto it = liveTimes->find(kv.first);
+        if(it == liveTimes->end()) kv.second->Scale(1./rt);
+        else kv.second->Scale(1./it->second);
+    }
+}
+
+double SegmentSaver::extract_norm(TFile& f) {
+    auto norm = dynamic_cast<TVectorD*>(f.Get("normalization"));
+    if(!norm) throw std::logic_error("run normalization undefined");
+    auto n = norm->GetNrows()? (*norm)[0] : 0.;
+    delete norm;
+    return n;
+}
+
 bool SegmentSaver::isNormalized() { return normalization->GetNrows(); }
 
 void SegmentSaver::rename(const string& nm) {
@@ -73,7 +112,7 @@ TObject* SegmentSaver::_tryLoad(const string& oname) {
     if(!o) {
         if(ignoreMissingHistos) {
             printf("Warning: missing object '%s' in '%s'\n",
-                   oname.c_str(), dirIn? dirIn->GetName() : fIn? fIn->GetName() : "Unknown");
+                oname.c_str(), dirIn? dirIn->GetName() : fIn? fIn->GetName() : "Unknown");
         } else {
             throw std::runtime_error("File structure mismatch: missing '"+oname+"'");
         }
@@ -83,14 +122,18 @@ TObject* SegmentSaver::_tryLoad(const string& oname) {
     return o;
 }
 
-TCumulative* SegmentSaver::_registerCumulative(const string& onm, const TCumulative& cTemplate) {
-    auto c = tryLoad<TCumulative>(onm);
-    if(!c) {
-        c = static_cast<TCumulative*>(addObject((TNamed*)cTemplate.Clone(onm.c_str())));
-        c->Clear();
+TH1* SegmentSaver::_registerSavedClone(const string& hname, const TH1& hTemplate) {
+    if(saveHists.count(hname)) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+    auto h = tryLoad<TH1>(hname);
+    if(h) resetZaxis(h);
+    else {
+        h = static_cast<TH1*>(hTemplate.Clone(hname.c_str()));
+        addObject(h);
+        h->Reset();
     }
-    tCumDat.emplace(onm,c);
-    return c;
+    saveHists.emplace(hname, h);
+    if(h->ClassName() == TString("TProfile") || h->ClassName() == TString("TProfile2D")) doNotScale.insert(h);
+    return h;
 }
 
 TH1* SegmentSaver::getSavedHist(const string& hname) {
@@ -105,12 +148,6 @@ const TH1* SegmentSaver::getSavedHist(const string& hname) const {
     return it->second;
 }
 
-const TCumulative* SegmentSaver::getTCumulative(const string& cname) const {
-    auto it = tCumDat.find(cname);
-    if(it == tCumDat.end()) throw std::runtime_error("Missing TCumulative '"+cname+"'");
-    return it->second;
-}
-
 const CumulativeData* SegmentSaver::getCumulative(const string& cname) const {
     auto it = cumDat.find(cname);
     if(it == cumDat.end()) throw std::runtime_error("Missing Cumulative '"+cname+"'");
@@ -119,21 +156,17 @@ const CumulativeData* SegmentSaver::getCumulative(const string& cname) const {
 
 void SegmentSaver::zeroSavedHists() {
     for(auto& kv: saveHists) kv.second->Reset();
-    for(auto& kv: cumDat) kv.second->Scale(0);
-    for(auto& kv: tCumDat) kv.second->Clear();
+    for(auto& kv: cumDat) kv.second->ClearCumulative();
 }
 
 void SegmentSaver::scaleData(double s) {
     if(s == 1.) return;
     for(auto& kv: saveHists) {
         if(doNotScale.count(kv.second)) continue;
-        if(kv.second->ClassName() != TString("TProfile") && kv.second->ClassName() != TString("TProfile2D")) {
-            if(!kv.second->GetSumw2()) kv.second->Sumw2();
-            kv.second->Scale(s);
-        }
+        if(!kv.second->GetSumw2()) kv.second->Sumw2();
+        kv.second->Scale(s);
     }
-    for(auto& kv: cumDat) if(!doNotScale.count(kv.second)) kv.second->Scale(s);
-    for(auto& kv: tCumDat) if(!doNotScale.count(kv.second)) kv.second->Scale(s);
+    for(auto& kv: cumDat) if(kv.second->scalable) kv.second->Scale(s);
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
@@ -143,8 +176,8 @@ bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
             return false;
         }
     }
-    for(auto& kv: tCumDat) {
-        if(!S.tCumDat.count(kv.first)) {
+    for(auto& kv: cumDat) {
+        if(!S.cumDat.count(kv.first)) {
             if(throwit) throw std::runtime_error("Mismatched cumulative '"+kv.first+"' in '"+path+"'");
             return false;
         }
@@ -166,10 +199,6 @@ map<string,float> SegmentSaver::compareKolmogorov(const SegmentSaver& S) const {
 void SegmentSaver::addSegment(const SegmentSaver& S, double sc) {
     isEquivalent(S, true);
     for(auto& kv: saveHists) kv.second->Add(S.getSavedHist(kv.first), sc);
-    for(auto& kv: tCumDat) {
-        auto o = S.getTCumulative(kv.first);
-        if(o) kv.second->Add(*o, sc);
-    }
     for(auto& kv: cumDat) {
         auto o = S.getCumulative(kv.first);
         if(o) kv.second->Add(*o, sc);

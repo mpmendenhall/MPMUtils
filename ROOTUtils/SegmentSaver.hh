@@ -1,17 +1,23 @@
-/// \file SegmentSaver.hh Mechanism for loading pre-defined histograms from file
-// -- Michael P. Mendenhall, LLNL 2020
+/// \file SegmentSaver.hh Mechanism for loading and summing pre-defined histograms from file
+// -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef SEGMENTSAVER_HH
 #define SEGMENTSAVER_HH
 
 #include "OutputManager.hh"
-#include "TCumulative.hh"
 #include "SignalSink.hh"
-#include <TVectorT.h>
+#include "TCumulativeMap.hh"
+
 #include <TFile.h>
-#include <stdexcept>
+#include <TVectorT.h>
+
 #include <set>
 using std::set;
+#include <stdexcept>
+#include <type_traits>
+
+/// utility function to remove color axis data, to force re-draw with current dimensions
+void resetZaxis(TH1* o);
 
 /// class for saving, retrieving, and summing data from file
 class SegmentSaver: public OutputManager, virtual public SignalSink {
@@ -26,52 +32,47 @@ public:
     /// write items to current directory or subdirectory of provided
     TDirectory* writeItems(TDirectory* d = nullptr) override;
 
-
     /// get metadata string
     const string& getMeta(const string& k);
-
     /// set metadata string
     void setMeta(const string& k, const string& v) { xmeta[k] = v; }
 
     /// construct or retrieve saved TH1-derived class
     template<class T, typename... Args>
     void registerSaved(T*& o, const string& hname, Args&&... a) {
-        if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+        if(saveHists.count(hname)) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
         if(o) throw std::logic_error("Registration of '" + path + "/" + hname + "' would overwrite non-null pointer");
         o = tryLoad<T>(hname);
         if(!o) o = addObject(new T(hname.c_str(), std::forward<Args>(a)...));
         saveHists.emplace(hname, o);
+        if(o->ClassName() == TString("TProfile") || o->ClassName() == TString("TProfile2D")) doNotScale.insert(o);
     }
 
     /// clone from template or restore from file a saved TH1-derived class
-    template<class T, class U>
+    template<class T, class U, typename = std::enable_if_t<std::is_base_of_v<TH1, U>>, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
     void registerSavedClone(T*& h, const string& hname, const U& hTemplate) {
-        if(saveHists.find(hname) != saveHists.end()) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
         if(h) throw std::logic_error("Registration of '" + path + "/" + hname + "' would overwrite non-null pointer");
-        h = tryLoad<U>(hname);
-        if(h) resetZaxis(h);
-        else {
-            h = addObject((U*)hTemplate.Clone(hname.c_str()));
-            h->Reset();
-        }
-        saveHists.emplace(hname, h);
+        h = static_cast<T*>(_registerSavedClone(hname, hTemplate));
     }
 
-    /// clone or restore from file a cumulative object
-    TCumulative* _registerCumulative(const string& onm, const TCumulative& cTemplate);
-    /// register cumulative with useful type return
-    template<class T>
-    T* registerCumulative(const string& onm, const T& cTemplate) {
-        return static_cast<T*>(_registerCumulative(onm, cTemplate));
+    /// construct or retrieve saved TCumulative-derived class
+    template<class T, typename... Args>
+    void registerTCumulative(T*& o, const string& hname, Args&&... a) {
+        if(cumDat.count(hname)) throw std::logic_error("Duplicate name '"+hname+"'"); // don't duplicate names!
+        if(o) throw std::logic_error("Registration of '" + path + "/" + hname + "' would overwrite non-null pointer");
+        o = tryLoad<T>(hname);
+        if(!o) o = addObject(new T(hname, std::forward<Args>(a)...));
+        cumDat.emplace(hname, o);
     }
-    /// construct or retrieve named cumulative from file
+
+    /// construct or retrieve named cumulative from file (requires file-based constructor)
     template<class CUMDAT, typename... Args>
     void registerAccumulable(CUMDAT*& o, const string& onm, Args&&... a) {
         if(cumDat.count(onm)) throw std::runtime_error("Duplicate cumulative name '" + onm + "'");
         if(o) throw std::logic_error("Registration of '" + path + "/" + onm + "' would overwrite non-null pointer");
         if(dirIn) o = new CUMDAT(onm, *dirIn, std::forward<Args>(a)...);
         else o = new CUMDAT(onm, std::forward<Args>(a)...);
-        cumDat[onm] = o;
+        cumDat.emplace(onm, o);
     }
 
     /// construct or restore non-cumulative by name
@@ -80,12 +81,6 @@ public:
         o = tryLoad<T>(onm);
         if(!o) addWithName(o = new T(std::forward<Args>(a)...), onm);
     }
-    /// copy from template or restore non-cumulative by name
-    template<class T>
-    T* registerWithName(const string& onm, const T& oTemplate) {
-        auto o = tryLoad<T>(onm);
-        return o? o : addWithName(oTemplate.Clone(onm.c_str()), onm);
-    }
 
     /// get core histogram by name
     TH1* getSavedHist(const string& hname);
@@ -93,17 +88,19 @@ public:
     const TH1* getSavedHist(const string& hname) const;
     /// get cumulative data by name, const
     const CumulativeData* getCumulative(const string& cname) const;
-    /// get cumulative data by name, const
-    const TCumulative* getTCumulative(const string& cname) const;
-    /// get full histograms listing
-    const map<string,TH1*>& getHists() const { return saveHists; }
     /// zero out all saved histograms
     virtual void zeroSavedHists();
     /// scale all saved histograms by a factor
     virtual void scaleData(double s);
-    /// check whether normalization has been performed
+    /// divide all (scaled) distributions by run time; should only be done once!
+    virtual void normalize_runtime();
+    /// check whether normalize_to_runtime has been performed
     bool isNormalized();
+    /// helper to extract normalization (0 if not normalized)
+    static double extract_norm(TFile& f);
 
+    /// get total run timing
+    virtual double getRuntime() const { return runTimes->GetTotal(); }
     /// add histograms, cumulatives from another SegmentSaver of the same type
     virtual void addSegment(const SegmentSaver& S, double sc = 1.);
     /// background subtract
@@ -122,7 +119,7 @@ public:
     /// handle datastream signals
     void signal(datastream_signal_t s) override;
 
-    double tSetup = 0;          ///< performance profiling: time to run constructor
+    double tSetup = 0;          ///< performance profiling: time to run constructor and initialize()
     double tProcess = 0;        ///< permormance profiling: time to process data
     double tCalc = 0;           ///< performance profiling: time for calculateResults
     double tPlot = 0;           ///< performance profiling: time for makePlots
@@ -132,12 +129,12 @@ public:
     // ----- Subclass me! ----- //
     /// optional mid-processing status check calculations/results/plots
     virtual void checkStatus() { }
-    /// perform normalization on all histograms (e.g. conversion to differential rates); should only be done once!
-    virtual void normalize() { if(!isNormalized()) { normalization->ResizeTo(1); (*normalization)(0) = 1; }  }
+    /// additional normalization on all histograms after normalize_runtime (e.g. conversion to differential rates); should only be done once!
+    virtual void normalize() { }
     /// virtual routine for generating calculated hists
     virtual void calculateResults() { }
     /// virtual routine for generating output plots
-    virtual void makePlots() {}
+    virtual void makePlots() { }
     /// virtual routine for comparing to other analyzers (of this type or nullptr; meaning implementation-dependent)
     virtual void compare(const vector<SegmentSaver*>&) { }
     /// virtual routine to calculate incremental changes from preceding timestep
@@ -158,14 +155,15 @@ protected:
         return oo;
     }
 
-    map<string,TH1*> saveHists;         ///< saved cumulative histograms
-    set<void*> doNotScale;              ///< items not to rescale
-    map<string, CumulativeData*> cumDat;    ///< non-TObject cumulative types
-    map<string, TCumulative*> tCumDat;      ///< non-TH1-derived cumulative datatypes
-    map<string, string> xmeta;          ///< extra metadata
-};
+    /// clone from template or restore from file a saved TH1-derived class
+    TH1* _registerSavedClone(const string& hname, const TH1& hTemplate);
 
-/// utility function to remove color axis data, to force re-draw with current dimensions
-void resetZaxis(TH1* o);
+    map<string, TH1*> saveHists;                            ///< saved cumulative histograms
+    set<TH1*> doNotScale;                                   ///< saveHists items not to rescale
+    map<string, CumulativeData*> cumDat;                    ///< additional cumulative types
+    TCumulativeMap<string,Double_t>* runTimes = nullptr;    ///< run times for each input file
+    TCumulativeMap<string,Double_t>* liveTimes = nullptr;   ///< optional separate per-object normalization livetimes
+    map<string, string> xmeta;                              ///< extra metadata
+};
 
 #endif
