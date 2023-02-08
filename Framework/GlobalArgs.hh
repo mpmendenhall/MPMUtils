@@ -20,6 +20,9 @@ std::set<string>& QueriedArgs();
 /// load command-line arguments into GlobalArgs() list
 void loadGlobalArgs(int argc, char** argv);
 
+/// set value for argument if not already specified
+void setDefaultGlobalArg(const string& argname, const string& argval);
+
 /// get number of times argument was specified
 size_t numGlobalArg(const string& argname);
 /// check whether "+argname" given, with status message printout

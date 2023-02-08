@@ -138,6 +138,7 @@ bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
     auto it = GA.find(argname);
     bool noarg = it == GA.end() || !it->second.size();
     if(!noarg && it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
+    if(!help.size()) return !noarg;
 
     printf(TERMFG_BLUE "*" TERMSGR_RESET " Optional argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
     if(noarg) {
@@ -159,6 +160,11 @@ void displayGlobalArgs() {
         printf("'%s':\n", kv.first.c_str());
         for(auto& s: kv.second) printf("\t* '%s'\n", s.c_str());
     }
+}
+
+void setDefaultGlobalArg(const string& argname, const string& argval) {
+    auto& G = GlobalArgs();
+    if(!G.count(argname)) G[argname].push_back(argval);
 }
 
 int checkUnusedArgs() {
