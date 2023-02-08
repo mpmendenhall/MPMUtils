@@ -41,13 +41,13 @@ class ENDF_File6_LAW2_List(ENDF_List):
     """List entry in LAW=2 File 6 table [MAT, 6, MT/ 0.0, E_1 ,LANG, 0, NW, NL/ A_l(E)]LIST"""
     def __init__(self, iterlines):
         super().__init__(iterlines)
-        self.rnm("C2","E1")     # incident energy [eV]
+        self.rnm("C2","E1")     # lab-frame incident energy [eV]
         self.rnm("L1","LANG")   # angular distribution type
         self.rnm("N2","NL")     # LANG=0: highest Legendre order used; else number of cosines tabulated.
         self.rectp = "LIST.LAW2"
 
     def __repr__(self):
-        s = self.printid() +'; E1 %g MeV,\tLANG = %i'%(1e-6 * self.E1, self.LANG)
+        s = self.printid() +'; E1 %g MeV (lab), \tLANG = %i'%(1e-6 * self.E1, self.LANG)
         if self.LANG == 0:
             return s + ': Legendre polynomial with NL = %i terms:  \t'%self.NL + str(self.data)
         return s+',\tNL=%i'%self.NL
@@ -119,14 +119,18 @@ class ENDF_File6_Tab1(ENDF_Tab1):
         if self.distrib is not None: s += '\n'+str(self.distrib)
         return s
 
+ENDF_File6_LCT_names = {1: "LAB", 2: "CM", 3: "CM(light)+LAB(heavy)"}
+
 class ENDF_File6_Sec(ENDF_HEAD_Record):
-    """File 6 'Product Energy-Angle Distributions' section"""
+    """File 6 'Product Energy-Angle Distributions' section [MAT, 6, MT/ ZA, AWR, 0, LCT, NK, 0]HEAD"""
     def __init__(self, iterlines, l0 = None):
         if l0: super().__init__(l0)
         else: super().__init__(next(iterlines))
         assert self.MF%20 == 6
+        assert self.L1 == 0
+        assert self.N2 == 0
         self.rectp = "File %i 'Product Energy-Angle Distributions' section %i"%(self.MF, self.MT)
-        self.rnm("N2","LCT")    # reference frame for secondary energy, angle specification
+        self.rnm("L2","LCT")    # reference frame for secondary energy, angle specification
         self.rnm("N1","NK")     # number of subsections
 
         self.sections = [ENDF_File6_Tab1(iterlines) for i in range(self.NK)]
@@ -134,6 +138,6 @@ class ENDF_File6_Sec(ENDF_HEAD_Record):
         assert footer.rectp == "SEND"
 
     def __repr__(self):
-        s = self.printid() +', %g AMU; %i products in frame %i'%(self.AWR, self.NK, self.LCT)
+        s = self.printid() +', %g AMU; %i products in %s frame'%(self.AWR, self.NK, ENDF_File6_LCT_names.get(self.LCT, str(self.LCT)))
         for t in self.sections: s += '\n    --- File 6 Section ---' + str(t)
         return s

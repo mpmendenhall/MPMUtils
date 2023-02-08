@@ -36,10 +36,10 @@ class ENDF_Record(object):
     def __repr__(self):
         return self.printid() + ' "%s"'%self.TEXT
 
-    def rnm(self, old_name, new_name):
-        """Rename attribute"""
-        self.__dict__[new_name] = self.__dict__.pop(old_name)
-
+    def rnm(self, old_name, new_name, keep = False):
+        """Rename attribute (optionally keep old)"""
+        if keep: self.__dict__[new_name] = self.__dict__[old_name]
+        else: self.__dict__[new_name] = self.__dict__.pop(old_name)
 
 class ENDF_CONT_Record(ENDF_Record):
     """CONTROL record, generic base type for many entries [MAT,MF,MT/C1,C2,L1,L2,N1,N2]CONT"""
@@ -58,6 +58,7 @@ class ENDF_CONT_Record(ENDF_Record):
 
 class ENDF_HEAD_Record(ENDF_CONT_Record):
     """HEAD = CONT, with C1,C2 -> ZA,AWR"""
+    # [MAT,MF,ZA,AWR,L1,L2,N1,N2]HEAD
     def __init__(self,line):
         super().__init__(line)
         self.rnm("C1", "ZA")    # 1000*Z + A

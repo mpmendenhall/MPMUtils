@@ -107,6 +107,15 @@ public:
     /// boosted momentum component given p_|| and total p^2
     double unboost_p(double m, double px, double p2) const { double E = sqrt(p2+m*m); unboost(E, px); return px; }
 
+    /// boost unit direction component (along boost axis)
+    double boost_d(double d) const { return (d - beta)/(1 - beta*d); }
+    /// unboost unit direction component (along boost axis)
+    double unboost_d(double d) const { return (d + beta)/(1 + beta*d); }
+    /// unit direction boost Jacobean d(boost_d)/dd
+    double boost_dd(double d) const { double c = 1 - beta*d; return (1-beta*beta)/(c*c); }
+    /// unit direction boost Jacobean d(unboost_d)/dd
+    double unboost_dd(double d) const { double c = 1 + beta*d; return (1-beta*beta)/(c*c); }
+
     /// given lab-frame unit direction component d_z and CM-frame energy, calculate CM frame momentum component p_z
     /// (useful in 2-body CM systems where CM-frame E,|p| is known, and lab direction is measured)
     double pz_CM_from_lab_direction(double E_CM, double m, double dz_lab) const;

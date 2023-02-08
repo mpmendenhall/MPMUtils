@@ -24,6 +24,8 @@ public:
     /// Polymorphic destructor
     virtual ~_DataSource() { }
 
+    /// Initialize for read start
+    virtual void init_dsource() { }
     /// Reset to start
     virtual void reset() { nread = 0; id_current_evt = -1; }
     /// Skip ahead n items

@@ -31,7 +31,7 @@ public:
     /// debugging contents print
     void display() const override {
         std::cout << "TCumulativeMap '" << name << "'\n";
-        for(auto& kv: *this) std::cout << "\t" << kv.first << " -> " << kv.second << std::endl;
+        //for(auto& kv: *this) std::cout << "\t" << kv.first << " -> " << kv.second << std::endl;
     }
     /// clear data contents
     void ClearCumulative() override { this->clear(); }

@@ -47,7 +47,7 @@ size_t numGlobalArg(const string& argname) {
 }
 
 bool wasArgGiven(const string& argname, const string& help) {
-    printf("* Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
+    printf(TERMFG_BLUE "*" TERMSGR_RESET " Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
     if(numGlobalArg(argname)) {
         printf(TERMFG_GREEN "enabled" TERMSGR_RESET "\n");
         return true;

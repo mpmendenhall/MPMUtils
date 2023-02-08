@@ -73,8 +73,6 @@ public:
 
     /// load next "event" of entries with same identifer into vector; return event identifier loaded
     int64_t loadEvent(vector<T>& v);
-    /// load all data into map by event number
-    void loadAll(multimap<int64_t, T>& dat);
 
 protected:
     T next_read{};              ///< next item read in for event list reads
@@ -276,12 +274,6 @@ int64_t HDF5_Table_Cache<T>::loadEvent(vector<T>& v) {
         v.push_back(next_read);
     }
     return id_current_evt;
-}
-
-template<typename T>
-void HDF5_Table_Cache<T>::loadAll(multimap<int64_t, T>& dat) {
-    T val;
-    while(next(val)) dat.emplace(getIdentifier(val),val);
 }
 
 ///////////////////////////////////////////////

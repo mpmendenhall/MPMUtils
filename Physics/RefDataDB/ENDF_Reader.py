@@ -8,6 +8,8 @@ from ENDF_File7_Reader import *
 from ENDF_File8_Reader import *
 from ENDF_File9_Reader import *
 from ENDF_File10_Reader import *
+from ENDF_File12_Reader import *
+from ENDF_File14_Reader import *
 from ENDF_File23_Reader import *
 from ENDF_File26_Reader import *
 from ENDF_File27_Reader import *
@@ -42,6 +44,8 @@ def load_ENDF_Section(iterlines):
     elif h.MF == 8:  return ENDF_File8_Sec(iterlines, l0)
     elif h.MF == 9:  return ENDF_File9_Sec(iterlines, l0)
     elif h.MF == 10: return ENDF_File10_Sec(iterlines, l0)
+    elif h.MF == 12: return ENDF_File12_Sec(iterlines, l0)
+    elif h.MF == 14: return ENDF_File14_Sec(iterlines, l0)
     elif h.MF == 23: return ENDF_File23_Sec(iterlines, l0)
     elif h.MF == 26: return ENDF_File26_Sec(iterlines, l0)
     elif h.MF == 27: return ENDF_File27_Sec(iterlines, l0)
