@@ -95,10 +95,12 @@ public:
 
     /// task to be run in thread
     void threadjob() override {
-        while(runstat != STOP_REQUESTED) {
+        while(true) {
+            check_pause();
             flush();
-            unique_lock<mutex> lk(inputMut);
-            inputReady.wait(lk);
+            unique_lock<mutex> lk(inputMut);  // acquire unique_lock on queue in this scope
+            if(runstat == STOP_REQUESTED) break;
+            inputReady.wait(lk);              // unlock until notified
         }
         flush();
     }

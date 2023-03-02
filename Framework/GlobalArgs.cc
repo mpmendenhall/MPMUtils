@@ -4,6 +4,7 @@
 #include "ContextMap.hh"
 #include "TermColor.hh"
 #include "to_str.hh"
+#include <stdlib.h> // for strtol
 
 struct gargmap: public std::map<string, std::vector<string>> { };
 std::map<string, std::vector<string>>& GlobalArgs() {
@@ -127,7 +128,7 @@ bool optionalGlobalArg(const string& argname, double& v, const string& help) {
 bool optionalGlobalArg(const string& argname, int& v, const string& help) {
     string s = to_str(v);
     if(!optionalGlobalArg(argname, s, help)) return false;
-    v = atoi(s.c_str());
+    v = strtol(s.c_str(), nullptr, 0);
     return true;
 }
 

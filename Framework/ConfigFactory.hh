@@ -45,13 +45,13 @@ protected:
 class ConfigurableStage: public Configurable {
 public:
     /// Constructor
-    explicit ConfigurableStage(const Setting& S): Configurable(S) {
-        if(S.exists("next")) next = constructCfgObj<Configurable>(S["next"], "");
-    }
+    using Configurable::Configurable;
+    /// construct "next"
+    virtual void buildNext() { if(Cfg.exists("next")) next = constructCfgObj<Configurable>(Cfg["next"], ""); }
     /// Destructor
     ~ConfigurableStage() { delete next; }
     /// Run configured operation
-    void run() override { if(next) next->run(); }
+    void run() override { if(!next) buildNext(); if(next) next->run(); }
 
     Configurable* next = nullptr;   ///<   next run stage
 };

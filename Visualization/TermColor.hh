@@ -7,6 +7,39 @@
 /// "Control Sequence Inducer" ESC[
 #define ANSI_CSI "\x1b["
 
+/// Erase to end of current line
+#define VT100_ERASE_END   ANSI_CSI "K"
+/// Erase back to start of current line
+#define VT100_ERASE_START ANSI_CSI "1K"
+/// Erase whole current line
+#define VT100_ERASE_LINE  ANSI_CSI "2K"
+/// Erase down to bottom of screen
+#define VT100_ERASE_DOWN   ANSI_CSI "J"
+/// Erase up to top of screen
+#define VT100_ERASE_UP     ANSI_CSI "1J"
+/// Erase whole screen
+#define VT100_ERASE_SCREEN ANSI_CSI "2J"
+
+/// Cursor up N rows
+#define VT100_CURS_UP(N)  ANSI_CSI #N "A"
+/// Cursor down N rows
+#define VT100_CURS_DN(N)  ANSI_CSI #N "B"
+/// Cursor forward N columns
+#define VT100_CURS_FWD(N) ANSI_CSI #N "C"
+/// Cursor back N columns
+#define VT100_CURS_BWD(N) ANSI_CSI #N "D"
+/// Set cursor Row, Column
+#define VT100_CURS_SET(R,C) ANSI_CSI #R ";" #C "f"
+/// Cursor to "home" upper-left position
+#define VT100_CURS_HOME   ANSI_CSI    "H"
+/// Save cursor position
+#define VT100_CURS_SAVE   ANSI_CSI    "S"
+/// "Unsave" restore to saved position
+#define VT100_CURS_UNSV   ANSI_CSI    "U"
+
+
+
+
 /// "Select Graphic Rendition" CSI command
 #define ANSI_CSI_SGR(...) ANSI_CSI __VA_ARGS__ "m"
 
