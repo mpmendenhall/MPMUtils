@@ -191,11 +191,11 @@ void NoisyMin::fitMinSingular() {
     vector<double> vcontrib(N); // variable contributions to nonsingular space
     if(verbose) printf("Hessian principal axes widths:\n");
     for(size_t j = 0; j<N; j++) {
-        if(verbose) printf("\t%g ~ %g\n", 1/sqrt(S_q(j)), 0.5*dS_q[j]*pow(S_q(j), -1.5));
-        if(S_q(j) - 2*dS_q[j] <= 0) vS.push_back(j);
+        if(verbose) printf("\t%g ~ %g\n", 1/sqrt(fabs(S_q(j))), 0.5*dS_q[j]*pow(fabs(S_q(j)), -1.5));
+        if(fabs(S_q(j)) - 2*dS_q[j] <= 0) vS.push_back(j);
         else {
             vG.push_back(j);
-            for(size_t i=0; i<N; i++) vcontrib[i] += pow(U_q(i, j),2);
+            for(size_t i=0; i<N; i++) vcontrib[i] += U_q(i, j) * U_q(i, j);
         }
     }
     auto nGood = vG.size();

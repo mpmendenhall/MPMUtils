@@ -128,13 +128,13 @@ public:
     template<typename T>
     T* GetArrayPtr() {
         assert(What() >= kMESS_ARRAY);
-        return (T*)(data()+sizeof(int));
+        return (T*)(data()+sizeof(UInt_t));
     }
     /// Retrieve pointer to start of non-ROOT data block
     template<typename T>
     const T* GetArrayPtr() const {
-        assert(What() >= kMESS_ARRAY);
-        return (const T*)(data()+sizeof(int));
+        if(What() < kMESS_ARRAY) throw std::logic_error("Not an array");
+        return (const T*)(data()+sizeof(UInt_t));
     }
 
     /// contents sum operation, automatic for built-in arithmetic types and arrays thereof
@@ -144,7 +144,7 @@ public:
     template<typename T>
     void accumulate(const KeyData& kd) {
         if(What() < kMESS_ARRAY) {
-            assert(wsize == sizeof(T)+2*sizeof(UInt_t));
+            if(wsize != sizeof(T) + 2*sizeof(UInt_t)) throw std::logic_error("Invalid array data size");
             if(kd.wsize != wsize) throw std::domain_error("Incompatible data sizes!");
             *(T*)data() += *(T*)kd.data();
         } else {
@@ -152,7 +152,11 @@ public:
             if(n != kd.vSize<T>()) throw std::domain_error("Incompatible array sizes!");
             auto p0 = GetArrayPtr<T>();
             auto p1 = kd.GetArrayPtr<T>();
-            for(UInt_t i=0; i<n; i++) *(p0++) += *(p1++);
+	    if(p0 == p1) throw std::logic_error("Accumulating into self");
+            for(UInt_t i=0; i<n; i++) {
+                if(*p0 == *p1) printf("%u: %g\n", i, double(*p0)); // shouldn't need this!! something else is broken!
+                *(p0++) += *(p1++);
+	    }
         }
     }
 

@@ -23,17 +23,22 @@ void KTAccumJobComm::endJob(BinaryIO& B) {
     for(size_t i=0; i<combos.size(); i++) {
         auto cd = kt.FindKey(combos[i]);
         auto kd = B.receive<KeyData*>();
-        if(!kd) throw std::logic_error("Failed to receive combining data  '" + combos[i] + "'");
+        if(!cd || !kd) throw std::logic_error("Failed to receive combining data  '" + combos[i] + "'");
 
         auto tp = cd->What();
         if(tp != kd->What()) throw std::logic_error("Mismatched types for combining '" + combos[i] + "'");
 
         if(tp == kMESS_OBJECT) {
+	    if(!objs.at(i)) throw std::logic_error("Null accumulation object");
             auto h = kd->GetROOT<TH1>();
-            assert(h && objs[i]);
-            objs[i]->Add(h);
+            if(!h) throw std::logic_error("Missing corresponding accumulation object");
+            objs.at(i)->Add(h);
+            //printf("Accumulating '%s : %s'\n", combos.at(i).c_str(), h->GetName());    
             delete h;
-        } else *cd += *kd;
+        } else {
+            //printf("Accumulating '%s'\n", combos.at(i).c_str());    
+	    *cd += *kd;
+	}
         delete kd;
     }
 }

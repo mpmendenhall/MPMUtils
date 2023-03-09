@@ -2,7 +2,6 @@
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "MultiJobControl.hh"
-#include "DiskBIO.hh"
 
 string workerName(size_t wclass) { return FactoriesIndex::indexFor<JobWorker>().at(wclass).classname; }
 
@@ -26,61 +25,11 @@ void JobComm::splitJobs(vector<JobSpec>& vJS, size_t nSplit, size_t nItms, size_
 
 REGISTER_FACTORYOBJECT(JobWorker, JobWorker)
 
-string JobWorker::stateDir = "";
-
 void JobWorker::run(const JobSpec& JS, BinaryIO&) {
     printf("JobWorker does nothing for ");
     JS.display();
     MultiJobWorker::JW->signalDone();
 }
-
-string JobWorker::sdataFile(const string& h) const {
-    if(!stateDir.size()) return "";
-    std::stringstream fn;
-    fn << stateDir << "/SavedState_" << h << ".dat";
-    return fn.str();
-}
-
-bool JobWorker::checkState(const string& h) {
-    lastReq[h] = nReq++;
-    if(stateData.count(h)) return true;
-    if(!stateDir.size()) return false;
-
-    auto f = sdataFile(h);
-    FDBinaryReader b(f);
-    if(!b.inIsOpen()) return false;
-    //if(verbose > 3) printf("Loading persisted data from '%s'\n", f.c_str());
-    b.receive(stateData[h]);
-    return true;
-}
-
-void JobWorker::clearState(const string& h) {
-    stateData.erase(h);
-    lastReq.erase(h);
-    if(stateDir.size()) runSysCmd("rm -f " + sdataFile(h));
-}
-
-void JobWorker::persistState(const string& h) {
-    auto it = stateData.find(h);
-    if(stateDir.size() && it != stateData.end()) {
-        auto f = sdataFile(h);
-        runSysCmd("mkdir -p " + stateDir);
-        //if(verbose > 3) printf("Persisting state data to '%s'\n", f.c_str());
-        {
-            FDBinaryWriter b(f+"_tmp");
-            b.send(it->second);
-        }
-        runSysCmd("mv " + f+"_tmp" + " " + f);
-    }
-
-    // purge excessive storage
-    if(stateData.size() > 1000) {
-        vector<string> vold;
-        for(auto& kv: stateData) if(lastReq[kv.first] < nReq-500) vold.push_back(kv.first);
-        for(auto hh: vold) if(hh != h) stateData.erase(h);
-    }
-}
-
 
 ////////////////////////////
 ////////////////////////////

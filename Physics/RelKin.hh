@@ -107,9 +107,9 @@ public:
     /// boosted momentum component given p_|| and total p^2
     double unboost_p(double m, double px, double p2) const { double E = sqrt(p2+m*m); unboost(E, px); return px; }
 
-    /// boost unit direction component (along boost axis)
+    /// boost massless particle unit direction component (along boost axis)
     double boost_d(double d) const { return (d - beta)/(1 - beta*d); }
-    /// unboost unit direction component (along boost axis)
+    /// unboost massless particle unit direction component (along boost axis)
     double unboost_d(double d) const { return (d + beta)/(1 + beta*d); }
     /// unit direction boost Jacobean d(boost_d)/dd
     double boost_dd(double d) const { double c = 1 - beta*d; return (1-beta*beta)/(c*c); }

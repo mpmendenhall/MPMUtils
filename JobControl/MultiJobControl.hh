@@ -23,7 +23,7 @@ CN: polls isRunning(...) until a job has completed; runs JS->C->endJob(CN) to re
 #define MULTIJOBCONTROL_HH
 
 #include "ObjectFactory.hh"
-#include "KeyTable.hh"
+#include "BinaryIO.hh"
 #include <unistd.h>
 
 class JobComm;
@@ -56,7 +56,7 @@ public:
 
 
 
-/// Base class for a worker job (with state storage utilities); subclass and REGISTER_FACTORYOBJECT(myClass, JobWorker) in your code
+/// Base class for a worker job; subclass and REGISTER_FACTORYOBJECT(myClass, JobWorker) in your code
 class JobWorker {
 public:
     /// polymorphic destructor
@@ -64,40 +64,7 @@ public:
 
     /// run specified job, talking to JobComm::startJob and endJob through B
     virtual void run(const JobSpec& J, BinaryIO& B);
-
-    /// check if state data available (and make available if possible) for hash
-    virtual bool checkState(const string& h);
-    /// clear state data for hash
-    virtual void clearState(const string& h);
-
-    /// push state data for identifier hash
-    template<class T>
-    void pushState(const string& h, const T& d) {
-        stateData.emplace(h,d);
-        persistState(h);
-    }
-
-    /// load state data for identifier hash
-    template<class T>
-    void getState(const string& h, T& d) {
-        if(!checkState(h)) throw std::range_error("State data unavailable");
-        stateData.at(h).Get(d);
-    }
-
-    static string stateDir;         ///< non-empty to specify directory for state data storage
-
-protected:
-    /// name for state data file
-    virtual string sdataFile(const string& h) const;
-    /// persistently save state data for hash
-    virtual void persistState(const string& h);
-
-    map<string, KeyData> stateData; ///< memory-resident saved state information by hash
-    map<string, size_t> lastReq;    ///< when each piece of stored data was last requested
-    size_t nReq = 0;                ///< number of times stored data has been requested
 };
-
-
 
 
 /// Controller node distributing jobs to matching MultiJobWorker; subclass with features for a particular channel.

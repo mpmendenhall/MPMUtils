@@ -5,6 +5,7 @@
 #define KTACCUMJOB_HH
 
 #include "MultiJobControl.hh"
+#include "KeyTable.hh"
 #include <TH1.h>
 
 /// KeyTable-based accumulate protocol communicator
