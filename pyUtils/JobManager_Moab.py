@@ -1,13 +1,13 @@
 #! /bin/env python3
-## @file JobManager_Slurm.py job submission interface to slurm/sbatch job control
-# Michael P. Mendenhall, LLNL 2019
+## @file JobManager_Moab.py job submission interface to MOAB/msub job control
+# Michael P. Mendenhall, LLNL 2023
 
 from JobManager_Interface import *
 import subprocess
 import datetime
 
-class SlurmInterface(BatchQueueInterface):
-    jobstates = {"PENDING":2, "RUNNING":3, "COMPLETED":4, "Unknown":5, "CANCELLED":6, "TIMEOUT":8, "NODE_FAIL":9, "Bundled":7}
+class MoabInterface(BatchQueueInterface):
+    jobstates = {"Idle":2, "ReqNodeNotA":2, "Starting":3, "Running":3, "Completed":4, "Unknown":5, "Removed":6, "Bundled":7}
 
     def __init__(self, conn):
         super().__init__(conn)
@@ -18,39 +18,39 @@ class SlurmInterface(BatchQueueInterface):
 
     def check_queued_status(self):
         """Get status on all queue items: [(QID, job state number)]"""
-        cmd = 'sacct -u $USER --format=JobID,state'
+        cmd = 'showq -u $USER'
         qdat = subprocess.getoutput(cmd)
         print(cmd)
         print(qdat)
         jstatus = []
         for l in qdat.split("\n"):
             l = l.split()
-            if len(l) != 2 or not l[0].isdigit(): continue
-            jstatus.append((int(l[0]), self.jobstates.get(l[1].strip("+"),5)))
+            if len(l) != 9: continue
+            jstatus.append((int(l[0]), self.jobstates.get(l[2],5)))
         return jstatus
 
     def _submit_job(self, J):
         """Submit job via msub"""
 
         p = J.getpath()
-        mcmds =["--export=ALL",
-                "-n %i"%J.res_list["cores"],
-                "-t %i"%(J.res_list["walltime"]/60),
+        mcmds =["-j oe", "-V",
+                "-l ttc=%i"%J.res_list["cores"],
+                "-l walltime=%i"%J.res_list["walltime"],
                 "-o " + p + "/log.txt"]
-        if J.name: mcmds.append("-J %s_%i"%(J.name, J.jid))
-        if J.q: mcmds.append("-p " + J.q)
+        if J.name: mcmds.append("-N %s_%i"%(J.name, J.jid))
+        if J.q: mcmds.append("-q "+ J.q)
         if J.acct: mcmds.append("-A " + J.acct)
 
-        mscript = '\n'.join(["#!/bin/bash",] + ["#SBATCH " + m for m in mcmds]) + '\n\n'
+        mscript = '\n'.join(["#!/bin/bash",] + ["#MSUB " + m for m in mcmds]) + '\n\n'
 
         mscript += J.prerun_script() + "\n"
         mscript += " ".join(J.get_run_command()) + '\n\n'
         mscript += J.postrun_script() + '\n'
-        open(p+"/sbatch.txt", "w").write(mscript)
+        open(p+"/msub.txt", "w").write(mscript)
 
-        sbatch = subprocess.Popen(["sbatch"], stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
-        sbatch.stdin.write(mscript.encode())
-        ou,er = sbatch.communicate()
+        msub = subprocess.Popen(["msub"], stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.PIPE)
+        msub.stdin.write(mscript.encode())
+        ou,er = msub.communicate()
 
         o = ou.decode().strip()
         print("Job '%s' submitted as '%s'"%(J.jid,o))
@@ -59,7 +59,7 @@ class SlurmInterface(BatchQueueInterface):
             qid = int(o.split()[-1].split(".")[0])
             return qid
         except:
-            print("*** sbatch error ***")
+            print("*** msub error ***")
             print(er.decode())
             return None
 

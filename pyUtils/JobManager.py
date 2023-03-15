@@ -3,6 +3,7 @@
 # Michael P. Mendenhall, LLNL 2020
 
 from JobManager_DB import *
+from JobManager_Moab import *
 from JobManager_Slurm import *
 from JobManager_Local import *
 from JobManager_LSF import *
@@ -11,9 +12,12 @@ import subprocess
 
 def choose_interface(conn):
     """Identify batch manager interface"""
-    if not subprocess.call(["which","msub"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL):
-        print("Using slurm/msub batch system")
+    if not subprocess.call(["which","sbatch"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL):
+        print("Using slurm/sbatch batch system")
         return SlurmInterface(conn)
+    if not subprocess.call(["which","msub"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL):
+        print("Using moab/msub batch system")
+        return MoabInterface(conn)
     if not subprocess.call(["which","jsrun"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL):
         print("Using LSF/bsub batch system")
         return LSFInterface(conn)

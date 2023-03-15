@@ -46,7 +46,7 @@ public:
     }
 
     int nskip = 1;  ///< skip fraction for less verbose output
-    int npause = 0; ///< pause after showing this many (if nonzero)
+    int npause = 1; ///< pause after showing this many (if nonzero)
 
 protected:
     ordering_t t_prev_clust = {}; ///< previous cluster time

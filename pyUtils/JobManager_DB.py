@@ -17,7 +17,7 @@ def statename(i): return statenames.get(i,"status %i"%i)
 # directory for job scripts
 jobscript_dir = os.environ["HOME"] + "/" + os.environ["HOSTNAME"] + "_jobs/"
 # path to database file
-dbfile = jobscript_dir+"/jdb.sql"
+dbfile = jobscript_dir+"/jdb.sqlite3"
 # cached resource IDs by name
 resource_ids = { }
 
@@ -25,8 +25,14 @@ resource_ids = { }
 ######################
 ######################
 
+def cmd_str(cmd):
+    """Shell-escaped string from command arguments list"""
+    return " ".join([shlex.quote(s) for s in cmd])
+
 class Job:
     """Description of a shell-script job to run"""
+    default_acct = None
+    default_q = None
 
     def __init__(self, name="anon", q=None, acct=None, script="", jid=None, qid=None, res_list = {}):
         self.name = name            # job name
@@ -36,6 +42,9 @@ class Job:
         self.res_list = res_list    # resource requirements
         self.jid = jid              # JobsDB unique identifier
         self.qid = qid              # Queue system unique identifier
+
+        if self.q is None: self.q = Job.default_q
+        if self.acct is None: self.acct = Job.default_acct
 
     def upload(self, curs):
         """upload to JobsDB"""
@@ -70,12 +79,16 @@ class Job:
         """script before main run"""
         return 'echo `date +"%%s"` $HOSTNAME > %s/start.txt\n'%self.getpath()
 
+    def fill_wrapper(self, wfile):
+        """generate contents of wrapper shell script"""
+        wfile.write("#!/bin/bash\n" + self.prerun_script()
+                    + "\n" + cmd_str(self.get_run_command())
+                    + "\n" + self.postrun_script())
+
     def make_wrapper(self):
         """generate wrapper shell script"""
         d = self.getpath()
-        open(d + "/wrapper.sh", "w").write("#!/bin/bash\n" + self.prerun_script()
-                                           + "\n" + " ".join(self.get_run_command())
-                                           + "\n" + self.postrun_script())
+        self.fill_wrapper(open(d + "/wrapper.sh", "w"))
         os.chmod(d + "/wrapper.sh", 0o744)
 
     def postrun_script(self):
@@ -162,7 +175,7 @@ class BundleJob(Job):
 
         return True
 
-def connect_JobsDB(fname, remake = True):
+def connect_JobsDB(fname = None, remake = True):
     """Get connection to Jobs DB"""
     global dbfile
     if fname is None: fname = dbfile
@@ -236,7 +249,7 @@ def completed_runstats(curs, name):
 def clear_completed(conn, clearlogs = True):
     curs = conn.cursor()
     if clearlogs:
-        curs.execute("SELECT jid FROM jobs WHERE status=4 OR status=6")
+        curs.execute("SELECT job_id FROM jobs WHERE status=4 OR status=6")
         for r in curs.fetchall():
             try: os.remove(get_job(r[0]).getpath())
             except: pass

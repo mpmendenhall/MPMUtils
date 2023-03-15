@@ -7,6 +7,7 @@
 #include "OutputManager.hh"
 #include "SignalSink.hh"
 #include "TCumulativeMap.hh"
+#include "TermColor.hh"
 
 #include <TFile.h>
 #include <TVectorT.h>
@@ -49,7 +50,7 @@ public:
     }
 
     /// clone from template or restore from file a saved TH1-derived class
-    template<class T, class U, typename = std::enable_if_t<std::is_base_of_v<TH1, U>>, typename = std::enable_if_t<std::is_base_of_v<T, U>>>
+    template<class T, class U, typename = std::enable_if_t<std::is_base_of<TH1, U>::value>, typename = std::enable_if_t<std::is_base_of<T, U>::value>>
     void registerSavedClone(T*& h, const string& hname, const U& hTemplate) {
         if(h) throw std::logic_error("Registration of '" + path + "/" + hname + "' would overwrite non-null pointer");
         h = static_cast<T*>(_registerSavedClone(hname, hTemplate));
@@ -130,11 +131,11 @@ public:
     /// optional mid-processing status check calculations/results/plots
     virtual void checkStatus() { }
     /// additional normalization on all histograms after normalize_runtime (e.g. conversion to differential rates); should only be done once!
-    virtual void normalize() { }
+    virtual void normalize() { printf(TERMFG_BLUE "\n--------- Normalizing '%s'... ----------" TERMSGR_RESET "\n\n", path.c_str()); }
     /// virtual routine for generating calculated hists
-    virtual void calculateResults() { }
+    virtual void calculateResults() { printf(TERMFG_BLUE "\n--------- '%s' calculating results... ----------" TERMSGR_RESET "\n\n", path.c_str()); }
     /// virtual routine for generating output plots
-    virtual void makePlots() { }
+    virtual void makePlots() { printf(TERMFG_BLUE "\n--------- '%s' outputting plots... ----------" TERMSGR_RESET "\n\n", path.c_str()); }
     /// virtual routine for comparing to other analyzers (of this type or nullptr; meaning implementation-dependent)
     virtual void compare(const vector<SegmentSaver*>&) { }
     /// virtual routine to calculate incremental changes from preceding timestep
