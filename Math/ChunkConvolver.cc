@@ -43,7 +43,7 @@ void ChunkConvolver::convolve(const vector<double>& _v_in, vector<double>& v_out
     }
 
     // pad out for full calculation
-    auto n_chunks = (orig_size-1)/N + 2;
+    size_t n_chunks = (orig_size-1)/N + 2;
     if(boundaries[1] == BOUNDARY_WRAP) ++n_chunks;
     auto v_in = _v_in;
     v_in.resize(n_chunks * N);
@@ -62,12 +62,6 @@ void ChunkConvolver::convolve(const vector<double>& _v_in, vector<double>& v_out
 
         for(i=0; i<N; ++i) v_out[n0 + i] = vtail[i] + P.v_x[i];
         vtail.assign(P.v_x.begin() + N, P.v_x.end());
-    }
-
-    // final tail
-    if(boundaries[0] == BOUNDARY_0) {
-        auto it = v_out.begin() + (n_chunks - 1)*N;
-        for(auto x: vtail) *(it++) = x;
     }
 
     // truncate to correct size
