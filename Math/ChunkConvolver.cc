@@ -35,6 +35,7 @@ void ChunkConvolver::convolve(const vector<double>& _v_in, vector<double>& v_out
     auto& P = IFFTWorkspace<plan_t>::get_iffter(2*N);
     vector<double> vtail(N);    // second half of previous chunk
 
+    // starting boundary contribution
     if(boundaries[0] == BOUNDARY_WRAP) {
         extract_range_cyclic(_v_in.begin(), _v_in.end(), -N, N, P.v_x.data());
         for(int i=N; i < 2*N; ++i) P.v_x[i] = 0;
@@ -42,9 +43,8 @@ void ChunkConvolver::convolve(const vector<double>& _v_in, vector<double>& v_out
         vtail.assign(P.v_x.begin() + N, P.v_x.end());
     }
 
-    // pad out for full calculation
-    size_t n_chunks = (orig_size-1)/N + 2;
-    if(boundaries[1] == BOUNDARY_WRAP) ++n_chunks;
+    // pad out end for full chunked calculation
+    size_t n_chunks = (orig_size + 1)/N + 1;
     auto v_in = _v_in;
     v_in.resize(n_chunks * N);
     v_out.resize(n_chunks * N);
