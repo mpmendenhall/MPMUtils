@@ -19,7 +19,7 @@ M u V u* < k-space: N//2 + 1 = 3 unique entries (M real, u complex, V == V* real
 Example: [N = n = 5, odd]
 a b c d e   < x-space input
 M u v v*u*  < k-space: N//2 + 1 = 3 unique entries (M real, u,v complex)
-0 1 2       < k-space outpus
+0 1 2       < k-space outputs
 
 -------------------
 - Additional symmetries reflected in k-space results

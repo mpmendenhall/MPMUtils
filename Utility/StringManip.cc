@@ -117,7 +117,7 @@ vector<int> sToInts(const string& s, const string& splitchars) {
     return v;
 }
 
-vector< vector<double> > readArray(ifstream& fin, unsigned int minitems, const string& splitchars) {
+vector< vector<double> > readArray(istream& fin, unsigned int minitems, const string& splitchars) {
     vector< vector<double> > a;
     string s;
     while (fin.good()) {

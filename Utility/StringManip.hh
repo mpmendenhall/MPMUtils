@@ -35,7 +35,7 @@
 #include <algorithm>
 
 using std::vector;
-using std::ifstream;
+using std::istream;
 
 /// integer to roman numerals string
 string itosRN(int i);
@@ -56,7 +56,7 @@ vector<double> sToDoubles(const string& str, const string& splitchars = ", \t\r\
 /// split a string into a vector of ints
 vector<int> sToInts(const string& str, const string& splitchars = ", \t\r\n");
 /// read in an array from a file
-vector< vector<double> > readArray(ifstream& fin, unsigned int minitems = 1, const string& splitchars = ", \t\r\n");
+vector<vector<double>> readArray(istream& fin, unsigned int minitems = 1, const string& splitchars = ", \t\r\n");
 /// load file as string
 string loadFileString(const string& fname);
 
