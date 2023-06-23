@@ -47,7 +47,7 @@ namespace EX {
         /// Constructor
         explicit Scope(ID i): id(i) { }
         /// Destructor
-        virtual ~Scope() { for(auto& kv: notes) delete kv.second; }
+        virtual ~Scope() { for(const auto& kv: notes) delete kv.second; }
 
         /// get name in string format
         virtual string getName() const { return string("[") + basename(get<0>(id)) + ":" +to_str(get<2>(id)) + "] " + get<1>(id); }

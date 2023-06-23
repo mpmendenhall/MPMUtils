@@ -10,7 +10,9 @@ size_t _hash64(const void* dat, size_t n) {
     if(!dat) return 0;
     static const size_t k[2] = {0,0};
     size_t h;
-    siphash((const uint8_t*)dat, n, (const uint8_t*)k, (uint8_t*)&h, 8);
+    siphash(reinterpret_cast<const uint8_t*>(dat), n,
+            reinterpret_cast<const uint8_t*>(k),
+            reinterpret_cast<uint8_t*>(&h), 8);
     return h;
 }
 

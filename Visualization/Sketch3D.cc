@@ -115,7 +115,7 @@ bool compare_projectables(const unique_ptr<ProjectablePrimitive>& lhs,
 void PrimitivesLayer::drawInto(XMLTag& X, const Perspective& P) {
     for(auto& o: myObjs) o->setPerspective(P);
     std::sort(myObjs.begin(), myObjs.end(), &compare_projectables);
-    for(auto& o: myObjs) {
+    for(const auto& o: myObjs) {
         X.addChild(o->myXML);
         o->myXML = nullptr;
     }

@@ -177,7 +177,7 @@ void accumPoints(TGraphErrors& a, const TGraphErrors& b, bool errorWeight, bool 
 }
 
 TH1* cumulativeHist(const TH1& h, bool normalize, bool reverse) {
-    TH1* c = (TH1*)h.Clone((h.GetName()+string("_cum")).c_str());
+    auto c = static_cast<TH1*>(h.Clone((h.GetName()+string("_cum")).c_str()));
     int n = h.GetNbinsX();
     float ecum2 = 0;
     if(reverse) {
@@ -314,7 +314,7 @@ double integralAndError(TH1* h, double x0, double x1, Double_t& err, const strin
 
 TH1* poisson_smear(const TH1& hIn, double NperX, TH1* hOut, double n_max) {
     if(!hOut) {
-        hOut = (TH1*)hIn.Clone((string(hIn.GetName())+"_Smeared").c_str());
+        hOut = static_cast<TH1*>(hIn.Clone((string(hIn.GetName())+"_Smeared").c_str()));
         hOut->Reset();
     }
     for(int i=1; i<=hIn.GetNbinsX(); i++) {
@@ -587,7 +587,7 @@ TH1* projectTH2(const TH2& h, double nb, double cx, double cy) {
 TH1* histsep(const TH1& h1, const TH1& h2) {
     int nb = h1.GetNbinsX();
     assert(nb==h2.GetNbinsX());
-    TH1* hDiv = (TH1*)h1.Clone("hDivision");
+    auto hDiv = static_cast<TH1*>(h1.Clone("hDivision"));
     hDiv->SetBinContent(0,0);
     hDiv->SetBinContent(nb+1,0);
     for(int b=1; b<=nb; b++)

@@ -251,7 +251,7 @@ TGraph GammaScatterSteps::eSpectrum(double PE_per_MeV) const {
     gaussian_smearing_integral GSI(PE_per_MeV);
 
     vector<TGraph> csegs;
-    for(auto& S: steps) csegs.push_back(Egamma_to_Ee(S.EscapeSum));
+    for(const auto& S: steps) csegs.push_back(Egamma_to_Ee(S.EscapeSum));
 
     double Erange = E0 + 4 * sqrt(E0/PE_per_MeV);
     for(int i = 0; i < npts; ++i) {
@@ -263,7 +263,7 @@ TGraph GammaScatterSteps::eSpectrum(double PE_per_MeV) const {
         double y = exp(-dx*dx/(2*s2))/sqrt(2*M_PI*s2) * (steps.back().nScatter + FullCapt);
 
         // separately integrate each segment to avoid singularities
-        for(auto& gs: csegs) y += GSI.apply(gs, x);
+        for(const auto& gs: csegs) y += GSI.apply(gs, x);
 
         gSmear.SetPoint(i, x, y);
     }
@@ -313,7 +313,7 @@ void GammaScatterSteps::single_scatter_deposition(s_eScatterStep& S) {
 
 void GammaScatterSteps::calcRescatter(const GammaScatterSteps& GSS) {
     bSteps.clear();
-    for(auto& S: GSS.steps) bSteps.push_back(fromEscaping(S));
+    for(const auto& S: GSS.steps) bSteps.push_back(fromEscaping(S));
     bComptons = {};
     bComptons.GetXaxis()->SetTitle("Compton electron energy [MeV]");
     bComptons.GetYaxis()->SetTitle("Compton scatters [/MeV]");
@@ -325,7 +325,7 @@ void GammaScatterSteps::calcRescatter(const GammaScatterSteps& GSS) {
     for(int i=0; i < npts/2 - 1; ++i) {
         double E = i * Ec2/(npts/2 - 1);
         double y = 0;
-        for(auto& S: bSteps) if(E < S.Ec) y += comptonsFrom(S,E);
+        for(const auto& S: bSteps) if(E < S.Ec) y += comptonsFrom(S,E);
         bComptons.SetPoint(j++, E, y);
     }
     for(int i=0; i < npts/2-1; ++i) {

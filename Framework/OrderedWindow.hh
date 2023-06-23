@@ -63,7 +63,7 @@ public:
     virtual ~OrderedWindow() {
         if(size()) {
             printf("Warning: unflushed window of %zu objects.\n", size());
-            for(auto& o: *this) dispObj(o);
+            for(const auto& o: *this) dispObj(o);
             if(enforceClear) abort();
         }
     }

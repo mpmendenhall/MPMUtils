@@ -42,7 +42,7 @@ public:
     /// print cluster information
     virtual void display(ordering_t x0 = 0) const {
         printf("Cluster with %zu objects at t = %g (max spacing %g)\n", size(), x_median - x0, dx);
-        for(auto& o: *this) {
+        for(const auto& o: *this) {
             printf("\t");
             dispObj(o);
         }

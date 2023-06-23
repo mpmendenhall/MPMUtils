@@ -36,7 +36,7 @@ namespace EX {
         /// Constructor
         Subcontext(Scope* s, int d, Subcontext* p);
         /// Destructor
-        ~Subcontext() { for(auto& kv: children) delete kv.second; }
+        ~Subcontext() { for(const auto& kv: children) delete kv.second; }
         /// Get (create as needed) subcontext for scope
         Subcontext* enterScope(Scope* SS);
 
@@ -66,7 +66,7 @@ namespace EX {
         static void DeleteContext();
 
         /// Destructor
-        ~Context() { delete current; for(auto& kv: scopes) delete kv.second; }
+        ~Context() { delete current; for(const auto& kv: scopes) delete kv.second; }
 
         /// Get current scope
         Scope& currentScope() { return *current->S; }

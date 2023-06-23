@@ -157,7 +157,7 @@ bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
 
 void displayGlobalArgs() {
     printf("Global Arguments:\n");
-    for(auto& kv: GlobalArgs()) {
+    for(const auto& kv: GlobalArgs()) {
         printf("'%s':\n", kv.first.c_str());
         for(auto& s: kv.second) printf("\t* '%s'\n", s.c_str());
     }
@@ -171,7 +171,7 @@ void setDefaultGlobalArg(const string& argname, const string& argval) {
 int checkUnusedArgs() {
     int unused = 0;
     const auto& QA = QueriedArgs();
-    for(auto& kv: GlobalArgs()) {
+    for(const auto& kv: GlobalArgs()) {
         if(QA.count(kv.first)) continue;
         printf(TERMFG_RED "* Unused command-line argument: " TERMFG_YELLOW "'%s'\n" TERMSGR_RESET, kv.first.c_str());
         ++unused;

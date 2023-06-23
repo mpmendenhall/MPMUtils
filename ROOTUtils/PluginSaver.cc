@@ -60,7 +60,7 @@ void PluginSaver::Configure(const Setting& S, bool skipUnknown) {
         for(int i=0; i<nplugs; i++) {
             string pname = plugs[i].getName();
             int copynum = -1;
-            if(plugs[i].isList()) for(auto& c: plugs[i]) buildPlugin(pname, copynum, c, skipUnknown);
+            if(plugs[i].isList()) for(const auto& c: plugs[i]) buildPlugin(pname, copynum, c, skipUnknown);
             else buildPlugin(pname, copynum, plugs[i], skipUnknown);
         }
     }
@@ -76,7 +76,7 @@ map<string,float> PluginSaver::compareKolmogorov(const SegmentSaver& S) const {
         auto Si = PS.getPlugin(P->path);
         if(!Si) continue;
         auto mm = P->compareKolmogorov(*Si);
-        for(auto& kv: mm) m[P->path + "." + kv.first] = kv.second;
+        for(const auto& kv: mm) m[P->path + "." + kv.first] = kv.second;
     }
     return m;
 }

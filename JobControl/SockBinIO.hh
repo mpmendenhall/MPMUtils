@@ -12,10 +12,11 @@ public:
 
 protected:
     /// push data to socket buffer; drops if buffer full
-    void _send(void* vptr, int size) override {
+    void _send(const void* vptr, int size) override {
         auto wp = sockfd? get_writepoint() : nullptr;
         if(!wp) return;
-        wp->assign((char*)vptr, (char*)(vptr) + size);
+        auto vv = reinterpret_cast<const char*>(vptr);
+        wp->assign(vv, vv + size);
         finish_write();
     }
 };
@@ -24,9 +25,9 @@ protected:
 class SockBinRead: public BinaryReader, public SockFD {
 public:
     /// Constructor
-    SockBinRead(int sfd = 0): SockFD(sfd) { }
+    explicit SockBinRead(int sfd = 0): SockFD(sfd) { }
 
 protected:
     /// blocking data receive
-    void _receive(void* vptr, int size) override { sockread((char*)vptr, size); }
+    void _receive(void* vptr, int size) override { sockread(reinterpret_cast<char*>(vptr), size); }
 };

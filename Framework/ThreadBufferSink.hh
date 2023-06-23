@@ -22,7 +22,7 @@ public:
     using DataLink<T,T>::nextSink;
 
     /// Constructor
-    ThreadBufferSink(DataSink<T>* s = nullptr) { nextSink = s; }
+    explicit ThreadBufferSink(DataSink<T>* s = nullptr) { nextSink = s; }
 
     /// receive item to queue
     void push(T& o) override {

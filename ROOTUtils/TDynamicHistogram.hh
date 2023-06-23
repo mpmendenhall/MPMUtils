@@ -18,7 +18,7 @@ using std::map;
 class TDynamicHistogram: public TCumulative {
 public:
     /// Constructor
-    TDynamicHistogram(const TString& nme = "", const TString& ttl = "", Int_t n = 1, Double_t x0 = 0, Double_t x1 = 1):
+    explicit TDynamicHistogram(const TString& nme = "", const TString& ttl = "", Int_t n = 1, Double_t x0 = 0, Double_t x1 = 1):
     TCumulative(nme,ttl), fN(n), fX0(x0), fX1(x1) { }
     /// Destructor
     virtual ~TDynamicHistogram() { }

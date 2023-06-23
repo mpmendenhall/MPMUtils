@@ -76,7 +76,7 @@ void TermGraph::getView(rowcol_t p0, pixelarray_t& v, const Compositor& C) const
 
     // maximum hit density
     int nmax = 1;
-    for(auto& kv: hits) nmax = std::max(nmax, kv.second.n);
+    for(const auto& kv: hits) nmax = std::max(nmax, kv.second.n);
 
     for(auto& kv: hits) {
         int ii = symbs.size()*(kv.second.dy/kv.second.n + 0.5);

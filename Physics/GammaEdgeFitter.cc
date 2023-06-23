@@ -30,7 +30,7 @@ double GammaEdgeFitter::_eval(double E) {
     double y = exp(-dx*dx/(2*s2))/sqrt(2*M_PI*s2) * (steps.back().nScatter + FullCapt);
 
     // separately integrate each segment to avoid singularities
-    for(auto& gs: csegs) y += GSI.apply(gs, E);
+    for(const auto& gs: csegs) y += GSI.apply(gs, E);
 
     return y;
 }
@@ -45,21 +45,21 @@ double GammaEdgeFitter::Evaluate(double* x, double* p) {
     bool do_up = eDens != _ed;
 
     double _edb = p[6] * get_edens();
-    double do_upb = GBG.eDens != _edb;
+    bool do_upb = GBG.eDens != _edb;
 
     if(do_upb && _edb > 1e-4) GBG.setDens(_edb, nsteps);
 
     if(do_up) {
         setDens(_ed, nsteps);
         csegs.clear();
-        for(auto& S: steps) csegs.push_back(Egamma_to_Ee(S.EscapeSum));
+        for(const auto& S: steps) csegs.push_back(Egamma_to_Ee(S.EscapeSum));
     }
 
     if((do_up || do_upb) && _edb) calcRescatter(GBG);
 
     auto E = *x/SigPerE;
     double y = 0;
-    for(auto& l: lines) y += l.second * _eval(E/l.first) / l.first;
+    for(const auto& l: lines) y += l.second * _eval(E/l.first) / l.first;
 
     if(p[4]) {
         y += p[4] * (_edb > 1e-4? GSI.apply(bComptons, E) : 1) * pow(E, p[5]);

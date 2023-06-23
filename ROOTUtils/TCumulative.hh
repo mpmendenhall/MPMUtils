@@ -15,7 +15,7 @@
 class TCumulative: public TNamed, public CumulativeData {
 public:
     /// Constructor
-    TCumulative(const TString& nme = "", const TString& ttl = ""): TNamed(nme,ttl), CumulativeData((const char*)(nme)) { }
+    explicit TCumulative(const TString& nme = "", const TString& ttl = ""): TNamed(nme,ttl), CumulativeData(nme.Data()) { }
     /// Destructor
     virtual ~TCumulative() { }
 

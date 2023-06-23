@@ -44,7 +44,7 @@ string itosRN(int i);
 template<typename VT>
 string vtos(const VT& ds, const string& sep = ",") {
      string ss = "";
-     for(auto& i: ds) {
+     for(const auto& i: ds) {
          if(ss.size()) ss += sep;
          ss += to_str(i);
      }

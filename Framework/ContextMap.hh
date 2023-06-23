@@ -130,9 +130,9 @@ protected:
     class owner_t: public _owner_t {
     public:
         /// delete pointer
-        void deletep(void* p) const override { delete (T*)p; }
+        void deletep(void* p) const override { delete static_cast<T*>(p); }
         /// clone pointer
-        void* clone(const void* p) const override { return p? new T(*(T*)p) : nullptr; }
+        void* clone(const void* p) const override { return p? new T(*static_cast<T*>(p)) : nullptr; }
         /// clone this class
         _owner_t* clowner() const override { return new owner_t; }
     };
@@ -149,14 +149,14 @@ protected:
 template<typename T>
 struct s_context_singleton {
     /// set context singleton from this object
-    void set() { ContextMap::setCopy<T,T>(*(const T*)this); }
+    void set() { ContextMap::setCopy<T,T>(*static_cast<const T*>(this)); }
 
     /// get context singleton, with default settings
     template<typename... Args>
     static T& get(Args&&... a) { return ContextMap::getDefault<T,T,Args...>(std::forward<Args>(a)...); }
 
     /// update this object from context singleton
-    void lookup() { ContextMap::lookup<T,T>(*(const T*)this); }
+    void lookup() { ContextMap::lookup<T,T>(*static_cast<const T*>(this)); }
 };
 
 /// Context-settable singleton helper; adds instance() static function to class, pointing to current singleton object

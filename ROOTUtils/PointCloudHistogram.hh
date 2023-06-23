@@ -30,7 +30,7 @@ public:
     float project(size_t i, const float* v) const;
 
     /// extract point into nDim()-dimensional array
-    void getPoint(unsigned int i, float* x) const { for(auto& v: *this) *(x++) = v[i]; }
+    void getPoint(unsigned int i, float* x) const { for(const auto& v: *this) *(x++) = v[i]; }
 
     /// add point from nDim()-dimensional array
     void addPoint(float* x) { for(auto& v: *this) v.push_back(*(x++)); }

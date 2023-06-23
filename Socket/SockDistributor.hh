@@ -30,7 +30,7 @@ public:
     void sendData(const char* d, size_t n);
     /// send vector as binary blob
     template<typename T>
-    void sendvector(const vector<T>& v) { sendData((char*)v.data(), v.size()*sizeof(T)); }
+    void sendvector(const vector<T>& v) { sendData(reinterpret_cast<const char*>(v.data()), v.size()*sizeof(T)); }
 
     // set: host, port
     // call: launch_mythread();
@@ -61,7 +61,7 @@ public:
     using SockDistribClient::SockDistribClient;
 protected:
     /// Process received data as array of T
-    bool process_v(const vector<char>& v) override { return process((T*)v.data(), v.size()/sizeof(T)); }
+    bool process_v(const vector<char>& v) override { return process(reinterpret_cast<T*>(v.data()), v.size()/sizeof(T)); }
     /// Process received data as array of T --- Subclass me!
     virtual bool process(const T*, size_t n) { return n; }
 };

@@ -143,8 +143,8 @@ int SQLite_Helper::bindVecBlob(sqlite3_stmt* stmt, int i, const vector<double>& 
 }
 
 bool SQLite_Helper::get_string(sqlite3_stmt* stmt, unsigned int i, string& rslt) {
-    const unsigned char* s = sqlite3_column_text(stmt, i);
-    if(s) rslt = string((const char*)s);
+    auto s = sqlite3_column_text(stmt, i);
+    if(s) rslt = string(reinterpret_cast<const char*>(s));
     return s;
 }
 

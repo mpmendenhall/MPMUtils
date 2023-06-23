@@ -42,11 +42,17 @@ void ChunkConvolver::convolve(const vector<double>& _v_in, vector<double>& v_out
         do_convolve(P);
         vtail.assign(P.v_x.begin() + N, P.v_x.end());
     }
+    if(boundaries[0] == BOUNDARY_FLAT) {
+        for(int i=0; i < N; ++i) P.v_x[i] = _v_in[0];
+        for(int i=N; i < 2*N; ++i) P.v_x[i] = 0;
+        do_convolve(P);
+        vtail.assign(P.v_x.begin() + N, P.v_x.end());
+    }
 
     // pad out end for full chunked calculation
     size_t n_chunks = (orig_size + 1)/N + 1;
     auto v_in = _v_in;
-    v_in.resize(n_chunks * N);
+    v_in.resize(n_chunks * N, boundaries[1] == BOUNDARY_FLAT? _v_in.back() : 0.);
     v_out.resize(n_chunks * N);
     if(boundaries[1] == BOUNDARY_WRAP) {
         extract_range_cyclic(_v_in.begin(), _v_in.end(), 0, v_in.size() - orig_size, v_in.data() + orig_size);

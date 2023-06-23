@@ -170,13 +170,13 @@ void SegmentSaver::scaleData(double s) {
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {
-    for(auto& kv: saveHists) {
+    for(const auto& kv: saveHists) {
         if(!S.saveHists.count(kv.first)) {
             if(throwit) throw std::runtime_error("Mismatched histogram '"+kv.first+"' in '"+path+"'");
             return false;
         }
     }
-    for(auto& kv: cumDat) {
+    for(const auto& kv: cumDat) {
         if(!S.cumDat.count(kv.first)) {
             if(throwit) throw std::runtime_error("Mismatched cumulative '"+kv.first+"' in '"+path+"'");
             return false;

@@ -66,7 +66,7 @@ string cfgString(const Config& cfg) {
     auto n = ftell(f);
     rewind(f);
     string s(n, ' ');
-    if(fread((void*)s.data(), 1, n, f) != size_t(n)) throw std::runtime_error("fread FAIL");
+    if(fread(static_cast<void*>(s.data()), 1, n, f) != size_t(n)) throw std::runtime_error("fread FAIL");
     fclose(f);
 
     return s;

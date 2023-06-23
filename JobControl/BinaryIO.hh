@@ -45,7 +45,7 @@ public:
     /// data block send
     void send(const void* vptr, int size) {
          start_wtx();
-         append_write((char*)vptr, size);
+         append_write(reinterpret_cast<const char*>(vptr), size);
          end_wtx();
     }
 
@@ -60,7 +60,7 @@ public:
     template<typename... T>
     void send(const std::tuple<T...>& t) {
         start_wtx();
-        for(auto& c: t) send(c);
+        for(const auto& c: t) send(c);
         end_wtx();
     }
 
@@ -69,7 +69,7 @@ public:
     void send(const vector<T>& v) {
         start_wtx();
         send<int>(v.size()*sizeof(T));
-        for(auto& x: v) send(x);
+        for(const auto& x: v) send(x);
         end_wtx();
     }
 
@@ -78,7 +78,7 @@ public:
     void send(const map<K,V>& mp) {
         start_wtx();
         send<size_t>(mp.size());
-        for(auto& kt: mp) {
+        for(const auto& kt: mp) {
             send(kt.first);
             send(kt.second);
         }
@@ -88,7 +88,7 @@ public:
 protected:
 
     /// blocking data send
-    virtual void _send(void* vptr, int size) = 0;
+    virtual void _send(const void* vptr, int size) = 0;
     /// flush output
     virtual void flush() { }
 
@@ -110,7 +110,7 @@ public:
 
 protected:
     /// _send does nothing!
-    void _send(void*, int) override { }
+    void _send(const void*, int) override { }
 };
 
 
@@ -184,40 +184,40 @@ inline void BinaryWriter::send(const char* x) { send(string(x)); }
 class MemBReader: public BinaryReader {
 public:
     /// Constructor to non-owned buffer
-    MemBReader(const void* p = nullptr, size_t n = 0) { setReadBuffer(p,n); }
+    explicit MemBReader(const void* p = nullptr, size_t n = 0) { setReadBuffer(p,n); }
     /// set buffer
-    void setReadBuffer(const void* p, size_t n) { dR = p; pR = p; eR = (const char*)p + n; }
+    void setReadBuffer(const void* p, size_t n) { eR = pR = dR = reinterpret_cast<const char*>(p); eR += n; }
 
 protected:
     /// blocking data receive
     void _receive(void* vptr, int size) override {
-        if((const char*)pR + size > eR) throw -1;
+        if(pR + size > eR) throw std::runtime_error("Invalid receive allocation");
         std::memcpy(vptr,pR,size);
-        (const char*&)pR += size;
+        pR += size;
     }
 
-    const void* dR; ///< read data buffer
-    const void* pR; ///< read position
-    const void* eR; ///< end of read data buffer
+    const char* dR = nullptr;   ///< read data buffer
+    const char* pR = nullptr;   ///< read position
+    const char* eR = nullptr;   ///< end of read data buffer
 };
 
 /// Memory buffer BinaryWriter
 class MemBWriter: public BinaryWriter {
 public:
     /// Constructor to non-owned buffer
-    MemBWriter(void* p, size_t n): dW(p), pW(p), eW((char*)p + n) { }
+    MemBWriter(void* p, size_t n): dW(reinterpret_cast<char*>(p)), pW(dW), eW(dW + n) { }
 
 protected:
     /// blocking data send
-    void _send(void* vptr, int size) override {
-        if((char*)pW + size > eW) throw -1;
+    void _send(const void* vptr, int size) override {
+        if(pW + size > eW) throw -1;
         std::memcpy(pW,vptr,size);
-        (char*&)pW += size;
+        pW += size;
     }
 
-    void* dW;   ///< write data buffer
-    void* pW;   ///< write position
-    void* eW;   ///< end of write data buffer
+    char* dW;   ///< write data buffer
+    char* pW;   ///< write position
+    char* eW;   ///< end of write data buffer
 };
 
 /// Memory buffer I/O
@@ -227,11 +227,11 @@ class MemBIO: public MemBReader, public MemBWriter { };
 class DequeBIO: virtual public BinaryIO, protected deque<char> {
 protected:
     /// blocking data send
-    void _send(void* vptr, int s) override { auto v = (char*)vptr; while(s--) push_back(*(v++)); }
+    void _send(const void* vptr, int s) override { auto v = reinterpret_cast<const char*>(vptr); while(s--) push_back(*(v++)); }
     /// blocking data receive
     void _receive(void* vptr, int s) override {
         if((int)size() < s) throw std::domain_error("Insufficient buffered data!");
-        auto v = (char*)vptr;
+        auto v = reinterpret_cast<char*>(vptr);
         while(s--) { *(v++) = front(); pop_front(); }
     }
 };

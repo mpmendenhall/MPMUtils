@@ -120,7 +120,7 @@ void SockConnection::configure_host() {
     if(host.size()) {
         server = gethostbyname(host.c_str());
         if(!server) throw sockerror(*this, "Unknown hostname '" + host + "'");
-        serv_addr.sin_addr = *(struct in_addr*) server->h_addr;
+        serv_addr.sin_addr = *reinterpret_cast<struct in_addr*>(server->h_addr);
         bcopy(server->h_addr, (char*)&serv_addr.sin_addr.s_addr, server->h_length);
     } else serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // default for this machine
 }

@@ -48,7 +48,7 @@ template<typename val_t>
 std::ostream& operator<<(std::ostream& o, const ZCircuit_Base<val_t>& C) {
     o << "ZCircuit [" << C.Ncalc << " free nodes; input " << C.iV0 << ", output " << C.iOut << ", ground " << C.iGnd << "]" << "\n";
     size_t i = C.Ncalc;
-    for(auto& v: C.Vnodes) o << "\t+ Constraint [" << i++ << "] V = " << v << "\n";
+    for(const auto& v: C.Vnodes) o << "\t+ Constraint [" << i++ << "] V = " << v << "\n";
     i = 0;
     for(auto& l: C.links)  o << "\t" << "* Link [" << i++ << "]: " << l.i0 << " -> " << l.Z << " " << std::arg(l.phase) << " -> " << l.i1 << "\n";
     return o;
@@ -105,7 +105,7 @@ public:
         }
 
         // internal non-shorting links between shorting equivalence classes
-        for(auto& l: links) {
+        for(const auto& l: links) {
             if(l.i0 >= N) continue; // irrelevant Vnode-to-Vnode link
             auto i0 = shorted[l.i0];
 
@@ -142,7 +142,7 @@ public:
         }
 
         // link-to-Vnodes terms
-        for(auto& l: links) {
+        for(const auto& l: links) {
             if(l.i0 >= N || l.i1 < N) continue;
             auto i0 = shorted[l.i0];
             if(l.Z == val_t{}) M(i0, i0) += l.phase;
@@ -155,7 +155,7 @@ public:
         RHS = {};
 
         // External Vnode link terms
-        for(auto& l: links) {
+        for(const auto& l: links) {
             if(l.i0 >= N || l.i1 < N) continue; // links from internal to Vnode
             auto i0 = shorted[l.i0]; // common shorting point
             if(l.Z == val_t{}) RHS[i0] +=  Vnodes.at(l.i1-N);
@@ -301,7 +301,7 @@ public:
     /// set Z values in circuit
     template<class ZCircuit_t>
     void stuff(ZCircuit_t& ZC) const {
-        for(auto& p: ps) {
+        for(const auto& p: ps) {
             for(auto l: p.links) {
                 ZC.links.at(l).Z = p.Z;
                 ZC.links.at(l).phase = p.phase;

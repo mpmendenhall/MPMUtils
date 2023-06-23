@@ -13,6 +13,7 @@ public:
     /// boundary condition options
     enum boundary_t {
         BOUNDARY_0,         ///< zero outside boundary edges
+        BOUNDARY_FLAT,      ///< repeat value of first/last point
         BOUNDARY_WRAP       ///< wrap points from opposite end of data
     };
     /// boundary conditions to apply at start and end

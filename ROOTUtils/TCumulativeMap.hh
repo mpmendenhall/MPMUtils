@@ -20,13 +20,13 @@ public:
     typedef map<K_,V_> map_t;
 
     /// Constructor
-    TCumulativeMap(const TString& nme = "", const TString& ttl = ""): TCumulative(nme,ttl) { }
+    explicit TCumulativeMap(const TString& nme = "", const TString& ttl = ""): TCumulative(nme,ttl) { }
 
     /// Scale contents by factor
     void Scale(Double_t s) override { for(auto& kv: *this) kv.second *= s; }
     /// Add another object of the same type
     void Add(const CumulativeData& CD, Double_t s = 1.) override {
-        for(auto& kv: dynamic_cast<const TCumulativeMap<K_,V_>&>(CD)) Insert(kv.first, kv.second*s);
+        for(const auto& kv: dynamic_cast<const TCumulativeMap<K_,V_>&>(CD)) Insert(kv.first, kv.second*s);
     }
     /// debugging contents print
     void display() const override {
@@ -39,7 +39,7 @@ public:
     void Insert(const K_& k, const V_& v) { (*this)[k] += v; }
 
     /// Get sum total of all contents
-    V_ GetTotal() const { V_ sm = {}; for(auto& kv: *this) sm += kv.second; return sm; }
+    V_ GetTotal() const { V_ sm = {}; for(const auto& kv: *this) sm += kv.second; return sm; }
 
     ClassDefOverride(TCumulativeMap, 3)
 };

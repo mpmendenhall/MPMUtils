@@ -94,8 +94,8 @@ void AnalysisStep::_makeXML(XMLTag& X) {
     X.addChild(Xfout);
 
     auto Xgargs = new XMLTag("cmdargs");
-    for(auto& kv: GlobalArgs()) {
-        for(auto& s: kv.second) {
+    for(const auto& kv: GlobalArgs()) {
+        for(const auto& s: kv.second) {
             auto Xa = new XMLTag(kv.first);
             Xa->addChild(new XMLText(s));
             Xa->oneline = true;

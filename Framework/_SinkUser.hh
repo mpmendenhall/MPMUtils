@@ -67,7 +67,7 @@ _SinkUser* _find_lastSink(T* s, bool can_return_nullptr = false) {
 class _SubSinkUser: public _SinkUser {
 public:
     /// Constructor
-    _SubSinkUser(_SinkUser* s = nullptr): subSinker(s) { }
+    explicit _SubSinkUser(_SinkUser* s = nullptr): subSinker(s) { }
     /// get nextSink output
     SignalSink* _getNext() override {
         if(!subSinker) throw std::logic_error("undefined subSinker");

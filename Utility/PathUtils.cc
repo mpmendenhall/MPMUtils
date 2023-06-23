@@ -47,7 +47,7 @@ void makePath(const string& p, bool forFile) {
 
     string thepath;
     if(p.front() == '/') thepath += "/";
-    for(auto& e: pathels) {
+    for(const auto& e: pathels) {
         thepath += e + "/";
         if(!dirExists(thepath)) {
             string cmd = "mkdir -p '"+thepath+"'";

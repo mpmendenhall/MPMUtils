@@ -50,12 +50,12 @@ string c_to_str(char c) {
 }
 
 string lower(string s) {
-    transform(s.begin(), s.end(), s.begin(), (int(*)(int))tolower);
+    transform(s.begin(), s.end(), s.begin(), static_cast<int(*)(int)>(tolower));
     return s;
 }
 
 string upper(string s) {
-    transform(s.begin(), s.end(), s.begin(), (int(*)(int))toupper);
+    transform(s.begin(), s.end(), s.begin(), static_cast<int(*)(int)>(toupper));
     return s;
 }
 
