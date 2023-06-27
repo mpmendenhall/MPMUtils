@@ -23,7 +23,7 @@
 #define NGRID_HH
 
 #include <iterator>
-#include <cassert>
+#include <stdexcept>
 
 /// Grid index generation
 template<size_t N, typename I = int>
@@ -61,7 +61,7 @@ public:
         iterator(const idx_t& g, size_t ii): ngrid(g), i(ii), c() {
             if(i==(size_t)-1) a = N;
             // TODO calculate position otherwise
-            else assert(false);
+            else throw std::logic_error("unimplemented");
         }
 
         /// increment

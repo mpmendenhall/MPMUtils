@@ -21,6 +21,7 @@
 
 #include "ControlMenu.hh"
 #include <utility>
+#include <stdexcept>
 
 bool StreamInteractor::menutils_CheckStackSize(unsigned int n) {
     assert(mydeque && mystack);
@@ -62,7 +63,7 @@ void InputRequester::doIt() {
             if(defaultArgs[i].size())
                 printf(" [%s]",defaultArgs[i].c_str());
             printf(" > ");
-            assert(fgets(indata,1024,stdin));
+            if(!fgets(indata,1024,stdin)) throw std::runtime_error("fgets fail");
             string argin = strip(indata);
             if(!argin.size())
                 mystack->push(defaultArgs[i]);
