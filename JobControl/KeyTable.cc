@@ -104,7 +104,7 @@ KeyData* BinaryReader::receive<KeyData*>() {
     UInt_t s = receive<UInt_t>();
     UInt_t w = receive<UInt_t>();
     auto d = new KeyData(w, s);
-    _receive((void*)d->data(), s);
+    _receive(static_cast<void*>(d->data()), s);
     return d;
 }
 
@@ -113,5 +113,5 @@ void BinaryReader::receive(KeyData& d) {
     UInt_t s = receive<UInt_t>();
     Int_t w = receive<UInt_t>();
     d = KeyData(w,s);
-    _receive((void*)d.data(), s);
+    _receive(static_cast<void*>(d.data()), s);
 }

@@ -97,7 +97,7 @@ Quadratic NoisyMin::fitHessian() {
     LM.setNeq(vs.size());
     vec_t y(vs.size());
     size_t i = 0;
-    for(auto& p: vs) {
+    for(const auto& p: vs) {
         int j = 0;
         for(auto x: p.t) LM.setM(i, j++, x);
         y[i] = p.f;
@@ -392,7 +392,7 @@ std::ostream& operator<< (std::ostream &o, const NoisyMin& NM) {
     o << NM.h << '\t' << NM.verbose << '\t' << NM.nSigmaStat << '\t' << NM.k0 << '\t' << NM.dk2 << '\t' << NM.minStep << '\n';
 
     o << NM.fvals.size() << '\n';
-    for(auto& p: NM.fvals) o << p;
+    for(const auto& p: NM.fvals) o << p;
 
     o << NM.QRNGn << '\n';
 

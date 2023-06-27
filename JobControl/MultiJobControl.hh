@@ -1,20 +1,22 @@
 /// \file MultiJobControl.hh Generic interface for distributing/receiving binary data/jobs
-// -- Michael P. Mendenhall, LLNL 2019
+// -- Michael P. Mendenhall, LLNL 2023
 
 /*
 
-JobWorker: instantiated on remote node to run job according to supplied instructions
-JobComm:   lives on control node with protocol for communicating with JobWorker; holds job-specific configuration info
-
 CN = Controller Node
-WN = Worker Node
+WN = (remote) Worker Node
+
+JobWorker: instantiated on WN to run job according to supplied instructions
+JobComm:   runs on CN, with protocol for communicating with JobWorker
+
+
 
 CN: send JobSpec JS to WN, encoding JobWorker class wclass
-CN: run JS.C->startJob(CN) to send additional configuration information
-WN: Receives JS; loads appropriate worker W for JS.wclass
-CN: Use JS->C->startJob(CN as comm channel) to send start-of-job instructions
-WN: W->Run(JS, WN as comm channel); might await/receive config info from remote JS->C
-WN: calls signalDone() when W is complete
+    WN: Receives JS; loads appropriate worker W for JS.wclass;
+        calls JobWorker::run(...) to load further start-of-run information
+CN: Use JS.C->startJob(CN) to send additional configuration information to JobWorker on WN
+    WN: finishes receiving additional configuration info; runs job
+    WN: calls signalDone() when W is complete; sends output results to CN
 CN: polls isRunning(...) until a job has completed; runs JS->C->endJob(CN) to receive output
 
 */
@@ -42,12 +44,13 @@ struct JobSpec {
 
 
 
-/// Base class defining communications protocol (over supplied channel) between controller and worker
+/// Base class defining communications protocol (over supplied channel) between controller and worker.
+/// Runs on controller node to send start-of-job commands and process end-of-job results for each job instance.
 class JobComm {
 public:
-    /// start-of-job communication (send instruction details)
+    /// start-of-job communication (send instruction details specific to job type)
     virtual void startJob(BinaryIO&) = 0;
-    /// end-of-job communication (retrieve results)
+    /// end-of-job communication (retrieve results specific to job type)
     virtual void endJob(BinaryIO&) = 0;
 
     /// Helper function to create subdivided jobs list, referencing this communicator
@@ -97,7 +100,7 @@ protected:
     /// Check status for all running jobs, performing post-return jobs as needed; return number of still-running jobs
     vector<int> checkJobs();
 
-    map<int,JobSpec> jobs;          ///< active jobs by worker ID
+    map<int,JobSpec> jobs;      ///< active jobs by worker ID
 };
 
 
@@ -105,7 +108,7 @@ protected:
 class MultiJobWorker: virtual public BinaryIO {
 public:
     /// Destructor
-    ~MultiJobWorker() { for(auto& kv: workers) delete kv.second; }
+    ~MultiJobWorker() { for(const auto& kv: workers) delete kv.second; }
     /// run as worker, processing and returning jobs
     void runWorkerJobs();
 

@@ -89,7 +89,7 @@ public:
     template<typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr>
     void Get(T& x) const {
         auto w = What();
-        if(w == typeID<T>(kMESS_BINARY)) x = *(T*)data();
+        if(w == typeID<T>(kMESS_BINARY)) x = *reinterpret_cast<const T*>(data());
         else {
             w -= kMESS_BINARY;
             /* */if(w == typeID<  int8_t>()) x = T(*reinterpret_cast<const int8_t*>(data()));
@@ -119,7 +119,7 @@ public:
     template<typename T>
     UInt_t vSize() const {
         if(What() < kMESS_ARRAY) throw std::runtime_error("Incorrect data type for array");
-        return (*(int*)data())/sizeof(T);
+        return (*reinterpret_cast<const int*>(data()))/sizeof(T);
     }
     /// Written data size [bytes]
     size_t wSize() const { assert((int)wsize <= BufferSize()); return wsize; }
@@ -146,7 +146,7 @@ public:
         if(What() < kMESS_ARRAY) {
             if(wsize != sizeof(T) + 2*sizeof(UInt_t)) throw std::logic_error("Invalid array data size");
             if(kd.wsize != wsize) throw std::domain_error("Incompatible data sizes!");
-            *(T*)data() += *(T*)kd.data();
+            *reinterpret_cast<T*>(data()) += *reinterpret_cast<const T*>(kd.data());
         } else {
             auto n = vSize<T>();
             if(n != kd.vSize<T>()) throw std::domain_error("Incompatible array sizes!");
@@ -179,12 +179,12 @@ public:
     void bdisplay() const {
         display();
         printf("\t->");
-        for(size_t i = 0; i < std::min(wsize,size_t(50)); i++) printf(" %2x", ((const unsigned char*)Buffer())[i]);
+        for(size_t i = 0; i < std::min(wsize,size_t(50)); i++) printf(" %2x", reinterpret_cast<const unsigned char*>(Buffer())[i]);
         printf("\n");
     }
 
     /// get What() stored in binary
-    UInt_t _What() const { return *(UInt_t*)(Buffer()+sizeof(UInt_t)); }
+    UInt_t _What() const { return *reinterpret_cast<const UInt_t*>(Buffer()+sizeof(UInt_t)); }
 
 protected:
     /// Constructor, taking ownership of allocated buffer
@@ -230,7 +230,7 @@ public:
     ~KeyTable() { Clear(); }
 
     /// Clear data
-    void Clear() { for(auto& kv: *this) delete kv.second; clear(); }
+    void Clear() { for(const auto& kv: *this) delete kv.second; clear(); }
 
     /// Set from KeyData (taking ownership; delete entry if 'nullptr'); return 'true' if previous key deleted
     bool _Set(const string& k, KeyData* v);

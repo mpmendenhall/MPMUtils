@@ -5,7 +5,7 @@
 
 void PointSelector::display() const {
     printf("PointSelector for %zu dimensions in %zu partitions:\n", Ntot, parts.size());
-    for(auto& p: parts) printf("\t%zu dimensions: %zu x %zu points (at %zu)\n", p.N, p.npts, p.Nsub, p.QRNGn);
+    for(const auto& p: parts) printf("\t%zu dimensions: %zu x %zu points (at %zu)\n", p.N, p.npts, p.Nsub, p.QRNGn);
 }
 
 void PointSelector::addPart(size_t N, size_t npts) {

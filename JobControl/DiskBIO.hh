@@ -18,7 +18,7 @@ protected:
     std::ostream& fOut;   ///< output stream
 
     /// blocking data send
-    void _send(const void* vptr, int size) override { fOut.write((char*)vptr, size); }
+    void _send(const void* vptr, int size) override { fOut.write(static_cast<const char*>(vptr), size); }
 };
 
 /// Binary read from iostream objects
@@ -30,7 +30,7 @@ public:
 protected:
     std::istream& fIn;  ///< input stream
     /// blocking data receive
-    void _receive(void* vptr, int size) override { fIn.read((char*)vptr, size); }
+    void _receive(void* vptr, int size) override { fIn.read(static_cast<char*>(vptr), size); }
 };
 
 

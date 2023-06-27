@@ -46,8 +46,8 @@ Lorentz_boost Lorentz_boost::to_projectile_CM(double& KE, double mProj, double m
     double pL = KE_to_p(KE, mProj); // lab-frame projectile momentum
     if(!forward) pL *= -1;
     auto L = from_beta(pL/(KE + M));// boost to CM velocity in lab frame
-    double gamma = L.gammaM1 + 1;
-    KE = gamma*KE + L.gammaM1*M - L.beta*gamma*pL;
+    double g = L.gammaM1 + 1;
+    KE = g*KE + L.gammaM1*M - L.beta*g*pL;
     return L;
 }
 

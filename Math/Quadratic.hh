@@ -37,8 +37,8 @@ public:
     template<typename coeffs>
     void getCoeffs(coeffs& v) const {
         int n = 0;
-        for(auto& x: A) v[n++] = x;
-        for(auto& x: b) v[n++] = x;
+        for(const auto& x: A) v[n++] = x;
+        for(const auto& x: b) v[n++] = x;
         v[n] = c;
     }
 

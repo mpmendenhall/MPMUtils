@@ -17,7 +17,7 @@ using std::vector;
 class gsl_matrix_wrapper {
 public:
     /// Constructor with dimensions
-    gsl_matrix_wrapper(size_t m = 0, size_t n = 0, bool c = true): M(m && n? c? gsl_matrix_calloc(m,n) : gsl_matrix_alloc(m,n) : nullptr) { }
+    explicit gsl_matrix_wrapper(size_t m = 0, size_t n = 0, bool c = true): M(m && n? c? gsl_matrix_calloc(m,n) : gsl_matrix_alloc(m,n) : nullptr) { }
     /// Copy constructor
     gsl_matrix_wrapper(const gsl_matrix_wrapper& w): M(nullptr) { *this = w; }
     /// Move constructor
@@ -57,7 +57,7 @@ std::istream& operator>> (std::istream &i, gsl_matrix_wrapper& M);
 class gsl_vector_wrapper {
 public:
     /// Constructor with dimensions
-    gsl_vector_wrapper(size_t n = 0, bool c = true): v(n? c? gsl_vector_calloc(n) : gsl_vector_alloc(n) : nullptr) { }
+    explicit gsl_vector_wrapper(size_t n = 0, bool c = true): v(n? c? gsl_vector_calloc(n) : gsl_vector_alloc(n) : nullptr) { }
     /// Copy constructor
     gsl_vector_wrapper(const gsl_vector_wrapper& w): v(nullptr) { *this = w; }
     /// Move constructor
@@ -122,7 +122,7 @@ void add_xTx(gsl_matrix* A, gsl_vector* vn, const X& x) {
 }
 /// sum x x^T points into symmetric matrix (lower triangle)
 template<typename V>
-void sumSymm(gsl_matrix* A, gsl_vector* vn, const V& vp) { for(auto& p: vp) add_xTx(A, vn, p); }
+void sumSymm(gsl_matrix* A, gsl_vector* vn, const V& vp) { for(const auto& p: vp) add_xTx(A, vn, p); }
 
 /// resize (allocate if needed) gsl vector
 void resize(gsl_vector*& g, size_t n);
