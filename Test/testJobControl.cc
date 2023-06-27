@@ -9,6 +9,7 @@ mpirun -np $SLURM_CPUS_ON_NODE bin/testJobControl
 #include "ThreadsJobControl.hh"
 #include "KTAccumJob.hh"
 #include "CodeVersion.hh"
+#include "JobState.hh"
 #include <TH1F.h>
 
 /// Test job class interfacing with KeyData
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
     } else {
 
         MultiJobWorker::JW = new MPIJobWorker();
-        JobWorker::stateDir = "./SavedState/";
+        JobState::stateDir = "./SavedState/";
         MultiJobWorker::JW->runWorkerJobs();
 
         delete MultiJobWorker::JW;

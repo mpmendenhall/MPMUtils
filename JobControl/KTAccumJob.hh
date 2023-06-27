@@ -41,6 +41,8 @@ public:
     /// run job
     void run(const JobSpec& J, BinaryIO& B) override;
 
+    KeyTable kt;    ///< received KeyTable data
+
 protected:
     /// subclass me with calculation on kt, J!
     virtual void runAccum() { printf("KTAccumJob does nothing for "); JS.display(); }
@@ -48,7 +50,6 @@ protected:
     void returnCombined(BinaryIO& B);
 
     JobSpec JS;     ///< current job info
-    KeyTable kt;    ///< received KeyTable data
 };
 
 

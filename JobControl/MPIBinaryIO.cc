@@ -26,7 +26,7 @@ set<int> MPIBinaryIO::availableRanks;
 
 char* MPIBinaryIO::hostname = new char[MPI_MAX_PROCESSOR_NAME];
 
-void MPIBinaryIO::_send(void* vptr, int size) {
+void MPIBinaryIO::_send(const void* vptr, int size) {
     if(!size) return;
     MPI_Send(vptr, size, MPI_UNSIGNED_CHAR, dataDest, 2, MPI_COMM_WORLD);
 }

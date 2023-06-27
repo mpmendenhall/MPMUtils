@@ -18,7 +18,7 @@ protected:
     std::ostream& fOut;   ///< output stream
 
     /// blocking data send
-    void _send(void* vptr, int size) override { fOut.write((char*)vptr, size); }
+    void _send(const void* vptr, int size) override { fOut.write((char*)vptr, size); }
 };
 
 /// Binary read from iostream objects
@@ -53,7 +53,7 @@ public:
 
 protected:
     /// blocking data send
-    void _send(void* vptr, int size) override;
+    void _send(const void* vptr, int size) override;
     /// flush output
     void flush() override { if(fOut >= 0 && fsync(fOut)) throw std::runtime_error("failed to fsync output file"); }
 

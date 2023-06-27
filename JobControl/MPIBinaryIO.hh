@@ -25,7 +25,7 @@ public:
 
 protected:
     /// blocking data send
-    void _send(void* vptr, int size) override;
+    void _send(const void* vptr, int size) override;
     /// blocking data receive
     void _receive(void* vptr, int size) override;
 };

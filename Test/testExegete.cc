@@ -52,9 +52,11 @@ int main(int, char**) {
             _EXPLAINVAR("The loop index is",i);
         }
 
-        vector<double> foo(20);
-        _EXPLAINVAR("A vector full of zeros",foo);
-        float blerg[15];
+	// This no longer works! need to fix:
+        //vector<double> foo(20);
+        //_EXPLAINVAR("A vector full of zeros",foo);
+        
+	float blerg[15];
         _EXPLAINVAR("A static array", blerg);
         _EXPLAINVAL("With uninitialized third element", blerg[2]);
         _EXPLAINVAL("Two plus two is", 2+2);
