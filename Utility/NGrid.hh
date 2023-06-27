@@ -42,8 +42,19 @@ public:
     }
 
     /// iterator over grid indices
-    class iterator: public std::iterator<std::forward_iterator_tag, const idx_t> {
+    class iterator {
     public:
+        /// for STL iterator interface
+        using iterator_category = std::forward_iterator_tag;
+        /// for STL iterator interface
+        using value_type = const idx_t;
+        /// for STL iterator interface
+        using difference_type = std::ptrdiff_t;
+        /// for STL iterator interface
+        using pointer = value_type*;
+        /// for STL iterator interface
+        using reference = value_type&;
+
         /// Constructor from grid dimensions
         explicit iterator(const idx_t& g): ngrid(g), c() { }
         /// Constructor at mid position

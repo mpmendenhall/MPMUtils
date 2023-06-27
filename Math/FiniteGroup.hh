@@ -222,8 +222,13 @@ public:
 
 /// iterator for enumerated semigroup instance
 template<class G>
-class esg_iterator: public std::iterator<std::forward_iterator_tag, const typename G::elem_t> {
+class esg_iterator {
 public:
+    /// for STL iterator interface
+    using iterator_category = std::forward_iterator_tag;
+    /// for STL iterator interface
+    using value_type = const typename G::elem_t;
+
     /// Constructor from grid dimensions
     explicit esg_iterator(const G& g, size_t i = 0): GG(g), c(i) { }
     /// increment
@@ -243,8 +248,19 @@ protected:
 
 /// iterator for a static enumerated semigroup class
 template<class G>
-class esg_static_iterator: public std::iterator<std::forward_iterator_tag, const typename G::elem_t> {
+class esg_static_iterator {
 public:
+    /// for STL iterator interface
+    using iterator_category = std::forward_iterator_tag;
+    /// for STL iterator interface
+    using value_type = const typename G::elem_t;
+    /// for STL iterator interface
+    using difference_type = std::ptrdiff_t;
+    /// for STL iterator interface
+    using pointer = value_type*;
+    /// for STL iterator interface
+    using reference = value_type&;
+
     /// Constructor from grid dimensions
     esg_static_iterator(size_t i = 0): c(i) { if(c < G::getOrder()) e = G::element(c); }
     /// increment

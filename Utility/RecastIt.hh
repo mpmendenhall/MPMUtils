@@ -8,8 +8,19 @@
 
 /// re-casting iterator wrapper
 template<class it0, class T>
-class recastIt: public std::iterator<std::forward_iterator_tag,T*> {
+class recastIt {
 public:
+    /// for STL iterator interface
+    using iterator_category = std::forward_iterator_tag;
+    /// for STL iterator interface
+    using value_type = T*;
+    /// for STL iterator interface
+    using difference_type = std::ptrdiff_t;
+    /// for STL iterator interface
+    using pointer = value_type*;
+    /// for STL iterator interface
+    using reference = value_type&;
+
     /// Constructor
     recastIt(it0 it): I(it) { }
 

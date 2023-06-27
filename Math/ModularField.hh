@@ -94,8 +94,19 @@ public:
     friend class iterator;
 
     /// iterator over range N; can use 'for(auto n: ModularField<N>::iterator()) { }'
-    class iterator: public std::iterator<std::forward_iterator_tag, const ModularField> {
+    class iterator {
     public:
+        /// for STL iterator interface
+        using iterator_category = std::forward_iterator_tag;
+        /// for STL iterator interface
+        using value_type = const ModularField;
+        /// for STL iterator interface
+        using difference_type = std::ptrdiff_t;
+        /// for STL iterator interface
+        using pointer = value_type*;
+        /// for STL iterator interface
+        using reference = value_type&;
+
         /// Constructor
         constexpr iterator(ModularField n = {}): i(n) { }
 
@@ -121,8 +132,13 @@ public:
     };
 
     /// reference-based iterator
-    class ref_iterator: public std::iterator<std::forward_iterator_tag, const ModularField> {
+    class ref_iterator {
     public:
+        /// for STL iterator interface
+        using iterator_category = std::forward_iterator_tag;
+        /// for STL iterator interface
+        using value_type = const ModularField;
+
         /// Constructor
         constexpr ref_iterator(ModularField n = {}): i(n) { }
 

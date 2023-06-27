@@ -12,8 +12,19 @@ using std::array;
 
 /// iterator for values N0, ... , N1
 template<typename val_t, val_t N0, val_t N1>
-class RangeIt: public std::iterator<std::forward_iterator_tag, const val_t> {
+class RangeIt {
 public:
+    /// for STL iterator interface
+    using iterator_category = std::forward_iterator_tag;
+    /// for STL iterator interface
+    using value_type = const val_t;
+    /// for STL iterator interface
+    using difference_type = std::ptrdiff_t;
+    /// for STL iterator interface
+    using pointer = value_type*;
+    /// for STL iterator interface
+    using reference = value_type&;
+
     /// Constructor, for start or end of range
     constexpr RangeIt(bool start = true): i(start? N0 : N1) { }
 
@@ -48,8 +59,19 @@ _constexpr array<val_t, N1-N0> RangeArray() {
 
 /// Variable-range iteration
 template<typename val_t = size_t>
-class VRangeIt: public std::iterator<std::forward_iterator_tag, const val_t> {
+class VRangeIt {
 public:
+    /// for STL iterator interface
+    using iterator_category = std::forward_iterator_tag;
+    /// for STL iterator interface
+    using value_type = const val_t;
+    /// for STL iterator interface
+    using difference_type = std::ptrdiff_t;
+    /// for STL iterator interface
+    using pointer = value_type*;
+    /// for STL iterator interface
+    using reference = value_type&;
+
     /// Constructor from total size, starting point
     explicit VRangeIt(val_t n, val_t i = {}): N(n), c(i) { }
     /// increment
