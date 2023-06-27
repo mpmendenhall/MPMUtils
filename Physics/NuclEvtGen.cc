@@ -93,7 +93,7 @@ void DecayAtom::load(const Stringmap& m) {
 
 void DecayAtom::genAuger(vector<NucDecayEvent>& v) {
     if(gRandom->Uniform(0,1) > pAuger) return;
-    NucDecayEvent evt;
+    NucDecayEvent evt = {};
     evt.d = PDG_ELECTRON;
     evt.E = Eauger;
     evt.randp();
@@ -287,7 +287,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
     fancyname = Q.getDefault("fileinfo","fancyname","");
 
     // load levels data
-    for(auto& l: Q.retrieve("level")) {
+    for(const auto& l: Q.retrieve("level")) {
         levels.push_back(NucLevel(l));
         transIn.push_back(vector<TransitionBase*>());
         transOut.push_back(vector<TransitionBase*>());
@@ -308,7 +308,7 @@ NucDecaySystem::NucDecaySystem(const SMFile& Q, const BindingEnergyLibrary& B, d
 
     if(Q.getDefault("norm","gamma","") == "groundstate") {
         double gsflux = 0;
-        for(auto& l: levels) if(!l.fluxOut) gsflux += l.fluxIn;
+        for(const auto& l: levels) if(!l.fluxOut) gsflux += l.fluxIn;
         for(auto& tr: transitions) tr->scale(1./gsflux);
         for(auto& l: levels) l.scale(1./gsflux);
     }
@@ -378,7 +378,7 @@ void NucDecaySystem::circle_check(unsigned int n, set<unsigned int>& passed, set
 
 NucDecaySystem::~NucDecaySystem() {
     for(auto& t: transitions) delete t;
-    for(auto& kv: atoms) delete kv.second;
+    for(const auto& kv: atoms) delete kv.second;
 }
 
 DecayAtom* NucDecaySystem::getAtom(unsigned int Z) {
@@ -424,7 +424,7 @@ void NucDecaySystem::display(bool verbose) const {
 
 void NucDecaySystem::displayLevels(bool verbose) const {
     printf("---- Energy Levels ----\n");
-    for(auto& l: levels) {
+    for(const auto& l: levels) {
         printf("[%u DF] ",getNDF(l.n));
         l.display(verbose);
     }
@@ -524,7 +524,7 @@ NucDecayLibrary::NucDecayLibrary(const std::string& datp, double t):
 datpath(datp), tcut(t), BEL(SMFile(datpath+"/ElectronBindingEnergy.txt")) { }
 
 NucDecayLibrary::~NucDecayLibrary() {
-    for(auto& kv: NDs) delete kv.second;
+    for(const auto& kv: NDs) delete kv.second;
 }
 
 NucDecaySystem& NucDecayLibrary::getGenerator(const std::string& gennm) {
@@ -570,7 +570,7 @@ GammaForest::GammaForest(const std::string& fname, double E2MeV) {
 
 void GammaForest::genDecays(vector<NucDecayEvent>& v, double n) {
     while(n >= 1. || gRandom->Uniform(0,1) < n) {
-        NucDecayEvent evt;
+        NucDecayEvent evt = {};
         evt.d = PDG_GAMMA;
         evt.t = 0;
         evt.E = gammaE[gammaProb.select()];

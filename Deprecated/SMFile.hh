@@ -9,7 +9,7 @@
 class SMFile: public multimap<string,Stringmap> {
 public:
     /// Constructor with input filename
-    SMFile(const string& s = "", bool readit = true);
+    explicit SMFile(const string& s = "", bool readit = true);
 
     /// retrieve values for key
     vector<Stringmap> retrieve(const string& s) const;

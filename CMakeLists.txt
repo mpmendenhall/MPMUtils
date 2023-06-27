@@ -10,6 +10,7 @@ set(CMAKE_INSTALL_LIBDIR ${CMAKE_BINARY_DIR}/lib) # for ROOT_GENERATE_DICTIONARY
 set(CMAKE_C_STANDARD 99) # sqlite3.c complains under c90 about 'long long' type
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 INCLUDE(CXXWarnings.cmake)
 INCLUDE(DefaultBuildType.cmake)
 
@@ -192,5 +193,4 @@ endforeach(E)
 file(GLOB TESTMODULES Test/modules/*.cc)
 target_sources(mpmexamples PUBLIC ${TESTMODULES})
 
-SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(Doc)

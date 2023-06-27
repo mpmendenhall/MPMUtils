@@ -109,7 +109,7 @@ public:
 class TransitionBase {
 public:
     /// constructor
-    TransitionBase(NucLevel& f, NucLevel& t): from(f), to(t), Itotal(0) {}
+    TransitionBase(NucLevel& f, NucLevel& t): from(f), to(t) {}
     /// destructor
     virtual ~TransitionBase() {}
     /// display transition line info
@@ -129,10 +129,10 @@ public:
     /// how many of given electron type were knocked out
     virtual unsigned int nVacant(unsigned int) const { return 0; }
 
-    DecayAtom* toAtom;  ///< final state atom info
-    NucLevel& from;     ///< level this transition is from
-    NucLevel& to;       ///< level this transition is to
-    double Itotal;      ///< total transition intensity
+    DecayAtom* toAtom = nullptr;    ///< final state atom info
+    NucLevel& from;                 ///< level this transition is from
+    NucLevel& to;                   ///< level this transition is to
+    double Itotal = 0;              ///< total transition intensity
 };
 
 
@@ -159,8 +159,8 @@ public:
     void scale(double s) override;
 
     double Egamma;      ///< gamma energy [MeV]
-    int shell;          ///< selected conversion electron shell
-    int subshell;       ///< selected conversion electron subshell
+    int shell = 0;      ///< selected conversion electron shell
+    int subshell = 0;   ///< selected conversion electron subshell
     double Igamma;      ///< total gamma intensity
 
 protected:
@@ -189,7 +189,7 @@ public:
     /// return number of continuous degrees of freedom needed to specify transition
     unsigned int getNDF() const override { return 0; }
 
-    bool isKCapt;       ///< whether transition was a K capture
+    bool isKCapt = false;   ///< whether transition was a K capture
 };
 
 /// alpha decay transitions

@@ -47,7 +47,7 @@ BindingEnergyLibrary::BindingEnergyLibrary(const SMFile& Q) {
 }
 
 BindingEnergyLibrary::~BindingEnergyLibrary() {
-    for(auto& kv: tables) delete kv.second;
+    for(const auto& kv: tables) delete kv.second;
 }
 
 const BindingEnergyTable* BindingEnergyLibrary::getBindingTable(unsigned int Z, bool allownullptr) const {
