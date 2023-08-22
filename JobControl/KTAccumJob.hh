@@ -22,7 +22,7 @@ public:
     void endJob(BinaryIO& B) override;
 
     /// collect accumulated objects back into kt
-    void gather();
+    virtual void gather();
 
     /// get correct worker class ID
     virtual size_t workerType() const = 0;

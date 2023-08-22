@@ -32,6 +32,6 @@ class ENDF_File14_Sec(ENDF_HEAD_Record):
             assert self.NI <= self.NK
             self.contents = [ENDF_CONT_Record(next(iterlines)) for i in range(self.NI)]
             if self.LTT == 1:
-
+                assert False
             if self.LTT == 2:
                 assert False

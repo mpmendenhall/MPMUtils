@@ -97,6 +97,7 @@ DST-IV [RODFT11] N = 4*n, odd around j=-0.5 and even around j=n-0.5
 #include <cmath>
 #include <map>
 using std::map;
+#include <algorithm>
 
 
 //-----------------------------------------
@@ -616,6 +617,29 @@ protected:
     }
 };
 
+/// Positive half of Gaussian-smoothed derivative kernel
+template<typename T = double>
+vector<T> half_gaussderiv_kernel(size_t i, T r) {
+    vector<T> verf(i+2); // erfs at bin edges for integrals of Gaussian in bins
+    for(int j=0; j < int(i+2); ++j) verf[j] = std::erf((long double)((j-0.5)/(sqrt(2.)*r)));
+    vector<T> k(i);
+    for(int j=0; j < i; ++j) k[j] = -0.5*(-verf[j] + 2*verf[j+1] - verf[j+2]);
+    return k;
+}
+
+/// Gaussian-smoothed derivative kernel
+template<typename T = double>
+vector<T> gaussderiv_kernel(size_t half_i, T r) {
+    auto k = half_gaussderiv_kernel(half_i, r);
+    std::reverse(k.begin(), k.end());
+    k.resize(2*half_i);
+    for(size_t i = 0; i < half_i; ++i) {
+        k[2*half_i - i - 1] = k[i];
+        k[i] = -k[i];
+    }
+    return k;
+}
+
 /// Gaussian-smoothed derivative filter; symmetrizing boundary conditions
 template<typename T = double>
 class GaussDerivFactory: public ConvolverFactory<Convolve_DCT_DST_II<T>> {
@@ -627,20 +651,10 @@ public:
 protected:
     /// calculate convolution kernel for given size
     vector<T> calcKernel(size_t i) override {
-        while(verf.size() < i + 2) {
-            int j = verf.size();
-            verf.push_back(std::erf((long double)((j-0.5)/(sqrt(2.)*r))));
-        }
-
-        while(vkern.size() < i) {
-            auto j = vkern.size();
-            vkern.push_back(-0.5*(-verf[j]+2*verf[j+1]-verf[j+2]));
-        }
-
+        if(vkern.size() < i) vkern = half_gaussderiv_kernel(i,r);
         return vector<T>(vkern.begin(), vkern.begin() + i);
     }
 
-    vector<T> verf;     ///< erfs at bin edges for integrals of Gaussian in bins
     vector<T> vkern;    ///< smoothing kernel * {-1,1} derivative
 };
 

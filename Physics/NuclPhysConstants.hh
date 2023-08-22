@@ -28,10 +28,13 @@ namespace physconst {
 
     constexpr double N_A = 6.02214076e23;               ///< exact Avogadro constant         [mol^-1]  CODATA 2018
 
+    constexpr double J_per_MeV = 1.602176634e-13;       ///< exact value of MeV in Joules              CODATA 2018
     constexpr double hbar = 1.054571817e-34;            ///< exact reduced Planck constant [J s] CODATA 2018
     constexpr double hbar_c = 197.3269804;              ///< exact hbar*c [MeV fm] CODATA 2018
 
     constexpr double c_mps = 299792458.;                ///< exact speed of light in vacuum  [m/s]     CODATA 2018
+
+    constexpr double epsilon_0 = 8.8541878128e-12;      ///< +-(13), vacuum electric permittivity [F/m = C^2 / J m] CODATA 2018
 
     constexpr double r_e = alpha * hbar_c / m_e;        /// "classical electron radius" (alpha * hbar) / (m_e * c) [fm]
 

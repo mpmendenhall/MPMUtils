@@ -81,9 +81,9 @@ void GLVisDriver::_clearWindow(const vector<float>& v) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void _end_pause(void*, VGLCallback*) { }
+void _end_pause(VGLCallback*) { }
 
-void GLVisDriver::pause(void (*f)(void*, VGLCallback*), void* args) {
+void GLVisDriver::pause(void (*f)(VGLCallback*), VGLCallback* args) {
     pause_callback = f;
     pause_args = args;
     if(pause_info.size()) printf("%s", pause_info.c_str());
@@ -262,13 +262,15 @@ void GLVisDriver::keypress(unsigned char key, int x, int y) {
         return;
     } else if(key == 27) resetViewTransformation();     // escape
     else if(pause_callback) {
-        VGLCallback C;
-        C.x = x;
-        C.y = y;
-        C.a = key;
-        C.b = 0;
-        C.reason = VGLCallback::KEYPRESS;
-        (*pause_callback)(pause_args, &C);
+       if(pause_args) {
+            auto& C = *pause_args;
+            C.x = x;
+            C.y = y;
+            C.a = key;
+            C.b = 0;
+            C.reason = VGLCallback::KEYPRESS;
+       }
+       (*pause_callback)(pause_args);
     } else printf("Un-assigned keypress %u at %i,%i\n", key, x, y);
 }
 
@@ -280,13 +282,15 @@ void GLVisDriver::startMouseTracking(int button, int state, int x, int y) {
     }
 
     if(pause_callback) {
-        VGLCallback C;
-        C.x = x;
-        C.y = y;
-        C.a = state;
-        C.b = button;
-        C.reason = VGLCallback::STARTMOUSE;
-        (*pause_callback)(pause_args, &C);
+        if(pause_args) {
+            auto& C = *pause_args;
+            C.x = x;
+            C.y = y;
+            C.a = state;
+            C.b = button;
+            C.reason = VGLCallback::STARTMOUSE;
+        }
+        (*pause_callback)(pause_args);
     }
 }
 
@@ -326,13 +330,15 @@ void GLVisDriver::mouseTrackingAction(int x, int y) {
     updated = true;
 
     if(pause_callback) {
-        VGLCallback C;
-        C.x = x;
-        C.y = y;
-        C.a = modifier;
-        C.b = 0;
-        C.reason = VGLCallback::MOVEMOUSE;
-        (*pause_callback)(pause_args, &C);
+        if(pause_args) {
+            auto& C = *pause_args;
+            C.x = x;
+            C.y = y;
+            C.a = modifier;
+            C.b = 0;
+            C.reason = VGLCallback::MOVEMOUSE;
+        }
+        (*pause_callback)(pause_args);
     }
 }
 
@@ -375,7 +381,10 @@ void GLVisDriver::mouseTrackingAction(int x, int y) {
     */
 
 void _tryFlush() {
-    if(kill_flag) exit(0);
+    if(kill_flag) {
+        printf("\nVisrGL received kill_flag\n\n");
+        exit(0);
+    }
     if(GLDr) GLDr->tryFlush();
     usleep(50000);
 }
@@ -471,6 +480,6 @@ void GLVisDriver::doGlutLoop() {
 
 void GLVisDriver::doGlutLoop() { }
 void GLVisDriver::endGlutLoop() { }
-void GLVisDriver::pause(void (*)(void*, VGLCallback*), void*) { }
+void GLVisDriver::pause(void (*)(VGLCallback*), VGLCallback*) { }
 
 #endif
