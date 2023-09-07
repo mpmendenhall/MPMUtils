@@ -623,7 +623,7 @@ vector<T> half_gaussderiv_kernel(size_t i, T r) {
     vector<T> verf(i+2); // erfs at bin edges for integrals of Gaussian in bins
     for(int j=0; j < int(i+2); ++j) verf[j] = std::erf((long double)((j-0.5)/(sqrt(2.)*r)));
     vector<T> k(i);
-    for(int j=0; j < i; ++j) k[j] = -0.5*(-verf[j] + 2*verf[j+1] - verf[j+2]);
+    for(size_t j=0; j < i; ++j) k[j] = -0.5*(-verf[j] + 2*verf[j+1] - verf[j+2]);
     return k;
 }
 

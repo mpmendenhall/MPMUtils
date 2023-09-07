@@ -29,8 +29,30 @@
 #include <time.h>
 #include <errno.h>
 #include <string.h>
-#include <set>
-using std::set;
+
+#if __cplusplus >= 201703L
+#include <filesystem>
+
+bool fileExists(const string& f) {
+    return std::filesystem::is_regular_file(f);
+}
+
+bool dirExists(const string& d) {
+    return std::filesystem::is_directory(d);
+}
+
+void makePath(const string& p, bool forFile) {
+    auto pathels = split(p,"/");
+    if(forFile && pathels.size()) pathels.pop_back();
+    if(!pathels.size()) return;
+
+    string thepath = p.front() == '/'? "/" : "";
+    for(const auto& e: pathels) thepath += e + "/";
+    std::filesystem::create_directories(thepath);
+    if(!dirExists(thepath)) throw std::runtime_error("Unable to make path '"+thepath+"'");
+}
+
+#else
 
 bool fileExists(const string& f) {
     return !system(("test -r '" + f + "'").c_str());
@@ -39,6 +61,7 @@ bool fileExists(const string& f) {
 bool dirExists(const string& d) {
     return !system(("test -d '" + d + "'").c_str());
 }
+
 
 void makePath(const string& p, bool forFile) {
     auto pathels = split(p,"/");
@@ -56,6 +79,9 @@ void makePath(const string& p, bool forFile) {
         }
     }
 }
+
+#endif
+
 
 double fileAge(const string& fname) {
     if(!(fileExists(fname) || dirExists(fname))) return -1.;
