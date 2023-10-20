@@ -4,6 +4,7 @@
 #include "PluginSaver.hh"
 #include "TermColor.hh"
 #include "to_str.hh"
+#include "GlobalArgs.hh"
 
 PluginSaver::PluginSaver(OutputManager* pnt, const Setting& S, const string& _path, const string& inflName):
 SegmentSaver(pnt, _path, inflName) {
@@ -67,6 +68,8 @@ void PluginSaver::Configure(const Setting& S, bool skipUnknown) {
 
     std::sort(myPlugins.begin(), myPlugins.end(),
               [](SegmentSaver* a, SegmentSaver* b) { return a->order < b->order; });
+
+    if(optionalGlobalArg("plotformat", printsfx, "plot output format")) setPrintSuffix(printsfx);
 }
 
 map<string,float> PluginSaver::compareKolmogorov(const SegmentSaver& S) const {

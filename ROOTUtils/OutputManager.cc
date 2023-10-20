@@ -48,6 +48,12 @@ string OutputManager::fullPath() const {
 void OutputManager::printMulti(const string& fname, const string& suffix, TPad* P) {
     if(!fname.size()) throw std::logic_error("Printset requires non-empty name");
 
+    if(!suffix.size() && printsfx != ".pdf") {
+        printf("printMulti '%s' Only supported in .pdf mode\n", fname.c_str());
+        printMulti(fname, ".pdf", P);
+        return;
+    }
+
     auto& printset = psets[fname];
     if(!printset.n) printset.sfx = suffix;
     else if(printset.sfx != suffix) throw std::logic_error("Inconsistent printset naming");

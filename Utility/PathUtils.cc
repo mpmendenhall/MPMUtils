@@ -30,7 +30,7 @@
 #include <errno.h>
 #include <string.h>
 
-#if __cplusplus >= 201703L
+#if __cpp_lib_filesystem >= 201703L
 #include <filesystem>
 
 bool fileExists(const string& f) {

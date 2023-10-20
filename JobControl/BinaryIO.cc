@@ -30,5 +30,5 @@ void BinaryWriter::send<string>(const string& s) {
 template<>
 void BinaryReader::receive<string>(string& s) {
     s = string(receive<int>(), ' ');
-    _receive(static_cast<void*>(s.data()), s.size());
+    _receive(reinterpret_cast<void*>(s.data()), s.size());
 }
