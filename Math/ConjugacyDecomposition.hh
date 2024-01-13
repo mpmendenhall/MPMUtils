@@ -5,6 +5,7 @@
 
 #include "CayleyTable.hh"
 #include "EquivalenceClasses.hh"
+#include <random>
 
 /// Analysis of <Enumerated Semigroup> into element orders
 template<class G>
@@ -58,7 +59,8 @@ public:
     /// Constructor from <Enumerated Semigroup>
     ConjugacyDecomposition(const G& g = {}): OrdersDecomposition<G>(g) {
         for(auto& x: g) vscramble.push_back(x);
-        std::random_shuffle(vscramble.begin(), vscramble.end());
+
+        std::shuffle(vscramble.begin(), vscramble.end(), std::mt19937(rand()));
 
         for(auto& os: this->by_order) {
             for(auto i: os.second) assign_CC(os.first, i, g);

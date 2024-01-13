@@ -7,6 +7,7 @@
 #include <iostream>
 #include <TRandom3.h>
 #include <time.h>
+#include <unistd.h> // fo usleep
 
 using namespace Terminart;
 
