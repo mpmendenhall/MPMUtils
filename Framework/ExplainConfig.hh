@@ -9,6 +9,7 @@
 #include "TermColor.hh"
 #include "NoCopy.hh"
 #include <set>
+using std::set;
 #include <map>
 using std::map;
 
@@ -25,8 +26,8 @@ public:
     /// Check if requested setting existed
     operator bool() const { return &S != &NullSetting; }
 
-    /// Query setting existence
-    bool exists(const string& name) { queried.insert(name); return S.exists(name); }
+    /// Query setting existence; verbose if non-empty descrip provided
+    bool exists(const string& name, const string& descrip = "", bool mandatory = false);
     /// Lookup optional, returning NullSetting if not present
     const Setting& lookupOpt(const string& name) { return exists(name)? S[name] : NullSetting; }
     /// Mandatory setting lookup
@@ -46,6 +47,9 @@ public:
         printf("%s" TERMSGR_RESET "'\n", to_str(val).c_str());
         return ex;
     }
+
+    /// Lookup one of multiple string choices
+    bool lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices);
 
     /// Lookup and describe string-valued multiple choice option
     bool lookupChoice(const string& name, int& val, const string& descrip, const map<string, int>& choices);
@@ -76,7 +80,7 @@ protected:
     void printloc() const;
 
     const Setting& S;                   ///< settings group being queried
-    std::set<string> queried;           ///< sub-settings (attempted) queried
+    set<string> queried;                ///< sub-settings (attempted) queried
     map<string, SettingsQuery> Ssub;    ///< sub-queries generated
 };
 

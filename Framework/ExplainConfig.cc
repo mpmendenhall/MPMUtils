@@ -32,10 +32,39 @@ void _printloc(const Setting& S) {
 
 void SettingsQuery::printloc() const { _printloc(S); }
 
-bool SettingsQuery::lookupChoice(const string& name, int& val, const string& descrip, const map<string, int>& choices) {
-
+bool SettingsQuery::lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices) {
     queried.insert(name);
 
+    // update default if setting present
+    bool ex = _checkOpt(name, descrip);
+    if(ex) {
+        printf(TERMFG_BLUE "(default '%s') " TERMFG_GREEN "-> " TERMSGR_RESET, val.c_str());
+        S.lookupValue(name, val);
+        if(!choices.count(val)) {
+            printf(TERMFG_RED "INVALID CHOICE '%s'\nfor ", val.c_str());
+            _printloc(S[name]);
+            printf("\n**** Allowed options:");
+            for(auto& c: choices) printf("\n  * '%s'", c.c_str());
+            printf(TERMSGR_RESET "\n");
+            throw std::runtime_error("invalid configuration selection");
+        }
+    } else printf(TERMFG_GREEN "defaulted to");
+
+    // show selection in list of options
+    for(auto& c: choices) {
+        if(c == val) {
+            printf(TERMFG_YELLOW " *");
+            if(ex) printf(TERMFG_MAGENTA TERMSGR_BOLD);
+            else printf(TERMFG_GREEN);
+        } else printf(" " TERMFG_BLUE);
+        printf("'%s'" TERMSGR_RESET, c.c_str());
+    }
+    printf("\n");
+
+    return ex;
+}
+
+bool SettingsQuery::lookupChoice(const string& name, int& val, const string& descrip, const map<string, int>& choices) {
     // identify default value
     auto it = choices.begin();
     while(it != choices.end()) {
@@ -44,62 +73,47 @@ bool SettingsQuery::lookupChoice(const string& name, int& val, const string& des
     }
     if(it == choices.end()) throw std::logic_error("Invalid default value for choices");
 
-    // update default if setting present
-    bool ex = _checkOpt(name, descrip);
-    if(ex) {
-        printf(TERMFG_BLUE "(default '%s') " TERMFG_GREEN "-> " TERMSGR_RESET, it->first.c_str());
-        string s = S[name];
-        it = choices.find(s);
-        if(it == choices.end()) {
-            printf(TERMFG_RED "INVALID CHOICE '%s'\nfor ", s.c_str());
-            _printloc(S[name]);
-            printf("\n**** Allowed options:");
-            for(auto kv: choices) printf("\n  * '%s'", kv.first.c_str());
-            printf(TERMSGR_RESET "\n");
-            throw std::runtime_error("invalid configuration selection");
-        }
-        val = it->second;
-    } else printf(TERMFG_GREEN "defaulted to");
+    set<string> opts;
+    for(auto& kv: choices) opts.insert(kv.first);
+    auto s = it->first;
+    bool ex = lookupChoice(name, s, descrip, opts);
+    val = choices.at(s);
+    return ex;
+}
 
-    // show selection in list of options
-    for(auto& kv: choices) {
-        if(kv.second == val) {
-            printf(TERMFG_YELLOW " *");
-            if(ex) printf(TERMFG_MAGENTA TERMSGR_BOLD);
-            else printf(TERMFG_GREEN);
-        } else printf(" " TERMFG_BLUE);
-        printf("'%s'" TERMSGR_RESET, kv.first.c_str());
+
+bool SettingsQuery::exists(const string& name, const string& descrip, bool mandatory) {
+    queried.insert(name);
+    bool ex = S.exists(name);
+
+    if(mandatory && !ex) {
+        printf(TERMFG_RED "Required settings '%s' <%s> MISSING\nfrom ", name.c_str(), descrip.c_str());
+        printloc();
+        S[name]; // throws missing setting exception
     }
-    printf("\n");
+
+    if(!descrip.size()) return ex;
+
+    printf(TERMFG_BLUE "\n**********************************************************\n**** " TERMSGR_RESET);
+    if(mandatory) printf("Required ");
+    printf("Settings '" TERMFG_GREEN "%s" TERMSGR_RESET "': %s ", name.c_str(), descrip.c_str());
+    if(!ex) {
+        printf(TERMFG_YELLOW "not provided\n" TERMFG_BLUE "**** within ");
+        printloc();
+        printf(TERMSGR_RESET "\n");
+    } else {
+        printf(TERMFG_GREEN "provided" TERMSGR_RESET "\n" TERMFG_BLUE "**** ");
+        _printloc(S[name]);
+        printf(TERMSGR_RESET "\n");
+    }
 
     return ex;
 }
 
 SettingsQuery& SettingsQuery::get(const string& name, const string& descrip, bool mandatory) {
+    exists(name, descrip, mandatory);
     if(!Ssub.count(name)) Ssub.emplace(name, lookupOpt(name));
-
-    auto& SQ = Ssub.at(name);
-    if(!descrip.size()) {
-        if(!SQ && mandatory) S[name]; // throws missing setting exception
-        return SQ;
-    }
-    printf(TERMFG_BLUE "\n**********************************************************\n**** " TERMSGR_RESET);
-    if(mandatory) printf("Required ");
-    printf("Settings group '" TERMFG_GREEN "%s" TERMSGR_RESET "': %s ", name.c_str(), descrip.c_str());
-    if(!SQ) {
-        if(mandatory) {
-            printf(TERMFG_RED "MISSING" TERMSGR_RESET "\n");
-            S[name]; // throws missing setting exception
-        }
-        printf(TERMFG_YELLOW "not provided; using defaults\n" TERMFG_BLUE "**** within ");
-        printloc();
-        printf(TERMSGR_RESET "\n");
-    } else {
-        printf(TERMFG_GREEN "provided\n" TERMFG_BLUE "**** ");
-        SQ.printloc();
-        printf(TERMSGR_RESET "\n");
-    }
-    return SQ;
+    return Ssub.at(name);
 }
 
 bool SettingsQuery::_checkOpt(const string& name, const string& descrip) const {
