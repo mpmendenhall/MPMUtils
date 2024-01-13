@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 using std::string;
+#include <vector>
 
 /// utility function for converting to string
 template<typename T>
@@ -13,6 +14,14 @@ inline string to_str(const T& x) {
     std::stringstream ss;
     ss << x;
     return ss.str();
+}
+
+/// utility for displaying vector as string
+template<typename T>
+inline string to_str(const std::vector<T>& v) {
+    string s = "[ ";
+    for(auto& x: v) s += to_str(x) + " ";
+    return s + "]";
 }
 
 #endif

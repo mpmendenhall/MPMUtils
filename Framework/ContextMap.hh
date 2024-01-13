@@ -9,16 +9,13 @@
 #include <vector>
 #include <stdexcept>
 #include <typeinfo>
+#include "NoCopy.hh"
 
 /// Utility for (context-scoped) cascading variables lookup
-class ContextMap {
+class ContextMap: private NoCopy {
 public:
     /// Default constructor
     explicit ContextMap(ContextMap* _parent = nullptr): parent(_parent) { }
-    /// Copy constructor, using operator= defined below
-    ContextMap(const ContextMap& M) { *this = M; }
-    /// Copy Assignment
-    ContextMap& operator=(const ContextMap& o);
     /// Destructor
     ~ContextMap() { for(auto& kv: dat) if(kv.second.second) kv.second.second->deletep(kv.second.first); }
 
