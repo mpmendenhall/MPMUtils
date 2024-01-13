@@ -12,7 +12,6 @@
 using std::set;
 #include <map>
 using std::map;
-#include <vector>
 using std::vector;
 
 /// Verbose query operations wrapper on settings group
@@ -32,7 +31,7 @@ public:
     bool exists(const string& name, const string& descrip = "", bool mandatory = false);
 
     /// Lookup setting, returning NullSetting if not present (or throwing error if mandatory)
-    const Setting& lookup(const string& name, const string& descrip = "", bool mandatory = false) { return exists(name, descrip, mandatory)? S[name] : NullSetting; }
+    const Setting& lookup(const string& name, const string& descrip = "", bool mandatory = false) { return exists(name, descrip, mandatory)? S.lookup(name) : NullSetting; }
 
     /// Look up setting contents without printing description; return whether found
     template<class C>
@@ -57,7 +56,7 @@ public:
         if(ex) {
             printf(TERMFG_BLUE "(default '%s')" TERMFG_GREEN " -> " TERMSGR_RESET "'" TERMSGR_BOLD TERMFG_MAGENTA, to_str(v).c_str());
 
-            auto vv = _lookupVector(name, descrip, n, mandatory);
+            auto vv = _lookupVector(name, descrip, n);
             v.resize(vv.size());
             auto it = v.begin();
             for(auto s: vv) *(it++) = C(*s);
@@ -87,6 +86,7 @@ public:
     /// error thrown if "mandatory" and not found
     SettingsQuery& get(const string& name, const string& descrip, bool mandatory = false);
 
+    /// Level of panic in response to problematic issue
     enum Response_t {
         IGNORE, ///< silently ignore issue
         WARN,   ///< show warning about issue
@@ -95,17 +95,14 @@ public:
 
     static Response_t default_require_queried;  ///< global default query requirement
 
+    /// Helper to print location of setting in file
+    static void printloc(const Setting& _S);
 
 protected:
     /// return exists() + display setting description, "* Configuration ..." line or "*** Settings" group header
     bool show_exists(const string& name, const string& descrip, bool mandatory = false, bool header = false);
 
-    /// Print path / file location
-    void printloc() const;
-
-    /// Look up vector, or single value to fill into n-element vector. Returns empty vector if non-existent.
-    vector<const Setting*> _lookupVector(const string& name, size_t n);
-    /// _lookupVector + display whether found
+    /// Look up vector, or single value to fill into n-element vector. Returns empty vector if non-existent (or error if mandatory).
     vector<const Setting*> _lookupVector(const string& name, const string& descrip, size_t n, bool mandatory = false);
 
     const Setting& S;                   ///< settings group being queried

@@ -10,11 +10,11 @@ require_queried(default_require_queried), S(_S) {
         throw std::runtime_error("Setting '" + S.getPath() + "' must be of { group } type");
 }
 
-void _printloc(const Setting& S) {
-    auto sf = S.getSourceFile();
-    auto p = S.getPath();
+void SettingsQuery::printloc(const Setting& _S) {
+    auto sf = _S.getSourceFile();
+    auto p = _S.getPath();
     if(p.size()) printf("'%s' at ", p.c_str());
-    printf("%s : line %i", sf? sf : "<no file>", S.getSourceLine());
+    printf("%s : line %i", sf? sf : "<no file>", _S.getSourceLine());
 }
 
 SettingsQuery::~SettingsQuery() {
@@ -26,13 +26,11 @@ SettingsQuery::~SettingsQuery() {
         if(require_queried == ERROR) printf(TERMFG_RED);
         else printf(TERMFG_YELLOW);
         printf("\n** Encountered unused configuration setting ");
-        _printloc(SS);
+        printloc(SS);
         printf("\n" TERMSGR_RESET);
         if(require_queried == ERROR) std::terminate();
     }
 }
-
-void SettingsQuery::printloc() const { _printloc(S); }
 
 bool SettingsQuery::lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices) {
     // update default if setting present
@@ -42,7 +40,7 @@ bool SettingsQuery::lookupChoice(const string& name, string& val, const string& 
         S.lookupValue(name, val);
         if(!choices.count(val)) {
             printf(TERMFG_RED "INVALID CHOICE '%s'\nfor ", val.c_str());
-            _printloc(S[name]);
+            printloc(S.lookup(name));
             printf("\n**** Allowed options:");
             for(auto& c: choices) printf("\n  * '%s'", c.c_str());
             printf(TERMSGR_RESET "\n");
@@ -64,19 +62,13 @@ bool SettingsQuery::lookupChoice(const string& name, string& val, const string& 
     return ex;
 }
 
-vector<const Setting*> SettingsQuery::_lookupVector(const string& name, size_t n) {
-    if(!S.exists(name)) return {};
-
-    vector<const Setting*> v;
-    auto& SS = S[name];
-    if(SS.isArray()) for(auto& i: SS) v.push_back(&i);
-    else for(size_t i=0; i<n; ++i) v.push_back(&SS);
-    return v;
-}
-
 vector<const Setting*> SettingsQuery::_lookupVector(const string& name, const string& descrip, size_t n, bool mandatory) {
     if(!exists(name, descrip, mandatory)) return {};
-    auto v = _lookupVector(name, n);
+
+    vector<const Setting*> v;
+    auto& SS = S.lookup(name);
+    if(SS.isArray()) for(auto& i: SS) v.push_back(&i);
+    else for(size_t i=0; i<n; ++i) v.push_back(&SS);
     return v;
 }
 
@@ -103,8 +95,8 @@ bool SettingsQuery::exists(const string& name, const string& descrip, bool manda
 
     if(mandatory && !ex) {
         printf(TERMFG_RED "Required settings '%s' <%s> MISSING\nfrom ", name.c_str(), descrip.c_str());
-        printloc();
-        S[name]; // throws missing setting exception
+        printloc(S);
+        S.lookup(name); // throws missing setting exception
     }
 
     return ex;
@@ -122,11 +114,11 @@ bool SettingsQuery::show_exists(const string& name, const string& descrip, bool 
         printf("Settings '" TERMFG_GREEN "%s" TERMSGR_RESET "': %s ", name.c_str(), descrip.c_str());
         if(!ex) {
             printf(TERMFG_YELLOW "not provided\n" TERMFG_BLUE "**** within ");
-            printloc();
+            printloc(S);
             printf(TERMSGR_RESET "\n");
         } else {
             printf(TERMFG_GREEN "provided" TERMSGR_RESET "\n" TERMFG_BLUE "**** ");
-            _printloc(S[name]);
+            printloc(S.lookup(name));
             printf(TERMSGR_RESET "\n");
         }
     } else {
@@ -142,4 +134,3 @@ SettingsQuery& SettingsQuery::get(const string& name, const string& descrip, boo
     if(!Ssub.count(name)) Ssub.emplace(name, lookup(name));
     return Ssub.at(name);
 }
-
