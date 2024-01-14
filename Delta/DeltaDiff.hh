@@ -1,4 +1,4 @@
-/// \file DeltaDiff.hh gnu diff based delta
+/// @file DeltaDiff.hh gnu diff based delta
 // Michael P. Mendenhall, LLNL 2021
 
 #include "DeltaBase.hh"

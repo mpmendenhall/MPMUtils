@@ -1,4 +1,4 @@
-/// \file CyclicGroup.hh Cyclic groups
+/// @file CyclicGroup.hh Cyclic groups
 // -- Michael P. Mendenhall, 2019
 
 #ifndef CYCLICGROUP_HH

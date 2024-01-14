@@ -1,4 +1,4 @@
-/// \file MultiFill.cc
+/// @file MultiFill.cc
 
 #include "MultiFill.hh"
 #include <TAxis.h>

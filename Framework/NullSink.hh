@@ -1,4 +1,4 @@
-/// \file NullSink.hh Ignore datastream contents
+/// @file NullSink.hh Ignore datastream contents
 // -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef NULLSINK_HH

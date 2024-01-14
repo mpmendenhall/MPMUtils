@@ -1,4 +1,4 @@
-/// \file _ConfigCollator.cc
+/// @file _ConfigCollator.cc
 
 #include "_ConfigCollator.hh"
 

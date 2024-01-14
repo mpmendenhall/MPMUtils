@@ -1,4 +1,4 @@
-/// \file Sketch3D.cc
+/// @file Sketch3D.cc
 // -- Michael P. Mendenhall, 2017
 
 #include "Sketch3D.hh"

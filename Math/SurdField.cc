@@ -1,4 +1,4 @@
-/// \file SurdField.cc
+/// @file SurdField.cc
 
 #include "SurdField.hh"
 

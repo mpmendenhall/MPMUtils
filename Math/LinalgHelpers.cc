@@ -1,4 +1,4 @@
-/// \file LinalgHelpers.cc
+/// @file LinalgHelpers.cc
 // -- Michael P. Mendenhall, 2018
 
 #include "LinalgHelpers.hh"

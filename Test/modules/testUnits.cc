@@ -1,4 +1,4 @@
-/// \file testUnits.cc Test units definitions
+/// @file testUnits.cc Test units definitions
 
 #include "ConfigFactory.hh"
 

@@ -1,4 +1,4 @@
-/// \file testPolynomial.cc Test of polynomial manipulation
+/// @file testPolynomial.cc Test of polynomial manipulation
 
 #include "ConfigFactory.hh"
 

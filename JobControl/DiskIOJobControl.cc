@@ -1,4 +1,4 @@
-/// \file DiskIOJobControl.cc
+/// @file DiskIOJobControl.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "DiskIOJobControl.hh"

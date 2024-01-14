@@ -1,4 +1,4 @@
-/// \file DataSource.hh Base class for providing a stream of objects
+/// @file DataSource.hh Base class for providing a stream of objects
 // -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef DATASOURCE_HH

@@ -1,4 +1,4 @@
-/// \file TermColor.hh Defines for terminal text color control codes
+/// @file TermColor.hh Defines for terminal text color control codes
 // -- Michael P. Mendenhall, 2020
 
 #ifndef TERMCOLOR_HH

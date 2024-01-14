@@ -1,4 +1,4 @@
-/// \file ConfigOrderQ.hh Configuration-file-friendly ordering queue
+/// @file ConfigOrderQ.hh Configuration-file-friendly ordering queue
 // -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef CONFIGORDERQ_HH

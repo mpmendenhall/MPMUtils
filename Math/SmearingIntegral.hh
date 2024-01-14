@@ -1,4 +1,4 @@
-/// \File SmearingIntegral.hh Apply energy-resolution-smearing response to distributions
+/// @file SmearingIntegral.hh Apply energy-resolution-smearing response to distributions
 // Michael P. Mendenhall, LLNL 2022
 
 #ifndef SMEARINGINTEGRAL_HH

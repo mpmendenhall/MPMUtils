@@ -1,4 +1,4 @@
-/// \file ConfigCollator.hh Configturation-buildable Collator object
+/// @file ConfigCollator.hh Configturation-buildable Collator object
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef CONFIGCOLLATOR_HH

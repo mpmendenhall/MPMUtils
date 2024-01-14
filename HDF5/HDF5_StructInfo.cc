@@ -1,4 +1,4 @@
-/// \file HDF5_StructInfo.cc
+/// @file HDF5_StructInfo.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "HDF5_StructInfo.hh"

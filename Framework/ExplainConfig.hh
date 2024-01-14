@@ -1,4 +1,4 @@
-/// \file ExplainConfig.hh Verbose display of configuration file loading
+/// @file ExplainConfig.hh Verbose display of configuration file loading
 // -- Michael P. Mendenhall (LLNL) 2024
 
 #ifndef EXPLAINCONFIG_HH
@@ -17,10 +17,15 @@ using std::vector;
 /// Verbose query operations wrapper on settings group
 class SettingsQuery: private NoCopy {
 public:
-    /// Constructor
+    /// Constructor, wrapping a `group` type setting (else error)
     explicit SettingsQuery(const Setting& _S);
-    /// Destructor
+    /// Destructor; checks for un-queried settings in group
     ~SettingsQuery();
+
+
+
+    //------------------------------------------------------------------------
+    // "silent" operations without terminal output (aside from error messages)
 
     /// Access associated setting
     operator const Setting& () const { return S; }
@@ -31,11 +36,18 @@ public:
     bool exists(const string& name, const string& descrip = "", bool mandatory = false);
 
     /// Lookup setting, returning NullSetting if not present (or throwing error if mandatory)
-    const Setting& lookup(const string& name, const string& descrip = "", bool mandatory = false) { return exists(name, descrip, mandatory)? S.lookup(name) : NullSetting; }
-
+    const Setting& lookup(const string& name, const string& descrip = "", bool mandatory = false) {
+        return exists(name, descrip, mandatory)? S.lookup(name) : NullSetting;
+    }
     /// Look up setting contents without printing description; return whether found
     template<class C>
-    bool lookupValue(const string& name, C& val) { queried.insert(name); return S.lookupValue(name, val); }
+    bool lookupValue(const string& name, C& val) {
+        queried.insert(name); return S.lookupValue(name, val);
+    }
+
+
+    //------------------------------------------------------------------------
+    // "verbose" operations displaying status of found/default values
 
     /// Describe optional-value lookup with default
     template<class C>
@@ -66,11 +78,11 @@ public:
         return ex;
     }
 
-    /// Lookup one of multiple string choices
+    /// Lookup one of multiple string choices, with `val` as default
     bool lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices);
-    /// Lookup and describe string-valued multiple choice option
+    /// Lookup and describe string-valued multiple choice option, mapped to integer for enum lookup
     bool lookupChoice(const string& name, int& val, const string& descrip, const map<string, int>& choices);
-    /// wrapper for enumeration-valued choices
+    /// Lookup and describe enumeration-valued string-named choices
     template<class C>
     bool lookupEnum(const string& name, C& val, const string& descrip, const map<string, C>& choices) {
         map<string, int> m;
@@ -81,10 +93,19 @@ public:
         return b;
     }
 
-    /// Get query-able subgroup or NullSetting;
-    /// verbose terminal output if `descrip` supplied non-empty;
-    /// error thrown if "mandatory" and not found
+    /// Get query-able subgroup or `NullSetting`.
+    /** Verbose terminal output if `descrip` supplied non-empty;
+     * error thrown if "mandatory" and not found.
+     * Result is "owned" by this object, and will be destructed with unused query checking along with this.
+     */
     SettingsQuery& get(const string& name, const string& descrip, bool mandatory = false);
+
+    /// Helper to print location of setting in file
+    static void printloc(const Setting& _S);
+
+
+    //------------------------------------------------
+    // reaction to un-queried variables on destruction
 
     /// Level of panic in response to problematic issue
     enum Response_t {
@@ -95,8 +116,6 @@ public:
 
     static Response_t default_require_queried;  ///< global default query requirement
 
-    /// Helper to print location of setting in file
-    static void printloc(const Setting& _S);
 
 protected:
     /// return exists() + display setting description, "* Configuration ..." line or "*** Settings" group header

@@ -1,4 +1,4 @@
-/// \file "EquivalenceClasses.hh" Helper for assembling equivalence classes
+/// @file "EquivalenceClasses.hh" Helper for assembling equivalence classes
 // -- Michael P. Mendenhall, 2019
 
 #ifndef EQUIVALENCECLASSES_HH

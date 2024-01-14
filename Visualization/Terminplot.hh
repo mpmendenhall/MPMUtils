@@ -1,4 +1,4 @@
-/// \file Terminplot.hh "ASCII art" plotter
+/// @file Terminplot.hh "ASCII art" plotter
 // -- Michael P. Mendenhall, 2021
 
 #ifndef TERMINPLOT_HH

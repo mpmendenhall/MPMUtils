@@ -1,4 +1,4 @@
-/// \file GridLayout.hh Helper for laying out grids of bounding boxes
+/// @file GridLayout.hh Helper for laying out grids of bounding boxes
 
 #ifndef GRIDLAYOUT_HH
 #define GRIDLAYOUT_HH

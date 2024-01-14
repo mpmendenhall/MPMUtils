@@ -1,4 +1,4 @@
-/// \file ProgressBar.hh text-based progress bar
+/// @file ProgressBar.hh text-based progress bar
 /*
  * ProgressBar.hh, part of the MPMUtils package
  * Copyright (c) 2007-2019 Michael P. Mendenhall

@@ -1,4 +1,4 @@
-/// \file StringManip.cc
+/// @file StringManip.cc
 /*
  * StringManip.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

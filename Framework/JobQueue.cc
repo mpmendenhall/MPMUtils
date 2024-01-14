@@ -1,4 +1,4 @@
-/// \file JobQueue.cc
+/// @file JobQueue.cc
 
 #include "JobQueue.hh"
 #include <algorithm>

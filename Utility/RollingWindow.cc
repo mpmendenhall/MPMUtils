@@ -1,4 +1,4 @@
-/// \file RollingWindow.cc
+/// @file RollingWindow.cc
 
 #include "RollingWindow.hh"
 

@@ -1,4 +1,4 @@
-/// \file ChebyshevPolynomials.cc
+/// @file ChebyshevPolynomials.cc
 
 #include "ChebyshevPolynomials.hh"
 

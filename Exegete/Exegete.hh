@@ -1,4 +1,4 @@
-/// \file Exegete.hh Central include for Exegete documentation system
+/// @file Exegete.hh Central include for Exegete documentation system
 /*
  * Exegete.hh from the Exegete runtime documentation system
  * Copyright (c) 2017 Dr. Michael P. Mendenhall

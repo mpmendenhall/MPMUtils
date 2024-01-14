@@ -1,4 +1,4 @@
-/// \file DynamicHistogram.cc
+/// @file DynamicHistogram.cc
 #include "DynamicHistogram.hh"
 using std::pair;
 

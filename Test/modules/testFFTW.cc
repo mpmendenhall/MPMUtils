@@ -1,4 +1,4 @@
-/// \file testFFTW.cc FFTW3 wrapper tests
+/// @file testFFTW.cc FFTW3 wrapper tests
 
 #include "FFTW_Convolver.hh"
 #include "ConfigFactory.hh"

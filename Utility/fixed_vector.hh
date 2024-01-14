@@ -1,4 +1,4 @@
-/// \file fixed_vector.hh Fixed-size (non-reallocating) vector with std::vector API
+/// @file fixed_vector.hh Fixed-size (non-reallocating) vector with std::vector API
 // -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef FIXED_VECTOR

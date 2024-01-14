@@ -1,4 +1,4 @@
-/// \file Rational.cc
+/// @file Rational.cc
 
 #include "Rational.hh"
 

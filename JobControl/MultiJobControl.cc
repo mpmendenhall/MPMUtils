@@ -1,4 +1,4 @@
-/// \file MultiJobControl.cc
+/// @file MultiJobControl.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "MultiJobControl.hh"

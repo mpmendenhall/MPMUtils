@@ -1,4 +1,4 @@
-/// \file GetEnv.hh Helper to get environment variable
+/// @file GetEnv.hh Helper to get environment variable
 
 #ifndef GETENV_HH
 #define GETENV_HH

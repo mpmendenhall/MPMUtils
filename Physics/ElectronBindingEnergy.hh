@@ -1,4 +1,4 @@
-/// \file ElectronBindingEnergy.hh Atomic shell binding energy tables
+/// @file ElectronBindingEnergy.hh Atomic shell binding energy tables
 // -- Michael P. Mendenhall
 
 #ifndef ELECTRONBINDINGENERGY_HH

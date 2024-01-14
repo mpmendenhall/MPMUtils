@@ -1,4 +1,4 @@
-/// \file RefCounter.hh Simple base class for reference-counted objects
+/// @file RefCounter.hh Simple base class for reference-counted objects
 
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of

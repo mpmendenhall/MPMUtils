@@ -1,4 +1,4 @@
-/// \file BoxTree.cc
+/// @file BoxTree.cc
 
 #include "BoxTree.hh"
 #include <algorithm>

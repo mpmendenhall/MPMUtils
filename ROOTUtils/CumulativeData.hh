@@ -1,4 +1,4 @@
-/// \file CumulativeData.hh Base class for objects that can be scaled/summed
+/// @file CumulativeData.hh Base class for objects that can be scaled/summed
 // -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef CUMULATIVEDATA_HH

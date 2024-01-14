@@ -1,4 +1,4 @@
-/// \file HDF5_StructInfo.hh Struct layout information for HDF5 tables
+/// @file HDF5_StructInfo.hh Struct layout information for HDF5 tables
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef HDF5_STRUCTINFO_HH

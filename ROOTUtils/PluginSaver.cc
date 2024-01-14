@@ -1,4 +1,4 @@
-/// \file PluginSaver.cc
+/// @file PluginSaver.cc
 // -- Michael P. Mendenhall, 2019
 
 #include "PluginSaver.hh"

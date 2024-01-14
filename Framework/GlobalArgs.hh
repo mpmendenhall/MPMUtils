@@ -1,4 +1,4 @@
-/// \file GlobalArgs.hh Utilities for command line argument globals
+/// @file GlobalArgs.hh Utilities for command line argument globals
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef GLOBALARGS_HH

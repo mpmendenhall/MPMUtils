@@ -1,4 +1,4 @@
-/// \file FloatErr.cc
+/// @file FloatErr.cc
 
 #include "FloatErr.hh"
 #include "StringManip.hh"

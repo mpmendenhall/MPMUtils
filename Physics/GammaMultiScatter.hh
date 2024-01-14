@@ -1,4 +1,4 @@
-/// \file GammaMultiScatter.hh Gamma scattering spectra approximations
+/// @file GammaMultiScatter.hh Gamma scattering spectra approximations
 // -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef GAMMAMULTISCATTER_HH

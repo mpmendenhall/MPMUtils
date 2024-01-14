@@ -1,4 +1,4 @@
-/// \file UniqueKeys.hh Unique int key provision
+/// @file UniqueKeys.hh Unique int key provision
 // -- Michael P. Mendenhall, 2018
 
 #ifndef UNIQUEKEYS_HH

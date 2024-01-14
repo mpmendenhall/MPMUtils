@@ -1,4 +1,4 @@
-/// \file SockBinIO.hh BinaryIO serialization/deserialization over buffered socket connection
+/// @file SockBinIO.hh BinaryIO serialization/deserialization over buffered socket connection
 // Michael P. Mendenhall, LLNL 2021
 
 #include "BinaryIO.hh"

@@ -1,4 +1,4 @@
-/// \file "LinMin.hh" Least-squares linear equations solver
+/// @file "LinMin.hh" Least-squares linear equations solver
 /*
  * LinMin.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2018 Michael P. Mendenhall

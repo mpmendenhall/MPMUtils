@@ -1,4 +1,4 @@
-/// \file zlibWrapper.hh Simple wrapper on zlib deflate/inflate compression
+/// @file zlibWrapper.hh Simple wrapper on zlib deflate/inflate compression
 // -- Michael P. Mendenhall
 
 #ifndef ZLIBWRAPPER_HH

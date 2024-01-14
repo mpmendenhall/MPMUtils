@@ -1,4 +1,4 @@
-/// \file ElectronBindingEnergy.cc
+/// @file ElectronBindingEnergy.cc
 
 #include "ElectronBindingEnergy.hh"
 #include <stdio.h>

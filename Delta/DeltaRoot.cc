@@ -1,4 +1,4 @@
-/// \file DeltaRoot.cc
+/// @file DeltaRoot.cc
 
 #include "DeltaRoot.hh"
 #include "PathUtils.hh"

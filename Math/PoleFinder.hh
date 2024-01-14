@@ -1,4 +1,4 @@
-/// \file PoleFinder.hh Numerically find poles/zeros of complex rational functions
+/// @file PoleFinder.hh Numerically find poles/zeros of complex rational functions
 // Michael P. Mendenhall, LLNL 2022
 
 #include <vector>

@@ -1,4 +1,4 @@
-/// \file testLaplacianSum.cc Test of LaplacianSums functions
+/// @file testLaplacianSum.cc Test of LaplacianSums functions
 
 #include "ConfigFactory.hh"
 #include "LaplacianSums.hh"

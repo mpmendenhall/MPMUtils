@@ -1,4 +1,4 @@
-/// \file EX_Scope.hh Defines a "scope" associated with a specific annotated block of code
+/// @file EX_Scope.hh Defines a "scope" associated with a specific annotated block of code
 /*
  * EX_Scope.hh from the Exegete runtime documentation system
  * Copyright (c) 2017 Dr. Michael P. Mendenhall

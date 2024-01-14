@@ -1,4 +1,4 @@
-/// \file GammaEdgeFitter.cc
+/// @file GammaEdgeFitter.cc
 
 #include "GammaEdgeFitter.hh"
 #include "SmearingIntegral.hh"

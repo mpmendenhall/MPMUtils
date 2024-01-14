@@ -1,4 +1,4 @@
-/// \file Threadworker.hh Utility base class for launching worker thread
+/// @file Threadworker.hh Utility base class for launching worker thread
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef THREADWORKER_HH

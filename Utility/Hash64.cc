@@ -1,4 +1,4 @@
-/// \file Hash64.cc
+/// @file Hash64.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "Hash64.hh"

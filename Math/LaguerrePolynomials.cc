@@ -1,4 +1,4 @@
-/// \file LaguerrePolynomials.cc
+/// @file LaguerrePolynomials.cc
 
 #include "LaguerrePolynomials.hh"
 

@@ -1,4 +1,4 @@
-/// \file ThreadsJobControl.hh Threading-based job runner
+/// @file ThreadsJobControl.hh Threading-based job runner
 
 #ifndef THREADSJOBCONTROL_HH
 #define THREADSJOBCONTROL_HH

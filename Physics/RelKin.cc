@@ -1,4 +1,4 @@
-/// \file RelKin.cc
+/// @file RelKin.cc
 
 #include "RelKin.hh"
 #include <stdio.h>

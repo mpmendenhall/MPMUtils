@@ -1,4 +1,4 @@
-/// \file BetaSpectrumGenerator.hh Class for calculating beta spectrum shape
+/// @file BetaSpectrumGenerator.hh Class for calculating beta spectrum shape
 // -- Michael P. Mendenhall
 
 #ifndef BETASPECTRUMGENERATOR_HH

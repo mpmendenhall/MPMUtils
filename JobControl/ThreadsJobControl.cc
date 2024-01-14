@@ -1,4 +1,4 @@
-/// \file ThreadsJobControl.cc
+/// @file ThreadsJobControl.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "ThreadsJobControl.hh"

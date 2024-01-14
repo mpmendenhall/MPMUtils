@@ -1,4 +1,4 @@
-/// \file SignalSink.hh Receiver for datastream signals
+/// @file SignalSink.hh Receiver for datastream signals
 // -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef SIGNALSINK_HH

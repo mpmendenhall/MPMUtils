@@ -1,4 +1,4 @@
-/// \file ConfigFactory.hh Helper for ``factory'' construction from libconfig settings
+/// @file ConfigFactory.hh Helper for ``factory'' construction from libconfig settings
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef CONFIGFACTORY_HH

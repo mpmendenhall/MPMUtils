@@ -1,4 +1,4 @@
-/// \file SockDistributor.cc
+/// @file SockDistributor.cc
 // -- Michael P. Mendenhall, 2018
 
 #include "SockDistributor.hh"

@@ -1,4 +1,4 @@
-/// \file RecastIt.hh re-casting iterator wrapper
+/// @file RecastIt.hh re-casting iterator wrapper
 // -- Michael P. Mendenhall, 2018
 
 #ifndef RECASTIT_HH

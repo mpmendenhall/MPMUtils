@@ -1,4 +1,4 @@
-/// \file "LinMinConstrained.hh" Least-squares linear solver with linear constraints
+/// @file "LinMinConstrained.hh" Least-squares linear solver with linear constraints
 /*
  * LinMinConstrained.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2018 Michael P. Mendenhall

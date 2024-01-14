@@ -1,4 +1,4 @@
-/// \file _AnaIndex.hh Dynamic type-specific templates lookup
+/// @file _AnaIndex.hh Dynamic type-specific templates lookup
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef _ANAINDEX_HH

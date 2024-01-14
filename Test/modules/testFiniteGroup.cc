@@ -1,4 +1,4 @@
-/// \file testFiniteGroup.cc Test of finite group code
+/// @file testFiniteGroup.cc Test of finite group code
 
 #include "ConfigFactory.hh"
 #include "GlobalArgs.hh"

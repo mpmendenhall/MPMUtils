@@ -1,4 +1,4 @@
-/// \file ConfigParallel.hh Configurable parallelize-and-collate process
+/// @file ConfigParallel.hh Configurable parallelize-and-collate process
 // Michaep P. Mendenhall, LLNL 2021
 
 #ifndef CONFIGPARALLEL_HH

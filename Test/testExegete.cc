@@ -1,4 +1,4 @@
-/// \file testme.cc Example program using Exegete runtime documentation
+/// @file testme.cc Example program using Exegete runtime documentation
 
 /*
 TODO:

@@ -1,4 +1,4 @@
-/// \file JankoGroup.cc
+/// @file JankoGroup.cc
 
 #include "JankoGroup.hh"
 

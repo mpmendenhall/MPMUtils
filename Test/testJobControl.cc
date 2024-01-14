@@ -1,4 +1,4 @@
-/// \file testJobControl.cc Test of job control classes
+/// @file testJobControl.cc Test of job control classes
 
 /*
 export SLURM_CPUS_ON_NODE=4

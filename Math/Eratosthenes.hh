@@ -1,4 +1,4 @@
-/// \file Eratosthenes.hh Sieve of Eratosthenes primes/factoring utility
+/// @file Eratosthenes.hh Sieve of Eratosthenes primes/factoring utility
 /*
  * Eratosthenes.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2018 Michael P. Mendenhall

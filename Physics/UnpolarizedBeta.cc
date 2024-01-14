@@ -1,4 +1,4 @@
-/// \file UnpolarizedBeta.cc
+/// @file UnpolarizedBeta.cc
 
 #include "UnpolarizedBeta.hh"
 #include <vector>

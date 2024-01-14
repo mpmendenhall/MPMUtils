@@ -1,4 +1,4 @@
-/// \file UnitDefs.h Seven-dimensional SI units system
+/// @file UnitDefs.h Seven-dimensional SI units system
 // Michael P. Mendenhall, 2021
 
 #ifndef UNITDEFS_HH

@@ -1,4 +1,4 @@
-/// \file CodeVersion.cc
+/// @file
 
 #include "CodeVersion.hh"
 #include <unistd.h> // for gethostname
@@ -12,6 +12,7 @@
 
 namespace CodeVersion {
 
+    /// remove pair of double quotes around string
     string strip_quotes(const string& s) {
         return (s[0] != '"' || *s.rbegin() != '"')? s : s.substr(1, s.size()-2);
     }
@@ -52,6 +53,7 @@ namespace CodeVersion {
     const string cpp_version = "unknown";
 #endif
 
+    /// hostname lookup function
     const char* get_hostname() {
         auto c = new char[1025];
         c[1024] = 0; // assure array terminated if hostname truncated
@@ -60,6 +62,7 @@ namespace CodeVersion {
     }
     const string host = get_hostname();
 
+    /// username lookup function
     const char* get_user() {
         auto uid = getuid();
         auto p = getpwuid(uid);

@@ -18,7 +18,7 @@
  *
  */
 
-/// \file VarMat.hh Templatized variable-size matrices with mathematical operations
+/// @file VarMat.hh Templatized variable-size matrices with mathematical operations
 #ifndef VARMAT_HH
 /// Make sure this header is only loaded once
 #define VARMAT_HH

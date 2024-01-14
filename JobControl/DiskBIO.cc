@@ -1,4 +1,4 @@
-/// \file DiskBIO.cc
+/// @file DiskBIO.cc
 
 #include "DiskBIO.hh"
 #include <sys/types.h>

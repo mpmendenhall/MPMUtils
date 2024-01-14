@@ -1,4 +1,4 @@
-/// \file PointCloudHistogram.cc
+/// @file PointCloudHistogram.cc
 
 #include "PointCloudHistogram.hh"
 

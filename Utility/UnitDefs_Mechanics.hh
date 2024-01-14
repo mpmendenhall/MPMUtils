@@ -1,4 +1,4 @@
-/// \file UnitDefs_Mechanics.hh Mechanics units (mostly mks based)
+/// @file UnitDefs_Mechanics.hh Mechanics units (mostly mks based)
 
 #ifndef UNITDEFS_MECHANICS_HH
 #define UNITDEFS_MECHANICS_HH

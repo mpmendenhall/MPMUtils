@@ -1,4 +1,4 @@
-/// \file _AnaIndex.cc
+/// @file _AnaIndex.cc
 
 #include "_AnaIndex.hh"
 

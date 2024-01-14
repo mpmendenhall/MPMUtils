@@ -1,4 +1,4 @@
-/// \file PointCloudPCA.hh Principal Components Analysis for weighted point cloud
+/// @file PointCloudPCA.hh Principal Components Analysis for weighted point cloud
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef POINTCLOUDPCA_HH

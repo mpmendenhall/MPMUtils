@@ -1,4 +1,4 @@
-/// \file PointCloudHistogram.hh Multi-dimensional histogram binned around point cloud locations
+/// @file PointCloudHistogram.hh Multi-dimensional histogram binned around point cloud locations
 // Michael P. Mendenhall
 
 #include <TKDTree.h>

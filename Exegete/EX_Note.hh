@@ -1,4 +1,4 @@
-/// \file EX_Note.hh Simple textual annotation note (base class for fancier notes)
+/// @file EX_Note.hh Simple textual annotation note (base class for fancier notes)
 /*
  * EX_Note.hh from the Exegete runtime documentation system
  * Copyright (c) 2017 Dr. Michael P. Mendenhall

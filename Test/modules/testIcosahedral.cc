@@ -1,4 +1,4 @@
-/// \file testIcosahedral.cc Test of icosahdral point group code
+/// @file testIcosahedral.cc Test of icosahdral point group code
 // -- Michael P. Mendenhall, 2019
 
 #include "Icosahedral.hh"

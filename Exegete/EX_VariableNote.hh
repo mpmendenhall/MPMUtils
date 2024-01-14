@@ -1,4 +1,4 @@
-/// \file EX_VariableNote.hh Annotation of (template-typed) variable value
+/// @file EX_VariableNote.hh Annotation of (template-typed) variable value
 /*
  * EX_VariableNote.hh from the Exegete runtime documentation system
  * Copyright (c) 2017 Dr. Michael P. Mendenhall

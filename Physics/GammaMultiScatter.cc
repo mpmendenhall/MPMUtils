@@ -1,4 +1,4 @@
-/// \file GammaMultiScatter.cc
+/// @file GammaMultiScatter.cc
 
 #include "GammaMultiScatter.hh"
 #include "SmearingIntegral.hh"

@@ -1,4 +1,4 @@
-/// \file VisrGL.cc
+/// @file VisrGL.cc
 // -- Michael P. Mendenhall, 2019
 
 #include "VisrGL.hh"

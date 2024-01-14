@@ -1,4 +1,4 @@
-/// \file MPIJobControl.hh MultiJobControl communicating via MPI
+/// @file MPIJobControl.hh MultiJobControl communicating via MPI
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef MPIJOBCONTROL_HH

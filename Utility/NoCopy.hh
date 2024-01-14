@@ -1,4 +1,4 @@
-/// \file NoCopy.hh Mixin class to prevent copy construction or assignment
+/// @file NoCopy.hh Mixin class to prevent copy construction or assignment
 // -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef NOCOPY_HH

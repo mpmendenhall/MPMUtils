@@ -1,4 +1,4 @@
-/// \file TDynamicHistogram.hh Histogram with dynamic (sparse) binning
+/// @file TDynamicHistogram.hh Histogram with dynamic (sparse) binning
 // This file was produced under the employ of the United States Government,
 // and is consequently in the PUBLIC DOMAIN, free from all provisions of
 // US Copyright Law (per USC Title 17, Section 105).

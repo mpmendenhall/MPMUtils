@@ -1,4 +1,4 @@
-/// \file Rational.hh Rational numbers as lists of prime factors
+/// @file Rational.hh Rational numbers as lists of prime factors
 
 #ifndef RATIONAL_HH
 #define RATIONAL_HH

@@ -1,4 +1,4 @@
-/// \file SVGGrid.hh Helper for making grid of SVG groups
+/// @file SVGGrid.hh Helper for making grid of SVG groups
 
 #ifndef SVGGRID_HH
 #define SVGGRID_HH

@@ -1,4 +1,4 @@
-/// \file TGraphIntegrator.cc
+/// @file TGraphIntegrator.cc
 
 #include "TGraphIntegrator.hh"
 

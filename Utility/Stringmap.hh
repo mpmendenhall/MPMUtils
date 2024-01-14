@@ -1,4 +1,4 @@
-/// \file Stringmap.hh wrapper for multimap<string,string> with useful functions
+/// @file Stringmap.hh wrapper for multimap<string,string> with useful functions
 /*
  * Stringmap.hh, part of the MPMUtils package.
  * Copyright (c) 2018 Michael P. Mendenhall

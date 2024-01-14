@@ -1,4 +1,4 @@
-/// \file BinaryOutputObject.hh base utility class for tag-string-delimited binary IO
+/// @file BinaryOutputObject.hh base utility class for tag-string-delimited binary IO
 /*
  * BinaryOutputObject.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

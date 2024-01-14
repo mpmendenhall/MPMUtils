@@ -1,4 +1,4 @@
-/// \file SockConnection.hh Base class for connecting to a socket
+/// @file SockConnection.hh Base class for connecting to a socket
 
 #ifndef SOCKCONNECTION_HH
 #define SOCKCONNECTION_HH

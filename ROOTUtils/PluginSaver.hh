@@ -1,4 +1,4 @@
-/// \file PluginSaver.hh
+/// @file PluginSaver.hh
 // -- Michael P. Mendenhall, 2019
 
 #ifndef PLUGINSAVER_HH

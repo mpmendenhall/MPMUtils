@@ -1,4 +1,4 @@
-/// \file "Polynomial.hh" Algebraic polynomial manipulation
+/// @file "Polynomial.hh" Algebraic polynomial manipulation
 // -- Michael P. Mendenhall, 2019
 
 #ifndef POLYNOMIAL_HH

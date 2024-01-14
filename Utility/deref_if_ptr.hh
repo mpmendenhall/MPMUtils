@@ -1,4 +1,4 @@
-/// \file deref_if_ptr.hh Template utility to return T&, T* -> T&
+/// @file deref_if_ptr.hh Template utility to return T&, T* -> T&
 // -- Michael P. Mendenhall, 2019
 
 #ifndef DEREF_IF_PTR_HH

@@ -1,4 +1,4 @@
-/// \file MathieuGroup.cc
+/// @file MathieuGroup.cc
 
 #include "MathieuGroup.hh"
 

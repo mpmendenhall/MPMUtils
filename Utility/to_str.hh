@@ -1,4 +1,4 @@
-/// \file to_str.hh Utility template for anything-to-string
+/// @file to_str.hh Utility template for anything-to-string
 
 #ifndef TO_STR_HH
 #define TO_STR_HH

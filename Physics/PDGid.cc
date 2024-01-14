@@ -1,4 +1,4 @@
-/// \file PDGid.cc
+/// @file PDGid.cc
 
 #include "PDGid.hh"
 #include "to_str.hh"

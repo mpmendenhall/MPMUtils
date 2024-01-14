@@ -1,4 +1,4 @@
-/// \file GraphUtils.cc
+/// @file GraphUtils.cc
 #include "GraphUtils.hh"
 #include "to_str.hh"
 #include <math.h>

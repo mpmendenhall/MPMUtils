@@ -1,4 +1,4 @@
-/// \file PhiField.hh Field of a + b*phi (a,b rational; phi = golden ratio)
+/// @file PhiField.hh Field of a + b*phi (a,b rational; phi = golden ratio)
 // -- Michael P. Mendenhall, 2019
 
 #ifndef PHIFIELD_HH

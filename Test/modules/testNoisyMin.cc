@@ -1,4 +1,4 @@
-/// \file testNoisyMin.cc Test NoisyMin algorithm
+/// @file testNoisyMin.cc Test NoisyMin algorithm
 
 #include "ConfigFactory.hh"
 #include "GlobalArgs.hh"

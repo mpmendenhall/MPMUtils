@@ -1,4 +1,4 @@
-/// \file testMatrix.cc Test matrix operations
+/// @file testMatrix.cc Test matrix operations
 
 #include "ConfigFactory.hh"
 #include "Matrix.hh"

@@ -1,4 +1,4 @@
-/// \file ExplainConfig.cc
+/// @file
 
 #include "ExplainConfig.hh"
 
@@ -18,7 +18,18 @@ void SettingsQuery::printloc(const Setting& _S) {
 }
 
 SettingsQuery::~SettingsQuery() {
+    // ignored, or nothing to be unused:
     if(!*this || require_queried == IGNORE) return;
+
+    // skip checking unused if destructing during exception:
+#if __cplusplus < 201703L
+    if(std::uncaught_exception()) return;
+#else
+    if(std::uncaught_exceptions()) return;
+#endif
+
+    // check for unused items
+    bool has_unused = false;
     for(auto& SS: S) {
         auto n = SS.getName();
         if(queried.count(n)) continue;
@@ -28,8 +39,9 @@ SettingsQuery::~SettingsQuery() {
         printf("\n** Encountered unused configuration setting ");
         printloc(SS);
         printf("\n" TERMSGR_RESET);
-        if(require_queried == ERROR) std::terminate();
+        has_unused = true;
     }
+    if(has_unused && require_queried == ERROR) std::terminate();
 }
 
 bool SettingsQuery::lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices) {

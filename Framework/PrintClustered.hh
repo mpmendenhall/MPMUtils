@@ -1,4 +1,4 @@
-/// \file PrintClustered.hh Print organized by cluster
+/// @file PrintClustered.hh Print organized by cluster
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef PRINTCLUSTERED_HH

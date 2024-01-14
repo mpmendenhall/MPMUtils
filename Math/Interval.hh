@@ -1,4 +1,4 @@
-/// \file Interval.hh 1D interval
+/// @file Interval.hh 1D interval
 // Michael P. Mendenhall, 2020
 
 #ifndef INTERVAL_HH

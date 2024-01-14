@@ -1,4 +1,4 @@
-/// \file DiskQuadrature.hh Quadrature integration rules for disk
+/// @file DiskQuadrature.hh Quadrature integration rules for disk
 // Abramowitz and Stegun 25.4.61 (p. 891--)
 
 // x, y, weight, for disk radius = 0.5

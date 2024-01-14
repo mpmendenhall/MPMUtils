@@ -1,4 +1,4 @@
-/// \file HDF5_IO.cc
+/// @file HDF5_IO.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "HDF5_IO.hh"

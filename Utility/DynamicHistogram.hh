@@ -1,4 +1,4 @@
-/// \file DynamicHistogram.hh histogram classes with dynamically variable bins
+/// @file DynamicHistogram.hh histogram classes with dynamically variable bins
 #ifndef DYNAMICHISTOGRAM_HH
 #define DYNAMICHISTOGRAM_HH
 

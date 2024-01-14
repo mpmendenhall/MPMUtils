@@ -1,4 +1,4 @@
-/// \file "FiniteGroup.hh" Base classes for finite groups
+/// @file "FiniteGroup.hh" Base classes for finite groups
 // -- Michael P. Mendenhall, 2019
 
 /*

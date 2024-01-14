@@ -1,4 +1,4 @@
-/// \file HalfedgeDS.hh Halfedge data structure
+/// @file HalfedgeDS.hh Halfedge data structure
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef HALFEDGEDS_HH

@@ -1,4 +1,4 @@
-/// \file CayleyTable.hh Cayley Table for enumerated (semi)group
+/// @file CayleyTable.hh Cayley Table for enumerated (semi)group
 // -- Michael P. Mendenhall, 2019
 
 #ifndef CAYLEYTABLE_HH

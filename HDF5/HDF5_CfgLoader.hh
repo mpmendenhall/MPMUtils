@@ -1,4 +1,4 @@
-/// \file HDF5_CfgLoader.hh Base for configurable HDF5 data table input/output
+/// @file HDF5_CfgLoader.hh Base for configurable HDF5 data table input/output
 
 #ifndef HDF5_CFGLOADER_HH
 #define HDF5_CFGLOADER_HH

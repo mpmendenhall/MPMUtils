@@ -1,4 +1,4 @@
-/// \file LaguerrePolynomials.hh Laguerre Polynomials (orthonogonal basis on [0,infty] with weight e^{-x})
+/// @file LaguerrePolynomials.hh Laguerre Polynomials (orthonogonal basis on [0,infty] with weight e^{-x})
 // -- Michael P. Mendenhall, 2019
 
 #ifndef LAGUERREPOLYNOMIALS_HH

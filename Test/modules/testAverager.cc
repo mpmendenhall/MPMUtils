@@ -1,4 +1,4 @@
-/// \file testAverager.cc Validate variance-tracking averager
+/// @file testAverager.cc Validate variance-tracking averager
 // -- Michael P. Mendenhall, 2021
 
 #include "ConfigFactory.hh"

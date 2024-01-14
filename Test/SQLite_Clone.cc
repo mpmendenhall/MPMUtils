@@ -1,4 +1,4 @@
-/// \file SQLite_Clone.cc Clone an SQLite database
+/// @file SQLite_Clone.cc Clone an SQLite database
 // based on sample code from https://www.sqlite.org/backup.html
 
 #include "sqlite3.h"

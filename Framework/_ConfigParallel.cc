@@ -1,4 +1,4 @@
-/// \file _ConfigParallel.cc
+/// @file _ConfigParallel.cc
 
 #include "ConfigParallel.hh"
 

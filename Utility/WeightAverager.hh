@@ -1,4 +1,4 @@
-/// \file WeightAverager.hh Utility for recording multivariate weighted-average sums with second moments
+/// @file WeightAverager.hh Utility for recording multivariate weighted-average sums with second moments
 #ifndef WEIGHTAVERAGER_HH
 #define WEIGHTAVERAGER_HH
 

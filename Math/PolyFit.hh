@@ -1,4 +1,4 @@
-/// \file "PolyFit.hh" Polynomial fitting configuration
+/// @file "PolyFit.hh" Polynomial fitting configuration
 /*
  * PolyFit.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2018 Michael P. Mendenhall

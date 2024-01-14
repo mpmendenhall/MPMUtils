@@ -1,4 +1,4 @@
-/// \file mpmexamples.cc Run a configured example
+/// @file mpmexamples.cc Run a configured example
 // -- Michael P. Mendenhall 2020
 
 #include "RunCfgCmd.hh"

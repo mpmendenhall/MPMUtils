@@ -1,4 +1,4 @@
-/// \file MultiJobControl.hh Generic interface for distributing/receiving binary data/jobs
+/// @file MultiJobControl.hh Generic interface for distributing/receiving binary data/jobs
 // -- Michael P. Mendenhall, LLNL 2023
 
 /*

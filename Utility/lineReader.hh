@@ -1,4 +1,4 @@
-/// \file lineReader.hh load istream line-by-line
+/// @file lineReader.hh load istream line-by-line
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef LINEREADER_HH

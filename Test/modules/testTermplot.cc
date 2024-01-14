@@ -1,4 +1,4 @@
-/// \file testTermplot.cc Test ASCII-art plotter
+/// @file testTermplot.cc Test ASCII-art plotter
 // Michael P. Mendenhall
 
 #include "ConfigFactory.hh"

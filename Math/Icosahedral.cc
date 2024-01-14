@@ -1,4 +1,4 @@
-/// \file Icosahedral.cc
+/// @file Icosahedral.cc
 // -- Michael P. Mendenhall, 2019
 
 #include "Icosahedral.hh"

@@ -1,4 +1,4 @@
-/// \file Terminart.hh Color terminal "ASCII art" utilities
+/// @file Terminart.hh Color terminal "ASCII art" utilities
 // -- Michael P. Mendenhall, 2020
 
 #ifndef TERMINART_HH

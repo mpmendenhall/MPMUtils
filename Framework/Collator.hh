@@ -1,4 +1,4 @@
-/// \file Collator.hh Combine ordered items received from multiple "push" sources
+/// @file Collator.hh Combine ordered items received from multiple "push" sources
 // -- Michael P. Mendenhall, 2019
 
 #ifndef COLLATOR_HH

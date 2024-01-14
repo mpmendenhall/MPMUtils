@@ -1,4 +1,4 @@
-/// \file TreeWrap.hh Utility wrapper to organize node classes into tree structure
+/// @file TreeWrap.hh Utility wrapper to organize node classes into tree structure
 // -- Michael P. Mendenhall, 2018
 
 #ifndef TREEWRAP_HH

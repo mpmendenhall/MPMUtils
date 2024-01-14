@@ -1,4 +1,4 @@
-/// \file ModularField.cc
+/// @file ModularField.cc
 
 #include "ModularField.hh"
 #include <map>

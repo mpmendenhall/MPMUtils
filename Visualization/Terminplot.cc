@@ -1,4 +1,4 @@
-/// \file Terminplot.cc
+/// @file Terminplot.cc
 
 #include "Terminplot.hh"
 #include <algorithm>

@@ -1,4 +1,4 @@
-/// \file HalfedgeDS.cc
+/// @file HalfedgeDS.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "HalfedgeDS.hh"

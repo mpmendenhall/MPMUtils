@@ -1,4 +1,4 @@
-/// \file libconfig_readerr.cc
+/// @file
 
 #include "libconfig_readerr.hh"
 #include <stdio.h>

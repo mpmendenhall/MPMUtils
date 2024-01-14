@@ -1,4 +1,4 @@
-/// \file ContextMap.cc
+/// @file
 
 #include "ContextMap.hh"
 

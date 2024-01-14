@@ -1,4 +1,4 @@
-/// \file GraphicsUtils.cc
+/// @file GraphicsUtils.cc
 #include "GraphicsUtils.hh"
 #include "PathUtils.hh"
 #include "StringManip.hh"

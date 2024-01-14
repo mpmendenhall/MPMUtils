@@ -1,4 +1,4 @@
-/// \file FresnelEqs.cc
+/// @file FresnelEqs.cc
 
 #include "FresnelEqs.hh"
 #include <stdexcept>

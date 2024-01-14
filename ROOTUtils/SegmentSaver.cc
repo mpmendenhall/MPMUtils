@@ -1,4 +1,4 @@
-/// \file SegmentSaver.cc
+/// @file SegmentSaver.cc
 
 #include "SegmentSaver.hh"
 #include "PathUtils.hh"

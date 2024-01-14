@@ -1,4 +1,4 @@
-/// \file Matrix.hh Templatized fixed-size matrix class
+/// @file Matrix.hh Templatized fixed-size matrix class
 
 /*
  * Matrix.hh, part of the MPMUtils package.

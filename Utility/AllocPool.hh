@@ -1,4 +1,4 @@
-/// \file AllocPool.hh Pool of re-usable allocated objects
+/// @file AllocPool.hh Pool of re-usable allocated objects
 // -- Michael P. Mendenhall 2018
 
 #ifndef ALLOCPOOL_HH

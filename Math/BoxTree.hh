@@ -1,4 +1,4 @@
-/// \file BoxTree.hh Dividing edges for KD Tree
+/// @file BoxTree.hh Dividing edges for KD Tree
 
 #include <vector>
 using std::vector;

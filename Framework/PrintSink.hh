@@ -1,4 +1,4 @@
-/// \file PrintSink.hh Display datastream contents
+/// @file PrintSink.hh Display datastream contents
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef PRINTSINK_HH

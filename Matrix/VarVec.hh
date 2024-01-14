@@ -18,7 +18,7 @@
  *
  */
 
-/// \file VarVec.hh templatized variable-length arrays with mathematical operations
+/// @file VarVec.hh templatized variable-length arrays with mathematical operations
 #ifndef VARVEC_HH
 /// Make sure this header is only loaded once
 #define VARVEC_HH

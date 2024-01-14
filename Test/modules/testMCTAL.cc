@@ -1,4 +1,4 @@
-/// \file testMCTAL.cc Test of MCNP MCTAL parser
+/// @file testMCTAL.cc Test of MCNP MCTAL parser
 
 #include "ConfigFactory.hh"
 #include "MCTAL_File.hh"

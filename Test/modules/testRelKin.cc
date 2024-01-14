@@ -1,4 +1,4 @@
-/// \file testRelKin.cc Test of relativistic kinematics calcs
+/// @file testRelKin.cc Test of relativistic kinematics calcs
 
 #include "ConfigFactory.hh"
 #include "RelKin.hh"

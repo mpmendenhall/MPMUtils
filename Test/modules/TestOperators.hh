@@ -1,4 +1,4 @@
-/// \file TestOperators.hh templates to test out operators
+/// @file TestOperators.hh templates to test out operators
 
 #include <iostream>
 using std::cout;

@@ -1,4 +1,4 @@
-/// \file VisrSVG.cc
+/// @file VisrSVG.cc
 // -- Michael P. Mendenhall, 2019
 
 #include "VisrSVG.hh"

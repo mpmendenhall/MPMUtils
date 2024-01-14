@@ -1,4 +1,4 @@
-/// \file "Abstract.hh" Top-level abstract mathematical structures
+/// @file "Abstract.hh" Top-level abstract mathematical structures
 /*
  * Abstract.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2018 Michael P. Mendenhall

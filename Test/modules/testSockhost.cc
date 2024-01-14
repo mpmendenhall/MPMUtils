@@ -1,4 +1,4 @@
-/// \file testSockhost.cc Test sockets server host
+/// @file testSockhost.cc Test sockets server host
 
 #include "ConfigFactory.hh"
 #include "SockBinIO.hh"

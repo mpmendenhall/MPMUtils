@@ -1,4 +1,4 @@
-/// \file DeltaRoot.hh summarize ROOT file differences
+/// @file DeltaRoot.hh summarize ROOT file differences
 // Michael P. Mendenhall, LLNL 2021
 
 #include "DeltaBase.hh"

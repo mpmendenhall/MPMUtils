@@ -1,4 +1,4 @@
-/// \file MultiFill.hh Histogram + covariance matrix for correlated multiple-bin fills
+/// @file MultiFill.hh Histogram + covariance matrix for correlated multiple-bin fills
 // -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef MULTIFILL_HH

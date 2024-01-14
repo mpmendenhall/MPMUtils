@@ -1,4 +1,4 @@
-/// \file DivisorCheck.hh Precalculated integer divisor check
+/// @file DivisorCheck.hh Precalculated integer divisor check
 
 #ifndef DIVISORCHECK_HH
 #define DIVISORCHECK_HH

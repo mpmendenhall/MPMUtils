@@ -1,4 +1,4 @@
-/// \file SatoNiitaNeutrons.cc
+/// @file SatoNiitaNeutrons.cc
 
 #include "SatoNiitaNeutrons.hh"
 

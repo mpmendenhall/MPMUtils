@@ -1,4 +1,4 @@
-/// \file NoisyMin.cc
+/// @file NoisyMin.cc
 
 #include "NoisyMin.hh"
 #include <gsl/gsl_cblas.h>

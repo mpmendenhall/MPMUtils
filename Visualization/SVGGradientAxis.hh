@@ -1,4 +1,4 @@
-/// \file SVGGradientAxis.hh Color gradient z-axis for SVG plots
+/// @file SVGGradientAxis.hh Color gradient z-axis for SVG plots
 // -- Michael P. Mendenhall, 2018
 
 #ifndef SVGGRADIENTAXIS_HH

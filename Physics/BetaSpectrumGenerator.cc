@@ -1,4 +1,4 @@
-/// \file BetaSpectrumGenerator.cc
+/// @file BetaSpectrumGenerator.cc
 
 #include "BetaSpectrumGenerator.hh"
 #include "UnpolarizedBeta.hh"

@@ -1,4 +1,4 @@
-/// \file ConfigThreader.hh wrapper to run Configurable in its own thread
+/// @file ConfigThreader.hh wrapper to run Configurable in its own thread
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef CONFIGTHREADER_HH

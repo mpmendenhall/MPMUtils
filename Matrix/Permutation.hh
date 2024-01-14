@@ -18,7 +18,7 @@
  *
  */
 
-/// \file "Permutation.hh" Permutation matrices
+/// @file "Permutation.hh" Permutation matrices
 #ifndef PERMUTATION_HH
 /// Make sure this header is loaded only once
 #define PERMUTATION_HH

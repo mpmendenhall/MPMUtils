@@ -1,4 +1,4 @@
-/// \file UUID.hh Generate unique identifier numbers
+/// @file UUID.hh Generate unique identifier numbers
 // -- Michael P. Mendenhall, LLNL
 
 #ifndef UUID_HH

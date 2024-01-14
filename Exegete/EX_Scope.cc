@@ -1,4 +1,4 @@
-/// \file EX_Scope.cc
+/// @file EX_Scope.cc
 /*
  * EX_Scope.cc from the Exegete runtime documentation system
  * Copyright (c) 2017 Dr. Michael P. Mendenhall

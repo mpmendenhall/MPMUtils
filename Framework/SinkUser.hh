@@ -1,4 +1,4 @@
-/// \file SinkUser.hh Base classes using an output DataSink
+/// @file SinkUser.hh Base classes using an output DataSink
 // -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef SINKUSER_HH

@@ -1,4 +1,4 @@
-/// \file Permutation.cc
+/// @file Permutation.cc
 /*
  * Permutation.cc, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

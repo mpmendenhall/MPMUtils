@@ -1,4 +1,4 @@
-/// \file SMFile.hh simple text data format
+/// @file SMFile.hh simple text data format
 
 #ifndef SMFile_HH
 #define SMFile_HH

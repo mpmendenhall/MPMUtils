@@ -1,4 +1,4 @@
-/// \file FilterCircuits.hh Linear filter network circuits
+/// @file FilterCircuits.hh Linear filter network circuits
 // Michael P. Mendenhall, LLNL 2022
 
 #include "ZCircuit.hh"

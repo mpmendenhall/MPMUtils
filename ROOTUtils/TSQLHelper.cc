@@ -1,4 +1,4 @@
-/// \file TSQLHelper.cc
+/// @file TSQLHelper.cc
 /*
  * TSQLHelper.cc, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

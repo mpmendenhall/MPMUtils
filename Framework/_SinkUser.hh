@@ -1,4 +1,4 @@
-/// \file _SinkUser.hh Non-typed generic bases
+/// @file _SinkUser.hh Non-typed generic bases
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef _SINKUSER_HH

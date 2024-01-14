@@ -1,4 +1,4 @@
-/// \File SmearingIntegral.cc
+/// @file SmearingIntegral.cc
 
 #include "SmearingIntegral.hh"
 #include <cmath>

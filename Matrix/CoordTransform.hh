@@ -18,7 +18,7 @@
  *
  */
 
-/// \file CoordTransform.hh Templatized rotation/translation coordinate transform
+/// @file CoordTransform.hh Templatized rotation/translation coordinate transform
 #ifndef COORDTRANSFORM_HH
 /// Make sure this header is only loaded once
 #define COORDTRANSFORM_HH

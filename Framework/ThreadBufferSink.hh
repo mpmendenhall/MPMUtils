@@ -1,4 +1,4 @@
-/// \file ThreadBufferSink.hh FIFO Buffered input to sink running in independent thread
+/// @file ThreadBufferSink.hh FIFO Buffered input to sink running in independent thread
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef THREADBUFFERSINK_HH

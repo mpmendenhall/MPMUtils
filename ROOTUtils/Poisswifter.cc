@@ -1,4 +1,4 @@
-/// \file Poisswifter.cc
+/// @file Poisswifter.cc
 
 #include "Poisswifter.hh"
 #include <TStopwatch.h>

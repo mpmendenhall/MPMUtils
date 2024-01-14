@@ -1,4 +1,4 @@
-/// \file GridData.hh Uniformly-gridded interpolable data
+/// @file GridData.hh Uniformly-gridded interpolable data
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef GRIDDATA_HH

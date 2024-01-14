@@ -20,7 +20,7 @@
  *
  */
 
-/// \file "CMatrix.hh" Circulant matrices
+/// @file "CMatrix.hh" Circulant matrices
 #ifndef CMATRIX_HH
 /// Make sure this header is only loaded once
 #define CMATRIX_HH

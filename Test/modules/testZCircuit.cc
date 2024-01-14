@@ -1,4 +1,4 @@
-/// \file testZCircuit.cc Modeling network of linear impedance devices
+/// @file testZCircuit.cc Modeling network of linear impedance devices
 
 #include "ConfigFactory.hh"
 #include "GlobalArgs.hh"

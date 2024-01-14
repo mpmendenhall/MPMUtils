@@ -1,4 +1,4 @@
-/// \file Poisswifter.hh Faster binned Poisson distribution generator
+/// @file Poisswifter.hh Faster binned Poisson distribution generator
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef POISSWIFTER_HH

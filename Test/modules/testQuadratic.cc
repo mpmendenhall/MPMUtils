@@ -1,4 +1,4 @@
-/// \file testQuadratic.cc Test quadratic manipulations
+/// @file testQuadratic.cc Test quadratic manipulations
 
 #include "ConfigFactory.hh"
 #include "Quadratic.hh"

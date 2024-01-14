@@ -1,4 +1,4 @@
-/// \file PolyEval.hh Vectorized evaluation of polynomials
+/// @file PolyEval.hh Vectorized evaluation of polynomials
 /*
  * PolyEval.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2018 Michael P. Mendenhall

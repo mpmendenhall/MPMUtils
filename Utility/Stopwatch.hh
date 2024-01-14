@@ -1,4 +1,4 @@
-/// \file Stopwatch.hh Quickie profiling timer class
+/// @file Stopwatch.hh Quickie profiling timer class
 // -- Michael P. Mendenhall, 2019
 
 #ifndef STOPWATCH_HH

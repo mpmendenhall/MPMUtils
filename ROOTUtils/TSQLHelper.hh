@@ -1,4 +1,4 @@
-/// \file TSQLHelper.hh Convenience wrapper to TSQL database interface
+/// @file TSQLHelper.hh Convenience wrapper to TSQL database interface
 /*
  * TSQLHelper.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

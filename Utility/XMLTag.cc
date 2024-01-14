@@ -1,4 +1,4 @@
-/// \file XMLTag.cc
+/// @file XMLTag.cc
 
 #include "XMLTag.hh"
 

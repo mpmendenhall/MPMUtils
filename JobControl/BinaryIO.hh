@@ -1,4 +1,4 @@
-/// \file BinaryIO.hh Base interface for serializing/sending/receiving/deserializing binary objects
+/// @file BinaryIO.hh Base interface for serializing/sending/receiving/deserializing binary objects
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef BINARYIO_HH

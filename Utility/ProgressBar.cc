@@ -1,4 +1,4 @@
-/// \file ProgressBar.cc
+/// @file ProgressBar.cc
 /*
  * ProgressBar.cc, part of the MPMUtils package
  * Copyright (c) 2007-2019 Michael P. Mendenhall

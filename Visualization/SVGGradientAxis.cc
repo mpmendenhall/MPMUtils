@@ -1,4 +1,4 @@
-/// \file SVGGradientAxis.cc
+/// @file SVGGradientAxis.cc
 
 #include "SVGGradientAxis.hh"
 using namespace SVG;

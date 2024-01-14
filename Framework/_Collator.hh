@@ -1,4 +1,4 @@
-/// \file _Collator.hh Un-typed base Collator
+/// @file _Collator.hh Un-typed base Collator
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef _COLLATOR_HH

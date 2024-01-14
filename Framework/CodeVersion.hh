@@ -1,4 +1,4 @@
-/// \file CodeVersion.hh Repository and compiler version info
+/// @file CodeVersion.hh Repository and compiler version info
 // -- Michael P. Mendenhall, 2018
 
 #ifndef CODEVERSION_HH

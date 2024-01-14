@@ -1,4 +1,4 @@
-/// \file VisrGL.hh OpenGL visualization window driver
+/// @file VisrGL.hh OpenGL visualization window driver
 // -- Michael P. Mendenhall, 2019
 
 #ifndef VISRGL_HH

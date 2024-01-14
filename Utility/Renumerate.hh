@@ -1,4 +1,4 @@
-/// \file Renumerate.hh Utility for swapping numbers/names
+/// @file Renumerate.hh Utility for swapping numbers/names
 // -- Michael P. Mendenhall, 2019
 
 #ifndef RENUMERATE_HH

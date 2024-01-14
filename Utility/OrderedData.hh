@@ -1,4 +1,4 @@
-/// \file OrderedData.hh Wrapper template for adding ordering tag to objects
+/// @file OrderedData.hh Wrapper template for adding ordering tag to objects
 // -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef ORDEREDDATA_HH

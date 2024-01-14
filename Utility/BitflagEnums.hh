@@ -1,4 +1,4 @@
-/// \file BitflagEnums.hh Macro for setting up bit flag operations
+/// @file BitflagEnums.hh Macro for setting up bit flag operations
 // M.P. Mendenhall, 2022
 
 #ifndef BITFLAGENUMS_HH

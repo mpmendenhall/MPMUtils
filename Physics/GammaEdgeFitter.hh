@@ -1,4 +1,4 @@
-/// \file GammaEdgeFitter.hh Gamma spectum model integrated into ROOT fitter for smeared gamma edge fits
+/// @file GammaEdgeFitter.hh Gamma spectum model integrated into ROOT fitter for smeared gamma edge fits
 // -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef GAMMAEDGEFITTER

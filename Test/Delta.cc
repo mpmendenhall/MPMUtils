@@ -1,4 +1,4 @@
-/// \file Delta.cc main() for file comparator framework
+/// @file Delta.cc main() for file comparator framework
 // Michael P. Mendenhall, LLNL 2021
 
 #include "CodeVersion.hh"

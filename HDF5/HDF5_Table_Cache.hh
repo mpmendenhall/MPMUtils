@@ -1,4 +1,4 @@
-/// \file HDF5_Table_Cache.hh Template utility class for memory-cache buffered HDF5 tables IO
+/// @file HDF5_Table_Cache.hh Template utility class for memory-cache buffered HDF5 tables IO
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef HDF5_TABLE_CACHE_HH

@@ -1,4 +1,4 @@
-/// \file ChunkConvolver.hh Convolutions of fixed-size kernel against arbitrary length input
+/// @file ChunkConvolver.hh Convolutions of fixed-size kernel against arbitrary length input
 // Michael P. Mendenhall, LLNL 2023
 
 #ifndef CHUNKCONVOLVER_HH

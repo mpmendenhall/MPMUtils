@@ -1,4 +1,4 @@
-/// \file LinkDef.h ROOT linkdef for generating ROOT object library
+/// @file LinkDef.h ROOT linkdef for generating ROOT object library
 
 #ifdef __CLING__
 

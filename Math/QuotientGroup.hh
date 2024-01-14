@@ -1,4 +1,4 @@
-/// \file QuotientGroup.hh Quotient group constructions
+/// @file QuotientGroup.hh Quotient group constructions
 // -- Michael P. Mendenhall, 2019
 
 /*

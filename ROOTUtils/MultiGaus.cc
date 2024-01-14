@@ -1,4 +1,4 @@
-/// \file MultiGaus.cc
+/// @file MultiGaus.cc
 /*
  * MultiGaus.cc, part of the MPMUtils package.
  * Copyright (c) 2007-2014 Michael P. Mendenhall

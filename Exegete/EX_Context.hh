@@ -1,4 +1,4 @@
-/// \file EX_Context.hh Call-chain context
+/// @file EX_Context.hh Call-chain context
 /*
  * EX_Context.hh from the Exegete runtime documentation system
  * Copyright (c) 2017 Dr. Michael P. Mendenhall

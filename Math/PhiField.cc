@@ -1,4 +1,4 @@
-/// \file PhiField.cc
+/// @file PhiField.cc
 
 #include "PhiField.hh"
 

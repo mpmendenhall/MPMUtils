@@ -1,4 +1,4 @@
-/// \file testFitters.cc Test of fit routines
+/// @file testFitters.cc Test of fit routines
 
 #include "ConfigFactory.hh"
 #include "PolyFit.hh"

@@ -1,4 +1,4 @@
-/// \file SockOutBuffer.hh Buffered socket data transfer
+/// @file SockOutBuffer.hh Buffered socket data transfer
 
 #ifndef SOCKOUTBUFFER_HH
 #define SOCKOUTBUFFER_HH

@@ -1,4 +1,4 @@
-/// \file RunCfgCmd.cc
+/// @file RunCfgCmd.cc
 
 #include "RunCfgCmd.hh"
 #include "ConfigFactory.hh"

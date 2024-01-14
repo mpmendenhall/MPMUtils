@@ -1,4 +1,4 @@
-/// \file Clustered.hh Short-range clustering organization
+/// @file Clustered.hh Short-range clustering organization
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef CLUSTERED_HH

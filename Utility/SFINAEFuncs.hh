@@ -1,4 +1,4 @@
-/// \file SFINAEFuncs.hh
+/// @file SFINAEFuncs.hh
 // -- Michael P. Mendenhall, 2018
 
 #ifndef SFINAEFUNCS_HH

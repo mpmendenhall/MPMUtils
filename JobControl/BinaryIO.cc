@@ -1,4 +1,4 @@
-/// \file BinaryIO.cc
+/// @file BinaryIO.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "BinaryIO.hh"

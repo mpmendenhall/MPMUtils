@@ -1,4 +1,4 @@
-/// \file HermitePolynomials.cc
+/// @file HermitePolynomials.cc
 
 #include "HermitePolynomials.hh"
 

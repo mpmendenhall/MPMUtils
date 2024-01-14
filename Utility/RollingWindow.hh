@@ -1,4 +1,4 @@
-/// \file RollingWindow.hh rolling-window averager
+/// @file RollingWindow.hh rolling-window averager
 #ifndef ROLLINGWINDOW_HH
 #define ROLLINGWINDOW_HH
 

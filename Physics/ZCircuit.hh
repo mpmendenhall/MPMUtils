@@ -1,4 +1,4 @@
-/// \file ZCircuit.hh Network of linear 2-terminal devices
+/// @file ZCircuit.hh Network of linear 2-terminal devices
 // Michael P. Mendenhall, LLNL 2022
 
 #include "Matrix.hh"

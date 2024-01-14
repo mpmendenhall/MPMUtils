@@ -1,4 +1,4 @@
-/// \file SockDataSink.hh DataSink<> transmitting over socket
+/// @file SockDataSink.hh DataSink<> transmitting over socket
 // Michael P. Mendenhall, LLNL 2021
 
 #include "SockBinIO.hh"

@@ -1,4 +1,4 @@
-/// \file TF1_Quantiles.hh Cumulative Density Function and inverse CDF calculator
+/// @file TF1_Quantiles.hh Cumulative Density Function and inverse CDF calculator
 
 #include <TArrayD.h>
 #include <TF1.h>

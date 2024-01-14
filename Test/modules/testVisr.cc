@@ -1,4 +1,4 @@
-/// \file testVisr.cc Test program showing visualizer
+/// @file testVisr.cc Test program showing visualizer
 
 #include "ConfigFactory.hh"
 

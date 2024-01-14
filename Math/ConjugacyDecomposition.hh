@@ -1,4 +1,4 @@
-/// \file ConjugacyDecomposition.hh Decomposition of finite groups into conjugacy classes
+/// @file ConjugacyDecomposition.hh Decomposition of finite groups into conjugacy classes
 
 #ifndef CONJUGACYDECOMPOSITION_HH
 #define CONJUGACYDECOMPOSITION_HH

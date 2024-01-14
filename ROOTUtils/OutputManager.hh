@@ -1,4 +1,4 @@
-/// \file OutputManager.hh Organize output into parallel hierarchies of filesystem and ROOT TFile directories
+/// @file OutputManager.hh Organize output into parallel hierarchies of filesystem and ROOT TFile directories
 // -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef OUTPUTMANAGER_HH

@@ -1,4 +1,4 @@
-/// \file Eratosthenes.cc
+/// @file Eratosthenes.cc
 
 #include "Eratosthenes.hh"
 #include <algorithm>

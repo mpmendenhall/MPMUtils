@@ -1,4 +1,4 @@
-/// \file SplineFit.cc
+/// @file SplineFit.cc
 #include "SplineFit.hh"
 #include "StringManip.hh"
 

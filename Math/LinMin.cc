@@ -1,4 +1,4 @@
-/// \file LinMin.cc
+/// @file LinMin.cc
 /*
  * LinMin.cc, part of the MPMUtils package.
  * Copyright (c) 2007-2018 Michael P. Mendenhall

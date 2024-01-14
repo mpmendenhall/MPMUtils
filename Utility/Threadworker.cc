@@ -1,4 +1,4 @@
-/// \file Threadworker.cc
+/// @file Threadworker.cc
 
 #include "Threadworker.hh"
 #include "TermColor.hh"

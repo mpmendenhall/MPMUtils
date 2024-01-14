@@ -1,4 +1,4 @@
-/// \file KTAccumJob.hh KeyTable-based accumulate protocol communicator
+/// @file KTAccumJob.hh KeyTable-based accumulate protocol communicator
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef KTACCUMJOB_HH

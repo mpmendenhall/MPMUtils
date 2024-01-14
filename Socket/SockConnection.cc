@@ -1,4 +1,4 @@
-/// \file SockConnection.cc
+/// @file
 
 #include "SockConnection.hh"
 

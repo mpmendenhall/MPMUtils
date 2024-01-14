@@ -1,4 +1,4 @@
-/// \file KeyTable.cc
+/// @file KeyTable.cc
 
 #include "KeyTable.hh"
 #include <cstdint>

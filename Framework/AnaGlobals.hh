@@ -1,4 +1,4 @@
-/// \file AnaGlobals.hh Analysis global variables context definitions
+/// @file AnaGlobals.hh Analysis global variables context definitions
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef ANAGLOBALS_HH

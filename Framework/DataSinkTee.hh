@@ -1,4 +1,4 @@
-/// \file DataSinkTee.hh Configurable data sink splitter
+/// @file DataSinkTee.hh Configurable data sink splitter
 // -- Michael P. Mendenhall, LLNL 2021
 
 #ifndef DATASINKTEE_HH

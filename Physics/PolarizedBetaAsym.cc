@@ -1,4 +1,4 @@
-/// \file PolarizedBetaAsym.cc
+/// @file PolarizedBetaAsym.cc
 #include "PolarizedBetaAsym.hh"
 #include <stdio.h>
 #include <cmath>

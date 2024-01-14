@@ -1,4 +1,4 @@
-/// \file DeltaDiff.cc
+/// @file DeltaDiff.cc
 
 #include "DeltaDiff.hh"
 #include <stdio.h>

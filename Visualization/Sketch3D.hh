@@ -1,4 +1,4 @@
-/// \file Sketch3D.hh SVG-based 3D-to-2D projection "sketching" utilities
+/// @file Sketch3D.hh SVG-based 3D-to-2D projection "sketching" utilities
 // -- Michael P. Mendenhall, 2017
 
 #ifndef SKETCH3D_HH

@@ -1,4 +1,4 @@
-/// \file UnitDefs_EM.hh Electromagnetics units
+/// @file UnitDefs_EM.hh Electromagnetics units
 
 #ifndef UNITDEFS_EM_HH
 #define UNITDEFS_EM_HH

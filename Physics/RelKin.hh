@@ -1,4 +1,4 @@
-/// \file RelKin.hh Relativistic kinematics, with numerically stable calculations in nonrelativistic limits
+/// @file RelKin.hh Relativistic kinematics, with numerically stable calculations in nonrelativistic limits
 // -- Michael P. Mendenhall, 2020
 
 #ifndef RELKIN_HH

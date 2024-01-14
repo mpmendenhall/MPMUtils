@@ -1,4 +1,4 @@
-/// \file TestGammaScatter.cc Gamma scattering spectra approximations test plots
+/// @file TestGammaScatter.cc Gamma scattering spectra approximations test plots
 // -- Michael P. Mendenhall, LLNL 2022
 
 #include "ConfigFactory.hh"

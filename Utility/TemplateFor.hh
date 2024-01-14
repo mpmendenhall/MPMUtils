@@ -1,4 +1,4 @@
-/// \file TemplateFor.hh
+/// @file TemplateFor.hh
 // -- Michael P. Mendenhall, LLNL 2021
 
 // Nota Bene: the following employs unnecessary template evil

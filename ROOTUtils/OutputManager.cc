@@ -1,4 +1,4 @@
-/// \file OutputManager.cc
+/// @file OutputManager.cc
 
 #include "OutputManager.hh"
 #include "PathUtils.hh"

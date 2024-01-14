@@ -1,4 +1,4 @@
-/// \file JankoGroup.hh ``J1'' Janko group structure as test of finite groups manipulation
+/// @file JankoGroup.hh ``J1'' Janko group structure as test of finite groups manipulation
 // -- Michael P. Mendenhall, 2019
 
 #ifndef JANKOGROUP_HH

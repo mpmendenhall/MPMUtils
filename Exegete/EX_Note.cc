@@ -1,4 +1,4 @@
-/// \file EX_Note.cc
+/// @file EX_Note.cc
 /*
  * EX_Note.cc from the Exegete runtime documentation system
  * Copyright (c) 2017 Dr. Michael P. Mendenhall

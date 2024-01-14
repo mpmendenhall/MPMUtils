@@ -1,4 +1,4 @@
-/// \file SockIOServer.cc
+/// @file SockIOServer.cc
 
 #include "SockIOServer.hh"
 #include <unistd.h>    // for write(...), usleep(n)

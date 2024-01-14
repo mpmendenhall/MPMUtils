@@ -1,4 +1,4 @@
-/// \file TGraphIntegrator.hh Helper for integrating TGraph using gsl intgration functions
+/// @file TGraphIntegrator.hh Helper for integrating TGraph using gsl intgration functions
 // Michael P. Mendenhall, 2022
 
 #ifndef TGRAPHINTEGRATOR_HH

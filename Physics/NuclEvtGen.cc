@@ -1,4 +1,4 @@
-/// \file NuclEvtGen.cc
+/// @file NuclEvtGen.cc
 
 #include "NuclEvtGen.hh"
 #include "NuclPhysConstants.hh"

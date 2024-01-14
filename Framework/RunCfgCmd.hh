@@ -1,4 +1,4 @@
-/// \file RunCfgCmd.hh Skeleton base executable for configuration-file-driven analysis
+/// @file RunCfgCmd.hh Skeleton base executable for configuration-file-driven analysis
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef RUNCFGCMD_HH

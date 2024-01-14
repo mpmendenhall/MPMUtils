@@ -1,4 +1,4 @@
-/// \file Collator.cc
+/// @file Collator.cc
 
 #include "_Collator.hh"
 

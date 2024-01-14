@@ -1,4 +1,4 @@
-/// \file "PointSelector.hh" Multidimensional hierarchical point generator
+/// @file "PointSelector.hh" Multidimensional hierarchical point generator
 
 #ifndef POINTSELECTOR_HH
 #define POINTSELECTOR_HH

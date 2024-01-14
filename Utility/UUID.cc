@@ -1,4 +1,4 @@
-/// \file UUID.cc
+/// @file UUID.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "UUID.hh"

@@ -1,4 +1,4 @@
-/// \file TagCounter.cc
+/// @file TagCounter.cc
 /*
  * TagCounter.cc, part of the MPMUtils package.
  * Copyright (c) 2014 Michael P. Mendenhall

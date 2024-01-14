@@ -1,4 +1,4 @@
-/// \file Averager.hh Simple statistics accumulation
+/// @file Averager.hh Simple statistics accumulation
 // -- Michael P. Mendenhall, 2021
 
 #ifndef AVERAGER_HH

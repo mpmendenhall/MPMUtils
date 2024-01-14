@@ -1,4 +1,4 @@
-/// \file ModularField.hh Modular Integers field
+/// @file ModularField.hh Modular Integers field
 
 #ifndef MODULARFIELD_HH
 #define MODULARFIELD_HH

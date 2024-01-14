@@ -1,4 +1,4 @@
-/// \file MathieuGroup.hh Mathieu M11,12,21,22 simple finite groups
+/// @file MathieuGroup.hh Mathieu M11,12,21,22 simple finite groups
 // -- Michael P. Mendenhall, 2019
 
 #ifndef MATHIEUGROUP_HH

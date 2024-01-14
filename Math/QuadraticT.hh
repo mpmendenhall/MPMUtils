@@ -1,4 +1,4 @@
-/// \file QuadraticT.hh templatized fixed-size version of Quadratic
+/// @file QuadraticT.hh templatized fixed-size version of Quadratic
 
 #ifndef QUADRATICT_HH
 #define QUADRATICT_HH

@@ -1,4 +1,4 @@
-/// \file LaplacianSums.hh Infinite sums of 1/quadratic form
+/// @file LaplacianSums.hh Infinite sums of 1/quadratic form
 // Michael P. Mendenhall, LLNL 2021
 
 /// \f$\sum_{k=-\infty}^{\infty} 1/(k^2 + c)\f$

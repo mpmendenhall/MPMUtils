@@ -1,4 +1,4 @@
-/// \file coerced_lower_bound.hh Helper to coerce value into position in sorted range
+/// @file coerced_lower_bound.hh Helper to coerce value into position in sorted range
 // -- Michael P. Mendenhall, 2019
 
 #include <algorithm>

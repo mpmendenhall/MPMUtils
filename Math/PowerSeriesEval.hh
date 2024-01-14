@@ -1,4 +1,4 @@
-/// \file PowerSeriesEval.hh Vectorized power-series sum evaluation
+/// @file PowerSeriesEval.hh Vectorized power-series sum evaluation
 /*
  * PowerSeriesEval.hh, part of the MPMUtils package.
  * Copyright (c) 2007-2018 Michael P. Mendenhall

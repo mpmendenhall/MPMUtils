@@ -1,4 +1,4 @@
-/// \file AnalysisStep.hh "Analysis step" XML output wrapper
+/// @file AnalysisStep.hh "Analysis step" XML output wrapper
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef ANALYSISSTEP_HH

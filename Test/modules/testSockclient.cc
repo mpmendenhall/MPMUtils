@@ -1,4 +1,4 @@
-/// \file testSockclient.cc Test sockets server client
+/// @file testSockclient.cc Test sockets server client
 
 #include "ConfigFactory.hh"
 #include "SockBinIO.hh"

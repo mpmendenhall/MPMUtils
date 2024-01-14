@@ -1,4 +1,4 @@
-/// \file ObjectFactory.cc
+/// @file ObjectFactory.cc
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "ObjectFactory.hh"

@@ -1,4 +1,4 @@
-/// \file SegmentSaver.hh Mechanism for loading and summing pre-defined histograms from file
+/// @file SegmentSaver.hh Mechanism for loading and summing pre-defined histograms from file
 // -- Michael P. Mendenhall, LLNL 2022
 
 #ifndef SEGMENTSAVER_HH

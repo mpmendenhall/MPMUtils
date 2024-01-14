@@ -1,4 +1,4 @@
-/// \file Visr.cc
+/// @file Visr.cc
 // -- Michael P. Mendenhall, 2019
 
 #include "Visr.hh"

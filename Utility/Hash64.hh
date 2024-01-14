@@ -1,4 +1,4 @@
-/// \file Hash64.hh Wrapper and convenience functions for 64-bit hashes (SipHash backend)
+/// @file Hash64.hh Wrapper and convenience functions for 64-bit hashes (SipHash backend)
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef HASH64_HH

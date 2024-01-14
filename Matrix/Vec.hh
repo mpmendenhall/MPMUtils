@@ -1,4 +1,4 @@
-/// \file Vec.hh Templatized fixed-length array class with mathematical operations
+/// @file Vec.hh Templatized fixed-length array class with mathematical operations
 
 /*
  * Vec.hh, part of the MPMUtils package.

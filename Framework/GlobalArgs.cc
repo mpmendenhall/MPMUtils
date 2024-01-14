@@ -1,4 +1,4 @@
-/// \file GlobalArgs.cc
+/// @file
 
 #include "GlobalArgs.hh"
 #include "ContextMap.hh"

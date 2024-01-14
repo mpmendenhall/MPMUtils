@@ -1,4 +1,4 @@
-/// \file DiskIOJobControl.hh MultiJobControl using files on disk for communication
+/// @file DiskIOJobControl.hh MultiJobControl using files on disk for communication
 
 #ifndef DISKIOJOBCONTROL_HH
 #define DISKIOJOBCONTROL_HH

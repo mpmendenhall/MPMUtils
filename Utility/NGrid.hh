@@ -1,4 +1,4 @@
-/// \file NGrid.hh N-dimensional grid generator
+/// @file NGrid.hh N-dimensional grid generator
 /*
  * NGrid.hh, part of the MPMUtils package
  * Copyright (c) 2007-2018 Michael P. Mendenhall

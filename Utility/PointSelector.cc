@@ -1,4 +1,4 @@
-/// \file PointSelector.cc
+/// @file PointSelector.cc
 
 #include "PointSelector.hh"
 #include "DiskBIO.hh"

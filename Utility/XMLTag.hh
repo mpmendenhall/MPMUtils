@@ -1,4 +1,4 @@
-/// \file XMLTag.hh Simple XML output class
+/// @file XMLTag.hh Simple XML output class
 // -- Michael P. Mendenhall, 2018
 
 #ifndef XMLTAG_HH

@@ -1,4 +1,4 @@
-/// \file PDGid.hh Particle Data Group particle ID numbers
+/// @file PDGid.hh Particle Data Group particle ID numbers
 // Michael P. Mendenhall, LLNL 2022
 
 #ifndef PDGID_HH

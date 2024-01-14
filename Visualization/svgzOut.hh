@@ -1,4 +1,4 @@
-/// \file svgzOut.hh Helper to write .svgz compressed svg, if available at compile
+/// @file svgzOut.hh Helper to write .svgz compressed svg, if available at compile
 // -- Michael P. Mendenhall, 2018
 
 #ifndef SVGZOUT_HH

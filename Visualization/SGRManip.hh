@@ -1,4 +1,4 @@
-/// \file SGRManip.hh "Select Graphic Rendition" terminal text styles manipulation
+/// @file SGRManip.hh "Select Graphic Rendition" terminal text styles manipulation
 // -- Michael P. Mendenhall, 2020
 
 #ifndef SGRMANIP_HH

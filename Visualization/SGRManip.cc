@@ -1,4 +1,4 @@
-/// \file SGRManip.cc
+/// @file SGRManip.cc
 
 #include "SGRManip.hh"
 

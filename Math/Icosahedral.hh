@@ -1,4 +1,4 @@
-/// \file Icosahedral.hh Icosahedral symmetry manipulations
+/// @file Icosahedral.hh Icosahedral symmetry manipulations
 // -- Michael P. Mendenhall, 2019
 
 

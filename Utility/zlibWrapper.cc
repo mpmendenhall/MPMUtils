@@ -1,4 +1,4 @@
-/// \file zlibWrapper.cc
+/// @file zlibWrapper.cc
 // -- Michael P. Mendenhall
 
 #include "zlibWrapper.hh"

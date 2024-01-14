@@ -1,4 +1,4 @@
-/// \file LaplacianSums.cc
+/// @file LaplacianSums.cc
 
 #include "LaplacianSums.hh"
 #include <cmath>

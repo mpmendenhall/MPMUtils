@@ -1,4 +1,4 @@
-/// \file testFiber.cc Demonstration of boost::fiber
+/// @file testFiber.cc Demonstration of boost::fiber
 // -- Michael P. Mendenhall, 2019
 
 #include "ConfigFactory.hh"

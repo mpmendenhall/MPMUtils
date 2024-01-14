@@ -1,4 +1,4 @@
-/// \file LocklessCircleBuffer.hh Circular buffer for passing output from time-sensitive thread
+/// @file LocklessCircleBuffer.hh Circular buffer for passing output from time-sensitive thread
 
 #ifndef LOCKLESSCIRCULARBUFFER_HH
 #define LOCKLESSCIRCULARBUFFER_HH

@@ -1,4 +1,4 @@
-/// \file MPIBinaryIO.hh Binary I/O over MPI channel
+/// @file MPIBinaryIO.hh Binary I/O over MPI channel
 
 #ifndef MPIBINARYIO_HH
 #define MPIBINARYIO_HH

@@ -1,4 +1,4 @@
-/// \file GammaScattering.hh Gamma-electron scattering calculations
+/// @file GammaScattering.hh Gamma-electron scattering calculations
 // Michael P. Mendenhall, LLNL 2022
 
 #ifndef GAMMASCATTERING_HH

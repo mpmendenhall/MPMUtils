@@ -1,4 +1,4 @@
-/// \file testHDS.cc Test of Halfedge Data Structure
+/// @file testHDS.cc Test of Halfedge Data Structure
 // Michael P. Mendenhall, 2019
 
 #include "ConfigFactory.hh"

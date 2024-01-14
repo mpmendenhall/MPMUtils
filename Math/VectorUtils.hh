@@ -1,4 +1,4 @@
-/// \file VectorUtils.hh Templatized vector arithmetic utilities
+/// @file VectorUtils.hh Templatized vector arithmetic utilities
 // -- Michael P. Mendenhall, 2020
 
 #ifndef VECTORUTILS_HH

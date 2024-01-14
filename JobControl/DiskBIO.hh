@@ -1,4 +1,4 @@
-/// \file DiskBIO.hh Binary I/O to files
+/// @file DiskBIO.hh Binary I/O to files
 
 #ifndef DISKBIO_HH
 #define DISKBIO_HH

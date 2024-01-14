@@ -1,4 +1,4 @@
-/// \file FresnelEqs.hh Fresnel Equations for refraction/reflection at index mismatch
+/// @file FresnelEqs.hh Fresnel Equations for refraction/reflection at index mismatch
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef FRESNELEQS_HH

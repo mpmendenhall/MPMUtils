@@ -1,4 +1,4 @@
-/// \file LegendrePolynomials.hh Legendre Polynomials (orthonogonal polynomial basis on [-1,1] with weight 1)
+/// @file LegendrePolynomials.hh Legendre Polynomials (orthonogonal polynomial basis on [-1,1] with weight 1)
 // -- Michael P. Mendenhall, 2019
 
 #ifndef LEGENDREPOLYNOMIALS_HH

@@ -1,4 +1,4 @@
-/// \file VisrSVG.hh SVG 3D visualization driver
+/// @file VisrSVG.hh SVG 3D visualization driver
 // -- Michael P. Mendenhall, 2019
 
 #ifndef VISRSVG_HH

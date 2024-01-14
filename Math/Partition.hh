@@ -1,4 +1,4 @@
-/// \file Partition.hh Partitions (abstract and of arrays)
+/// @file Partition.hh Partitions (abstract and of arrays)
 // -- Michael P. Mendenhall, 2019
 
 #ifndef PARTITION_HH

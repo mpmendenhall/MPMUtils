@@ -1,4 +1,4 @@
-/// \file SMFile.cc
+/// @file SMFile.cc
 
 #include "SMFile.hh"
 #include <utility>

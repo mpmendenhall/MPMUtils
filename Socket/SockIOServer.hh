@@ -1,4 +1,4 @@
-/// \file SockIOServer.hh I/O server for multiple socket connections
+/// @file SockIOServer.hh I/O server for multiple socket connections
 
 #ifndef SOCKIOSERVER_HH
 #define SOCKIOSERVER_HH

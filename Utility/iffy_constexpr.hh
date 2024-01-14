@@ -1,4 +1,4 @@
-/// \file iffy_constexpr.hh disable constexpr where not supported in older standards
+/// @file iffy_constexpr.hh disable constexpr where not supported in older standards
 
 #ifndef _constexpr
 #if __cplusplus >= 201400L

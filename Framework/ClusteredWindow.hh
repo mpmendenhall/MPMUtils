@@ -1,4 +1,4 @@
-/// \file ClusteredWindow.hh Short-range clustering organization
+/// @file ClusteredWindow.hh Short-range clustering organization
 // -- Michael P. Mendenhall, LLNL 2020
 
 #ifndef CLUSTEREDWINDOW_HH

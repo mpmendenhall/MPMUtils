@@ -1,4 +1,4 @@
-/// \file testRational.cc Test rational numbers and associated fields
+/// @file testRational.cc Test rational numbers and associated fields
 
 #include "ConfigFactory.hh"
 

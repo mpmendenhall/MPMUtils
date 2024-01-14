@@ -1,4 +1,4 @@
-/// \file HDF5_IO.hh HDF5 file I/O
+/// @file HDF5_IO.hh HDF5 file I/O
 // -- Michael P. Mendenhall, LLNL 2019
 
 #ifndef HDF5_IO_HH

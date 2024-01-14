@@ -1,4 +1,4 @@
-/// \file ChunkConvolver.cc
+/// @file ChunkConvolver.cc
 
 #include "ChunkConvolver.hh"
 #include <stdexcept>

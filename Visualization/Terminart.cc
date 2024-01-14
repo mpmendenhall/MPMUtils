@@ -1,4 +1,4 @@
-/// \file Terminart.cc
+/// @file Terminart.cc
 
 #include "Terminart.hh"
 #include "to_str.hh"

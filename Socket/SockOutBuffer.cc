@@ -1,4 +1,4 @@
-/// \file SockOutBuffer.cc
+/// @file
 
 #include "SockOutBuffer.hh"
 #include <stdio.h>  // for printf(...)

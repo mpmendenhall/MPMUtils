@@ -1,4 +1,4 @@
-/// \file char_istream.hh istream using supplied const char buffer
+/// @file char_istream.hh istream using supplied const char buffer
 // Michael P. Mendenhall, LLNL 2021
 
 #ifndef CHAR_ISTREAM_HH

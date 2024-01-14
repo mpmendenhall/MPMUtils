@@ -1,4 +1,4 @@
-/// \file "NoisyMin.hh" Minimizer for ``noisy'' function evaluation
+/// @file "NoisyMin.hh" Minimizer for ``noisy'' function evaluation
 
 #ifndef NOISYMIN_HH
 #define NOISYMIN_HH
