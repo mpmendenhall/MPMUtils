@@ -3,13 +3,9 @@
 #include "RunCfgCmd.hh"
 #include "ConfigFactory.hh"
 #include "GlobalArgs.hh"
-#include "libconfig_readerr.hh"
 #include "AnalysisStep.hh"
 #include "AnaGlobals.hh"
 #include "TermColor.hh"
-
-#include <stdlib.h>
-#include <stdio.h>
 
 int RunCfgCmd::main(int argc, char** argv, const char* execname) {
     printf(TERMSGR_ITALIC "\n");

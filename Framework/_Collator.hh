@@ -8,8 +8,6 @@
 #include "Threadworker.hh"
 
 #include <cstddef> // for size_t on some systems
-#include <vector>
-using std::vector;
 #include <utility> // for std::pair
 
 /// Type-independent re-casting base

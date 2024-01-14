@@ -6,12 +6,10 @@
 
 #include "HDF5_IO.hh"
 #include "HDF5_StructInfo.hh"
-#include "DataSource.hh"
 #include "DataSink.hh"
 #include <map>
+using std::map;
 using std::multimap;
-#include <vector>
-using std::vector;
 
 /// type-idependent base HDF5 table reader
 class _HDF5_Table_Cache: public HDF5_InputFile {

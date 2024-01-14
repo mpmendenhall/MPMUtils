@@ -6,8 +6,6 @@
 #include <netdb.h>  // for sockaddr_in, hostent
 #include <unistd.h> // for write(...), close(...), usleep(n)
 #include <stdexcept>
-#include <vector>
-using std::vector;
 
 #include "to_str.hh"
 

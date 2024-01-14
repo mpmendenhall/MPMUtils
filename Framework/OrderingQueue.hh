@@ -8,16 +8,12 @@
 #include "deref_if_ptr.hh"
 #include "SFINAEFuncs.hh" // for dispObj
 
-#include <vector>
-using std::vector;
 #include <queue>
 using std::priority_queue;
 #include <cassert>
 #include <limits>
 #include <cmath> // for std::isfinite
-#include <stdexcept>
 #include <csignal> // for SIGINT breakpoint
-#include <type_traits>  // for std::remove_pointer
 
 /// Sort slightly-out-of-order items into proper order
 template<class T, typename _ordering_t = typename std::remove_pointer<T>::type::ordering_t>

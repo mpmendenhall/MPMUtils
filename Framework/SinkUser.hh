@@ -4,10 +4,9 @@
 #ifndef SINKUSER_HH
 #define SINKUSER_HH
 
+#include "XMLTag.hh"
 #include "_SinkUser.hh"
 #include "DataSink.hh"
-#include "ConfigFactory.hh"
-#include "XMLTag.hh"
 
 /// Base class outputting to a sink
 template<typename T>

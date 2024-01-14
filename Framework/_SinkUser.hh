@@ -5,8 +5,6 @@
 #define _SINKUSER_HH
 
 #include "SignalSink.hh"
-#include <stdexcept>
-#include <typeinfo>
 #include "ConfigFactory.hh"
 
 class _AnaIndex;
