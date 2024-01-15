@@ -4,14 +4,14 @@
 #ifndef _ANAINDEX_HH
 #define _ANAINDEX_HH
 
-#include "libconfig_readerr.hh"
+#include "ConfigFactory.hh"
 #include <stdexcept>
 class _ConfigCollator;
 
 /// Virtual base for lookup of type-specific analysis chain units
 class _AnaIndex {
 public:
-    virtual _ConfigCollator* makeConfigCollator(const Setting& S) const;
+    virtual _ConfigCollator* makeConfigCollator(const ConfigInfo_t& S) const;
 };
 
 #endif

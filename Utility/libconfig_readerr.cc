@@ -5,11 +5,14 @@
 #include <map>
 #include <stdexcept>
 
-std::map<const Setting*, const Config*> rConfigs;
+std::map<const Setting*, const Config*>& rConfigs() {
+    static std::map<const Setting*, const Config*> m;
+    return m;
+}
 
 const Setting& registerConfig(const Config& cfg) {
     auto& S = cfg.getRoot();
-    rConfigs[&S] = &cfg;
+    rConfigs()[&S] = &cfg;
     return S;
 }
 
@@ -17,8 +20,8 @@ const Config* lookupConfig(const Setting* S) {
     if(!S) return nullptr;
     auto SS = const_cast<Setting*>(S);
     while(!SS->isRoot()) SS = &SS->getParent();
-    auto it = rConfigs.find(SS);
-    return it == rConfigs.end()? nullptr : it->second;
+    auto it = rConfigs().find(SS);
+    return it == rConfigs().end()? nullptr : it->second;
 }
 
 const Config& lookupConfig(const Setting& S) {
@@ -27,8 +30,15 @@ const Config& lookupConfig(const Setting& S) {
     return *c;
 }
 
-const Config NullConfig;
-const Setting& NullSetting = registerConfig(NullConfig);
+const Config& NullConfig() {
+    static Config C;
+    return C;
+}
+
+const Setting& NullSetting() {
+    static auto& S = registerConfig(NullConfig());
+    return S;
+}
 
 void readConfigFile(Config& cfg, const string& cfgfile, bool autoconvert) {
     cfg.setAutoConvert(autoconvert);

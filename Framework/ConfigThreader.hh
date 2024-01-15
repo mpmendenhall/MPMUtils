@@ -12,7 +12,7 @@
 class ConfigThreader: public Configurable, public Threadworker, virtual public XMLProvider {
 public:
     /// Constructor
-    explicit ConfigThreader(const Setting& S, int i = 0):
+    explicit ConfigThreader(const ConfigInfo_t& S, int i = 0):
     XMLProvider("ConfigThreader"), Configurable(S), Threadworker(i) { }
     /// run in thread
     void threadjob() override { run(); }

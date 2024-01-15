@@ -4,4 +4,4 @@
 
 #include "_ConfigCollator.hh"
 
-_ConfigCollator* _AnaIndex::makeConfigCollator(const Setting& S) const { return new _ConfigCollator(S); }
+_ConfigCollator* _AnaIndex::makeConfigCollator(const ConfigInfo_t& S) const { return new _ConfigCollator(S); }

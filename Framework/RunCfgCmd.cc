@@ -15,7 +15,7 @@ int RunCfgCmd::main(int argc, char** argv, const char* execname) {
     if(argc < 2) {
         printf(TERMSGR_BOLD "\nArguments: %s <config file | class> [-argname argval(s) ...]" TERMSGR_RESET "\n\n", execname);
         printf("Available top-level classes:\n");
-        BaseFactory<Configurable>::displayConstructionOpts<const Setting&>();
+        BaseFactory<Configurable>::displayConstructionOpts<const ConfigInfo_t&>();
         printf("\n");
         return EXIT_FAILURE;
     }
@@ -24,7 +24,7 @@ int RunCfgCmd::main(int argc, char** argv, const char* execname) {
     pre_run();
 
     try {
-        auto A = BaseFactory<Configurable>::try_construct(argv[1], NullSetting);
+        auto A = BaseFactory<Configurable>::try_construct(argv[1], NullSetting());
         AnalysisStep AS(execname);
         Config cfg;
 
@@ -35,7 +35,6 @@ int RunCfgCmd::main(int argc, char** argv, const char* execname) {
             printf(TERMFG_GREEN "\n-- Configuring from '%s'" TERMSGR_RESET "\n\n", argv[1]);
             readConfigFile(cfg, argv[1]);
             auto& S = registerConfig(cfg);
-
             A = constructCfgObj<Configurable>(S, "");
             S.lookupValue("class", AS.codename);
         }

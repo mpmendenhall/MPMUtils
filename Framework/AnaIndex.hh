@@ -15,7 +15,7 @@ template<typename T>
 class AnaIndex<T, typename T::ordering_t>: virtual public _AnaIndex {
 public:
     /// make type-appropriate ConfigCollator
-    _ConfigCollator* makeConfigCollator(const Setting& S) const override;
+    _ConfigCollator* makeConfigCollator(const ConfigInfo_t& S) const override;
 };
 
 #include "ConfigCollator.hh"

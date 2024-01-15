@@ -13,7 +13,7 @@ template<class T>
 class NullSink: public DataSink<T>, public XMLProvider  {
 public:
     /// Constructor
-    explicit NullSink(const Setting&): XMLProvider("NullSink") { }
+    explicit NullSink(const ConfigInfo_t&): XMLProvider("NullSink") { }
     /// Do nothing!
     void push(T&) override { }
 };

@@ -53,7 +53,7 @@ public:
     const _AnaIndex& getSinkIdx() const override;
 
     /// generate appropriat configured data sink type
-    SignalSink* makeDataSink(const Setting& S, const string& dfltclass = "") const override {
+    SignalSink* makeDataSink(const ConfigInfo_t& S, const string& dfltclass = "") const override {
         auto snk = constructCfgObj<DataSink<T>>(S, dfltclass);
         if(snk) snk->initialize();
         return snk;

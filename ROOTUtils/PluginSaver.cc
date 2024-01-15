@@ -6,16 +6,16 @@
 #include "to_str.hh"
 #include "GlobalArgs.hh"
 
-PluginSaver::PluginSaver(OutputManager* pnt, const Setting& S, const string& _path, const string& inflName):
+PluginSaver::PluginSaver(OutputManager* pnt, const ConfigInfo_t& S, const string& _path, const string& inflName):
 SegmentSaver(pnt, _path, inflName) {
+    // if not reloading from file, save configuration to metadata ... will reload at "initialize()"
     if(S.getLength() && !fIn) {
         setMeta("settingname", S.getPath());
         setMeta("configstr", cfgString(lookupConfig(S)));
     }
-    S.lookupValue("order", order);
 }
 
-void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown) {
+void PluginSaver::buildPlugin(const string& pname, int& copynum, const ConfigInfo_t& cfg, bool skipUnknown) {
     auto o = skipUnknown? BaseFactory<SegmentSaver>::try_construct(pname, (SegmentSaver&)*this, cfg)
         : BaseFactory<SegmentSaver>::construct(pname, (SegmentSaver&)*this, cfg);
 
@@ -27,8 +27,9 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& 
     string _rename = pname;
     if(copynum >= 0) _rename += "_"+to_str(copynum);
     string rn0 = _rename;
-    cfg.lookupValue("rename",_rename);
+    ExplainConfig::lookupValue(cfg, "rename", _rename, "plugin renaming");
     o->rename(_rename);
+    ExplainConfig::lookupValue(cfg, "order", o->order, "plugin execution order");
     byName[_rename] = o;
     myPlugins.push_back(o);
     {
@@ -42,34 +43,40 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, const Setting& 
 void PluginSaver::initialize() {
     SegmentSaver::initialize();
 
-    Config cfg;
-    cfg.setAutoConvert(true);
+    // TODO better memory management
+    auto cfg = new Config();
+    cfg->setAutoConvert(true);
     auto snm = getMeta("settingname");
     printf("Reconfiguring from saved setting '%s'\n", snm.c_str());
-    cfg.readString(getMeta("configstr"));
-    registerConfig(cfg);
-    Configure(cfg.lookup(snm), true);
+    cfg->readString(getMeta("configstr"));
+    registerConfig(*cfg);
+    SettingsQuery SQ(cfg->lookup(snm));
+    SQ.markused("class");
+    Configure(SQ, true);
 }
 
-void PluginSaver::Configure(const Setting& S, bool skipUnknown) {
+void PluginSaver::Configure(SettingsQuery& S, bool skipUnknown) {
     if(myPlugins.size()) throw std::runtime_error("Multiple calls to PluginSaver::Configure");
 
     // configure plugins
-    if(S.exists("plugins")) {
+    if(S.show_exists("plugins", "analysis plugins")) {
         auto& plugs = S["plugins"];
-        auto nplugs = plugs.getLength();
-        for(int i=0; i<nplugs; i++) {
-            string pname = plugs[i].getName();
+        for(const auto& p: plugs) {
+            string pname = p.getName();
+            ExplainConfig::show_exists(plugs, pname, "plugin settings");
             int copynum = -1;
-            if(plugs[i].isList()) for(const auto& c: plugs[i]) buildPlugin(pname, copynum, c, skipUnknown);
-            else buildPlugin(pname, copynum, plugs[i], skipUnknown);
+            if(p.isList()) {
+                for(const auto& c: p) buildPlugin(pname, copynum, c, skipUnknown);
+            } else buildPlugin(pname, copynum, p, skipUnknown);
         }
     }
 
     std::sort(myPlugins.begin(), myPlugins.end(),
               [](SegmentSaver* a, SegmentSaver* b) { return a->order < b->order; });
 
+    printf("\n");
     if(optionalGlobalArg("plotformat", printsfx, "plot output format")) setPrintSuffix(printsfx);
+    printf("\n");
 }
 
 map<string,float> PluginSaver::compareKolmogorov(const SegmentSaver& S) const {

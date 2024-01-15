@@ -12,7 +12,7 @@ template<typename T>
 class SockDataSink: public Configurable, public DataSink<T>, public SockBinWrite, public XMLProvider {
 public:
     /// Constructor
-    explicit SockDataSink(const Setting& S):
+    explicit SockDataSink(const ConfigInfo_t& S):
     Configurable(S), SockBinWrite("localhost", 50000), XMLProvider("SockDataSink") {
         S.lookupValue("host", host);
         optionalGlobalArg("outhost", host, "data output host");
@@ -45,7 +45,7 @@ protected:
 class ConfigSockServer: public ConfigThreader, public SockConnection {
 public:
     /// Constructor
-    explicit ConfigSockServer(const Setting& S):
+    explicit ConfigSockServer(const ConfigInfo_t& S):
     XMLProvider("ConfigSockServer"), ConfigThreader(S, -2) {
         S.lookupValue("host", host);
         optionalGlobalArg("inhost", host, "data source host");
@@ -80,7 +80,7 @@ template<typename T>
 class SockDSVecReceiver: public ConfigSockServer, public SinkUser<T> {
 public:
     /// Constructor
-    explicit SockDSVecReceiver(const Setting& S): XMLProvider("SockDSVecReceiver"),
+    explicit SockDSVecReceiver(const ConfigInfo_t& S): XMLProvider("SockDSVecReceiver"),
     ConfigSockServer(S) { if(S.exists("next")) this->createOutput(S["next"]); }
 
     using SinkUser<T>::nextSink;
@@ -107,7 +107,7 @@ template<typename T>
 class SockDSReceiver: public ConfigSockServer, public SinkUser<T> {
 public:
     /// Constructor
-    explicit SockDSReceiver(const Setting& S):
+    explicit SockDSReceiver(const ConfigInfo_t& S):
     ConfigSockServer(S) { if(S.exists("next")) this->createOutput(S["next"]); }
 
     using SinkUser<T>::nextSink;
@@ -143,7 +143,7 @@ class SockDSBlobReceiver: public ConfigSockServer,
 public SinkUser<const vector<char>> {
 public:
     /// Constructor
-    explicit SockDSBlobReceiver(const Setting& S):
+    explicit SockDSBlobReceiver(const ConfigInfo_t& S):
     ConfigSockServer(S) { if(S.exists("next")) this->createOutput(S["next"]); }
 
     // Receive data stream

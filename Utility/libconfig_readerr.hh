@@ -9,10 +9,10 @@ using namespace libconfig;
 using std::string;
 #include <stdio.h>
 
-/// Default empty configuration
-extern const Config NullConfig;
-/// Default empty setting
-extern const Setting& NullSetting;
+/// Default empty configuration singleton
+const Config& NullConfig();
+/// Default empty setting singleton
+const Setting& NullSetting();
 
 /// Read configuration file into config
 void readConfigFile(Config& cfg, const string& cfgfile, bool autoconvert = true);

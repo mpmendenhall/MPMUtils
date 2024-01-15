@@ -5,40 +5,49 @@
 #define CONFIGFACTORY_HH
 
 #include "ObjectFactory.hh"
-#include "libconfig_readerr.hh"
+#include "ExplainConfig.hh"
 
-/// Compile-time registration of BASE object constructed from const Setting&
-#define REGISTER_CONFIG(NAME, BASE) static const ObjectFactory<BASE, NAME, const Setting&> the_##NAME##_CfgFactory(#NAME);
+typedef Setting ConfigInfo_t;
+
+/// Compile-time registration of BASE object constructed from const ConfigInfo_t&
+#define REGISTER_CONFIG(NAME, BASE) static const ObjectFactory<BASE, NAME, const ConfigInfo_t&> the_##NAME##_CfgFactory(#NAME);
 
 /// Construct configured object looked up from setting; return nullptr if unavailable
 template<typename BASE, typename... Args>
-BASE* try_constructCfgObj(const Setting& S, const string& dfltclass,  Args&&... a) {
+BASE* try_constructCfgObj(const ConfigInfo_t& S, const string& dfltclass,  Args&&... a) {
     string defaultclass = dfltclass;
-    S.lookupValue("class", defaultclass);
+    ExplainConfig::lookupValue(S, "class", defaultclass, "class to construct");
     return BaseFactory<BASE>::try_construct(defaultclass, S, std::forward<Args>(a)...);
 }
 
 /// Construct configured object looked up from setting
 template<typename BASE, typename... Args>
-BASE* constructCfgObj(const Setting& S, const string& dfltclass, Args&&... a) {
+BASE* constructCfgObj(const ConfigInfo_t& S, const string& dfltclass, Args&&... a) {
     string defaultclass = dfltclass;
-    S.lookupValue("class", defaultclass);
-    if(!defaultclass.size()) throw std::runtime_error("'class' not set in configuration");
+    ExplainConfig::lookupValue(S, "class", defaultclass, "class to construct", !dfltclass.size());
     return BaseFactory<BASE>::construct(defaultclass, S, std::forward<Args>(a)...);
 }
 
-/// Base class for a generic top-level configurable object
-class Configurable {
+/// Base class storing query info on configuration
+class _Configurable {
 public:
     /// Constructor
-    explicit Configurable(const Setting& S): Cfg(S) { }
+    explicit _Configurable(const ConfigInfo_t& S): Cfg(S) { Cfg.markused("class"); }
     /// Polymorphic Destructor
-    virtual ~Configurable() { }
-    /// Run configured operation
-    virtual void run() { }
+    virtual ~_Configurable() { }
 
 protected:
-    const Setting& Cfg; ///< input configuration
+    SettingsQuery Cfg;  ///< input configuration
+};
+
+
+/// Base class for a generic top-level configurable object
+class Configurable: public _Configurable {
+public:
+    /// Constructor
+    explicit Configurable(const ConfigInfo_t& S): _Configurable(S) { }
+    /// Run configured operation
+    virtual void run() { }
 };
 
 /// Pass-through Configurable generating "next"
@@ -47,7 +56,7 @@ public:
     /// Constructor
     using Configurable::Configurable;
     /// construct "next"
-    virtual void buildNext() { if(Cfg.exists("next")) next = constructCfgObj<Configurable>(Cfg["next"], ""); }
+    virtual void buildNext() { if(Cfg.show_exists("next", "next processing stage")) next = constructCfgObj<Configurable>(Cfg["next"], ""); }
     /// Destructor
     ~ConfigurableStage() { delete next; }
     /// Run configured operation
@@ -57,7 +66,7 @@ public:
 };
 
 /// register Configurable subclass
-#define REGISTER_CONFIGURABLE(NAME) static ObjectFactory<Configurable, NAME, const Setting&> the_##NAME##_CfgblFactory(#NAME);
+#define REGISTER_CONFIGURABLE(NAME) static ObjectFactory<Configurable, NAME, const ConfigInfo_t&> the_##NAME##_CfgblFactory(#NAME);
 
 /// generate and register simple single-function Configurable --- follow by { brace enclosed } code block for run()
 #define REGISTER_EXECLET(NAME) class NAME: public Configurable { \

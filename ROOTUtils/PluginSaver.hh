@@ -5,16 +5,15 @@
 #define PLUGINSAVER_HH
 
 #include "SegmentSaver.hh"
-#include "ObjectFactory.hh"
+#include "ConfigFactory.hh"
 #include <chrono>
 using std::chrono::steady_clock;
-#include "libconfig_readerr.hh"
 
 /// A SegmentSaver that manages several (optional) plugin SegmentSavers sharing the same file
 class PluginSaver: public SegmentSaver {
 public:
     /// Constructor, optionally with input filename
-    explicit PluginSaver(OutputManager* pnt, const Setting& S, const string& _path = "PluginSaver", const string& inflName = "");
+    explicit PluginSaver(OutputManager* pnt, const ConfigInfo_t& S, const string& _path = "PluginSaver", const string& inflName = "");
     /// Destructor
     ~PluginSaver() { for(auto p: myPlugins) delete p; }
 
@@ -63,10 +62,10 @@ public:
 
 protected:
     /// Configure from libconfig object, dynamically loading plugins
-    virtual void Configure(const Setting& S, bool skipUnknown = false);
+    virtual void Configure(SettingsQuery& S, bool skipUnknown = false);
 
     /// load and configure plugin by class name
-    void buildPlugin(const string& pname, int& copynum, const Setting& cfg, bool skipUnknown);
+    void buildPlugin(const string& pname, int& copynum, const ConfigInfo_t& cfg, bool skipUnknown);
 
     decltype(steady_clock::now()) ana_t0;   ///< analysis start time
     map<string, SegmentSaver*> byName;      ///< available named plugins list
@@ -75,18 +74,18 @@ protected:
 
 /// Base class for constructing configuration-based plugins, with parent-class recast
 template <class Plug, class Base>
-class ConfigPluginBuilder: public _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const Setting&> {
+class ConfigPluginBuilder: public _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const ConfigInfo_t&> {
 public:
     /// Constructor, registering to list
-    explicit ConfigPluginBuilder(const string& cname): _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const Setting&>(cname) {
-        auto& idx = FactoriesIndex::indexFor<SegmentSaver, SegmentSaver&, const Setting&>();
+    explicit ConfigPluginBuilder(const string& cname): _ArgsBaseFactory<SegmentSaver, SegmentSaver&, const ConfigInfo_t&>(cname) {
+        auto& idx = FactoriesIndex::indexFor<SegmentSaver, SegmentSaver&, const ConfigInfo_t&>();
         auto h = FactoriesIndex::hash(cname);
         if(idx.count(h)) throw std::logic_error("Duplicate registration of plugin named '" + cname + "'");
         idx.emplace(h, *this);
     }
 
     /// Re-casting plugin construction
-    SegmentSaver* construct(SegmentSaver& pnt, const Setting& S) const override {
+    SegmentSaver* construct(SegmentSaver& pnt, const ConfigInfo_t& S) const override {
         auto t0 = steady_clock::now();
         auto P = new Plug(dynamic_cast<Base&>(pnt), S);
         P->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();

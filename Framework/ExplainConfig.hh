@@ -14,51 +14,86 @@ using std::set;
 using std::map;
 using std::vector;
 
-/// Verbose query operations wrapper on settings group
+/// Standalone verbose setting query functions
+namespace ExplainConfig {
+    /// Query setting existence; throw error if missing mandatory, else return silently
+    bool exists(const Setting& S, const string& name, const string& descrip = "", bool mandatory = false);
+
+    /// Helper to print location of setting in file
+    void printloc(const Setting& S);
+
+    /// return exists() + display setting description, "* Configuration ..." line or "*** Settings" group header
+    bool show_exists(const Setting& S, const string& name, const string& descrip, bool mandatory = false, bool header = true);
+
+    /// Describe (optional)-value lookup with default
+    template<class C>
+    bool lookupValue(const Setting& S, const string& name, C& val, const string& descrip, bool mandatory = false) {
+        bool ex = show_exists(S, name, descrip, mandatory, false);
+        if(ex) {
+            printf(TERMFG_BLUE "(default '%s')" TERMFG_GREEN " -> " TERMSGR_RESET "'" TERMSGR_BOLD TERMFG_MAGENTA, to_str(val).c_str());
+            S.lookupValue(name, val);
+        } else printf(TERMFG_GREEN "defaulted to " TERMSGR_RESET "'");
+        printf("%s" TERMSGR_RESET "'\n", to_str(val).c_str());
+        return ex;
+    }
+}
+
+/// Verbose query operations wrapper on settings group, tracking used/unused settings
 class SettingsQuery: private NoCopy {
 public:
     /// Constructor, wrapping a `group` type setting (else error)
-    explicit SettingsQuery(const Setting& _S);
+    SettingsQuery(const Setting& _S);
     /// Destructor; checks for un-queried settings in group
     ~SettingsQuery();
 
 
+    //------------------------------------------------------
+    // pass-through commands to underlying const Settings& S
+
+    /// Query setting existence; throw error if missing mandatory, else return silently
+    bool exists(const string& name, const string& descrip = "", bool mandatory = false) {
+        queried.insert(name); return ExplainConfig::exists(S, name, descrip, mandatory);
+    }
+    /// Pass-through for getName()
+    const char* getName() const { return S.getName(); }
+    /// Pass-through for getPath()
+    string getPath() const { return S.getPath(); }
+    /// Pass-through for getLength()
+    int getLength() const { return S.getLength(); }
+    /// quiet mandatory setting lookup
+    const Setting& operator[](const char* name);
 
     //------------------------------------------------------------------------
     // "silent" operations without terminal output (aside from error messages)
 
+    /// Mark as queried with no other actions
+    void markused(const string& s) { queried.insert(s); }
     /// Access associated setting
     operator const Setting& () const { return S; }
     /// Check if requested setting existed
-    operator bool() const { return &S != &NullSetting; }
-
-    /// Query setting existence; throw error if missing mandatory, else return silently
-    bool exists(const string& name, const string& descrip = "", bool mandatory = false);
+    operator bool() const { return &S != &NullSetting(); }
 
     /// Lookup setting, returning NullSetting if not present (or throwing error if mandatory)
     const Setting& lookup(const string& name, const string& descrip = "", bool mandatory = false) {
-        return exists(name, descrip, mandatory)? S.lookup(name) : NullSetting;
+        return exists(name, descrip, mandatory)? S.lookup(name) : NullSetting();
     }
-    /// Look up setting contents without printing description; return whether found
-    template<class C>
-    bool lookupValue(const string& name, C& val) {
-        queried.insert(name); return S.lookupValue(name, val);
-    }
-
+    /// Quiet loading of required subgroup
+    SettingsQuery& sub(const string& name);
 
     //------------------------------------------------------------------------
     // "verbose" operations displaying status of found/default values
 
-    /// Describe optional-value lookup with default
+    /// return exists() + display setting description, "* Configuration ..." line or "*** Settings" group header
+    bool show_exists(const string& name, const string& descrip, bool mandatory =  false, bool header = true) {
+        queried.insert(name);
+        return ExplainConfig::show_exists(S, name, descrip, mandatory, header);
+    }
+
+    /// Describe (optional)-value lookup with default
     template<class C>
-    bool lookupValue(const string& name, C& val, const string& descrip) {
-        bool ex = show_exists(name, descrip);
-        if(ex) {
-            printf(TERMFG_BLUE "(default '%s')" TERMFG_GREEN " -> " TERMSGR_RESET "'" TERMSGR_BOLD TERMFG_MAGENTA, to_str(val).c_str());
-            lookupValue(name, val);
-        } else printf(TERMFG_GREEN "defaulted to " TERMSGR_RESET "'");
-        printf("%s" TERMSGR_RESET "'\n", to_str(val).c_str());
-        return ex;
+    bool lookupValue(const string& name, C& val, const string& descrip = "", bool mandatory = false) {
+        queried.insert(name);
+        return ExplainConfig::lookupValue(S, name, val, descrip, mandatory);
     }
 
     /// Look up vector or single-value fill into size-n vector
@@ -79,7 +114,7 @@ public:
     }
 
     /// Lookup one of multiple string choices, with `val` as default
-    bool lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices);
+    bool lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices, bool mandatory = false);
     /// Lookup and describe string-valued multiple choice option, mapped to integer for enum lookup
     bool lookupChoice(const string& name, int& val, const string& descrip, const map<string, int>& choices);
     /// Lookup and describe enumeration-valued string-named choices
@@ -98,11 +133,7 @@ public:
      * error thrown if "mandatory" and not found.
      * Result is "owned" by this object, and will be destructed with unused query checking along with this.
      */
-    SettingsQuery& get(const string& name, const string& descrip, bool mandatory = false);
-
-    /// Helper to print location of setting in file
-    static void printloc(const Setting& _S);
-
+    SettingsQuery& get(const string& name, const string& descrip = "", bool mandatory = false);
 
     //------------------------------------------------
     // reaction to un-queried variables on destruction
@@ -118,15 +149,12 @@ public:
 
 
 protected:
-    /// return exists() + display setting description, "* Configuration ..." line or "*** Settings" group header
-    bool show_exists(const string& name, const string& descrip, bool mandatory = false, bool header = false);
-
     /// Look up vector, or single value to fill into n-element vector. Returns empty vector if non-existent (or error if mandatory).
     vector<const Setting*> _lookupVector(const string& name, const string& descrip, size_t n, bool mandatory = false);
 
     const Setting& S;                   ///< settings group being queried
     set<string> queried;                ///< sub-settings (attempted) queried
-    map<string, SettingsQuery> Ssub;    ///< sub-queries generated
+    map<string, SettingsQuery*> Ssub;   ///< sub-queries generated
 };
 
 #endif

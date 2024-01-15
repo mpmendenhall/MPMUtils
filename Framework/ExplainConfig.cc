@@ -2,6 +2,57 @@
 
 #include "ExplainConfig.hh"
 
+using namespace ExplainConfig;
+
+bool ExplainConfig::exists(const Setting& S, const string& name, const string& descrip, bool mandatory) {
+     bool ex = S.exists(name);
+
+    if(mandatory && !ex) {
+        printf(TERMFG_RED "Required settings '%s' <%s> MISSING\nfrom ", name.c_str(), descrip.c_str());
+        printloc(S);
+        S.lookup(name); // throws missing setting exception
+    }
+
+    return ex;
+}
+
+void ExplainConfig::printloc(const Setting& _S) {
+    auto sf = _S.getSourceFile();
+    auto p = _S.getPath();
+    if(p.size()) printf("'%s' at ", p.c_str());
+    printf("%s : line %i", sf? sf : "<no file>", _S.getSourceLine());
+}
+
+/// return exists() + display setting description, "* Configuration ..." line or "*** Settings" group header
+bool ExplainConfig::show_exists(const Setting& S, const string& name, const string& descrip, bool mandatory, bool header) {
+    auto ex = exists(S, name, descrip, mandatory);
+
+    if(mandatory) printf(TERMFG_MAGENTA);
+    else printf(TERMFG_BLUE);
+
+    if(header) {
+        printf("\n**********************************************************\n**** " TERMSGR_RESET);
+        if(mandatory) printf("Required ");
+        printf("Settings '" TERMFG_GREEN "%s" TERMSGR_RESET "': %s ", name.c_str(), descrip.c_str());
+        if(!ex) {
+            printf(TERMFG_YELLOW "not provided\n" TERMFG_BLUE "**** within ");
+            printloc(S);
+            printf(TERMSGR_RESET "\n");
+        } else {
+            printf(TERMFG_GREEN "provided" TERMSGR_RESET "\n" TERMFG_BLUE "**** ");
+            printloc(S.lookup(name));
+            printf(TERMSGR_RESET "\n");
+        }
+    } else {
+        printf("*" TERMSGR_RESET " Configuration '" TERMFG_GREEN "%s" TERMSGR_RESET " <%s>' ",
+               name.c_str(), descrip.c_str());
+    }
+
+    return ex;
+}
+
+//---------------------------------------------------------------
+
 SettingsQuery::Response_t SettingsQuery::default_require_queried = SettingsQuery::WARN;
 
 SettingsQuery::SettingsQuery(const Setting& _S):
@@ -10,14 +61,9 @@ require_queried(default_require_queried), S(_S) {
         throw std::runtime_error("Setting '" + S.getPath() + "' must be of { group } type");
 }
 
-void SettingsQuery::printloc(const Setting& _S) {
-    auto sf = _S.getSourceFile();
-    auto p = _S.getPath();
-    if(p.size()) printf("'%s' at ", p.c_str());
-    printf("%s : line %i", sf? sf : "<no file>", _S.getSourceLine());
-}
-
 SettingsQuery::~SettingsQuery() {
+    for(auto kv: Ssub) delete kv.second;
+
     // ignored, or nothing to be unused:
     if(!*this || require_queried == IGNORE) return;
 
@@ -44,9 +90,11 @@ SettingsQuery::~SettingsQuery() {
     if(has_unused && require_queried == ERROR) std::terminate();
 }
 
-bool SettingsQuery::lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices) {
+bool SettingsQuery::lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices, bool mandatory) {
+    queried.insert(name);
+
     // update default if setting present
-    bool ex = show_exists(name, descrip);
+    bool ex = show_exists(name, descrip, mandatory, false);
     if(ex) {
         printf(TERMFG_BLUE "(default '%s') " TERMFG_GREEN "-> " TERMSGR_RESET, val.c_str());
         S.lookupValue(name, val);
@@ -101,48 +149,16 @@ bool SettingsQuery::lookupChoice(const string& name, int& val, const string& des
     return ex;
 }
 
-bool SettingsQuery::exists(const string& name, const string& descrip, bool mandatory) {
-    queried.insert(name);
-    bool ex = S.exists(name);
+const Setting& SettingsQuery::operator[](const char* name) { return S[name]; }
 
-    if(mandatory && !ex) {
-        printf(TERMFG_RED "Required settings '%s' <%s> MISSING\nfrom ", name.c_str(), descrip.c_str());
-        printloc(S);
-        S.lookup(name); // throws missing setting exception
-    }
-
-    return ex;
-}
-
-bool SettingsQuery::show_exists(const string& name, const string& descrip, bool mandatory, bool header) {
-    auto ex = exists(name, descrip, mandatory);
-
-    if(mandatory) printf(TERMFG_MAGENTA);
-    else printf(TERMFG_BLUE);
-
-    if(header) {
-        printf("\n**********************************************************\n**** " TERMSGR_RESET);
-        if(mandatory) printf("Required ");
-        printf("Settings '" TERMFG_GREEN "%s" TERMSGR_RESET "': %s ", name.c_str(), descrip.c_str());
-        if(!ex) {
-            printf(TERMFG_YELLOW "not provided\n" TERMFG_BLUE "**** within ");
-            printloc(S);
-            printf(TERMSGR_RESET "\n");
-        } else {
-            printf(TERMFG_GREEN "provided" TERMSGR_RESET "\n" TERMFG_BLUE "**** ");
-            printloc(S.lookup(name));
-            printf(TERMSGR_RESET "\n");
-        }
-    } else {
-        printf("*" TERMSGR_RESET " Configuration '" TERMFG_GREEN "%s" TERMSGR_RESET " <%s>' ",
-               name.c_str(), descrip.c_str());
-    }
-
-    return ex;
+SettingsQuery& SettingsQuery::sub(const string& name) {
+    exists(name, "", true);
+    if(!Ssub.count(name)) Ssub.emplace(name, new SettingsQuery(S.lookup(name)));
+    return *Ssub.at(name);
 }
 
 SettingsQuery& SettingsQuery::get(const string& name, const string& descrip, bool mandatory) {
     show_exists(name, descrip, mandatory, true);
-    if(!Ssub.count(name)) Ssub.emplace(name, lookup(name));
-    return Ssub.at(name);
+    if(!Ssub.count(name)) Ssub.emplace(name, new SettingsQuery(lookup(name)));
+    return *Ssub.at(name);
 }

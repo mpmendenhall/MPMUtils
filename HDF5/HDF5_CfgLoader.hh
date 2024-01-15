@@ -11,7 +11,7 @@ template<typename T>
 class HDF5_CfgLoader: public HDF5_Table_Cache<T>, public CfgLoader<T> {
 public:
     /// Constructor
-    explicit HDF5_CfgLoader(const Setting& S, const string& farg = "", const string& tname = "", int v = 0):
+    explicit HDF5_CfgLoader(const ConfigInfo_t& S, const string& farg = "", const string& tname = "", int v = 0):
     XMLProvider("HDF5_CfgLoader"), HDF5_Table_Cache<T>(tname, v), CfgLoader<T>(S, farg) { }
 };
 
@@ -20,7 +20,7 @@ template<typename T>
 class HDF5_CfgWriter: public HDF5_Table_Writer<T>, virtual public XMLProvider {
 public:
     /// Constructor
-    explicit HDF5_CfgWriter(const Setting&, const string& farg = ""): XMLProvider("HDF5_CfgWriter") {
+    explicit HDF5_CfgWriter(const ConfigInfo_t&, const string& farg = ""): XMLProvider("HDF5_CfgWriter") {
         if(!farg.size()) return;
         const auto& fn = requiredGlobalArg(farg, "output .h5 file");
         this->openOutput(fn);

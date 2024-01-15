@@ -13,7 +13,7 @@ template<class T>
 class ConfigOrderQ: public OrderingQueue<T>, public XMLProvider  {
 public:
     /// Constructor
-    explicit ConfigOrderQ(const Setting& S): XMLProvider("OrderingQueue") {
+    explicit ConfigOrderQ(const ConfigInfo_t& S): XMLProvider("OrderingQueue") {
         this->createOutput(S["next"]);
         this->dt = 1e9;
         S.lookupValue("dt", this->dt);
