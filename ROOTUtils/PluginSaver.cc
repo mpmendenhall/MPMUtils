@@ -6,7 +6,7 @@
 #include "to_str.hh"
 #include "GlobalArgs.hh"
 
-PluginSaver::PluginSaver(OutputManager* pnt, const ConfigInfo_t& S, const string& _path, const string& inflName):
+PluginSaver::PluginSaver(OutputManager* pnt, const Setting& S, const string& _path, const string& inflName):
 SegmentSaver(pnt, _path, inflName) {
     // if not reloading from file, save configuration to metadata ... will reload at "initialize()"
     if(S.getLength() && !fIn) {

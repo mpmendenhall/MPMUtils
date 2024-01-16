@@ -11,7 +11,7 @@ class _ConfigCollator;
 /// Virtual base for lookup of type-specific analysis chain units
 class _AnaIndex {
 public:
-    virtual _ConfigCollator* makeConfigCollator(const ConfigInfo_t& S) const;
+    virtual _ConfigCollator* makeConfigCollator(const Setting& S) const;
 };
 
 #endif

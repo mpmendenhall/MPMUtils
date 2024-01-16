@@ -15,7 +15,7 @@ public:
     typedef DataSink<T> dsink_t;
 
     /// Constructor, from config file
-    explicit DataSinkTee(const ConfigInfo_t& S): XMLProvider("DataSinkTee") {
+    explicit DataSinkTee(const Setting& S): XMLProvider("DataSinkTee") {
         if(!S.exists("next")) throw std::runtime_error("DataSinkTee missing 'next' outputs");
         auto& nxt = S["next"];
         if(nxt.isList()) {

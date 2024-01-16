@@ -14,7 +14,7 @@
 class _ConfigParallel: public Configurable, public ThreadManager, public XMLProvider, public _SubSinkUser {
 public:
     /// Constructor
-    explicit _ConfigParallel(const ConfigInfo_t& S);
+    explicit _ConfigParallel(const Setting& S);
 
     /// Destructor
     ~_ConfigParallel() { delete keep_me; delete myColl; }
@@ -43,7 +43,7 @@ template<typename T, class CLUST = Clusterer<T>>
 class ConfigParallel: virtual public _ConfigParallel, public PreSink<CLUST> {
 public:
     /// Constructor
-    explicit ConfigParallel(const ConfigInfo_t& S): _ConfigParallel(S), PreSink<CLUST>(1000) {
+    explicit ConfigParallel(const Setting& S): _ConfigParallel(S), PreSink<CLUST>(1000) {
         S.lookupValue("cluster_dt", this->PreTransform.cluster_dx);
 
         if(S.exists("next")) { // collated mode

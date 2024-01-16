@@ -16,7 +16,7 @@ public:
     using DataLink<T,T>::nextSink;
 
     /// Constructor
-    explicit PrintSink(const ConfigInfo_t& S): XMLProvider("PrintSink") {
+    explicit PrintSink(const Setting& S): XMLProvider("PrintSink") {
         S.lookupValue("nskip", nskip);
         optionalGlobalArg("printskip", nskip, "printout decimation factor");
         if(S.exists("next")) this->createOutput(S["next"]);

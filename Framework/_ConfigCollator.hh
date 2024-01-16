@@ -13,7 +13,7 @@
 class _ConfigCollator: public Configurable, public XMLProvider, virtual public _Collator {
 public:
     /// Constructor
-    explicit _ConfigCollator(const ConfigInfo_t& S):
+    explicit _ConfigCollator(const Setting& S):
     Configurable(S), XMLProvider("Collator"), nthreads(std::thread::hardware_concurrency()) {
         S.lookupValue("nthreads", nthreads);
         optionalGlobalArg("nParallel", nthreads, "number of parallel collated processes (0 for single-threaded)");

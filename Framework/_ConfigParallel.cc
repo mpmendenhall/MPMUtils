@@ -2,7 +2,7 @@
 
 #include "ConfigParallel.hh"
 
-_ConfigParallel::_ConfigParallel(const ConfigInfo_t& S):
+_ConfigParallel::_ConfigParallel(const Setting& S):
 Configurable(S), XMLProvider("Parallel"), nparallel(std::thread::hardware_concurrency()) {
     Cfg.lookupValue("nthreads", nparallel);
     optionalGlobalArg("nParallel", nparallel, "number of parallel chains");

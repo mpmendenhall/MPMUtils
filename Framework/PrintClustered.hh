@@ -21,7 +21,7 @@ public:
     typedef typename CB_t::cluster_t cluster_t;
 
     /// Constructor
-    explicit PrintClustered(const ConfigInfo_t& S):
+    explicit PrintClustered(const Setting& S):
     super_t(20), XMLProvider("PrintClustered") {
         S.lookupValue("nskip", nskip);
         optionalGlobalArg("printskip", nskip, "cluster printout decimation factor");

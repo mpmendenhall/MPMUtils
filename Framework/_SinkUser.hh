@@ -38,10 +38,10 @@ public:
     virtual const _AnaIndex& getSinkIdx() const;
 
     /// generate appropriate configured data sink type
-    virtual SignalSink* makeDataSink(const ConfigInfo_t&, const string& = "") const { return new SignalSink(); }
+    virtual SignalSink* makeDataSink(const Setting&, const string& = "") const { return new SignalSink(); }
 
     /// construct and attach configured output sink
-    virtual void createOutput(const ConfigInfo_t& S, const string& dfltclass = "") {
+    virtual void createOutput(const Setting& S, const string& dfltclass = "") {
         _setNext(makeDataSink(S, dfltclass));
     }
 };
