@@ -16,11 +16,22 @@ bool ExplainConfig::exists(const Setting& S, const string& name, const string& d
     return ex;
 }
 
+/// print spaces to depth of setting
+string pdepth(const Setting& _S, const string& s = "  ") {
+    string d = "";
+    const Setting* S = &_S;
+    while(!S->isRoot()) {
+        S = &S->getParent();
+        d += s;
+    }
+    return d;
+}
+
 void ExplainConfig::printloc(const Setting& _S) {
     auto sf = _S.getSourceFile();
     auto p = _S.getPath();
     if(p.size()) printf("'%s' at ", p.c_str());
-    printf("%s : line %i", sf? sf : "<no file>", _S.getSourceLine());
+    printf("%s : line %i", sf? sf : "[in memory]", _S.getSourceLine());
 }
 
 /// return exists() + display setting description, "* Configuration ..." line or "*** Settings" group header
@@ -29,23 +40,25 @@ bool ExplainConfig::show_exists(const Setting& S, const string& name, const stri
 
     if(mandatory) printf(TERMFG_MAGENTA);
     else printf(TERMFG_BLUE);
+    auto pd = pdepth(S).c_str();
 
     if(header) {
-        printf("\n**********************************************************\n**** " TERMSGR_RESET);
+        printf("\n%s**********************************************************\n%s**** " TERMSGR_RESET, pd, pd);
         if(mandatory) printf("Required ");
         printf("Settings '" TERMFG_GREEN "%s" TERMSGR_RESET "': %s ", name.c_str(), descrip.c_str());
         if(!ex) {
-            printf(TERMFG_YELLOW "not provided\n" TERMFG_BLUE "**** within ");
+            printf(TERMFG_YELLOW "not provided\n" TERMFG_BLUE "%s**** within ", pd);
             printloc(S);
             printf(TERMSGR_RESET "\n");
         } else {
-            printf(TERMFG_GREEN "provided" TERMSGR_RESET "\n" TERMFG_BLUE "**** ");
+            printf(TERMFG_GREEN "provided" TERMSGR_RESET "\n");
+            printf(TERMFG_BLUE "%s**** ", pd);
             printloc(S.lookup(name));
             printf(TERMSGR_RESET "\n");
         }
     } else {
-        printf("*" TERMSGR_RESET " Configuration '" TERMFG_GREEN "%s" TERMSGR_RESET " <%s>' ",
-               name.c_str(), descrip.c_str());
+        printf("%s*" TERMSGR_RESET " Configuration '" TERMFG_GREEN "%s" TERMSGR_RESET " <%s>' ",
+               pd, name.c_str(), descrip.c_str());
     }
 
     return ex;
@@ -56,10 +69,7 @@ bool ExplainConfig::show_exists(const Setting& S, const string& name, const stri
 SettingsQuery::Response_t SettingsQuery::default_require_queried = SettingsQuery::WARN;
 
 SettingsQuery::SettingsQuery(const Setting& _S):
-require_queried(default_require_queried), S(_S) {
-    if(*this && !S.isGroup())
-        throw std::runtime_error("Setting '" + S.getPath() + "' must be of { group } type");
-}
+require_queried(default_require_queried), S(_S) { }
 
 SettingsQuery::~SettingsQuery() {
     for(auto kv: Ssub) delete kv.second;
@@ -148,8 +158,6 @@ bool SettingsQuery::lookupChoice(const string& name, int& val, const string& des
     val = choices.at(s);
     return ex;
 }
-
-const Setting& SettingsQuery::operator[](const char* name) { return S[name]; }
 
 SettingsQuery& SettingsQuery::sub(const string& name) {
     exists(name, "", true);

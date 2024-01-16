@@ -56,20 +56,18 @@ public:
     }
     /// Pass-through for getName()
     const char* getName() const { return S.getName(); }
-    /// Pass-through for getPath()
-    string getPath() const { return S.getPath(); }
-    /// Pass-through for getLength()
-    int getLength() const { return S.getLength(); }
     /// quiet mandatory setting lookup
-    const Setting& operator[](const char* name);
+    const Setting& operator[](const char* name) { queried.insert(name); return S[name]; }
+    /// "dereference" to get underlying Setting
+    const Setting& operator*() const { return S; }
+    /// "dereference" to get underlying Setting functions
+    const Setting* operator->() const { return &S; }
 
     //------------------------------------------------------------------------
     // "silent" operations without terminal output (aside from error messages)
 
     /// Mark as queried with no other actions
     void markused(const string& s) { queried.insert(s); }
-    /// Access associated setting
-    operator const Setting& () const { return S; }
     /// Check if requested setting existed
     operator bool() const { return &S != &NullSetting(); }
 
@@ -99,7 +97,7 @@ public:
     /// Look up vector or single-value fill into size-n vector
     template<class C>
     bool lookupVector(const string& name, const string& descrip, vector<C>& v, size_t n, bool mandatory = false) {
-        auto ex = show_exists(name, descrip, mandatory);
+        auto ex = show_exists(name, descrip, mandatory, false);
         if(ex) {
             printf(TERMFG_BLUE "(default '%s')" TERMFG_GREEN " -> " TERMSGR_RESET "'" TERMSGR_BOLD TERMFG_MAGENTA, to_str(v).c_str());
 
@@ -129,11 +127,34 @@ public:
     }
 
     /// Get query-able subgroup or `NullSetting`.
-    /** Verbose terminal output if `descrip` supplied non-empty;
+    /** Verbose terminal output
      * error thrown if "mandatory" and not found.
      * Result is "owned" by this object, and will be destructed with unused query checking along with this.
      */
     SettingsQuery& get(const string& name, const string& descrip = "", bool mandatory = false);
+
+
+    /// iterator through subnodes
+    class iterator {
+    public:
+        /// constructor, for begin or end iterator
+        explicit iterator(SettingsQuery& _SQ, bool start): SQ(_SQ), _it(start? SQ.S.begin() : SQ.S.end()) { }
+        /// dereference to get contents
+        SettingsQuery& operator*() { return SQ.sub(_it->getName()); }
+        /// move to next
+        iterator& operator++() { ++_it; return *this; }
+        /// check if iterators unequal
+        bool operator!=(const iterator& rhs) const { return _it != rhs._it; }
+
+    protected:
+        SettingsQuery& SQ;
+        decltype(NullSetting().begin()) _it;    ///< underlying setting iterator
+    };
+
+    /// starting iterator
+    iterator begin() { return iterator(*this, true); }
+    /// ending iterator
+    iterator end()   { return iterator(*this, false); }
 
     //------------------------------------------------
     // reaction to un-queried variables on destruction

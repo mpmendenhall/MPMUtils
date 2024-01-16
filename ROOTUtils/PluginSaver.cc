@@ -15,7 +15,7 @@ SegmentSaver(pnt, _path, inflName) {
     }
 }
 
-void PluginSaver::buildPlugin(const string& pname, int& copynum, const ConfigInfo_t& cfg, bool skipUnknown) {
+void PluginSaver::buildPlugin(const string& pname, int& copynum, SettingsQuery& cfg, bool skipUnknown) {
     auto o = skipUnknown? BaseFactory<SegmentSaver>::try_construct(pname, (SegmentSaver&)*this, cfg)
         : BaseFactory<SegmentSaver>::construct(pname, (SegmentSaver&)*this, cfg);
 
@@ -27,9 +27,9 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, const ConfigInf
     string _rename = pname;
     if(copynum >= 0) _rename += "_"+to_str(copynum);
     string rn0 = _rename;
-    ExplainConfig::lookupValue(cfg, "rename", _rename, "plugin renaming");
+    cfg.lookupValue("rename", _rename, "plugin renaming");
     o->rename(_rename);
-    ExplainConfig::lookupValue(cfg, "order", o->order, "plugin execution order");
+    cfg.lookupValue("order", o->order, "plugin execution order");
     byName[_rename] = o;
     myPlugins.push_back(o);
     {
@@ -42,6 +42,7 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, const ConfigInf
 
 void PluginSaver::initialize() {
     SegmentSaver::initialize();
+    if(storedSQ) throw std::logic_error("Repeated initialization");
 
     // TODO better memory management
     auto cfg = new Config();
@@ -50,25 +51,23 @@ void PluginSaver::initialize() {
     printf("Reconfiguring from saved setting '%s'\n", snm.c_str());
     cfg->readString(getMeta("configstr"));
     registerConfig(*cfg);
-    SettingsQuery SQ(cfg->lookup(snm));
-    SQ.markused("class");
-    Configure(SQ, true);
+    storedSQ = new SettingsQuery(cfg->lookup(snm));
+    storedSQ->markused("class");
+    Configure(*storedSQ, true);
 }
 
 void PluginSaver::Configure(SettingsQuery& S, bool skipUnknown) {
     if(myPlugins.size()) throw std::runtime_error("Multiple calls to PluginSaver::Configure");
 
     // configure plugins
-    if(S.show_exists("plugins", "analysis plugins")) {
-        auto& plugs = S["plugins"];
-        for(const auto& p: plugs) {
-            string pname = p.getName();
-            ExplainConfig::show_exists(plugs, pname, "plugin settings");
-            int copynum = -1;
-            if(p.isList()) {
-                for(const auto& c: p) buildPlugin(pname, copynum, c, skipUnknown);
-            } else buildPlugin(pname, copynum, p, skipUnknown);
-        }
+    auto& ps = S.get("plugins", "analysis plugins");
+    for(auto& p: ps) {
+        string pname = p.getName();
+        ps.show_exists(pname, "plugin settings");
+        int copynum = -1;
+        if(p->isList()) {
+            for(auto& c: p) buildPlugin(pname, copynum, c, skipUnknown);
+        } else buildPlugin(pname, copynum, p, skipUnknown);
     }
 
     std::sort(myPlugins.begin(), myPlugins.end(),

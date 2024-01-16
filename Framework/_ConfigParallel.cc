@@ -10,7 +10,7 @@ Configurable(S), XMLProvider("Parallel"), nparallel(std::thread::hardware_concur
 
 void _ConfigParallel::makeCollator() {
     if(!vends.size()) return;
-    myColl = vends.back()->getSinkIdx().makeConfigCollator(Cfg);
+    myColl = vends.back()->getSinkIdx().makeConfigCollator(*Cfg);
     tryAdd(myColl);
 
     if(nparallel <= 0) {
