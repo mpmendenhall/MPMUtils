@@ -104,7 +104,7 @@ public:
             auto vv = _lookupVector(name, descrip, n);
             v.resize(vv.size());
             auto it = v.begin();
-            for(auto s: vv) *(it++) = C(*s);
+            for(auto s: vv) *(it++) = (const C&)(*s);
         } else printf(TERMFG_GREEN "defaulted to " TERMSGR_RESET "'");
 
         printf("%s" TERMSGR_RESET "'\n", to_str(v).c_str());
