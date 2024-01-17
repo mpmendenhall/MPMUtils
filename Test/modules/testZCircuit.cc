@@ -173,8 +173,8 @@ REGISTER_EXECLET(testZCircuit) {
         Cd.addLink(0, Cd.iV0, 50);
         std::cout << Cd;
 
-        R_ZCalc Z1(50);
-        R_ZCalc Z2(50);
+        R_ZCalc<> Z1(50);
+        R_ZCalc<> Z2(50);
         Z1.delay = 21e-9;
         Z2.delay = 30e-9;
 

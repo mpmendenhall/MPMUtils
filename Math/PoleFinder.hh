@@ -27,6 +27,8 @@ struct eval_t {
 template<typename _val_t = std::complex<double>>
 struct pole_t {
     typedef _val_t val_t;
+    /// norm mag^2 of complex value
+    typedef decltype(std::norm(val_t{})) norm_t;
 
     /// Constructor
     pole_t(val_t _s0, int _mult):
@@ -47,7 +49,7 @@ struct pole_t {
     }
 
     /// update estimates for s0 using survey points
-    auto update_estimate() {
+    norm_t update_estimate() {
         val_t s1 = {};
 
         if(mult == -1) {
@@ -67,13 +69,13 @@ struct pole_t {
     }
 
     /// quality check should match multiplicity exponent
-    auto check_quality() const {
+    val_t check_quality() const {
         return log(std::norm(e2.F)/std::norm(e1.F)) / log(std::norm(s0 - e2.s)/std::norm(s0 - e1.s));
     }
 
     /// re-evaluate at current points
     template<class F_t>
-    auto refine(F_t& F) {
+    norm_t refine(F_t& F) {
         if(!isReal) {
             e2 = {F, {.98*s0.real(), 0.96 * s0.imag()}};
             e1 = {F, {.99*s0.real(), 0.98 * s0.imag()}};
@@ -95,7 +97,7 @@ public:
     /// Function type being evaluated
     typedef typename pole_t::val_t val_t;
     /// mag^2 norm type
-    typedef decltype(std::norm(val_t{})) norm_t;
+    typedef typename pole_t::norm_t norm_t;
 
     vector<eval_t<val_t>> testgrid; ///< points evaluated on test grid
     set<size_t> checkstart;         ///< points already checked as candidate poles
