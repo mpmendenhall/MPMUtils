@@ -50,8 +50,8 @@ public:
     }
 
     /// clone from template or restore from file a saved TH1-derived class
-    template<class T, class U, typename = std::enable_if_t<std::is_base_of<TH1, U>::value>, typename = std::enable_if_t<std::is_base_of<T, U>::value>>
-    void registerSavedClone(T*& h, const string& hname, const U& hTemplate) {
+    template<class T, class U>
+    typename std::enable_if<std::is_base_of<TH1, U>::value>::type registerSavedClone(T*& h, const string& hname, const U& hTemplate) {
         if(h) throw std::logic_error("Registration of '" + path + "/" + hname + "' would overwrite non-null pointer");
         h = static_cast<T*>(_registerSavedClone(hname, hTemplate));
     }

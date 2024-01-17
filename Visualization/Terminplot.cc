@@ -32,7 +32,7 @@ void TermGraph::autorange() {
     auto mmx = std::minmax_element(begin(), end());
     Ax->autorange(mmx.first->first, mmx.second->first);
 
-    auto mmy = std::minmax_element(begin(), end(), [](const auto& a, const auto& b) { return a.second < b.second; });
+    auto mmy = std::minmax_element(begin(), end(), [](decltype(*begin()) a, decltype(*begin()) b) { return a.second < b.second; });
     Ay->autorange(mmy.first->second, mmy.second->second);
 }
 
