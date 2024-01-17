@@ -142,7 +142,7 @@ public:
         vector<string> vnames;
         for(auto& kv: indexFor<B, Args...>()) vnames.push_back(kv.second.classname);
         std::sort(vnames.begin(), vnames.end());
-        for(auto& n: vnames) printf("\t* %s\n", n.c_str());
+        for(const auto& n: vnames) printf("\t* %s\n", n.c_str());
     }
 
     /// Error for failed class construction of this type

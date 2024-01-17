@@ -16,12 +16,12 @@ double integrator_wrapper::integrate(double x0, double x1) {
 
 tgraph_integrator::tgraph_integrator(const TGraph& _g, size_t _n):
 integrator_wrapper(_n), g(_g) {
-    setParams((void*)(&g));
+    setParams(const_cast<void*>(static_cast<const void*>(&g)));
     f.function = &_eval_tgraph;
 }
 
 tspline_integrator::tspline_integrator(const TSpline& _s, size_t _n):
 integrator_wrapper(_n), s(_s) {
-    setParams((void*)(&s));
+    setParams(const_cast<void*>(static_cast<const void*>(&s)));
     f.function = &_eval_tspline;
 }

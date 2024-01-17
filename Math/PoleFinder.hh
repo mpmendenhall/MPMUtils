@@ -144,7 +144,7 @@ public:
         if(!testgrid.size()) return mm;
         size_t i = 0;
         vector<norm_t> vnorms;
-        for(auto& p: testgrid) {
+        for(const auto& p: testgrid) {
             auto u = std::norm(p.F / (*this)(p.s));
             vnorms.push_back(u);
             if(u < mm.umin) { mm.umin = u; mm.imin = i; }

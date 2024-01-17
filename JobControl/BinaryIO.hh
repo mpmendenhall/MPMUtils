@@ -126,7 +126,7 @@ public:
     template<typename T>
     void receive(T& v) {
         static_assert(IS_TRIVIALLY_COPYABLE(T), "Object needs custom receive method");
-        _receive((void*)&v, sizeof(v));
+        _receive(static_cast<void*>(&v), sizeof(v));
     }
     /// out-of-place generic data receive
     template<typename T>

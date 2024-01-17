@@ -42,7 +42,7 @@ namespace ExplainConfig {
 class SettingsQuery: private NoCopy {
 public:
     /// Constructor, wrapping a `group` type setting (else error)
-    SettingsQuery(const Setting& _S);
+    explicit SettingsQuery(const Setting& _S);
     /// Destructor; checks for un-queried settings in group
     ~SettingsQuery();
 

@@ -113,7 +113,7 @@ int SockFD::awaitConnection() {
 //----------------------------------
 
 void SockConnection::configure_host() {
-    bzero((char*) &serv_addr, sizeof(serv_addr));
+    bzero(reinterpret_cast<char*>(&serv_addr), sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port); // host to network byte order
 
@@ -121,14 +121,14 @@ void SockConnection::configure_host() {
         server = gethostbyname(host.c_str());
         if(!server) throw sockerror(*this, "Unknown hostname '" + host + "'");
         serv_addr.sin_addr = *reinterpret_cast<struct in_addr*>(server->h_addr);
-        bcopy(server->h_addr, (char*)&serv_addr.sin_addr.s_addr, server->h_length);
+        bcopy(server->h_addr, reinterpret_cast<char*>(&serv_addr.sin_addr.s_addr), server->h_length);
     } else serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // default for this machine
 }
 
 void SockConnection::create_socket() {
     open_sockfd();
     configure_host();
-    int rc = bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));
+    int rc = bind(sockfd, reinterpret_cast<struct sockaddr*>(&serv_addr), sizeof(serv_addr));
     if(rc < 0) {
         close_socket();
         throw sockerror(*this, "Cannot bind to socket (error "+to_str(rc)+")");
@@ -138,7 +138,7 @@ void SockConnection::create_socket() {
 void SockConnection::connect_to_socket() {
     open_sockfd();
     configure_host();
-    int rc = connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    int rc = connect(sockfd, reinterpret_cast<struct sockaddr*>(&serv_addr), sizeof(serv_addr));
     if(rc < 0) {
         close_socket();
         throw sockerror(*this, "Cannot connect to socket (error "+to_str(rc)+")");

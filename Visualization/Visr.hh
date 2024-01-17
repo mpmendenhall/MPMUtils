@@ -46,7 +46,7 @@ public:
     float scale = 1.0;
 
     /// Coordinates projection matrix (row-major order)
-    float mProj[4][4];
+    float mProj[4][4] = {};
 
 protected:
 

@@ -17,6 +17,6 @@ size_t _hash64(const void* dat, size_t n) {
 }
 
 size_t chash64(size_t a, size_t b) {
-    size_t ab[2] = {a,b};
+    const size_t ab[2] = {a,b};
     return _hash64(ab, 2*sizeof(size_t));
 }

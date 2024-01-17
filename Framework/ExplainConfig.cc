@@ -40,7 +40,8 @@ bool ExplainConfig::show_exists(const Setting& S, const string& name, const stri
 
     if(mandatory) printf(TERMFG_MAGENTA);
     else printf(TERMFG_BLUE);
-    auto pd = pdepth(S).c_str();
+    auto pds = pdepth(S);
+    auto pd = pds.c_str();
 
     if(header) {
         printf("\n%s**********************************************************\n%s**** " TERMSGR_RESET, pd, pd);
@@ -112,14 +113,14 @@ bool SettingsQuery::lookupChoice(const string& name, string& val, const string& 
             printf(TERMFG_RED "INVALID CHOICE '%s'\nfor ", val.c_str());
             printloc(S.lookup(name));
             printf("\n**** Allowed options:");
-            for(auto& c: choices) printf("\n  * '%s'", c.c_str());
+            for(const auto& c: choices) printf("\n  * '%s'", c.c_str());
             printf(TERMSGR_RESET "\n");
             throw std::runtime_error("invalid configuration selection");
         }
     } else printf(TERMFG_GREEN "defaulted to");
 
     // show selection in list of options
-    for(auto& c: choices) {
+    for(const auto& c: choices) {
         if(c == val) {
             printf(TERMFG_YELLOW " *");
             if(ex) printf(TERMFG_MAGENTA TERMSGR_BOLD);

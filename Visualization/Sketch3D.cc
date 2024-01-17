@@ -27,7 +27,7 @@ void Perspective::clearRotation() {
 void Perspective::projectPoly(const vector<xyzpt>& vIn, vector<SVG::xypoint>& vOut, double& s, double& z) const {
     s = z = 0;
     xyzspt pp;
-    for(auto& p: vIn) {
+    for(const auto& p: vIn) {
         project(p,pp);
         SVG::xypoint ppp{pp[0],pp[1]};
         vOut.push_back(ppp);

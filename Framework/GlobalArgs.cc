@@ -106,7 +106,7 @@ bool optionalGlobalArg(const string& argname, string& v, const string& help) {
     QueriedArgs().insert(argname);
 
     printf(TERMFG_BLUE "*" TERMSGR_RESET " Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
-    auto& GA = GlobalArgs();
+    const auto& GA = GlobalArgs();
     auto it = GA.find(argname);
     if(it == GA.end() || !it->second.size()) {
         printf(TERMFG_GREEN "defaulted to" TERMSGR_RESET " '%s'\n", v.c_str());
@@ -135,7 +135,7 @@ bool optionalGlobalArg(const string& argname, int& v, const string& help) {
 bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
     QueriedArgs().insert(argname);
 
-    auto& GA = GlobalArgs();
+    const auto& GA = GlobalArgs();
     auto it = GA.find(argname);
     bool noarg = it == GA.end() || !it->second.size();
     if(!noarg && it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");

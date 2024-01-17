@@ -21,7 +21,7 @@ inline string to_str(const T& x) {
 template<typename T>
 inline string to_str(const vector<T>& v) {
     string s = "[ ";
-    for(auto& x: v) s += to_str(x) + " ";
+    for(const auto& x: v) s += to_str(x) + " ";
     return s + "]";
 }
 

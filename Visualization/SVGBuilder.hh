@@ -7,6 +7,7 @@
 #include "XMLTag.hh"
 #include "ColorSpec.hh"
 #include "BBox.hh"
+#include "NoCopy.hh"
 #include <fstream>
 using std::ofstream;
 #include <cmath>
@@ -214,7 +215,7 @@ namespace SVG {
         string idstr() const { return "url(#" + attrs.find("id")->second + ")"; }
     };
 
-    class text: public BBXML {
+    class text: public BBXML, protected NoCopy {
     public:
         text(const string& t, double x, double y, const string& fill = "black"): BBXML("text"), myText(new XMLText(t)) {
             addAttr("x",x);

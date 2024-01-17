@@ -71,7 +71,7 @@ void PluginSaver::Configure(SettingsQuery& S, bool skipUnknown) {
     }
 
     std::sort(myPlugins.begin(), myPlugins.end(),
-              [](SegmentSaver* a, SegmentSaver* b) { return a->order < b->order; });
+              [](const SegmentSaver* a, const SegmentSaver* b) { return a->order < b->order; });
 
     printf("\n");
     if(optionalGlobalArg("plotformat", printsfx, "plot output format")) setPrintSuffix(printsfx);
@@ -81,8 +81,8 @@ void PluginSaver::Configure(SettingsQuery& S, bool skipUnknown) {
 map<string,float> PluginSaver::compareKolmogorov(const SegmentSaver& S) const {
     auto m = SegmentSaver::compareKolmogorov(S);
     auto& PS = dynamic_cast<const PluginSaver&>(S);
-    for(auto P: myPlugins) {
-        auto Si = PS.getPlugin(P->path);
+    for(const auto P: myPlugins) {
+        const auto* Si = PS.getPlugin(P->path);
         if(!Si) continue;
         auto mm = P->compareKolmogorov(*Si);
         for(const auto& kv: mm) m[P->path + "." + kv.first] = kv.second;
@@ -133,7 +133,7 @@ void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
     SegmentSaver::addSegment(S);
     auto& PS = dynamic_cast<const PluginSaver&>(S);
     for(auto P: myPlugins) {
-        auto Si = PS.getPlugin(P->path);
+        const auto* Si = PS.getPlugin(P->path);
         if(Si) P->addSegment(*Si,sc);
         else printf("Warning: PluginSaver::addSegment missing matching plugin for '%s'\n", P->path.c_str());
     }
@@ -142,7 +142,7 @@ void PluginSaver::addSegment(const SegmentSaver& S, double sc) {
 void PluginSaver::checkpoint(const SegmentSaver& Sprev) {
     auto& PS = dynamic_cast<const PluginSaver&>(Sprev);
     for(auto P: myPlugins) {
-        auto Si = PS.getPlugin(P->path);
+        const auto* Si = PS.getPlugin(P->path);
         if(Si) P->checkpoint(*Si);
         else printf("Warning: PluginSaver::checkpoint missing matching plugin for '%s'\n", P->path.c_str());
     }
@@ -191,7 +191,7 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
 
     for(auto P: myPlugins) {
         vector<SegmentSaver*> vPi;
-        for(auto PS: vP) {
+        for(const auto PS: vP) {
             if(!PS) vPi.push_back(nullptr);
             else vPi.push_back(PS->getPlugin(P->path));
         }
@@ -203,7 +203,7 @@ void PluginSaver::compare(const vector<SegmentSaver*>& v) {
 void PluginSaver::BGSubtract(SegmentSaver& BG) {
     SegmentSaver::BGSubtract(BG);
 
-    auto BGp = dynamic_cast<PluginSaver*>(&BG);
+    const auto BGp = dynamic_cast<const PluginSaver*>(&BG);
     if(!BGp) return;
 
     for(auto P: myPlugins) P->BGData = BGp->getPlugin(P->path);
