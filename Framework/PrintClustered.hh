@@ -29,6 +29,7 @@ public:
         optionalGlobalArg("npause", npause, "pause display after every n clusters shown");
         if(S.exists("next")) this->createOutput(S["next"]);
         S.lookupValue("tcluster", this->PreTransform.cluster_dx);
+        totop = nskip >= 1000;
     }
 
     /// intercept and pass input objects
@@ -47,6 +48,7 @@ public:
 
     int nskip = 1;  ///< skip fraction for less verbose output
     int npause = 1; ///< pause after showing this many (if nonzero)
+    bool totop = false; ///< reset print position to top
 
 protected:
     ordering_t t_prev_clust = {}; ///< previous cluster time
@@ -59,12 +61,20 @@ protected:
         static int nc = 0;
         if(++nc % nskip) return;
 
+        if(totop) {
+            static int nt = 0;
+            printf(VT100_CURS_HOME);
+            if(!nt++) printf(VT100_ERASE_DOWN);
+        }
+
         if(o.size()) {
             printf(TERMFG_BLUE "\n-- gap of %.3f us --" TERMSGR_RESET "\n", (ordering_t(o[0]) - t_prev_clust)*1e-3);
             t_prev_clust = ordering_t(o.back());
         } else printf(TERMFG_RED "\n** empty cluster **" TERMSGR_RESET "\n");
 
         dispClust(o);
+
+        if(totop) printf(VT100_ERASE_DOWN);
 
         if(npause > 0) {
             static int nshow = 0;

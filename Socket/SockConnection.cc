@@ -7,7 +7,7 @@
 #define _GNU_SOURCE
 #endif
 
-#include <string.h> // for bzero(...)
+#include <string.h> // for bzero(...), strerror
 #include <stdio.h>  // for printf(...)
 #include <errno.h>  // for errno
 #include <poll.h>   // for poll(...)
@@ -38,7 +38,9 @@ void SockFD::sockwrite(const char* buff, size_t nbytes, bool fail_ok) {
                 continue;
             }
             if(fail_ok) return;
-            throw SockFDerror(*this, "Failed writing " + to_str(nbytes) + " to socket, error " + to_str(ret));
+            string emsg = "Failed writing " + to_str(nbytes) + " to socket; return " + to_str(ret);
+            emsg += +" with error " + to_str(errno) + " " + strerror(errno);
+            throw SockFDerror(*this,  emsg);
         }
         nbytes -= ret;
         buff += ret;

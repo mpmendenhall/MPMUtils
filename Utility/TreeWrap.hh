@@ -9,6 +9,7 @@ using std::vector;
 #include <array>
 using std::array;
 #include <cstddef> // for size_t
+#include <algorithm>
 
 /// Tree wrapper class
 template<class T>
@@ -62,15 +63,21 @@ public:
 
     /// get parent
     TreeWrap<T>* getParent() { return parent; }
-    /// convenience for adding children
-    template<class U>
-    U* addChild(U* W) { if(W) { children.push_back(W); W->TreeWrap<T>::parent = this; } return W; }
+    /// add child node
+    void addChild(TreeWrap<T>* W) { if(W) { children.push_back(W); W->TreeWrap<T>::parent = this; } }
     /// convenience: attempt add if dynamically castable
     template<class U>
     TreeWrap<T>* tryAdd(U* W) {
         auto c = dynamic_cast<TreeWrap<T>*>(W);
-        if(c) addChild(c);
+        addChild(c);
         return c;
+    }
+    /// unregister child
+    template<class U>
+    void tryRemove(U* W) {
+        auto c = dynamic_cast<TreeWrap<T>*>(W);
+        auto it = std::find(children.begin(), children.end(), c);
+        if(it != children.end()) children.erase(it);
     }
 
 protected:
