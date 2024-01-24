@@ -33,7 +33,7 @@ string ADBfile() {
 AnalysisDB::AnalysisDB():
 SQLite_Helper(ADBfile(), false, true,
               getEnv(PROJ_ENV_PFX()+"_CODE",true)+"/DB/AnalysisDB_Schema.sql") {
-    exec("PRAGMA foreign_keys = ON");
+    if(db) exec("PRAGMA foreign_keys = ON");
 }
 
 AnalysisDB::anarun_id_t AnalysisDB::createAnaRun(const string& dataname) {

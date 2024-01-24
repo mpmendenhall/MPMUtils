@@ -9,6 +9,7 @@
 #include <vector>
 #include <stdexcept>
 #include <typeinfo>
+#include <mutex>
 #include "NoCopy.hh"
 
 /// Utility for (context-scoped) cascading variables lookup
@@ -154,6 +155,27 @@ struct s_context_singleton {
 
     /// update this object from context singleton
     void lookup() { ContextMap::lookup<T,T>(*static_cast<const T*>(this)); }
+};
+
+/// Mutex on context singleton object
+template<typename T>
+class s_context_mutex: public std::mutex, public s_context_singleton<s_context_mutex<T>> { };
+
+/// Lock-guarding wrapper on context singletons, with "smart-pointer-like" dereferencing semantics
+template<typename T>
+class guarded_context_singleton: public std::lock_guard<std::mutex> {
+public:
+    /// constructor wrapping reference to global singleton with lock guard
+    guarded_context_singleton():
+    lock_guard(s_context_mutex<T>::get()), obj(s_context_singleton<T>::get()) { }
+
+    /// cast to underlying type
+    operator T&() { return obj; }
+    /// access referenced object
+    T* operator->() const { return &obj; }
+
+protected:
+    T& obj; ///< wrapped object
 };
 
 /// Context-settable singleton helper; adds instance() static function to class, pointing to current singleton object

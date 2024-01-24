@@ -67,10 +67,14 @@ void SegmentSaver::normalize_runtime() {
     if(isNormalized()) throw std::logic_error("Normalization already applied");
 
     double rt = getRuntime();
-    printf("Normalizing to %g seconds runtime\n", rt);
-    if(!rt) throw std::logic_error("normalizing to zero runtime");
     normalization->ResizeTo(1);
     (*normalization)(0) = rt;
+
+    if(rt) printf("Normalizing to %g seconds runtime\n", rt);
+    else {
+        printf(TERMFG_RED "\nWARNING: zero runtime specified, normalization skipped" TERMSGR_RESET "\n\n");
+        return;
+    }
 
     for(auto& kv: saveHists) {
         if(doNotScale.count(kv.second)) continue;
