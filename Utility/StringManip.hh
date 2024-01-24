@@ -68,6 +68,8 @@ string lower(string s);
 string upper(string s);
 /// replace all of one character in a string with another
 string replace(string str, char o, char n);
+/// replace all instances of 'o' with 'n' (non-recursive)
+string replace(const string& str, const string& o, const string& n);
 /// check whether string a begins with string b
 bool startsWith(const string& a, const string& b);
 /// split a string into substrings on given split characters

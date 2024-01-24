@@ -68,6 +68,18 @@ string replace(string s, char o, char n) {
     return s;
 }
 
+string replace(const string& str, const string& o, const string& n) {
+    string s = str;
+    size_t i = 0;
+    while(true) {
+        i = s.find(o, i);
+        if(i == std::string::npos) break;
+        s.replace(i, o.size(), n);
+        i += n.size();
+    }
+    return s;
+}
+
 bool startsWith(const string& a, const string& b) { return a.substr(0,b.size()) == b; }
 
 vector<string> split(const string& s, const string& splitchars) {

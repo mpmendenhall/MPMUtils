@@ -8,14 +8,14 @@
 
 /// Data processing signals side-channel info
 enum datastream_signal_t {
-    DATASTREAM_NOOP     = 0,    ///< ignore me!
-    DATASTREAM_INIT     = 1,    ///< once-per-analysis initialization
-    DATASTREAM_START    = 2,    ///< start of data block
-    DATASTREAM_CHECKPT  = 3,    ///< mid-calculation "checkpoint" request
+    DATASTREAM_NOOP     = 0,        ///< ignore me!
+    DATASTREAM_INIT     = 1,        ///< once-per-analysis initialization
+    DATASTREAM_START    = 2,        ///< start of data block
 
-    DATASTREAM_FLUSH    = 99994,///< "breakpoint" data flush
-    DATASTREAM_REINIT   = 99995,///< initialize for new upstream source
-    DATASTREAM_END      = 99996 ///< once-per-analysis end of data
+    DATASTREAM_FLUSH    = 99993,    ///< "breakpoint" data flush
+    DATASTREAM_CHECKPT  = 99994,    ///< mid-calculation "checkpoint" request
+    DATASTREAM_REINIT   = 99995,    ///< initialize for new upstream source
+    DATASTREAM_END      = 99996     ///< once-per-analysis end of data
 };
 
 /// Printable name for signals
