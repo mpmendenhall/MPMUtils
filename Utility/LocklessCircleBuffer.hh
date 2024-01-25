@@ -60,7 +60,8 @@ public:
         ready[write_idx] = true; // mark as written
         write_idx = (write_idx + 1) % buf.size();
         writept = nullptr;
-        inputReady.notify_one(); // notify new read available
+        if(!checkRunning()) flush();
+        else inputReady.notify_one(); // notify new read available
     }
 
     /// write to next buffer space, failing if unavailable
