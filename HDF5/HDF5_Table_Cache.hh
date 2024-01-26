@@ -127,6 +127,9 @@ public:
     void signal(datastream_signal_t sig) override;
 
 protected:
+    /// flush cached to file
+    void flush_cached();
+
     vector<T> cached;   ///< cached output data
 };
 
@@ -153,20 +156,30 @@ public:
 template<typename T>
 void HDF5_Table_Writer<T>::push(const vector<T>& vals) {
     cached.insert(cached.end(), vals.begin(), vals.end());
-    if(cached.size() >= nchunk) signal(DATASTREAM_FLUSH);
+    if(cached.size() >= nchunk) flush_cached();
     nwrite += vals.size();
 }
 
 template<typename T>
 void HDF5_Table_Writer<T>::push(const T& val) {
     cached.push_back(val);
-    if(cached.size() >= nchunk) signal(DATASTREAM_FLUSH);
+    if(cached.size() >= nchunk) flush_cached();
     nwrite++;
 }
 
 template<typename T>
 void HDF5_Table_Writer<T>::signal(datastream_signal_t sig) {
     if(sig < DATASTREAM_FLUSH) return;
+    if(sig == DATASTREAM_FLUSH) {
+        T x = {};
+        x.t = std::numeric_limits<typename T::ordering_t>::quiet_NaN();
+        cached.push_back(x);
+    }
+    flush_cached();
+}
+
+template<typename T>
+void HDF5_Table_Writer<T>::flush_cached() {
     if(outfile_id && cached.size()) {
         herr_t err = H5TBappend_records(outfile_id,  Tspec.table_name.c_str(), cached.size(),
                                         sizeof(T),  Tspec.offsets, Tspec.field_sizes, cached.data());
@@ -174,6 +187,7 @@ void HDF5_Table_Writer<T>::signal(datastream_signal_t sig) {
     }
     cached.clear();
 }
+
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////

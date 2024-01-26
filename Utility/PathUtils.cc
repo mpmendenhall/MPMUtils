@@ -105,18 +105,9 @@ vector<string> listdir(const string& dir, bool includeHidden, bool fullPath) {
     return dirs;
 }
 
-void combo_pdf(const vector<string>& namelist, const string& outname) {
-    if(!namelist.size()) return;
-    makePath(outname, true);
-    if(namelist.size() == 1) {
-        string cmd = "mv " + namelist.front() + " " + outname;
-        int rc = system(cmd.c_str());
-        if(rc) printf("%s: %i\n", cmd.c_str(), rc);
-        return;
-    }
-    string cmd = join(namelist," "); // file list
-    cmd = "if command -v pdfunite; then pdfunite " + cmd + " " + outname +"; else pdftk " + cmd + " cat output " + outname + "; fi; rm " + cmd;
-    int rc = system(cmd.c_str());
-    if(rc) printf("%s: %i\n", cmd.c_str(), rc);
+bool syscmd(const string& cmd, bool failOK) {
+    auto ret = system(cmd.c_str());
+    if(!ret) return true;
+    if(failOK) return false;
+    throw std::runtime_error("system(" + cmd +") failed");
 }
-

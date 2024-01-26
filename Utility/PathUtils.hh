@@ -34,11 +34,11 @@ bool fileExists(const string& f);
 bool dirExists(const string& d);
 /// make sure the specified path exists (if not, create it); optionally, exclude last item on path (filename)
 void makePath(const string& p, bool forFile = false);
+/// run system command, with error checking or throw
+bool syscmd(const string& cmd, bool failOK = false);
 /// list directory contents
 vector<string> listdir(const string& dir, bool includeHidden = false, bool fullPath = false);
 /// get time since last file modification (s)
 double fileAge(const string& fname);
-/// Combine list of PDF files into one multi-page document
-void combo_pdf(const vector<string>& namelist, const string& outname);
 
 #endif
