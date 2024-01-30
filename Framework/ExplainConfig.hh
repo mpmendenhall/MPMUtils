@@ -168,6 +168,7 @@ public:
 
     static Response_t default_require_queried;  ///< global default query requirement
 
+    void ignore_unused() { require_queried = IGNORE; }
 
 protected:
     /// Look up vector, or single value to fill into n-element vector. Returns empty vector if non-existent (or error if mandatory).

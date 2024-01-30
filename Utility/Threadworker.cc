@@ -67,7 +67,7 @@ void Threadworker::pause() {
     if(runstat != RUNNING) throw std::logic_error("Invalid state for pause");
     runstat = PAUSE_REQUESTED;
     inputReady.notify_one(); // signal to un-block on any other operations
-    inputReady.wait(lk, [this]{ return runstat == PAUSED; }); // unlock and wait until pause request reciprocated
+        inputReady.wait(lk, [this]{ return runstat == PAUSED; }); // unlock and wait until pause request reciprocated
 }
 
 void Threadworker::check_pause() {
@@ -75,20 +75,30 @@ void Threadworker::check_pause() {
     if(runstat == PAUSE_REQUESTED) {
         runstat = PAUSED;
         inputReady.notify_one();      // reciprocate pause request
-        inputReady.wait(lk, [this] { return runstat == RUNNING; }); // unlock and wait until pause lifted
+        if(verbose > 3) printf(TERMFG_YELLOW "  Threadworker [%i] paused..." TERMSGR_RESET "\n", worker_id);
+
+        inputReady.wait(lk, [this] { return runstat == PAUSE_REQUESTED; }); // unlock and wait until pause lifted
+
+        if(verbose > 3) printf(TERMFG_YELLOW "  Threadworker [%i] resumed." TERMSGR_RESET "\n", worker_id);
+        runstat = RUNNING;
+        inputReady.notify_one();      // reciprocate unpause request
     }
 }
 
 void Threadworker::unpause() {
+    unique_lock<mutex> l(inputMut);
     if(runstat != PAUSED) throw std::logic_error("Invalid state for unpause");
-    runstat = RUNNING;
+    if(verbose > 3) printf(TERMFG_YELLOW "Asking Threadworker [%i] to unpause..." TERMSGR_RESET "\n", worker_id);
+    runstat = PAUSE_REQUESTED;
     inputReady.notify_one();
+    inputReady.wait(l, [this]{ return runstat == RUNNING; }); // unlock and wait until unpause request reciprocated
 }
 
 void Threadworker::request_stop() {
     if(verbose > 3) printf(TERMFG_YELLOW "Asking Threadworker [%i] to stop..." TERMSGR_RESET "\n", worker_id);
     if(runstat == IDLE) throw std::logic_error("Attempt to stop in idle state");
     runstat = STOP_REQUESTED;
+    lock_guard<mutex> l(inputMut);
     inputReady.notify_one(); // notification to catch STOP_REQUESTED
 }
 

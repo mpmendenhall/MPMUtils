@@ -8,24 +8,22 @@
 #include "Threadworker.hh"
 #include <unistd.h>
 
-/// Typeless base
-class _ThreadBufferSink: public Configurable, public XMLProvider,
-virtual public SignalSink, virtual public _SinkUser {
-
-};
-
 /// Buffered input to sink running in independent thread
 template<typename T>
-class ThreadBufferSink: public DataLink<T,T>, public Threadworker {
+class ThreadBufferSink: public DataLink<T,T>, public Threadworker, public Configurable {
 public:
     typedef typename std::remove_const<T>::type Tmut_t;
     using DataLink<T,T>::nextSink;
 
-    /// Constructor
-    explicit ThreadBufferSink(DataSink<T>* s = nullptr) { nextSink = s; }
+    /// Configuration constructor
+    explicit ThreadBufferSink(const Setting& S): Configurable(S) {
+        Cfg.lookupValue("verbose", verbose, "threading debug verbosity level");
+        if(Cfg.show_exists("next", "ThreadBufferSink downstream analysis chain")) this->createOutput(Cfg["next"]);
+    }
 
     /// receive item to queue
     void push(T& o) override {
+        if(!checkRunning()) launch_mythread();
         lock_guard<mutex> l(inputMut);
         datq.push_back(o);
         inputReady.notify_one();
@@ -41,10 +39,17 @@ public:
 
             { // get input items ready to pass on
                 unique_lock<mutex> lk(inputMut);    // acquire unique_lock on queue in this scope
-                if(runstat == STOP_REQUESTED) break;
+                if(runstat == STOP_REQUESTED) {
+                    if(verbose > 3) printf(TERMFG_YELLOW "  Threadworker [%i] got stop command." TERMSGR_RESET "\n", worker_id);
+                    break;
+                } else if(verbose > 4) printf(TERMFG_BLUE "  Threadworker [%i] awaiting new input." TERMSGR_RESET "\n", worker_id);
                 inputReady.wait(lk);                // unlock; wait; re-lock when notified
                 std::swap(datq, datq2);
             }
+
+            most_buffered = std::max(most_buffered, datq2.size());
+            if(verbose > 4) printf(TERMFG_BLUE "  Threadworker [%i] has %zu buffered to process." TERMSGR_RESET "\n",
+                worker_id, datq2.size());
 
             // push(...) while continuing to receive without blocking
             if(nextSink) {
@@ -55,6 +60,10 @@ public:
             }
             datq2.clear();
         }
+
+        if(verbose > 3)
+            printf(TERMFG_BLUE "  Threadworker [%i] done (max buffered: %zu)." TERMSGR_RESET "\n", worker_id, most_buffered);
+        most_buffered = 0;
     }
 
     /// handle signals, including flush
@@ -66,12 +75,16 @@ public:
             if(nextSink) for(auto& o: datq) nextSink->push(o);
             datq.clear();
         }
-        if(nextSink) nextSink->signal(sig);
-        if(_is_launched) unpause();
+        DataLink<T,T>::signal(sig);
+        if(_is_launched) {
+            unpause();
+            if(sig > DATASTREAM_FLUSH) finish_mythread();
+        }
     }
 
 protected:
-    vector<Tmut_t> datq;    ///< input FIFO
+    vector<Tmut_t> datq;        ///< input FIFO
+    size_t most_buffered = 0;   ///< record most items buffered
 };
 
 #endif
