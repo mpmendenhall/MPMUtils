@@ -17,17 +17,21 @@ public:
     /// display MPI info to stdout
     static void display();
 
-    static int mpisize;                             ///< number of MPI ranks available
-    static int mpirank;                             ///< this job's number
-    static char* hostname;                          ///< hostname for this machine
-    static int coresPerNode;                        ///< number of cores on this MPI node
-    static set<int> availableRanks;                 ///< communication ranks available
+    static int mpisize;             ///< number of MPI ranks available
+    static int mpirank;             ///< this job's number
+    static char* hostname;          ///< hostname for this machine
+    static int coresPerNode;        ///< number of cores on this MPI node
+    static set<int> availableRanks; ///< communication ranks available
 
 protected:
     /// blocking data send
     void _send(const void* vptr, int size) override;
     /// blocking data receive
-    void _receive(void* vptr, int size) override;
+    size_t read(void* vptr, int size) override;
+
+    vector<char> rbuff; ///< read buffer
+    size_t rpt = 0;     ///< current read buffer read point
+    int dataSrc = 0;        ///< source identifier for data received
 };
 
 #endif

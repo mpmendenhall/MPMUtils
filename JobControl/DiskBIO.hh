@@ -27,10 +27,13 @@ public:
     /// Constructor
     explicit IOStreamBRead(std::istream& i): fIn(i) { }
 
+    /// blocking data receive
+    size_t read(void* vptr, int size) override { fIn.read(static_cast<char*>(vptr), size); return fIn.gcount(); }
+    /// skip over n bytes
+    void ignore(size_t n) override { fIn.ignore(n); }
+
 protected:
     std::istream& fIn;  ///< input stream
-    /// blocking data receive
-    void _receive(void* vptr, int size) override { fIn.read(static_cast<char*>(vptr), size); }
 };
 
 
@@ -78,17 +81,15 @@ public:
     /// check if input open
     bool inIsOpen() const { return fIn != -1; }
 
-protected:
     /// blocking data receive
-    void _receive(void* vptr, int size) override {
+    size_t read(void* vptr, int size) override {
         if(fIn < 0) throw std::runtime_error("No input file open!");
-        if(size != read(fIn, vptr, size)) throw std::runtime_error("Requested read failed!");
+        if(size != ::read(fIn, vptr, size)) throw std::runtime_error("Requested read failed!");
+        return size;
     }
 
+protected:
     int fIn = -1;    ///< input file descriptor
 };
-
-/// Utility to run command-line command, returning exit code
-int runSysCmd(const string& cmd);
 
 #endif

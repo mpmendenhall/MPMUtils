@@ -3,6 +3,7 @@
 
 #include "JobState.hh"
 #include "DiskBIO.hh"
+#include "PathUtils.hh"
 
 string JobState::stateDir = "";
 
@@ -29,20 +30,20 @@ bool JobState::checkState(const string& h) {
 void JobState::clearState(const string& h) {
     stateData.erase(h);
     lastReq.erase(h);
-    if(stateDir.size()) runSysCmd("rm -f " + sdataFile(h));
+    if(stateDir.size()) syscmd("rm -f " + sdataFile(h));
 }
 
 void JobState::persistState(const string& h) {
     auto it = stateData.find(h);
     if(stateDir.size() && it != stateData.end()) {
         auto f = sdataFile(h);
-        runSysCmd("mkdir -p " + stateDir);
+        syscmd("mkdir -p " + stateDir);
         //if(verbose > 3) printf("Persisting state data to '%s'\n", f.c_str());
         {
             FDBinaryWriter b(f+"_tmp");
             b.send(it->second);
         }
-        runSysCmd("mv " + f+"_tmp" + " " + f);
+        syscmd("mv " + f+"_tmp" + " " + f);
     }
 
     // purge excessive storage

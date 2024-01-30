@@ -25,7 +25,7 @@ CN: polls isRunning(...) until a job has completed; runs JS->C->endJob(CN) to re
 #define MULTIJOBCONTROL_HH
 
 #include "ObjectFactory.hh"
-#include "BinaryIO.hh"
+#include "MemBIO.hh"
 #include <unistd.h>
 
 class JobComm;
@@ -101,6 +101,7 @@ protected:
     vector<int> checkJobs();
 
     map<int,JobSpec> jobs;      ///< active jobs by worker ID
+    int dataSrc = 0;        ///< source identifier for data received
 };
 
 

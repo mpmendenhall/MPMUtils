@@ -3,17 +3,6 @@
 #include "DiskBIO.hh"
 #include <sys/types.h>
 #include <fcntl.h>
-#include <cstdlib> // for system(...)
-
-int runSysCmd(const string& cmd) {
-    int ret = std::system(cmd.c_str());
-    if(ret) {
-        auto e = WEXITSTATUS(ret);
-        printf("*** '%s' exited with return %i!\n", cmd.c_str(), e);
-        exit(e);
-    }
-    return ret;
-}
 
 void FDBinaryWriter::_send(const void* vptr, int size) {
     if(!vptr || fOut < 0 || size == -1) throw std::logic_error("invalid object write");

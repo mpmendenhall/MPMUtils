@@ -29,5 +29,5 @@ public:
 
 protected:
     /// blocking data receive
-    void _receive(void* vptr, int size) override { sockread(reinterpret_cast<char*>(vptr), size); }
+    size_t read(void* vptr, int size) override { return sockread(reinterpret_cast<char*>(vptr), size); }
 };

@@ -47,10 +47,10 @@ void Threadworker::run_here() {
 
 void* Threadworker::run_Threadworker_thread(void* p) {
     auto w = static_cast<Threadworker*>(p);
-    if(w->verbose) printf(TERMFG_GREEN "Threadworker [%i] threadjob started." TERMSGR_RESET "\n", w->worker_id);
+    if(w->verbose) printf(TERMFG_GREEN "  Threadworker [%i] threadjob started." TERMSGR_RESET "\n", w->worker_id);
     _thread_id = w->worker_id;
     w->threadjob();
-    if(w->verbose) printf(TERMFG_RED "Threadworker [%i] threadjob completed." TERMSGR_RESET "\n", w->worker_id);
+    if(w->verbose) printf(TERMFG_RED "  Threadworker [%i] threadjob completed." TERMSGR_RESET "\n", w->worker_id);
     if(w->myManager) w->myManager->notify_thread_completed(w);
     return nullptr;
 }

@@ -4,7 +4,7 @@
 #ifndef KEY_TABLE_H
 #define KEY_TABLE_H
 
-#include "BinaryIO.hh"
+#include "MemBIO.hh"
 #include <TMessage.h>
 #include <TObject.h>
 
@@ -200,7 +200,7 @@ protected:
     /// append data to current write point
     void _send(const void* vptr, int size) override { WriteBuf(vptr, size); wsize = fBufCur - Buffer(); }
     /// pull data from current readpoint
-    void _receive(void* vptr, int size) override { ReadBuf(vptr, size); }
+    size_t read(void* vptr, int size) override { return ReadBuf(vptr, size); }
     /// last _send data write size; includes first 2 bytes.
     size_t wsize = 2*sizeof(UInt_t);
 };

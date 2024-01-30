@@ -31,8 +31,8 @@ void MPIBinaryIO::_send(const void* vptr, int size) {
     MPI_Send(vptr, size, MPI_UNSIGNED_CHAR, dataDest, 2, MPI_COMM_WORLD);
 }
 
-void MPIBinaryIO::_receive(void* vptr, int size) {
-    if(!size) return;
+size_t MPIBinaryIO::read(void* vptr, int size) {
+    if(!size) return 0;
 
     if(rpt == rbuff.size()) { // need new data
         MPI_Status status;
@@ -48,6 +48,7 @@ void MPIBinaryIO::_receive(void* vptr, int size) {
 
     std::memcpy(vptr, rbuff.data()+rpt, size);
     rpt += size;
+    return size;
 }
 
 void MPIBinaryIO::uninit() { MPI_Finalize(); }
@@ -97,7 +98,7 @@ char* MPIBinaryIO::hostname = (char*)_hname;
 
 void MPIBinaryIO::_send(const void*, int) { throw std::logic_error("Not compiled with MPI!"); }
 
-void MPIBinaryIO::_receive(void*, int) { throw std::logic_error("Not compiled with MPI!"); }
+size_t MPIBinaryIO::read(void*, int) { throw std::logic_error("Not compiled with MPI!"); }
 
 void MPIBinaryIO::init(int, char **) { }
 
