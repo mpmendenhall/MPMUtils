@@ -17,18 +17,9 @@ public:
     void setReadBuffer(const void* p, size_t n) { eR = pR = dR = reinterpret_cast<const char*>(p); eR += n; }
 
     /// skip over n bytes
-    void ignore(size_t n) override {
-        if(pR + n > eR) throw std::runtime_error("Invalid ignore quantity");
-        pR += n;
-    }
-
+    void ignore(size_t n) override;
     /// blocking data receive
-    size_t read(void* vptr, int size) override {
-        if(pR + size > eR) throw std::runtime_error("Invalid receive allocation");
-        std::memcpy(vptr,pR,size);
-        pR += size;
-        return size;
-    }
+    void read(void* vptr, size_t size) override;
 
 protected:
     const char* dR = nullptr;   ///< read data buffer
@@ -44,11 +35,7 @@ public:
 
 protected:
     /// blocking data send
-    void _send(const void* vptr, int size) override {
-        if(pW + size > eW) throw -1;
-        std::memcpy(pW,vptr,size);
-        pW += size;
-    }
+    void _send(const void* vptr, size_t size) override;
 
     char* dW;   ///< write data buffer
     char* pW;   ///< write position
@@ -59,15 +46,35 @@ protected:
 class DequeBIO: virtual public BinaryIO, protected deque<char> {
 protected:
     /// blocking data send
-    void _send(const void* vptr, int s) override { auto v = reinterpret_cast<const char*>(vptr); while(s--) push_back(*(v++)); }
+    void _send(const void* vptr, size_t s) override { auto v = reinterpret_cast<const char*>(vptr); while(s--) push_back(*(v++)); }
     /// blocking data receive
-    size_t read(void* vptr, int s) override {
-        if((int)size() < s) throw std::domain_error("Insufficient buffered data!");
-        auto s0 = s;
-        auto v = reinterpret_cast<char*>(vptr);
-        while(s--) { *(v++) = front(); pop_front(); }
-        return s0;
-    }
+    void read(void* vptr, size_t s) override;
+};
+
+/// Buffering wrapper around another reader
+class BufferingReader: public BinaryReader {
+public:
+    /// Constructor
+    explicit BufferingReader(BinaryReader& _R, size_t b0 = 1024):
+    R(_R), dchunk(b0) { }
+
+    /// blocking data receive
+    void read(void* vptr, size_t size) override;
+    /// opportunistic data receive
+    size_t read_upto(void* vptr, size_t size) override;
+
+protected:
+    /// reset buffer to start
+    void rebuffer();
+    /// fixed-length fetch from source appended to buffer end
+    void load_buf(size_t s);
+    /// opportunistic fetch from source appended to buffer end
+    void load_buf_upto(size_t s);
+
+    BinaryReader& R;        ///< wrapped BinaryReader
+    size_t dchunk = 1024;   ///< read chunk size
+    vector<char> dat;       ///< pre-read buffer data
+    size_t rpos = 0;        ///< current position in read buffer
 };
 
 #endif

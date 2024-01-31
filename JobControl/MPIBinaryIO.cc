@@ -26,13 +26,13 @@ set<int> MPIBinaryIO::availableRanks;
 
 char* MPIBinaryIO::hostname = new char[MPI_MAX_PROCESSOR_NAME];
 
-void MPIBinaryIO::_send(const void* vptr, int size) {
+void MPIBinaryIO::_send(const void* vptr, size_t size) {
     if(!size) return;
     MPI_Send(vptr, size, MPI_UNSIGNED_CHAR, dataDest, 2, MPI_COMM_WORLD);
 }
 
-size_t MPIBinaryIO::read(void* vptr, int size) {
-    if(!size) return 0;
+void MPIBinaryIO::read(void* vptr, size_t size) {
+    if(!size) return;
 
     if(rpt == rbuff.size()) { // need new data
         MPI_Status status;
@@ -48,7 +48,6 @@ size_t MPIBinaryIO::read(void* vptr, int size) {
 
     std::memcpy(vptr, rbuff.data()+rpt, size);
     rpt += size;
-    return size;
 }
 
 void MPIBinaryIO::uninit() { MPI_Finalize(); }

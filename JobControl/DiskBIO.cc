@@ -4,9 +4,9 @@
 #include <sys/types.h>
 #include <fcntl.h>
 
-void FDBinaryWriter::_send(const void* vptr, int size) {
-    if(!vptr || fOut < 0 || size == -1) throw std::logic_error("invalid object write");
-    if(size != write(fOut, vptr, size)) throw std::runtime_error("Can't write file");
+void FDBinaryWriter::_send(const void* vptr, size_t size) {
+    if(!vptr || fOut < 0) throw std::logic_error("invalid object write");
+    if(size != (size_t)write(fOut, vptr, size)) throw std::runtime_error("Can't write file");
 }
 
 void FDBinaryReader::openIn(const string& s) {

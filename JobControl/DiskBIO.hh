@@ -18,7 +18,7 @@ protected:
     std::ostream& fOut;   ///< output stream
 
     /// blocking data send
-    void _send(const void* vptr, int size) override { fOut.write(static_cast<const char*>(vptr), size); }
+    void _send(const void* vptr, size_t size) override { fOut.write(static_cast<const char*>(vptr), size); }
 };
 
 /// Binary read from iostream objects
@@ -28,7 +28,10 @@ public:
     explicit IOStreamBRead(std::istream& i): fIn(i) { }
 
     /// blocking data receive
-    size_t read(void* vptr, int size) override { fIn.read(static_cast<char*>(vptr), size); return fIn.gcount(); }
+    void read(void* vptr, size_t size) override { if(read_upto(vptr,size) != size) throw std::runtime_error("File out of data"); }
+    /// non-blocking opportunistic read of all available to size
+    size_t read_upto(void* vptr, size_t s) override { fIn.read(static_cast<char*>(vptr), s); return fIn.gcount(); }
+
     /// skip over n bytes
     void ignore(size_t n) override { fIn.ignore(n); }
 
@@ -56,7 +59,7 @@ public:
 
 protected:
     /// blocking data send
-    void _send(const void* vptr, int size) override;
+    void _send(const void* vptr, size_t size) override;
     /// flush output
     void flush() override { if(fOut >= 0 && fsync(fOut)) throw std::runtime_error("failed to fsync output file"); }
 
@@ -82,11 +85,12 @@ public:
     bool inIsOpen() const { return fIn != -1; }
 
     /// blocking data receive
-    size_t read(void* vptr, int size) override {
+    void read(void* vptr, size_t size) override {
         if(fIn < 0) throw std::runtime_error("No input file open!");
-        if(size != ::read(fIn, vptr, size)) throw std::runtime_error("Requested read failed!");
-        return size;
+        if(size != (size_t)::read(fIn, vptr, size)) throw std::runtime_error("Requested read failed!");
     }
+    /// non-blocking opportunistic read of all available to size
+    size_t read_upto(void* vptr, size_t s) override { return ::read(fIn, vptr, s); }
 
 protected:
     int fIn = -1;    ///< input file descriptor

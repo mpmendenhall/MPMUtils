@@ -198,9 +198,9 @@ protected:
     void setData(const T&x) { whut(); send(x); std::memset(fBufCur, 0, fBufMax-fBufCur); SetReadMode(); }
 
     /// append data to current write point
-    void _send(const void* vptr, int size) override { WriteBuf(vptr, size); wsize = fBufCur - Buffer(); }
+    void _send(const void* vptr, size_t size) override { WriteBuf(vptr, size); wsize = fBufCur - Buffer(); }
     /// pull data from current readpoint
-    size_t read(void* vptr, int size) override { return ReadBuf(vptr, size); }
+    void read(void* vptr, size_t size) override { ReadBuf(vptr, size); }
     /// last _send data write size; includes first 2 bytes.
     size_t wsize = 2*sizeof(UInt_t);
 };

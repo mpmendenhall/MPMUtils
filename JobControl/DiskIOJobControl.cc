@@ -29,14 +29,14 @@ void DiskIOJobControl::clearIn() {
     runSysCmd(fn.str());
 }
 
-void DiskIOJobControl::_send(void* vptr, int size) {
+void DiskIOJobControl::_send(void* vptr, size_t size) {
     std::stringstream fn;
     fn << data_bpath << "/CommBuffer_" << rank << "_to_" << dataDest << ".dat";
     FDBinaryWriter b(fn.str());
     b.send(vptr, size);
 }
 
-void DiskIOJobControl::_receive(void* vptr, int size) {
+void DiskIOJobControl::_receive(void* vptr, size_t size) {
     auto& p = srcpos[dataSrc];
 
     std::stringstream fn;

@@ -16,9 +16,9 @@ public:
     void init(int argc, char** argv);
 
     /// blocking data send
-    void _send(void* vptr, int size) override;
+    void _send(void* vptr, size_t size) override;
     /// blocking data receive
-    void _receive(void* vptr, int size) override;
+    void _receive(void* vptr, size_t size) override;
 
     /// clear output buffer to current destination
     void clearOut() override;
@@ -38,9 +38,9 @@ public:
     void init(int argc, char** argv);
 
     /// blocking data send
-    void _send(void* vptr, int size) override;
+    void _send(void* vptr, size_t size) override;
     /// blocking data receive
-    void _receive(void* vptr, int size) override;
+    void _receive(void* vptr, size_t size) override;
 
     /// clear output buffer to current destination
     void clearOut() override;

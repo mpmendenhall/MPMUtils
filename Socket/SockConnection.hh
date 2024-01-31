@@ -26,6 +26,8 @@ public:
     void sockwrite(const char* buff, size_t nbytes, bool fail_ok = false);
     /// blocking read from socket
     size_t sockread(char* buff, size_t nbytes, bool fail_ok = false);
+    /// opportunistic read from socket
+    size_t sockread_upto(char* buff, size_t nbytes);
     /// poll and read next available data chunk into supplied vector
     void vecread(vector<char>& v, bool fail_ok = false);
 

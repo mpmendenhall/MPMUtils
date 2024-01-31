@@ -41,7 +41,7 @@ public:
     void send(const T* p) { send(*p); }
 
     /// data block send
-    void send(const void* vptr, int size) {
+    void send(const void* vptr, size_t size) {
          start_wtx();
          append_write(reinterpret_cast<const char*>(vptr), size);
          end_wtx();
@@ -86,7 +86,7 @@ public:
 protected:
 
     /// blocking data send
-    virtual void _send(const void* vptr, int size) = 0;
+    virtual void _send(const void* vptr, size_t size) = 0;
     /// flush output
     virtual void flush() { }
 
@@ -108,7 +108,7 @@ public:
 
 protected:
     /// _send does nothing!
-    void _send(const void*, int) override { }
+    void _send(const void*, size_t) override { }
 };
 
 
@@ -155,8 +155,10 @@ public:
         }
     }
 
-    /// raw blocking data receive
-    virtual size_t read(void* vptr, int size) = 0;
+    /// raw blocking data receive; error if full read not achieved
+    virtual void read(void* vptr, size_t size) = 0;
+    /// non-blocking opportunistic read of all available to size
+    virtual size_t read_upto(void*, size_t) { return 0; }
     /// skip over n bytes (... please reimplement faster!)
     virtual void ignore(size_t n) { vector<char> foo(n); read(foo.data(), n); }
 };

@@ -52,13 +52,18 @@ bool SockFD::do_poll(bool fail_ok) {
     pfd.fd = sockfd;
     pfd.events = POLLIN OR_POLLRDHUP;
 
-    int ret = poll(&pfd, 1 /*entries in pfd[]*/, read_timeout_ms);
-    if(ret != 1) {
-        if(fail_ok) return false;
-        if(ret < 0) throw SockFDerror(*this, "poll() failure, error " + to_str(errno));
-        if(!ret) throw SockFDerror(*this, "socket read timeout");
-        throw SockFDerror(*this, "poll() unexpectedly returned " + to_str(ret));
-    }
+    do {
+        int ret = poll(&pfd, 1 /*entries in pfd[]*/, read_timeout_ms);
+        if(ret != 1) {
+            if(fail_ok) return false;
+            if(ret < 0) {
+                if(errno == EINTR) continue; // ignore interrupts TODO what are we getting?
+                throw SockFDerror(*this, "poll() failure, error " + to_str(errno) + " " + strerror(errno));
+            }
+            if(!ret) throw SockFDerror(*this, "socket read timeout");
+            throw SockFDerror(*this, "poll() unexpectedly returned " + to_str(ret));
+        }
+    } while(false);
 
     if(!(pfd.revents & POLLIN) || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL OR_POLLRDHUP))) {
         if(fail_ok) return false;
@@ -74,19 +79,26 @@ bool SockFD::do_poll(bool fail_ok) {
 
 size_t SockFD::sockread(char* buff, size_t nbytes, bool fail_ok) {
     size_t nread = 0;
-    while(nread < nbytes) {
-        if(!do_poll(fail_ok)) return nread;
 
+    while(nread < nbytes) {
         auto len = read(sockfd, buff+nread, nbytes-nread);
         if(len < 0) {
             if(fail_ok) return nread;
-            throw SockFDerror(*this, "Failed socket read, error " + to_str(len));
+            throw SockFDerror(*this, "Failed socket read, error " + to_str(errno) + " " + strerror(errno));
         }
         nread += len;
-        if(nread != nbytes) usleep(1000);
+        if(nread == nbytes) return nread;
+        //if(!len) usleep(1000);
+        if(!do_poll(fail_ok)) return nread;
     }
 
     return nread;
+}
+
+size_t SockFD::sockread_upto(char* buff, size_t nbytes) {
+    auto len = read(sockfd, buff, nbytes);
+    if(len < 0) return 0;
+    return len;
 }
 
 void SockFD::vecread(vector<char>& v, bool fail_ok) {

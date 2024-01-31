@@ -25,9 +25,9 @@ public:
 
 protected:
     /// blocking data send
-    void _send(const void* vptr, int size) override;
+    void _send(const void* vptr, size_t size) override;
     /// blocking data receive
-    size_t read(void* vptr, int size) override;
+    void read(void* vptr, size_t size) override;
 
     vector<char> rbuff; ///< read buffer
     size_t rpt = 0;     ///< current read buffer read point

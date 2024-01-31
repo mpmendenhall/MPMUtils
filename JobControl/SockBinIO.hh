@@ -12,7 +12,7 @@ public:
 
 protected:
     /// push data to socket buffer; drops if buffer full
-    void _send(const void* vptr, int size) override {
+    void _send(const void* vptr, size_t size) override {
         auto wp = sockfd? get_writepoint() : nullptr;
         if(!wp) return;
         auto vv = reinterpret_cast<const char*>(vptr);
@@ -27,7 +27,8 @@ public:
     /// Constructor
     explicit SockBinRead(int sfd = 0): SockFD(sfd) { }
 
-protected:
     /// blocking data receive
-    size_t read(void* vptr, int size) override { return sockread(reinterpret_cast<char*>(vptr), size); }
+    void read(void* vptr, size_t size) override { sockread(reinterpret_cast<char*>(vptr), size); }
+    /// opportunistic data receive
+    size_t read_upto(void* vptr, size_t size) override { return sockread_upto(reinterpret_cast<char*>(vptr), size); }
 };
