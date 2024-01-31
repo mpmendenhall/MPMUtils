@@ -43,7 +43,7 @@ protected:
 };
 
 /// I/O to a deque buffer; virtual to allow mix-in with BinaryIO inheritance
-class DequeBIO: virtual public BinaryIO, protected deque<char> {
+class DequeBIO: virtual public BinaryReader, virtual public BinaryWriter, protected deque<char> {
 protected:
     /// blocking data send
     void _send(const void* vptr, size_t s) override { auto v = reinterpret_cast<const char*>(vptr); while(s--) push_back(*(v++)); }

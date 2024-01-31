@@ -25,7 +25,7 @@ void JobComm::splitJobs(vector<JobSpec>& vJS, size_t nSplit, size_t nItms, size_
 
 REGISTER_FACTORYOBJECT(JobWorker, JobWorker)
 
-void JobWorker::run(const JobSpec& JS, BinaryIO&) {
+void JobWorker::run(const JobSpec& JS, BinaryReader&, BinaryWriter&) {
     printf("JobWorker does nothing for ");
     JS.display();
     MultiJobWorker::JW->signalDone();
@@ -103,7 +103,7 @@ void MultiJobWorker::runJob(JobSpec& JS) {
         if(!W) throw std::runtime_error("Unable to construct requested worker class!");
     } else if(verbose > 4) printf("Already have worker class '%s'.\n", workerName(JS.wclass).c_str());
 
-    W->run(JS, *this);
+    W->run(JS, *this, *this);
 }
 
 void MultiJobWorker::runWorkerJobs() {

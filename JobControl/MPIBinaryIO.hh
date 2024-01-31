@@ -8,7 +8,7 @@
 using std::set;
 
 /// Binary I/O over MPI, with static MPI instance info
-class MPIBinaryIO: virtual public BinaryIO {
+class MPIBinaryIO: virtual public BinaryReader, virtual public BinaryWriter {
 public:
     /// initialize with MPI information
     static void init(int argc, char **argv);

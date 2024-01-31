@@ -18,7 +18,7 @@ template<typename T>
 struct _false: std::false_type { };
 
 /// Polymorphic data value for KeyTable
-class KeyData: public TMessage, protected BinaryIO {
+class KeyData: public TMessage, protected BinaryWriter, protected BinaryReader {
 public:
     // Buffer contains [UInt_t <unused message size>][UInt_t What][contents...]
 

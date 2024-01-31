@@ -17,9 +17,9 @@ public:
     KeyTable kt;    ///< associated KeyTable
 
     /// start-of-job communication (send instruction details)
-    void startJob(BinaryIO& B) override { B.send(kt); }
+    void startJob(BinaryWriter& B) override { B.send(kt); }
     /// end-of-job communication (get returnCombined() results)
-    void endJob(BinaryIO& B) override;
+    void endJob(BinaryReader& R) override;
 
     /// collect accumulated objects back into kt
     virtual void gather();
@@ -39,7 +39,7 @@ protected:
 class KTAccumJob: public JobWorker {
 public:
     /// run job
-    void run(const JobSpec& J, BinaryIO& B) override;
+    void run(const JobSpec& J, BinaryReader& R, BinaryWriter& W) override;
 
     KeyTable kt;    ///< received KeyTable data
 
@@ -47,7 +47,7 @@ protected:
     /// subclass me with calculation on kt, J!
     virtual void runAccum() { printf("KTAccumJob does nothing for "); JS.display(); }
     /// Return 'combine' entries from a KeyTable
-    void returnCombined(BinaryIO& B);
+    void returnCombined(BinaryWriter& B);
 
     JobSpec JS;     ///< current job info
 };

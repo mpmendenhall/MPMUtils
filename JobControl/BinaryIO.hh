@@ -163,15 +163,14 @@ public:
     virtual void ignore(size_t n) { vector<char> foo(n); read(foo.data(), n); }
 };
 
-/// Base combined binary I/O class
-class BinaryIO: public BinaryReader, public BinaryWriter { };
-
 /// string data send
 template<>
 void BinaryWriter::send<string>(const string& s);
+
 /// Receive string
 template<>
 void BinaryReader::receive<string>(string& s);
+
 /// treat const char* as string
 template<>
 inline void BinaryWriter::send(const char* x) { send(string(x)); }

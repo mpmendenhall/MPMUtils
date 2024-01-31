@@ -49,9 +49,9 @@ struct JobSpec {
 class JobComm {
 public:
     /// start-of-job communication (send instruction details specific to job type)
-    virtual void startJob(BinaryIO&) = 0;
+    virtual void startJob(BinaryWriter&) = 0;
     /// end-of-job communication (retrieve results specific to job type)
-    virtual void endJob(BinaryIO&) = 0;
+    virtual void endJob(BinaryReader&) = 0;
 
     /// Helper function to create subdivided jobs list, referencing this communicator
     void splitJobs(vector<JobSpec>& vJS, size_t nSplit, size_t nItms, size_t wclass, int uid=0);
@@ -66,12 +66,12 @@ public:
     virtual ~JobWorker() { }
 
     /// run specified job, talking to JobComm::startJob and endJob through B
-    virtual void run(const JobSpec& J, BinaryIO& B);
+    virtual void run(const JobSpec& J, BinaryReader& R, BinaryWriter& W);
 };
 
 
 /// Controller node distributing jobs to matching MultiJobWorker; subclass with features for a particular channel.
-class MultiJobControl: virtual public BinaryIO {
+class MultiJobControl: virtual public BinaryReader, virtual public BinaryWriter {
 public:
     /// Submission of job for processing; updates and returns JS.wid with assigned worker number. Possibly blocking depending on jobs back-end.
     virtual int submitJob(JobSpec& JS);
@@ -106,7 +106,7 @@ protected:
 
 
 /// Worker node able to run different job types
-class MultiJobWorker: virtual public BinaryIO {
+class MultiJobWorker: virtual public BinaryReader, virtual public BinaryWriter {
 public:
     /// Destructor
     ~MultiJobWorker() { for(const auto& kv: workers) delete kv.second; }

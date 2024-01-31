@@ -3,7 +3,7 @@
 
 #include "KTAccumJob.hh"
 
-void KTAccumJobComm::endJob(BinaryIO& B) {
+void KTAccumJobComm::endJob(BinaryReader& R) {
     if(!combos.size()) {
         for(auto& kv: kt) {
             if(kv.first.substr(0,7) != "Combine") continue;
@@ -22,7 +22,7 @@ void KTAccumJobComm::endJob(BinaryIO& B) {
 
     for(size_t i=0; i<combos.size(); i++) {
         auto cd = kt.FindKey(combos[i]);
-        auto kd = B.receive<KeyData*>();
+        auto kd = R.receive<KeyData*>();
         if(!cd || !kd) throw std::logic_error("Failed to receive combining data  '" + combos[i] + "'");
 
         auto tp = cd->What();
@@ -64,15 +64,15 @@ void KTAccumJobComm::launchAccumulate(int uid) {
 
 REGISTER_FACTORYOBJECT(KTAccumJob, JobWorker)
 
-void KTAccumJob::run(const JobSpec& J, BinaryIO& B) {
+void KTAccumJob::run(const JobSpec& J, BinaryReader& R, BinaryWriter& W) {
     JS = J;
-    B.receive(kt);
+    R.receive(kt);
     runAccum();
     MultiJobWorker::JW->signalDone();
-    returnCombined(B);
+    returnCombined(W);
 }
 
-void KTAccumJob::returnCombined(BinaryIO& B) {
+void KTAccumJob::returnCombined(BinaryWriter& B) {
     for(auto& kv: kt) {
         if(kv.first.substr(0,7) != "Combine") continue;
         auto c = kv.second->Get<string>();
