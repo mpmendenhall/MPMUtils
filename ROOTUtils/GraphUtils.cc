@@ -11,8 +11,16 @@
 vector<double> logbinedges(unsigned int nbins, double bmin, double bmax) {
     if(!(bmin > 0 && bmax > 0)) throw std::logic_error("Zero or negative logarithmic axis limits requested");
     vector<Double_t> binEdges(nbins+1);
-    for(unsigned int i=0; i<=nbins; i++)
+    for(unsigned int i = 0; i <= nbins; ++i)
         binEdges[i] = exp((nbins-i)*log(bmin)/nbins + i*log(bmax)/nbins);
+    return binEdges;
+}
+
+vector<double> logorlinbinedges(unsigned int nbins, double bmin, double bmax) {
+    if(bmin > 0 && bmax > 0) return logbinedges(nbins, bmin, bmax);
+    vector<Double_t> binEdges(nbins+1);
+    for(unsigned int i = 0; i <= nbins; ++i)
+        binEdges[i] = (nbins-i)*bmin/nbins + i*bmax/nbins;
     return binEdges;
 }
 

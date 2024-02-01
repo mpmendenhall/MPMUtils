@@ -21,23 +21,26 @@ using std::string;
 
 /// bin edges for log histograms
 vector<double> logbinedges(unsigned int nbins, double bmin, double bmax);
+/// log or linear bin edges, depending on bmin > 0 (log)
+vector<double> logorlinbinedges(unsigned int nbins, double bmin, double bmax);
+
 /// logarithmically binned histogram
 template<class TH1x = TH1F>
 TH1x* logHist(const string& name, const string& descrip, unsigned int nbins, double bmin, double bmax) {
-    return new TH1x(name.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data());
+    return new TH1x(name.c_str(), descrip.c_str(), nbins, logorlinbinedges(nbins,bmin,bmax).data());
 }
 /// log-lin binned 2D histogram
 template<class TH2x = TH2F>
 TH2x* loglinHist(const string& name, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax, bool logx = true) {
-    if(logx) return new TH2x(name.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data(), nby, ymin, ymax);
-    return new TH2x(name.c_str(), descrip.c_str(), nbins, bmin, bmax, nby, logbinedges(nby,ymin,ymax).data());
+    if(logx) return new TH2x(name.c_str(), descrip.c_str(), nbins, logorlinbinedges(nbins,bmin,bmax).data(), nby, ymin, ymax);
+    return new TH2x(name.c_str(), descrip.c_str(), nbins, bmin, bmax, nby, logorlinbinedges(nby,ymin,ymax).data());
 }
-
 /// log-log binned 2D histogram
 template<class TH2x = TH2F>
 TH2x* loglogHist(const string& name, const string& descrip, unsigned int nbins, double bmin, double bmax, unsigned int nby, double ymin, double ymax) {
-    return new TH2x(name.c_str(), descrip.c_str(), nbins, logbinedges(nbins,bmin,bmax).data(), nby, logbinedges(nby,ymin,ymax).data());
+    return new TH2x(name.c_str(), descrip.c_str(), nbins, logorlinbinedges(nbins,bmin,bmax).data(), nby, logorlinbinedges(nby,ymin,ymax).data());
 }
+
 /// bin-to-bin derivative of histogram, with optional scale factor
 TGraphErrors* histoDeriv(const TH1& h, unsigned int dxi = 1, double s = 1.0);
 
