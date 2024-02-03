@@ -140,7 +140,11 @@ public:
         /// constructor, for begin or end iterator
         explicit iterator(SettingsQuery& _SQ, bool start): SQ(_SQ), _it(start? SQ.S.begin() : SQ.S.end()) { }
         /// dereference to get contents
-        SettingsQuery& operator*() { return SQ.sub(_it->getName()); }
+        SettingsQuery& operator*() {
+            auto n = _it->getName();
+            if(!n) throw std::logic_error("List iteration unimplemented");
+            return SQ.sub(n);
+        }
         /// move to next
         iterator& operator++() { ++_it; return *this; }
         /// check if iterators unequal

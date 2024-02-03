@@ -31,6 +31,7 @@ void SockIOServer::threadjob() {
 void SockIOServer::handle_connection(int csockfd) {
     printf("Accepting new connection %i ...\n", csockfd);
     auto h = makeHandler(csockfd);
+    if(!h) throw std::runtime_error("Failed to create socket handler");
     add_thread(h, false);
     h->launch_mythread();
 }

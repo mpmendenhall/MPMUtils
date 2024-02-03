@@ -12,7 +12,7 @@ bool OutputManager::squelchAllPrinting = false;
 OutputManager::OutputManager(const string& bp, OutputManager* pnt):
 parent(pnt), path(bp) {
     TH1::AddDirectory(kFALSE);
-    defaultCanvas.SetCanvasSize(200,200);
+    setup_default_pad(&defaultCanvas);
 }
 
 TDirectory* OutputManager::getRootOut() {
@@ -94,3 +94,13 @@ string OutputManager::printCanvas(const string& fname, TPad* C, string suffix, c
     return fout;
 }
 
+void OutputManager::setup_default_pad(TVirtualPad* p) {
+    if(!p) p = gPad;
+    if(!p) throw std::logic_error("no pad defined");
+
+    p->SetCanvasSize(200,200);
+    p->SetTopMargin(.03); // just enough to clear exponent on y axis
+    p->SetLeftMargin(.151);
+    p->SetRightMargin(.04);
+    p->SetBottomMargin(.12);
+}

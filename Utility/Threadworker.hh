@@ -28,15 +28,15 @@ public:
     virtual ~Threadworker();
 
     /// launch worker thread (error if already launched)
-    void launch_mythread();
+    virtual void launch_mythread();
     /// pause thread (blocks until threadjob() reciprocates)
     void pause();
     /// re-start paused thread (non-blocking)
     void unpause();
     /// set STOP_REQUESTED and notify (but do not wait for join)
     void request_stop();
-    /// request and wait for completion of worker thread (error if not launched)
-    void finish_mythread();
+    /// request and wait for completion of worker thread (error if not launched, unless unlaunched_OK)
+    virtual void finish_mythread(bool unlaunched_OK = false);
     /// force-kill a thread that refuses to finish
     void kill_mythread(double timeout_s = 0.01);
     /// run threadjob() in this thread; return when done

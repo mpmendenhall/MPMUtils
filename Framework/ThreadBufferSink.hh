@@ -5,15 +5,17 @@
 #define THREADBUFFERSINK_HH
 
 #include "DataSink.hh"
-#include "Threadworker.hh"
+#include "PingpongBufferWorker.hh"
 #include <unistd.h>
 
 /// Buffered input to sink running in independent thread
 template<typename T>
-class ThreadBufferSink: public DataLink<T,T>, public Threadworker, public Configurable {
+class ThreadBufferSink: public DataLink<T,T>, public PingpongBufferWorker<T>, public Configurable {
 public:
-    typedef typename std::remove_const<T>::type Tmut_t;
     using DataLink<T,T>::nextSink;
+    typedef PingpongBufferWorker<T> PBW;
+    using PBW::verbose;
+    using PBW::_datq;
 
     /// Configuration constructor
     explicit ThreadBufferSink(const Setting& S): Configurable(S) {
@@ -22,12 +24,7 @@ public:
     }
 
     /// receive item to queue
-    void push(T& o) override {
-        lock_guard<mutex> l(inputMut);
-        datq.push_back(o);
-        inputReady.notify_one();
-        sched_yield();
-    }
+    void push(T& o) override { add_item(o); }
 
     /// buffered signal
     struct bufsig_t {
@@ -35,65 +32,32 @@ public:
         datastream_signal_t sig;    ///< signal
     };
 
-    /// thread to pull from queue and push downstream
-    void threadjob() override {
-        while(true) {
-            check_pause();
-
-            { // get input items ready to pass on
-                unique_lock<mutex> lk(inputMut);    // acquire unique_lock on queue in this scope
-                if(runstat == STOP_REQUESTED) {
-                    if(verbose > 3) printf(TERMFG_YELLOW "  Threadworker [%i] got stop command." TERMSGR_RESET "\n", worker_id);
-                    break;
-                } else if(verbose > 4) printf(TERMFG_BLUE "  Threadworker [%i] awaiting new input." TERMSGR_RESET "\n", worker_id);
-                inputReady.wait(lk);                // unlock; wait; re-lock when notified
-                pingpong();
-            }
-
-            // push(...) while continuing to receive without blocking
-            processout();
-        }
-
-        if(verbose > 3)
-            printf(TERMFG_BLUE "  Threadworker [%i] done (max buffered: %zu)." TERMSGR_RESET "\n", worker_id, most_buffered);
-        most_buffered = 0;
-    }
-
     /// handle signals
     void signal(datastream_signal_t sig) override {
-        if(sig == DATASTREAM_INIT) launch_mythread();
+        if(sig == DATASTREAM_INIT) PBW::launch_mythread();
         {
-            lock_guard<mutex> l(inputMut);
-            sigq.push_back({datq.size(), sig});
-            inputReady.notify_one();
+            lock_guard<mutex> l(PBW::inputMut);
+            sigq.push_back({PBW::datq.size(), sig});
+            PBW::inputReady.notify_one();
             sched_yield();
         }
-        if(sig >= DATASTREAM_END) {
-            finish_mythread();
-            pingpong();
-            processout();
-        }
+        if(sig >= DATASTREAM_END) PBW::finish_mythread(true);
     }
 
 protected:
-    vector<Tmut_t> datq;        ///< input FIFO
-    vector<Tmut_t> _datq;       ///< ping-pong for datq
     vector<bufsig_t> sigq;      ///< signals input FIFO
     vector<bufsig_t> _sigq;     ///< ping-pong for sigq
 
     /// swap input/output buffers
-    void pingpong() {
-        if(_datq.size() || _sigq.size()) throw std::logic_error("output buffer uncleared");
-        std::swap(datq, _datq);
+    void pingpong() override {
+        PBW::pingpong();
         std::swap(sigq, _sigq);
-        most_buffered = std::max(most_buffered, _datq.size());
     }
 
     /// process output buffers
-    void processout() {
-        if(verbose > 4)
-            printf(TERMFG_BLUE "  Threadworker [%i] has %zu buffered + %zu signals to process." TERMSGR_RESET "\n",
-                worker_id, _datq.size(), _sigq.size());
+    void processout() override {
+        PBW::processout();
+
         if(nextSink) {
             size_t i = 0;
             auto sit = _sigq.begin();
@@ -107,11 +71,9 @@ protected:
                 ++i;
             }
         }
-        _datq.clear();
+
         _sigq.clear();
     }
-
-    size_t most_buffered = 0;   ///< record most items buffered
 };
 
 #endif

@@ -102,7 +102,11 @@ void Threadworker::request_stop() {
     inputReady.notify_one(); // notification to catch STOP_REQUESTED
 }
 
-void Threadworker::finish_mythread() {
+void Threadworker::finish_mythread(bool unlaunched_OK) {
+    if(!checkRunning() && unlaunched_OK) {
+        if(verbose > 2) printf(TERMFG_YELLOW "Threadworker [%i] not running." TERMSGR_RESET "\n", worker_id);
+        return;
+    }
     if(verbose > 2) printf(TERMFG_YELLOW "Threadworker [%i] asked to finish..." TERMSGR_RESET "\n", worker_id);
     request_stop();
     int rc = pthread_join(mythread, nullptr);

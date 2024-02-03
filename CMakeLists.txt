@@ -38,6 +38,18 @@ else()
     message(FATAL_ERROR "libuuid library or headers not found --- maybe install libuuid-devel package?")
 endif()
 
+
+#######
+# ALSA
+#######
+find_package(ALSA)
+if(${ALSA_FOUND})
+    include_directories(SYSTEM ${ALSA_INCLUDE_DIRS})
+    list(APPEND EXTLIBS ${ALSA_LIBRARIES})
+    list(APPEND CXXOPTS "-DWITH_ALSA")
+endif()
+
+
 ########
 # OpenGL
 ########
@@ -129,7 +141,7 @@ LIST(APPEND EXTLIBS ${Geant4_LIBRARIES})
 # Choose objects to build
 
 foreach(dir IN ITEMS Delta Deprecated External Exegete Framework HDF5 JobControl
-        Math Matrix Physics Physics/MCNParse ROOTUtils Socket Utility Visualization )
+        Math Matrix Physics Physics/MCNParse ROOTUtils Socket Sound Utility Visualization )
 include_directories(${PROJECT_SOURCE_DIR}/${dir})
 file(GLOB DIRSRC ${dir}/*.c*)
 LIST(APPEND SOURCE_FILES ${DIRSRC})

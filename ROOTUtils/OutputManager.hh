@@ -71,6 +71,10 @@ public:
     TDirectory* getRootOut();
     /// full output path
     string fullPath() const;
+    /// reset canvas defaults
+
+    /// default canvas dimensionssssss
+    static void setup_default_pad(TVirtualPad* p = nullptr);
 
 protected:
     string printsfx = ".pdf";           ///< printCanvas default suffix (file type)
