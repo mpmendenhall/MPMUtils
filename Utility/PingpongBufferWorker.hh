@@ -39,8 +39,11 @@ public:
                 if(runstat == STOP_REQUESTED) {
                     if(verbose > 3) printf(TERMFG_YELLOW "  PingpongBufferWorker [%i] got stop command." TERMSGR_RESET "\n", worker_id);
                     break;
-                } else if(verbose > 4) printf(TERMFG_BLUE "  PingpongBufferWorker [%i] awaiting new input." TERMSGR_RESET "\n", worker_id);
-                inputReady.wait(lk);                // unlock; wait; re-lock when notified
+                }
+                if(!datq.size()) {
+                    if(verbose > 4) printf(TERMFG_BLUE "  PingpongBufferWorker [%i] awaiting new input." TERMSGR_RESET "\n", worker_id);
+                    inputReady.wait(lk); // unlock; wait; re-lock when notified
+                }
                 pingpong();
             }
 
@@ -53,11 +56,18 @@ public:
         most_buffered = 0;
     }
 
+    /// close out thread and finish processing items
     void finish_mythread(bool unlaunched_OK = false) override {
         Threadworker::finish_mythread(unlaunched_OK);
         pingpong();
         processout();
         _datq.clear();
+    }
+
+    /// backlog of items not yet passed to thread queue
+    size_t backlog() {
+        lock_guard<mutex> l(inputMut);
+        return datq.size();
     }
 
 protected:

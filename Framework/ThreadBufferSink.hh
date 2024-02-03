@@ -24,7 +24,7 @@ public:
     }
 
     /// receive item to queue
-    void push(T& o) override { add_item(o); }
+    void push(T& o) override { PBW::add_item(o); }
 
     /// buffered signal
     struct bufsig_t {

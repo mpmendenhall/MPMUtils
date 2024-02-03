@@ -28,6 +28,8 @@ public:
 
     /// time (s) for sample number i
     double _t(size_t i) const { return double(i)/samplerate; }
+    /// time (s) to sample number and dt residual
+    size_t samplepos(double& t) const { size_t i = samplerate*t; t -= i/double(samplerate); return i; }
 
     /// envelope shape setting
     enum envelope_t {

@@ -6,6 +6,7 @@
 
 #include "PingpongBufferWorker.hh"
 #include <string>
+#include <random>
 using std::string;
 
 #ifdef WITH_ALSA
@@ -13,12 +14,17 @@ using std::string;
 #endif
 
 /// ALSA-compatible .wav format generator
-template<typename _sample_t = unsigned char>
+template<typename _sample_t = int16_t>
 class WAVgen: public PingpongBufferWorker<const vector<_sample_t>> {
 public:
     typedef _sample_t sample_t;
     typedef PingpongBufferWorker<const vector<sample_t>> PBW;
+    static constexpr size_t bytes_per_sample = sizeof(sample_t); ///< storage size of one sample
+    static constexpr double min_a = std::numeric_limits<sample_t>::min(); ///< amplitude min for format
+    static constexpr double max_a = std::numeric_limits<sample_t>::max(); ///< amplitude max for format
 
+    /// Constructor
+    WAVgen(): dith(-0.5, 0.5) { }
     /// Destructor
     virtual ~WAVgen() { close(); }
 
@@ -26,9 +32,6 @@ public:
     double latency = 0.5;       ///< buffer latency, s
     size_t nchan = 2;           ///< number of channels
 
-    size_t bytes_per_sample = 1;        ///< storage size of one sample
-    double min_a = 0;                   ///< amplitude min for format
-    double max_a = 255;                 ///< amplitude max for format
     sample_t sprev = (min_a + max_a)/2; ///< end of previous sample sequence
 
     /// initialize sound output handle
@@ -44,16 +47,19 @@ public:
 
     /// send t seconds "silence" data to output buffer (blocking)
     void silence(double t) {
+        if(!(t > 0)) return;
         static vector<sample_t> v;
-        v.resize(nchan * samplerate * t, (min_a + max_a)/2);
+        v.clear();
+        v.resize(nchan * samplerate * t);
+        for(auto& s: v) s = normalize(0.); // dither and baseline
         PBW::add_item(v);
     }
 
-    /// map (-1,1) float to internal format range
-    template<typename S>
-    void normalize(float in, S& out) const {
+    /// map (-1,1) float to internal format range, with dithering
+    sample_t normalize(float in) {
+        in += dith(gen)/(max_a - min_a);
         in = std::max(std::min(in, float(1.)), float(-1.));
-        out = -0.5*min_a*(in - 1) + max_a*0.5*(in + 1);
+        return std::round(-0.5*min_a*(in - 1) + max_a*0.5*(in + 1));
     }
 
     /// remap float to native type/range and write
@@ -61,18 +67,23 @@ public:
         static vector<sample_t> v;
         v.resize(b.size());
         auto it = v.begin();
-        for(auto s: b) normalize(s, *(it++));
+        for(auto s: b) *(it++) = normalize(s);
         PBW::add_item(v);
     }
 
     /// finish processing and close connection (automatic on destruct)
     void close() {
         if(PBW::checkRunning()) PBW::finish_mythread();
+#ifdef WITH_ALSA
         if(handle) snd_pcm_close(handle);
         handle = nullptr;
+#endif
     }
 
 protected:
+    std::mt19937 gen;
+    std::uniform_real_distribution<> dith;
+
     /// send data to output buffer (blocking)
     void write(const vector<sample_t>& dat) {
         if(!dat.size()) return;
@@ -94,8 +105,8 @@ protected:
     }
 
 #ifdef WITH_ALSA
-    snd_pcm_t* handle = nullptr;                ///< output identifier
-    snd_pcm_format_t fmt = SND_PCM_FORMAT_U8;   ///< output data format
+    snd_pcm_t* handle = nullptr;                  ///< output identifier
+    snd_pcm_format_t fmt = SND_PCM_FORMAT_S16_LE; ///< output data format
 #endif
 
 };
