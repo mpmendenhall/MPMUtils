@@ -36,6 +36,10 @@ public:
     /// end buffered write transaction
     void end_wtx();
 
+    /// chainable readin operator
+    template<typename T>
+    BinaryWriter& operator<<(const T& v) { send(v); return *this; }
+
     /// Dereference pointers by default
     template<typename T>
     void send(const T* p) { send(*p); }
@@ -46,6 +50,9 @@ public:
          append_write(reinterpret_cast<const char*>(vptr), size);
          end_wtx();
     }
+    /// raw binary vector send
+    template<typename T>
+    void sendblock(const vector<T>& dat) { send(reinterpret_cast<const void*>(dat.data()), dat.size()*sizeof(T)); }
 
     /// generic data send
     template<typename T, typename std::enable_if<!std::is_pointer<T>::value>::type* = nullptr>
@@ -96,6 +103,17 @@ protected:
     int dataDest = 0;       ///< destination identifier for data send
     size_t wtxdepth = 0;    ///< write transaction depth counter
     vector<char> wbuff;     ///< deferred write buffer
+};
+
+/// scope-guarded transaction
+class WriteScope {
+public:
+    /// Constructor
+    explicit WriteScope(BinaryWriter& _B): B(_B) { B.start_wtx(); }
+    /// Destructor
+    ~WriteScope() { B.end_wtx(); }
+private:
+    BinaryWriter& B;
 };
 
 /// Binary writer with exposed buffer for serialization

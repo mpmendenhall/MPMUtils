@@ -5,6 +5,7 @@
 #define WAVEGEN_HH
 
 #include "PingpongBufferWorker.hh"
+#include "BinaryIO.hh"
 #include <string>
 #include <random>
 using std::string;
@@ -31,6 +32,7 @@ public:
     long samplerate = 48000;    ///< sample rate, Hz
     double latency = 0.5;       ///< buffer latency, s
     size_t nchan = 2;           ///< number of channels
+    BinaryWriter* fOut = nullptr;   ///< output .wav file
 
     sample_t sprev = (min_a + max_a)/2; ///< end of previous sample sequence
 
@@ -43,6 +45,23 @@ public:
                                  nchan, samplerate, 1 /* allow resampling */, latency * 1e6);
         if(err < 0) throw std::runtime_error("Playback open error: " + string(snd_strerror(err)));
 #endif
+    }
+
+    /// initialize headers in output file
+    void initOut(BinaryWriter& B) {
+        fOut = &B;
+        WriteScope _B(B);
+        B << 'R' << 'I' << 'F' << 'F';
+        B << int32_t(36 + 0x0FFFFF00);   //< update later with file size
+        B << 'W' << 'A' << 'V' << 'E';
+        B << 'f' << 'm' << 't' << ' ';
+        B << int32_t(8*sizeof(sample_t));
+        B << int16_t(1) /* uncompressed PCM */ << int16_t(nchan);
+        B << int32_t(samplerate);
+        B << int32_t(samplerate * nchan * sizeof(sample_t));
+        B << int16_t(nchan * sizeof(sample_t)) << int16_t(8*sizeof(sample_t));
+        B << 'd' << 'a' << 't' << 'a';
+        B << int32_t(0xFFFFFFFF); //< update later with data size
     }
 
     /// send t seconds "silence" data to output buffer (blocking)
@@ -87,15 +106,16 @@ protected:
     /// send data to output buffer (blocking)
     void write(const vector<sample_t>& dat) {
         if(!dat.size()) return;
+        if(fOut) fOut->sendblock(dat);
+        sprev = dat.back();
 #ifdef WITH_ALSA
-        if(!handle) throw std::logic_error("Output handle uninitialized");
+        if(!handle) return;
         long nframes = dat.size()/nchan;
         auto frames = snd_pcm_writei(handle, dat.data(), nframes);
         if(frames < 0) frames = snd_pcm_recover(handle, frames, 0 /* attempt silent error recovery */);
         if(frames < 0) printf("snd_pcm_writei failed: %s\n", snd_strerror(frames));
         if(frames > 0 && frames < nframes) printf("Short write (expected %li, wrote %li)\n", nframes, frames);
 #endif
-        sprev = dat.back();
     }
 
     /// play buffered items

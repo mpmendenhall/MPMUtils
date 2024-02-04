@@ -14,9 +14,14 @@ void FDBinaryReader::openIn(const string& s) {
     fIn = s.size()? open(s.c_str(), O_RDONLY) : -1;
 }
 
-void FDBinaryWriter::openOut(const string& s) {
+void FDBinaryWriter::openOut(const string& s, bool append) {
     if(fOut >= 0) close(fOut);
-    fOut = s.size()? open(s.c_str(), O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR) : -1;
+    fOut = -1;
+    if(s.size()) {
+        auto flags = O_WRONLY | O_CREAT;
+        if(append) flags = flags | O_APPEND;
+        fOut = open(s.c_str(), flags, S_IRUSR | S_IWUSR);
+    }
     if(s.size() && fOut < 0) throw std::runtime_error("Failure opening output file!");
 }
 

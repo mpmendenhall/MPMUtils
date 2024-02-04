@@ -46,12 +46,12 @@ public:
     /// Constructor
     explicit FDBinaryWriter(int fdOut = -1): fOut(fdOut) { }
     /// Constructor with filenames
-    explicit FDBinaryWriter(const string& nOut) { openOut(nOut); }
+    explicit FDBinaryWriter(const string& nOut, bool append = false) { openOut(nOut, append); }
     /// Destructor
     ~FDBinaryWriter() { FDBinaryWriter::flush(); closeOut(); }
 
     /// open output file
-    void openOut(const string& s);
+    void openOut(const string& s, bool append = false);
     /// close input file
     void closeOut();
     /// check if output open

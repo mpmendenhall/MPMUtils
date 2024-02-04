@@ -13,15 +13,18 @@ using std::vector;
 class Boop {
 public:
     /// Constructor
-    Boop(long srate = 48000): samplerate(srate) { }
+    Boop(long srate = 48000, size_t nc = 2):
+    samplerate(srate), nchan(nc) { }
 
     long samplerate;    ///< sample rate, Hz
+    size_t nchan;       ///< number of channels
 
     double f = 500;     ///< base frequency
     double a = 1;       ///< amplitude scaling
     double l = 0.2;     ///< duration [s]
     double rise = 0.2;  ///< envelope rise (envelope dependent)
     double timbre = 1;  ///< waveform timbre adjust
+    double efall = 1;   ///< tail falloff
 
     /// number of samples that will be generated
     size_t nsamps() const { return l * samplerate; }
@@ -45,6 +48,8 @@ public:
 
     /// generate and add sound to buffer
     void gen(float* v, size_t stride = 1, double dt = 0) const;
+    /// generate with automatic allocation
+    void gen(vector<float>& v, double t0, int chan) const;
 };
 
 #endif
