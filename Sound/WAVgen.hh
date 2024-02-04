@@ -1,6 +1,10 @@
 /// @file WAVgen.hh ALSA-compatible .wav generator/player
 // Michael P. Mendenhall, 2024
 
+/*
+may need to install: alsa-lib-devel
+*/
+
 #ifndef WAVEGEN_HH
 #define WAVEGEN_HH
 

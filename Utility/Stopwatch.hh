@@ -19,21 +19,27 @@ public:
     typedef std::chrono::time_point<clock_t> timept_t;
 
     /// Constructor
-    explicit _Stopwatch(bool go = true): running(go) { if(go) start();  }
+    explicit _Stopwatch(bool go = true) { if(go) start();  }
     /// Destructor
-    ~_Stopwatch() { if(running) stop(); }
+    ~_Stopwatch() { stop(true); }
 
     /// start counting
-    void start() {
-        if(running) throw std::logic_error("multiple stopwatch starts");
+    void start(bool restart_ok = false) {
+        if(running) {
+            if(restart_ok) return;
+            throw std::logic_error("multiple stopwatch starts");
+        }
         //printf("Starting stopwatch...\n");
         running = true;
         t0 = now();
     }
 
     /// stop counting
-    void stop() {
-        if(!running) throw std::logic_error("stopwatch stop without start");
+    void stop(bool restop_ok = false) {
+        if(!running) {
+            if(restop_ok) return;
+            throw std::logic_error("stopwatch stop without start");
+        }
         running = false;
         elapsed += dtime();
         //if(elapsed == dt) printf("Elapsed time: %g seconds\n", elapsed);
@@ -77,7 +83,7 @@ public:
     double elapsed = 0;     ///< total elapsed time
 
 protected:
-    bool running;
+    bool running = false;
 };
 
 /// Default stopwatch type
