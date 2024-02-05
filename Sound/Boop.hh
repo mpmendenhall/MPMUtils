@@ -24,7 +24,7 @@ public:
     double l = 0.2;     ///< duration [s]
     double rise = 0.2;  ///< envelope rise (envelope dependent)
     double timbre = 1;  ///< waveform timbre adjust
-    double efall = 1;   ///< tail falloff
+    double efall = 0;   ///< tail falloff
 
     /// number of samples that will be generated
     size_t nsamps() const { return l * samplerate; }
@@ -49,7 +49,7 @@ public:
     /// generate and add sound to buffer
     void gen(float* v, size_t stride = 1, double dt = 0) const;
     /// generate with automatic allocation
-    void gen(vector<float>& v, double t0, int chan) const;
+    void gen(vector<float>& v, double t0, int chan, size_t i0 = 0) const;
 };
 
 #endif

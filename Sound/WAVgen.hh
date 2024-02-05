@@ -73,7 +73,7 @@ public:
         if(!(t > 0)) return;
         static vector<sample_t> v;
         v.clear();
-        v.resize(nchan * samplerate * t);
+        v.resize(nchan * size_t(samplerate * t));
         for(auto& s: v) s = normalize(0.); // dither and baseline
         PBW::add_item(v);
     }

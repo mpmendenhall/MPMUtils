@@ -4,9 +4,11 @@
 
 double Boop::envelope(double t) const {
     if(t <= 0) return 0;
-    switch(eshape) {
-        case FLAT: return 1;
-        case TRIANGLE: return t< l*rise? t/(l*rise) : pow((l-t)/(l*(1-rise)), efall);
+    if(eshape == FLAT) return 1;
+    if(eshape == TRIANGLE) {
+        if(t < l*rise) return t/(l*rise);
+        double x = (l-t)/(l*(1-rise));
+        return x * exp(-efall*(1-x));
     }
     return 1;
 }
@@ -24,9 +26,9 @@ void Boop::gen(float* v, size_t stride, double dt) const {
     }
 }
 
-void Boop::gen(vector<float>& v, double t0, int chan) const {
+void Boop::gen(vector<float>& v, double t0, int chan, size_t i0) const {
     auto i = samplepos(t0);
-    auto sz = nchan*(i + nsamps());
+    auto sz = nchan*(i + nsamps()) + i0;
     if(sz > v.size()) v.resize(sz);
-    gen(v.data() + i*nchan + chan, nchan, t0);
+    gen(v.data() + i*nchan + chan + i0, nchan, t0);
 }
