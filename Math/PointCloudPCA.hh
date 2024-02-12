@@ -38,6 +38,13 @@ struct weightedpt: public array<T, N> {
 
     int i = 0;  ///< origin index
     weight_t w; ///< weight
+
+    /// display info to stdout
+    void display() const {
+        printf("Point %i: %g at [ ", i, double(w));
+        for(auto x: *this) printf("%6g ", double(x));
+        printf("]\n");
+    }
 };
 
 /// PCA calculation

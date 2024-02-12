@@ -20,9 +20,9 @@ inline string to_str(const T& x) {
 /// utility for displaying vector as string
 template<typename T>
 inline string to_str(const vector<T>& v) {
-    string s = "[ ";
-    for(const auto& x: v) s += to_str(x) + " ";
-    return s + "]";
+    string u = "[ ";
+    for(const auto& x: v) u += to_str(x) + " ";
+    return u + "]";
 }
 
 #endif

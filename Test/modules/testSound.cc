@@ -8,7 +8,7 @@
 REGISTER_EXECLET(testSound) {
     WAVgen<> WG;
     WG.verbose = 5;
-    Boop B(WG.samplerate);
+    SimpleBoop B(WG.samplerate);
     B.l = 0.15;
 
     WG.open_handle();
@@ -16,11 +16,12 @@ REGISTER_EXECLET(testSound) {
 
     for(size_t j = 0; j < 8; j++) {
 
-        vector<float> buf(WG.nchan * B.nsamps());
+        vector<float> buf;
         B.timbre = pow(1.2, j);
         B.f = 500*B.timbre;
         for(size_t i = 0; i < WG.nchan; ++i) {
-            B.gen(buf.data() + i, WG.nchan);
+	    B.chan = i;
+            B.gen(buf, 0);
             B.f *= 1.5;
         }
 
