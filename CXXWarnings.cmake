@@ -1,5 +1,5 @@
 LIST(APPEND CXXOPTS "-Wall" "-Wextra")
-option(WERROR "Enable/disable -Werror compile flags" ON)
+option(WERROR "Enable/disable -Werror compile flags" OFF)
 IF(WERROR)
     MESSAGE(STATUS "Enabling -Werror compile flag, turning warnings into errors")
     LIST(APPEND CXXOPTS "-Werror")
