@@ -1,4 +1,4 @@
-/// \file JobState.hh Utility for storage and retrieval of hash-identified state job state information
+/// @file JobState.hh Utility for storage and retrieval of hash-identified state job state information
 
 #ifndef JOBSTATE_HH
 #define JOBSTATE_HH

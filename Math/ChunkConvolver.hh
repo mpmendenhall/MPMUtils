@@ -25,6 +25,8 @@ public:
     void convolve(const vector<double>& vin, vector<double>& vout) const;
     /// get real-space kernel size
     size_t kernsize() const { return N; }
+    /// get realspace kernel
+    const vector<double>& getKernel() const { return kern; }
 
     /// centered Gaussian kernel (default window width if set to 0)
     void setGaussianKernel(double sigma, size_t w = 0);
@@ -39,6 +41,7 @@ protected:
     void do_convolve(workspace_t& P) const;
 
     int N = 0;                      ///< real-space kernel size
+    vector<double> kern;            ///< real-space kernel
     vector<plan_t::scplx_t> kkern;  ///< k-space kernel
 };
 

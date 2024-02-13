@@ -1,4 +1,4 @@
-/// \file testChunkConvolver.cc Convolution helper tests
+/// @file testChunkConvolver.cc Convolution helper tests
 
 #include "ChunkConvolver.hh"
 #include "ConfigFactory.hh"

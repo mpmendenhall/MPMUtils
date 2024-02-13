@@ -5,6 +5,7 @@
 
 void ChunkConvolver::setKernel(const vector<double>& k) {
     N = k.size();
+    kern = k;
     auto& P = IFFTWorkspace<plan_t>::get_iffter(2*N);
     auto it = P.v_x.begin();
     for(auto x: k) *(it++) = x;
@@ -27,10 +28,34 @@ void extract_range_cyclic(it_t begin, it_t end, int i0, size_t N, double* out) {
     }
 }
 
+/*
+    kernel size N = 4
+    orig_size = 10:
+   |abcd|    |    |    |
+    1234 1234 12.. tail
+    zero:       00 0000
+    flat:       22 2222
+    wrap:       12 3412
+
+   n_chunks = (10-1)/4 + 1 = 3
+
+   internal convolutions on chunks:
+    |1234|0000| repeating...
+     uuuu ttt0  repeating...
+  abcd ...abcd
+
+   out:
+abcd          abc d
+   |              |
+...1234 1234 12xx x000
+        (abc)d     abc
+*/
+
 void ChunkConvolver::convolve(const vector<double>& _v_in, vector<double>& v_out) const {
     auto orig_size = _v_in.size();
     if(!orig_size) { v_out.clear(); return; }
     if(!N) throw std::logic_error("Convolution with null-dimension kernel");
+    auto final_size = orig_size + N - 1;
 
     auto& P = IFFTWorkspace<plan_t>::get_iffter(2*N);
     vector<double> vtail(N);    // second half of previous chunk
@@ -50,20 +75,20 @@ void ChunkConvolver::convolve(const vector<double>& _v_in, vector<double>& v_out
     }
 
     // pad out end for full chunked calculation
-    size_t n_chunks = (orig_size + 1)/N + 1;
+    size_t n_chunks = (final_size - 1)/N + 1;
     auto v_in = _v_in;
-    v_in.resize(n_chunks * N, boundaries[1] == BOUNDARY_FLAT? _v_in.back() : 0.);
-    v_out.resize(n_chunks * N);
+    v_in.resize(final_size, boundaries[1] == BOUNDARY_FLAT? _v_in.back() : 0.);
     if(boundaries[1] == BOUNDARY_WRAP) {
         extract_range_cyclic(_v_in.begin(), _v_in.end(), 0, v_in.size() - orig_size, v_in.data() + orig_size);
     }
+    v_in.resize((n_chunks + 1) * N);
+    v_out.resize(n_chunks * N);
 
     for(size_t c = 0; c < n_chunks; ++c) {
         size_t n0 = c * N;
         int i = 0;
         for(; i < N; ++i) P.v_x[i] = v_in[n0 + i];
         for(; i < 2*N; ++i) P.v_x[i] = 0;
-
         do_convolve(P);
 
         for(i=0; i<N; ++i) v_out[n0 + i] = vtail[i] + P.v_x[i];
@@ -71,7 +96,7 @@ void ChunkConvolver::convolve(const vector<double>& _v_in, vector<double>& v_out
     }
 
     // truncate to correct size
-    v_out.resize(orig_size + N - 1);
+    v_out.resize(final_size);
 }
 
 void ChunkConvolver::do_convolve(workspace_t& P) const {

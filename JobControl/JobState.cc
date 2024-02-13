@@ -1,4 +1,4 @@
-/// \file JobState.cc
+/// @file JobState.cc
 // -- Michael P. Mendenhall, LLNL 2023
 
 #include "JobState.hh"

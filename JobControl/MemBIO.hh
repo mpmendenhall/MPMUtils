@@ -1,4 +1,4 @@
-/// \file MemBIO.hh Binary IO from in-memory buffers
+/// @file MemBIO.hh Binary IO from in-memory buffers
 
 #ifndef MEMBIO_HH
 #define MEMBIO_HH
