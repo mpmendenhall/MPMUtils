@@ -9,6 +9,24 @@
 using std::vector;
 #include "lininterp.hh"
 
+/// Downsample
+template<typename T, typename Tmid = T>
+void downsample(vector<T>& v, int d, bool downscale) {
+    if(d <= 1 || !v.size()) return;
+
+    auto it = v.begin();
+    int n = 0;
+    Tmid s = *it;
+    for(auto x: v) {
+        if(++n == d) {
+            n = 0;
+            *(it++) = downscale? s/d : s;
+            s = x;
+        } else s += x;
+    }
+    v.resize(v.size()/d);
+}
+
 /// Uniformly-spaced datapoints
 template<class T, typename Tmid = T>
 class GridData: public vector<T> {
@@ -25,21 +43,7 @@ public:
     double interpolate(fracindex_t s) const { return lininterp(*this, s); }
 
     /// Downsample
-    virtual void downsample(int d, bool downscale) {
-        if(d <= 1 || !this->size()) return;
-
-        auto it = this->begin();
-        int n = 0;
-        calcs_t s = *it;
-        for(auto x: *this) {
-            if(++n == d) {
-                n = 0;
-                *(it++) = downscale? s/d : s;
-                s = x;
-            } else s += x;
-        }
-        this->resize(this->size()/d);
-    }
+    virtual void downsample(int d, bool downscale) { ::downsample<T,Tmid>(*this, d, downscale); }
 };
 
 /// Gridded data axis
