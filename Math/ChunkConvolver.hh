@@ -39,6 +39,12 @@ protected:
 
     /// convolve P.v_in with kkern
     void do_convolve(workspace_t& P) const;
+    /// fill pre-data points into size of (initially zero'd) v_in
+    void prepoints(const vector<double>& _v_in, vector<double>& v_in) const;
+    /// append n post-data points
+    void postpoints(const vector<double>& _v_in, vector<double>& v_in, size_t n) const;
+    /// convolution on pre-padded input vector
+    void _convolve(vector<double>& v_in, vector<double>& v_out, size_t orig_size) const;
 
     int N = 0;                      ///< real-space kernel size
     vector<double> kern;            ///< real-space kernel

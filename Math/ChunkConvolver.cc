@@ -51,47 +51,54 @@ abcd          abc d
         (abc)d     abc
 */
 
+void ChunkConvolver::prepoints(const vector<double>& _v_in, vector<double>& v_in) const {
+    if(boundaries[0] == BOUNDARY_0) return;
+    int n = v_in.size();
+    if(boundaries[0] == BOUNDARY_WRAP) {
+        extract_range_cyclic(_v_in.begin(), _v_in.end(), -n, n, v_in.data());
+    } else if(boundaries[0] == BOUNDARY_FLAT) {
+        for(int i=0; i < n; ++i) v_in[i] = _v_in[0];
+    }
+}
+
+void ChunkConvolver::postpoints(const vector<double>& _v_in, vector<double>& v_in, size_t n) const {
+    auto orig_size = v_in.size();
+    v_in.resize(orig_size + n, boundaries[1] == BOUNDARY_FLAT? _v_in.back() : 0.);
+    if(boundaries[1] == BOUNDARY_WRAP) {
+        extract_range_cyclic(_v_in.begin(), _v_in.end(), 0, n, v_in.data() + orig_size);
+    }
+}
+
 void ChunkConvolver::convolve(const vector<double>& _v_in, vector<double>& v_out) const {
     auto orig_size = _v_in.size();
     if(!orig_size) { v_out.clear(); return; }
     if(!N) throw std::logic_error("Convolution with null-dimension kernel");
+
+    // pad out end for full chunked calculation
+    vector<double> v_in(N);
+    prepoints(_v_in, v_in);
+    v_in.insert(v_in.end(), _v_in.begin(), _v_in.end());
+    postpoints(_v_in, v_in, N-1);
+    _convolve(v_in, v_out, orig_size);
+}
+
+void ChunkConvolver::_convolve(vector<double>& v_in, vector<double>& v_out, size_t orig_size) const {
     auto final_size = orig_size + N - 1;
+    size_t n_chunks = (v_in.size() - 1)/N + 1;
+    v_in.resize(n_chunks * N);
+    v_out.resize(n_chunks * N);
 
     auto& P = IFFTWorkspace<plan_t>::get_iffter(2*N);
     vector<double> vtail(N);    // second half of previous chunk
-
-    // starting boundary contribution
-    if(boundaries[0] == BOUNDARY_WRAP) {
-        extract_range_cyclic(_v_in.begin(), _v_in.end(), -N, N, P.v_x.data());
-        for(int i=N; i < 2*N; ++i) P.v_x[i] = 0;
-        do_convolve(P);
-        vtail.assign(P.v_x.begin() + N, P.v_x.end());
-    }
-    if(boundaries[0] == BOUNDARY_FLAT) {
-        for(int i=0; i < N; ++i) P.v_x[i] = _v_in[0];
-        for(int i=N; i < 2*N; ++i) P.v_x[i] = 0;
-        do_convolve(P);
-        vtail.assign(P.v_x.begin() + N, P.v_x.end());
-    }
-
-    // pad out end for full chunked calculation
-    size_t n_chunks = (final_size - 1)/N + 1;
-    auto v_in = _v_in;
-    v_in.resize(final_size, boundaries[1] == BOUNDARY_FLAT? _v_in.back() : 0.);
-    if(boundaries[1] == BOUNDARY_WRAP) {
-        extract_range_cyclic(_v_in.begin(), _v_in.end(), 0, v_in.size() - orig_size, v_in.data() + orig_size);
-    }
-    v_in.resize((n_chunks + 1) * N);
-    v_out.resize(n_chunks * N);
-
     for(size_t c = 0; c < n_chunks; ++c) {
+        if(!c && boundaries[0] == BOUNDARY_0) continue;
         size_t n0 = c * N;
         int i = 0;
         for(; i < N; ++i) P.v_x[i] = v_in[n0 + i];
         for(; i < 2*N; ++i) P.v_x[i] = 0;
         do_convolve(P);
 
-        for(i=0; i<N; ++i) v_out[n0 + i] = vtail[i] + P.v_x[i];
+        if(c > 0) for(i=0; i<N; ++i) v_out[n0 - N + i] = vtail[i] + P.v_x[i];
         vtail.assign(P.v_x.begin() + N, P.v_x.end());
     }
 

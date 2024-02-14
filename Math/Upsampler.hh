@@ -13,7 +13,7 @@ public:
     using ChunkConvolver::getKernel;
 
     /// Constructor
-    Upsampler() { for(auto& b: boundaries) b = BOUNDARY_WRAP; }
+    Upsampler() { for(auto& b: boundaries) b = BOUNDARY_FLAT; }
 
     /// perform upsampling, output vector of size n_up * input. Okay for vin == vout.
     void upsample(const vector<double>& vin, vector<double>& vout);

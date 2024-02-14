@@ -3,27 +3,30 @@
 #include "Upsampler.hh"
 #include <gsl/gsl_sf_trig.h>
 
-void Upsampler::upsample(const vector<double>& vin, vector<double>& vout) {
-    if(n_up == 1) { vout = vin; return; }
+void Upsampler::upsample(const vector<double>& _vin, vector<double>& vout) {
+    if(n_up == 1) { vout = _vin; return; }
     if(!n_up) { vout.clear(); return; }
 
-    auto n0 = vin.size();
-    if(vin.data() == vout.data()) {
-        const vector<double> v2 = vin;
-        vout.clear();
-        vout.resize(n0 * n_up);
-        auto it = vout.begin();
-        for(auto s: v2) { *it = s; it += n_up; }
-    } else {
-        vout.clear();
-        vout.resize(vin.size() * n_up);
-        auto it = vout.begin();
-        for(auto s: vin) { *it = s; it += n_up; }
+    // pad out end for full chunked calculation
+    auto n = N/n_up;
+    vector<double> v_in(n);
+    prepoints(_vin, v_in);
+    v_in.insert(v_in.end(), _vin.begin(), _vin.end());
+    postpoints(_vin, v_in, n-1);
+
+    // pre-upsampling points lattice
+    auto n0 = v_in.size();
+    vector<double> vs(n_up * n0);
+    auto it = vs.begin();
+    for(size_t i = 0; i < n0; ++i) {
+        *it = v_in[i];
+        it += n_up;
     }
 
-    convolve(vout, vout);
+    n0 = _vin.size();
+    _convolve(vs, vout, n0 * n_up);
     auto dn = kernsize()/2;
-    vout.assign(vout.begin() + dn, vout.begin() + dn + n0*n_up);
+    vout.assign(vout.begin() + dn, vout.begin() + dn + n0 * n_up);
 }
 
 void Upsampler::normalize_kernel(vector<double>& k) const {
