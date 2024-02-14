@@ -103,18 +103,19 @@ string optionalGlobalDefault(const string& argname, const string& dflt, const st
 }
 
 bool optionalGlobalArg(const string& argname, string& v, const string& help) {
+    bool requery = QueriedArgs().count(argname);
     QueriedArgs().insert(argname);
 
-    printf(TERMFG_BLUE "*" TERMSGR_RESET " Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
+    if(!requery) printf(TERMFG_BLUE "*" TERMSGR_RESET " Optional argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
     const auto& GA = GlobalArgs();
     auto it = GA.find(argname);
     if(it == GA.end() || !it->second.size()) {
-        printf(TERMFG_GREEN "defaulted to" TERMSGR_RESET " '%s'\n", v.c_str());
+        if(!requery) printf(TERMFG_GREEN "defaulted to" TERMSGR_RESET " '%s'\n", v.c_str());
         return false;
     }
     if(it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
     v = it->second[0];
-    printf(TERMFG_GREEN "-> '%s'" TERMSGR_RESET "\n", v.c_str());
+    if(!requery) printf(TERMFG_GREEN "-> '" TERMFG_MAGENTA TERMSGR_BOLD "%s" TERMSGR_RESET TERMFG_GREEN "'" TERMSGR_RESET "\n", v.c_str());
     return true;
 }
 
@@ -133,6 +134,7 @@ bool optionalGlobalArg(const string& argname, int& v, const string& help) {
 }
 
 bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
+    bool requery = QueriedArgs().count(argname);
     QueriedArgs().insert(argname);
 
     const auto& GA = GlobalArgs();
@@ -141,17 +143,21 @@ bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
     if(!noarg && it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
     if(!help.size()) return !noarg;
 
-    printf(TERMFG_BLUE "*" TERMSGR_RESET " Optional argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
+    if(!requery) printf(TERMFG_BLUE "*" TERMSGR_RESET " Optional argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
     if(noarg) {
-        printf(TERMFG_GREEN "defaulted to ");
+        if(!requery) printf(TERMFG_GREEN "defaulted to ");
     } else {
         v = string_to_bool(it->second[0]);
-        printf(TERMFG_GREEN "-> ");
+        if(!requery) printf(TERMFG_GREEN "-> ");
     }
-    printf(TERMSGR_RESET "'");
-    if(v) printf(TERMFG_GREEN "true");
-    else printf(TERMFG_YELLOW "false");
-    printf(TERMSGR_RESET "'\n");
+
+    if(!requery) {
+        printf(TERMSGR_RESET "'");
+        if(v) printf(TERMFG_GREEN "true");
+        else printf(TERMFG_YELLOW "false");
+        printf(TERMSGR_RESET "'\n");
+    }
+
     return !noarg;
 }
 

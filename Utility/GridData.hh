@@ -10,17 +10,36 @@ using std::vector;
 #include "lininterp.hh"
 
 /// Uniformly-spaced datapoints
-template<class T>
+template<class T, typename Tmid = T>
 class GridData: public vector<T> {
 public:
     /// data type
     typedef T value_t;
+    /// internal calculation type
+    typedef Tmid calcs_t;
 
     /// Constructor inheritance
     using vector<T>::vector;
 
     /// linear interpolate to sample position
     double interpolate(fracindex_t s) const { return lininterp(*this, s); }
+
+    /// Downsample
+    virtual void downsample(int d, bool downscale) {
+        if(d <= 1 || !this->size()) return;
+
+        auto it = this->begin();
+        int n = 0;
+        calcs_t s = *it;
+        for(auto x: *this) {
+            if(++n == d) {
+                n = 0;
+                *(it++) = downscale? s/d : s;
+                s = x;
+            } else s += x;
+        }
+        this->resize(this->size()/d);
+    }
 };
 
 /// Gridded data axis
@@ -31,7 +50,7 @@ public:
     double dt = 1;  ///< grid spacing
 
     /// x bin position
-    double binX(double i) const { return t0 + i*dt; }
+    double binX(double i) const { return t0 + (s_start + i)*dt; }
 
     /// shift t0 -> t0 + ds * dt
     void xshift(double ds) { t0 += ds * dt; }
@@ -57,6 +76,25 @@ public:
     /// copy data from another GridData
     template<class GD2>
     void copyFrom(const GD2& v) { setAxisFrom(v); this->assign(v.begin(), v.end()); }
+
+    /// Downsample
+    void downsample(int d, bool downscale) override {
+        if(d <= 1) return;
+
+        dt *= d;
+        size_t xstart = (s_start < 0? -s_start : s_start) % d;
+        if(xstart && s_start > 0) xstart = d - xstart;
+        s_start += xstart;
+        s_start /= d;
+        if(xstart) {
+            if(xstart >= this->size()) {
+                this->clear();
+                return;
+            }
+            this->assign(this->begin() + xstart, this->end());
+        }
+        GridData_t::downsample(d, downscale);
+    }
 };
 
 #ifdef ENABLE_EXEGETE

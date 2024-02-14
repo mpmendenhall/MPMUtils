@@ -83,14 +83,18 @@ public:
 
     /// return exists() + display setting description, "* Configuration ..." line or "*** Settings" group header
     bool show_exists(const string& name, const string& descrip, bool mandatory =  false, bool header = true) {
+        bool requery = queried.count(name);
         queried.insert(name);
+        if(requery) return S.exists(name);
         return ExplainConfig::show_exists(S, name, descrip, mandatory, header);
     }
 
     /// Describe (optional)-value lookup with default
     template<class C>
     bool lookupValue(const string& name, C& val, const string& descrip = "", bool mandatory = false) {
+        bool requery = queried.count(name);
         queried.insert(name);
+        if(requery) return S.lookupValue(name, val);
         return ExplainConfig::lookupValue(S, name, val, descrip, mandatory);
     }
 
