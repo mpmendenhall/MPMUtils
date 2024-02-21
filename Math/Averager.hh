@@ -9,9 +9,9 @@
 
 /// Weighted average with numerically-stable variance tracking
 template<typename value_t = double, typename weight_t = double>
-struct Averager {
+struct _Averager {
     /// Default constructor
-    Averager() { }
+    _Averager() { }
 
     /// Add weighted item
     void add(value_t x, weight_t w) {
@@ -46,10 +46,10 @@ struct Averager {
     }
 
     /// add with unity weight
-    Averager& operator+=(value_t x) { add(x); return *this; }
+    _Averager& operator+=(value_t x) { add(x); return *this; }
 
     /// add averager
-    Averager& operator+=(const Averager& a) {
+    _Averager& operator+=(const _Averager& a) {
         if(!a.sw) return *this;
         if(!sw) return (*this = a);
 
@@ -64,16 +64,16 @@ struct Averager {
     void wscale(weight_t c) { sw *= c; swx *= c; sw2S *= c*c; }
 
     /// unary minus
-    const Averager operator-() const { return Averager(sw, -swx, sw2S); }
+    const _Averager operator-() const { return _Averager(sw, -swx, sw2S); }
     /// inplace subtraction
-    Averager& operator-=(const Averager& rhs) { *this += -rhs; return *this; }
+    _Averager& operator-=(const _Averager& rhs) { *this += -rhs; return *this; }
     /// subtraction
-    const Averager operator-(const Averager& rhs) const { auto p = *this; p -= rhs; return p; }
+    const _Averager operator-(const _Averager& rhs) const { auto p = *this; p -= rhs; return p; }
 
     /// scalar multiplication of mean value, spread
-    Averager& operator*=(value_t c) { swx *= c; sw2S *= c*c; return *this; }
+    _Averager& operator*=(value_t c) { swx *= c; sw2S *= c*c; return *this; }
     /// scalar multiplication of mean value, spread
-    const Averager operator*(value_t c) const { auto p = *this; p *= c; return p; }
+    const _Averager operator*(value_t c) const { auto p = *this; p *= c; return p; }
 
     /// total weight
     weight_t weight() const { return sw; }
@@ -95,11 +95,13 @@ struct Averager {
 
 protected:
     /// Constructor with contents
-    Averager(weight_t _sw, value_t _swx, value_t _sw2s): sw(_sw), swx(_swx), sw2S(_sw2s) { }
+    _Averager(weight_t _sw, value_t _swx, value_t _sw2s): sw(_sw), swx(_swx), sw2S(_sw2s) { }
 
     weight_t sw{};  ///< sum of weights
     value_t swx{};  ///< weighted sum w*x
     value_t sw2S{}; ///< weighted variance (sw)^2 sigma^2
 };
+
+typedef _Averager<> Averager;
 
 #endif

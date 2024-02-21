@@ -63,6 +63,7 @@ void PluginSaver::Configure(SettingsQuery& S, bool skipUnknown) {
     auto& ps = S.get("plugins", "analysis plugins");
     for(auto& p: ps) {
         string pname = p.getName();
+        ps.markunused(pname);
         ps.show_exists(pname, "plugin settings");
         int copynum = -1;
         if(p->isList()) {

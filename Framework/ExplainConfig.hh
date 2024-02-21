@@ -68,6 +68,8 @@ public:
 
     /// Mark as queried with no other actions
     void markused(const string& s) { queried.insert(s); }
+    /// Mark as unused
+    void markunused(const string& s) { queried.erase(s); }
     /// Check if requested setting existed
     operator bool() const { return &S != &NullSetting(); }
 
@@ -144,10 +146,12 @@ public:
         /// constructor, for begin or end iterator
         explicit iterator(SettingsQuery& _SQ, bool start): SQ(_SQ), _it(start? SQ.S.begin() : SQ.S.end()) { }
         /// dereference to get contents
-        SettingsQuery& operator*() {
+        SettingsQuery& operator*() { return SQ.sub(name()); }
+        /// get item name
+        string name() const {
             auto n = _it->getName();
             if(!n) throw std::logic_error("List iteration unimplemented");
-            return SQ.sub(n);
+            return string(n);
         }
         /// move to next
         iterator& operator++() { ++_it; return *this; }

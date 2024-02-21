@@ -48,16 +48,27 @@ size_t numGlobalArg(const string& argname) {
 }
 
 bool wasArgGiven(const string& argname, const string& help) {
+    bool requery = QueriedArgs().count(argname);
+    if(requery) return GlobalArgs().count(argname);
+
     printf(TERMFG_BLUE "*" TERMSGR_RESET " Argument '" TERMFG_GREEN "+%s" TERMSGR_RESET "' (%s) ", argname.c_str(), help.c_str());
     if(numGlobalArg(argname)) {
-        printf(TERMFG_GREEN "enabled" TERMSGR_RESET "\n");
+        printf(TERMFG_MAGENTA TERMSGR_BOLD "enabled" TERMSGR_RESET "\n");
         return true;
     }
     printf(TERMFG_YELLOW "disabled" TERMSGR_RESET "\n");
     return false;
 }
 
+string _requiredGlobalArg(const string& argname) {
+    QueriedArgs().insert(argname);
+    auto& v = GlobalArgs()[argname];
+    if(v.size() != 1) throw std::runtime_error("Expected one '-"+argname+"' argument");
+    return v[0];
+}
+
 string requiredGlobalArg(const string& argname, const string& help) {
+    if(QueriedArgs().count(argname)) return _requiredGlobalArg(argname);
     QueriedArgs().insert(argname);
 
     printf(TERMFG_YELLOW "*" TERMSGR_RESET " Required argument '" TERMFG_GREEN "-%s" TERMSGR_RESET " <%s>' ", argname.c_str(), help.c_str());
@@ -66,11 +77,20 @@ string requiredGlobalArg(const string& argname, const string& help) {
         printf(TERMFG_RED "MISSING!" TERMSGR_RESET "\n");
         throw std::runtime_error("Expected one '-"+argname+"' argument");
     }
-    printf(TERMFG_GREEN "-> '%s'" TERMSGR_RESET "\n", v[0].c_str());
+    printf(TERMFG_GREEN "->" TERMSGR_RESET " '" TERMFG_MAGENTA TERMSGR_BOLD "%s" TERMSGR_RESET "'\n", v[0].c_str());
     return v[0];
 }
 
+
+const vector<string>& _requiredGlobalMulti(const string& argname, size_t nmin) {
+    QueriedArgs().insert(argname);
+    auto& v = GlobalArgs()[argname];
+    if(v.size() < nmin) throw std::runtime_error("Expected at least " + to_str(nmin) + " '-"+argname+"' arguments, got " + to_str(v.size()));
+    return v;
+}
+
 const vector<string>& requiredGlobalMulti(const string& argname, const string& help, size_t nmin) {
+    if(QueriedArgs().count(argname)) return _requiredGlobalMulti(argname, nmin);
     QueriedArgs().insert(argname);
 
     auto& v = GlobalArgs()[argname];
@@ -80,9 +100,9 @@ const vector<string>& requiredGlobalMulti(const string& argname, const string& h
         printf(TERMFG_RED "MISSING!" TERMSGR_RESET "\n");
         throw std::runtime_error("Expected at least " + to_str(nmin) + " '-"+argname+"' arguments, got " + to_str(v.size()));
     }
-    printf(TERMFG_GREEN "->");
-    for(auto& s: v) printf(" '%s'", s.c_str());
-    printf(TERMSGR_RESET "\n");
+    printf(TERMFG_GREEN "->" TERMSGR_RESET);
+    for(auto& s: v) printf(" '" TERMFG_MAGENTA TERMSGR_BOLD "%s" TERMSGR_RESET "'", s.c_str());
+    printf("\n");
     return v;
 }
 
@@ -115,7 +135,7 @@ bool optionalGlobalArg(const string& argname, string& v, const string& help) {
     }
     if(it->second.size() > 1) throw std::runtime_error("Unexpected multiple '-"+argname+"' arguments");
     v = it->second[0];
-    if(!requery) printf(TERMFG_GREEN "-> '" TERMFG_MAGENTA TERMSGR_BOLD "%s" TERMSGR_RESET TERMFG_GREEN "'" TERMSGR_RESET "\n", v.c_str());
+    if(!requery) printf(TERMFG_GREEN "->" TERMSGR_RESET " '" TERMFG_MAGENTA TERMSGR_BOLD "%s" TERMSGR_RESET "'\n", v.c_str());
     return true;
 }
 
@@ -148,7 +168,7 @@ bool optionalGlobalArg(const string& argname, bool& v, const string& help) {
         if(!requery) printf(TERMFG_GREEN "defaulted to ");
     } else {
         v = string_to_bool(it->second[0]);
-        if(!requery) printf(TERMFG_GREEN "-> ");
+        if(!requery) printf(TERMFG_MAGENTA TERMSGR_BOLD "-> ");
     }
 
     if(!requery) {

@@ -16,7 +16,7 @@ MicPlacement::response_t MicPlacement::response(vec3_t x) const {
         if(pickup == CARDIOID) a *= 0.5*(k + 1);
     }
 
-    return { r/v_snd, a };
+    return response_t(r/v_snd, a);
 }
 
 void MicPlacement::display() const {

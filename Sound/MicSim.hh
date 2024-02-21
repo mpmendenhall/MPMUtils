@@ -29,6 +29,8 @@ public:
 
     /// calculated pickup response
     struct response_t {
+        /// constructor
+        explicit response_t(double _dt = 0, double _a = 1): dt(_dt), a(_a) { }
         double dt = 0;  ///< timing offset [s]
         double a = 1;   ///< normalized amplitude [m^2]
     };
