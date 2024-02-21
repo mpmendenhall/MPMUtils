@@ -6,7 +6,7 @@
 
 /// old-style averager with sum w*x, sum w*x*x
 template<typename value_t = double, typename weight_t = double>
-struct _Averager {
+struct __Averager {
     /// Add weighted item
     void add(value_t v, weight_t w = 1) {
         sum_w += w;
@@ -15,9 +15,9 @@ struct _Averager {
         sum_wxx += v*vw;
     }
     /// add with unity weight
-    _Averager& operator+=(value_t v) { add(v); return *this; }
+    __Averager& operator+=(value_t v) { add(v); return *this; }
     /// add averager
-    _Averager& operator+=(const _Averager& a) {
+    __Averager& operator+=(const __Averager& a) {
         sum_w += a.sum_w;
         sum_wx += a.sum_wx;
         sum_wxx += a.sum_wxx;
@@ -47,8 +47,8 @@ struct _Averager {
 
 
 REGISTER_EXECLET(testAverager) {
-    Averager<> A, B;
-    _Averager<> _A, _B;
+    Averager A, B;
+    __Averager<> _A, _B;
 
     for(double i = 1; i < 5; ++i) {
         A += i;
