@@ -3,10 +3,10 @@
 
 /// Iteration over map keys
 template<class M>
-class iter_keys {
+class _iter_keys {
 public:
     /// Constructor
-    iter_keys(M& _m): m(_m) { }
+    _iter_keys(const M& _m): m(_m) { }
 
     /// iterator through keys
     class iterator {
@@ -32,22 +32,28 @@ protected:
     const M& m;
 };
 
-/// Iteration over map values
+/// for c++11 function template deduction
 template<class M>
-class iter_vals {
+_iter_keys<M> iter_keys(const M& m) { return _iter_keys<M>(m); }
+
+
+/// Iteration over map values
+template<typename M>
+class _iter_vals {
 public:
     /// Constructor
-    iter_vals(M& _m): m(_m) { }
+    _iter_vals(M& _m): m(_m) { }
 
-    /// iterator through keys
+    /// iterator through keys (possibly const if M is const typename)
     class iterator {
     protected:
-        typename M::iterator it;  ///< underlying setting iterator
+        decltype(std::declval<M>().begin()) it;  ///< underlying iterator
     public:
         /// constructor
-        explicit iterator(typename M::iterator _it): it(_it) { }
-        /// dereference to get contents
-        decltype(it->second)& operator*() { return it->second; }
+        explicit iterator(decltype(it) _it): it(_it) { }
+        /// dereference to get contents --- templated so `auto` works in c++11
+        template<typename UNUSED=int>
+        auto& operator*() { return it->second; }
         /// move to next
         iterator& operator++() { ++it; return *this; }
         /// check if iterators unequal
@@ -62,7 +68,7 @@ public:
     /// const iterator through keys
     class const_iterator {
     protected:
-        typename M::const_iterator it;  ///< underlying setting iterator
+        typename M::const_iterator it;  ///< underlying iterator
     public:
         /// constructor
         explicit const_iterator(typename M::const_iterator _it): it(_it) { }
@@ -82,3 +88,8 @@ public:
 protected:
     M& m;
 };
+
+/// for c++11 function template deduction
+template<typename M>
+_iter_vals<M> iter_vals(M& m) { return _iter_vals<M>(m); }
+

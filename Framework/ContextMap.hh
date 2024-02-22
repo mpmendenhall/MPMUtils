@@ -11,6 +11,7 @@
 #include <typeinfo>
 #include <mutex>
 #include "NoCopy.hh"
+#include "iterate_map.hh"
 
 /// Utility for (context-scoped) cascading variables lookup
 class ContextMap: private NoCopy {
@@ -18,7 +19,7 @@ public:
     /// Default constructor
     explicit ContextMap(ContextMap* _parent = nullptr): parent(_parent) { }
     /// Destructor
-    ~ContextMap() { for(auto& kv: dat) if(kv.second.second) kv.second.second->deletep(kv.second.first); }
+    ~ContextMap() { for(auto& d: iter_vals(dat)) if(d.second) d.second->deletep(d.first); }
 
     /// get active context (create if none previously exist)
     static ContextMap& getContext();

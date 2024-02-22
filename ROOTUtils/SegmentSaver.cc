@@ -2,6 +2,7 @@
 
 #include "SegmentSaver.hh"
 #include "PathUtils.hh"
+#include "iterate_map.hh"
 #include <stdexcept>
 #include <TString.h>
 #include <TObjString.h>
@@ -165,12 +166,12 @@ void SegmentSaver::zeroSavedHists() {
 
 void SegmentSaver::scaleData(double s) {
     if(s == 1.) return;
-    for(auto& kv: saveHists) {
-        if(doNotScale.count(kv.second)) continue;
-        if(!kv.second->GetSumw2()) kv.second->Sumw2();
-        kv.second->Scale(s);
+    for(auto H: iter_vals(saveHists)) {
+        if(doNotScale.count(H)) continue;
+        if(!H->GetSumw2()) H->Sumw2();
+        H->Scale(s);
     }
-    for(auto& kv: cumDat) if(kv.second->scalable) kv.second->Scale(s);
+    for(auto H: iter_vals(cumDat)) if(H->scalable) H->Scale(s);
 }
 
 bool SegmentSaver::isEquivalent(const SegmentSaver& S, bool throwit) const {

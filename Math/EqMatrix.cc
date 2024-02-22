@@ -27,7 +27,7 @@ void EqMatrix::addSum(int i, int j, double x, double dx) {
 void EqMatrix::lineq_t::display() const {
     for(auto& p: coeffs) printf("%+g * [%i] ", p.second, p.first);
     printf("= %g +- %g\n", x, dx);
-};
+}
 
 void EqMatrix::index_vars() {
     indices.clear();
