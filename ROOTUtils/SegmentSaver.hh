@@ -11,6 +11,7 @@
 
 #include <TFile.h>
 #include <TVectorT.h>
+#include <TH1.h>
 
 #include <set>
 using std::set;
@@ -80,7 +81,7 @@ public:
     template<class T, typename... Args>
     void registerWithName(T*& o, const string& onm, Args&&... a) {
         o = tryLoad<T>(onm);
-        if(!o) addWithName(o = new T(std::forward<Args>(a)...), onm);
+        if(!o) addObject(o = new T(std::forward<Args>(a)...), onm);
     }
 
     /// get core histogram by name

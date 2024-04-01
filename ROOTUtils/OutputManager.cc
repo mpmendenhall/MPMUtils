@@ -6,6 +6,7 @@
 #include "TermColor.hh"
 #include <TFile.h>
 #include <TStyle.h>
+#include <TH1.h>
 
 bool OutputManager::squelchAllPrinting = false;
 

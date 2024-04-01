@@ -11,9 +11,6 @@
 #include <TObject.h>
 #include <TNamed.h>
 #include <TDirectory.h>
-#include <TH1.h>
-#include <TH1F.h>
-#include <TH2F.h>
 
 #include <string>
 using std::string;
@@ -32,22 +29,23 @@ public:
     virtual TDirectory* writeItems(TDirectory* d = nullptr);
     /// clear (delete) items
     void deleteAll();
-    /// register a named ROOT object for output (and eventual deletion)
-    void addNamedObject(TNamed* o);
+
+    /// register a named ROOT object (using its own name) for output (and eventual deletion)
+    void _addObject(TNamed* o);
+    /// register an anonymous ROOT object under the specified name
+    void _addObject(TObject* o, const string& name);
+
     /// convenience pass-through wrapper
     template<class T>
-    T* addObject(T* o) { addNamedObject(o); return o; }
+    T* addObject(T* o) { _addObject(o); return o; }
+    /// convenience pass-through wrapper
+    template<class T>
+    T* addObject(T* o, const string& name) { _addObject(o, name); return o; }
 
     /// register object to deletion list (not written to file)
-    virtual TObject* addDeletable(TObject* o);
-    /// register an anonymous ROOT object under the specified name
-    virtual TObject* addAnonymous(TObject* o, const string& name);
-    /// convenience pass-through wrapper
-    template<class T>
-    T* addWithName(T* o, const string& name) { addAnonymous(o, name); return o; }
+    TObject* addDeletable(TObject* o);
 
-    map<string, TNamed*> namedItems;    ///< objects with their own names; held until deleted
-    map<string, TObject*> anonItems;    ///< objects assigned a name; held until deleted.
+    map<string, TObject*> namedItems;    ///< objects to save; owned by this class
     vector<TObject*> deleteItems;       ///< other objects never written to file
 };
 

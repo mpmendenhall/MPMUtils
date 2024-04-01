@@ -4,19 +4,19 @@ PRAGMA foreign_keys = ON;
 
 -- Named entities to perform actions on
 CREATE TABLE entity (
-    entity_id INTEGER PRIMARY KEY, -- primary key for object identification
-    name TEXT,          -- name (short identifier)
-    descrip TEXT        -- description (more verbose information)
+    entity_id INTEGER PRIMARY KEY,  -- primary key for object identification
+    entity_name TEXT,               -- name (short identifier)
+    entity_descrip TEXT             -- description (more verbose information)
 );
-CREATE UNIQUE INDEX idx_entity ON entity(name);
+CREATE UNIQUE INDEX idx_entity ON entity(entity_name);
 
 -- Processes to perform on entities
 CREATE TABLE process (
     process_id INTEGER PRIMARY KEY, -- primary key for object identification
-    name TEXT,          -- name (short identifier)
-    descrip TEXT        -- description (more verbose information)
+    process_name TEXT,              -- name (short identifier)
+    process_descrip TEXT            -- description (more verbose information)
 );
-CREATE UNIQUE INDEX idx_process ON process(name);
+CREATE UNIQUE INDEX idx_process ON process(process_name);
 
 -- Processing status
 CREATE TABLE status (
@@ -48,5 +48,5 @@ remove "failed" or "setup" status to re-try step:
 DELETE FROM status WHERE (state = 0 OR state = 3) AND process_id = 2;
 
 remove entities failing a process step:
-delete from entity where entity_id in (select entity_id from status where state=3 and process_id=2);
+delete from entity where entity_id in (select entity_id from status where state=3 and p"rocess_id=2);
 */

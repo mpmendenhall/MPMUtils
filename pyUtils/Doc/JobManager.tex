@@ -130,7 +130,7 @@ Similarly, to let you run \cd{JobManager.py} from any directory without
 \cd{JobManager} relies on an \cd{sqlite3} database file for its stored information,
     along with a directory for batch job submission scripts and logfiles.
 By default, \cd{JobManager} will create a base directory at \cd{\$HOME/\$\{HOSTNAME\}\_jobs/},
-    containing database file \cd{jdb.sql}.
+    containing database file \cd{jdb.sqlite3}.
 
 \begin{hint}[\cd{\$JOBSOUT} directory]
 Configure an environment variable you can use to reference the JobManager output direcory by \newline
@@ -143,12 +143,12 @@ Configure an environment variable you can use to reference the JobManager output
 \section{Adding jobs to DB}
 
 \begin{hint}[\cd{JobManager.py} arguments summary]
-For a brief summary of \cd{JobsManager.py} command-line options, run: \newline
-\cd{JobsManager.py {-}{-}help}
+For a brief summary of \cd{JobManager.py} command-line options, run: \newline
+\cd{JobManager.py {-}{-}help}
 \end{hint}
 
 Jobs can be added to the DB (but not submitted to run, yet) by running
-    \cd{JobsManager.py} with some combination of the following commands:
+    \cd{JobManager.py} with some combination of the following commands:
 
 Contents of a job (or multiple jobs from a file) are specified by come combination of:
 \begin{itemize}
@@ -194,11 +194,11 @@ To try running a batch of test jobs on the local machine, generate them with: \n
 \cd{JobManager.py {-}{-}test 20 {-}{-}queue local} \newline
 then launch them, and wait for completion with status checks every 5 seconds: \newline
 \cd{JobManager.py {-}{-}launch {-}{-}cycle 5} \newline
-You could also combine the arguments from both commands above into a single \cd{JobsManager.py} call.
+You could also combine the arguments from both commands above into a single \cd{JobManager.py} call.
 The process should have created a \cd{\$JOBSOUT/test/} directory,
     containing the scripts, logfile, and output status of each test job.
 You can also view the Jobs DB contents by \newline
-\cd{sqlite3 \$JOBSOUT/jdb.sql 'select job\_id, status, t\_submit, use\_walltime, return\_code from jobs;'}
+\cd{sqlite3 \$JOBSOUT/jdb.sqlite3 'select job\_id, status, t\_submit, use\_walltime, return\_code from jobs;'}
 \end{hint}
 
 \begin{hint}[Raise batch job submission limit]
@@ -212,13 +212,13 @@ and let the custer batch management system decide on its own how many of these
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Bundling jobs}
 
-\cd{JobsManager.py} provides options for ``bundling'' multiple jobs together into a single batch queue submission.
+\cd{JobManager.py} provides options for ``bundling'' multiple jobs together into a single batch queue submission.
 This is useful if you have lots of very short jobs:
     the batch system will probably take much longer to allocate resources and run 12000 one-minute jobs instead of
     400 30-minute jobs (each performing 30 one-minute tasks in a row).
 This feature can also be used to parallelize multiple single-core jobs on batch systems
     allocating multi-core nodes.
-\cd{JobsManager.py} still tracks the individual completion status of each job within the
+\cd{JobManager.py} still tracks the individual completion status of each job within the
     single ``bundled'' job submitted to the queue system.
 
 Job bundling needs to be done somewhere between adding the individual jobs to the Jobs DB

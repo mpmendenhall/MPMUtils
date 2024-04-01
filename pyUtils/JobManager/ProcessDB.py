@@ -9,7 +9,12 @@ import time
 
 pdb_state_names = {0: "setup", 1: "in progress", 2: "done", 3: "failed"}
 
-def connect_ProcessDB(fname):
+def connect_ProcessDB(fname, reinit = True):
+    if not os.path.exists(fname):
+        assert reinit
+        print("Initializeing new ProcessDB at '%s'"%fname)
+        os.system('sqlite3 "%s" < '%fname + os.path.dirname(os.path.abspath(__file__)) + "/ProcessDB_Schema.sql")
+
     """Get cursor and connection for ProcessDB"""
     conn = sqlite3.connect(fname)
     curs = conn.cursor()
@@ -17,15 +22,21 @@ def connect_ProcessDB(fname):
     curs.execute("PRAGMA journal_mode = WAL")
     return curs,conn
 
+def clear_failed(conn):
+    """Initialize resource categories in jobs database"""
+    curs = conn.cursor()
+    curs.execute("DELETE FROM status WHERE state = 3")
+    conn.commit()
+
 def find_entity_id(curs, name):
     """Find named entity, if it exists"""
-    curs.execute("SELECT entity_id FROM entity WHERE name = ?", (name,))
+    curs.execute("SELECT entity_id FROM entity WHERE entity_name = ?", (name,))
     res = curs.fetchall()
     return res[0][0] if len(res) == 1 else None
 
 def create_entity(curs, name, descrip):
     """Create named entity; return id"""
-    curs.execute("INSERT INTO entity(name,descrip) VALUES (?,?)", (name, descrip))
+    curs.execute("INSERT INTO entity(entity_name,entity_descrip) VALUES (?,?)", (name, descrip))
     return curs.lastrowid
 
 def get_entity_id(curs, name, descrip):
@@ -36,7 +47,7 @@ def get_entity_id(curs, name, descrip):
 
 def find_process_id(curs, name):
     """Find process ID by name"""
-    curs.execute("SELECT process_id FROM process WHERE name = ?", (name,))
+    curs.execute("SELECT process_id FROM process WHERE process_name = ?", (name,))
     res = curs.fetchall()
     return res[0][0] if len(res) == 1 else None
 
@@ -44,17 +55,17 @@ def get_process_id(curs, name, descrip):
     """Find or create new named process; return ID"""
     pid = find_process_id(curs,name)
     if pid is not None: return pid
-    curs.execute("INSERT INTO process(name,descrip) VALUES (?,?)", (name, descrip))
+    curs.execute("INSERT INTO process(process_name,process_descrip) VALUES (?,?)", (name, descrip))
     return curs.lastrowid
 
 def get_entity_info(curs, eid):
     """Get name/description for entity"""
-    curs.execute("SELECT name,descrip FROM entity WHERE entity_id = ?", (eid,))
+    curs.execute("SELECT entity_name,entity_descrip FROM entity WHERE entity_id = ?", (eid,))
     return curs.fetchall()[0]
 
 def get_process_info(curs, pid):
     """Get name/description for process"""
-    curs.execute("SELECT name,descrip FROM process WHERE process_id = ?", (pid,))
+    curs.execute("SELECT process_name,process_descrip FROM process WHERE process_id = ?", (pid,))
     return curs.fetchall()[0]
 
 def set_status(curs, eid, pid, s):
@@ -98,6 +109,31 @@ def display_pdb_summary(curs):
         curs.execute("SELECT COUNT(*) FROM status WHERE state = ?", (i,))
         print("%i\toperations"%curs.fetchone()[0],pdb_state_names[i])
     print()
+
+def run_process_steps(steps, pdb_conn, checkdone = True):
+    pdb_curs = pdb_conn.cursor()
+    rdbconn = connect_JobsDB()
+    rdbcurs = rdbconn.cursor()
+
+    for s in steps:
+        s.check_progress(rdbcurs)
+        elegible = s.find_ready()
+        if elegible:
+            print("Elegible inputs for %s [%s]:"%s.info)
+            for eid in elegible:
+                einfo = get_entity_info(pdb_curs, eid)
+                print("\t%s [%s]"%einfo)
+                if checkdone and s.check_if_already_done(eid,einfo[0]):
+                    print("\t\tAlready processed.")
+                    set_status(pdb_curs, eid, s.pid , 2)
+                else:
+                    s.start_process(rdbcurs, eid)
+
+            rdbconn.commit()
+            pdb_conn.commit()
+
+    pdb_conn.commit()
+    display_pdb_summary(pdb_curs)
 
 def total_file_size(flist):
     """sum file sizes [Bytes] in list of files"""
@@ -168,7 +204,10 @@ class ProcessStep:
         self.set_status(eid, 0)
         estrt = self.estimate_runtime(eid,ename)
         if estrt is None: estrt = 1800
-        jid = make_job_script(rdbcurs, self.name, jcmd, self.res_use + [("walltime",estrt)])
+
+        rsrc = dict(self.res_use + [("walltime",estrt)])
+        print(rsrc)
+        jid = ShellJob(name=self.name, script=jcmd, res_list = rsrc).upload(rdbcurs)
         assert jid is not None
         self.curs.execute("UPDATE status SET job_id = ?, input_size = ? WHERE entity_id = ? AND process_id = ?", (jid, self.calc_inflsize(eid, ename), eid, self.pid))
         self.set_status(eid, 1)

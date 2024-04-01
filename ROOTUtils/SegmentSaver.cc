@@ -122,7 +122,7 @@ TObject* SegmentSaver::_tryLoad(const string& oname) {
             throw std::runtime_error("File structure mismatch: missing '"+oname+"'");
         }
     } else {
-        addWithName(o, oname);
+        addObject(o, oname);
     }
     return o;
 }

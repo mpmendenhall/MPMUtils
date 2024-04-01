@@ -13,7 +13,7 @@
 TDirectory* TObjCollector::writeItems(TDirectory* d) {
     if(!d) d = gDirectory;
 
-    for(auto const& kv: anonItems) {
+    for(auto const& kv: namedItems) {
         auto pp = splitLast(kv.first, "/");
         if(pp.first.size()) {
             if(!d->GetDirectory(pp.first.c_str())) d->mkdir(pp.first.c_str());
@@ -23,26 +23,25 @@ TDirectory* TObjCollector::writeItems(TDirectory* d) {
     }
 
     d->cd();
-    for(auto& kv: namedItems) kv.second->Write();
-
     return d;
 }
 
-void TObjCollector::addNamedObject(TNamed* o) {
+void TObjCollector::_addObject(TNamed* o) {
     if(!o) return;
     string n(o->GetName());
-    if(!n.size()) throw std::runtime_error("Adding item with empty name");
-    if(namedItems.count(n)) throw std::runtime_error("Adding duplicate named item '" + n + "'");
-    namedItems[n] = o;
+    _addObject(o, n);
+}
+
+void TObjCollector::_addObject(TObject* o, const string& name) {
+    if(!o) return;
+    if(namedItems.count(name)) throw std::runtime_error("Duplicate name '"+name+"' registered!");
+    if(!name.size()) throw std::runtime_error("Adding item with empty name");
+    namedItems[name] = o;
 }
 
 void TObjCollector::deleteAll() {
-    return; // TODO FIXME sometimes crashes at end of plugin processing!
-
     for(auto const& kv: namedItems) delete kv.second;
     namedItems.clear();
-    for(auto const& kv: anonItems) delete kv.second;
-    anonItems.clear();
     for(auto i: deleteItems) delete i;
     deleteItems.clear();
 }
@@ -54,9 +53,3 @@ TObject* TObjCollector::addDeletable(TObject* o) {
     return o;
 }
 
-TObject* TObjCollector::addAnonymous(TObject* o, const string& name) {
-    if(anonItems.count(name)) throw std::runtime_error("Duplicate name '"+name+"' registered!");
-    if(!name.size()) throw std::runtime_error("Adding anonymous item with empty name");
-    anonItems[name] = o;
-    return o;
-}
