@@ -77,13 +77,8 @@ protected:
 template <class Plug, class Base>
 class ConfigPluginBuilder: public _ArgsBaseFactory<SegmentSaver, SegmentSaver&, SettingsQuery&> {
 public:
-    /// Constructor, registering to list
-    explicit ConfigPluginBuilder(const string& cname): _ArgsBaseFactory<SegmentSaver, SegmentSaver&, SettingsQuery&>(cname) {
-        auto& idx = FactoriesIndex::indexFor<SegmentSaver, SegmentSaver&, SettingsQuery&>();
-        auto h = FactoriesIndex::hash(cname);
-        if(idx.count(h)) throw std::logic_error("Duplicate registration of plugin named '" + cname + "'");
-        idx.emplace(h, *this);
-    }
+    /// constructor
+    ConfigPluginBuilder(const string& cname) { this->register_class(cname); }
 
     /// Re-casting plugin construction
     SegmentSaver* construct(SegmentSaver& pnt, SettingsQuery& S) const override {
