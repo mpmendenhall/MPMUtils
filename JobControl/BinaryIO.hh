@@ -40,9 +40,9 @@ public:
     template<typename T>
     BinaryWriter& operator<<(const T& v) { send(v); return *this; }
 
-    /// Dereference pointers by default
+    /// unhappy sending pointers
     template<typename T>
-    void send(const T* p) { send(*p); }
+    void send(const T*) { throw std::logic_error("Don't send pointers"); }
 
     /// data block send
     void send(const void* vptr, size_t size) {
@@ -179,6 +179,10 @@ public:
     virtual size_t read_upto(void*, size_t) { return 0; }
     /// skip over n bytes (... please reimplement faster!)
     virtual void ignore(size_t n) { vector<char> foo(n); read(foo.data(), n); }
+
+protected:
+    int dataSrc = 0;    ///< source identifier for data receive
+
 };
 
 /// string data send

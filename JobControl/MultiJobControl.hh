@@ -9,8 +9,6 @@ WN = (remote) Worker Node
 JobWorker: instantiated on WN to run job according to supplied instructions
 JobComm:   runs on CN, with protocol for communicating with JobWorker
 
-
-
 CN: send JobSpec JS to WN, encoding JobWorker class wclass
     WN: Receives JS; loads appropriate worker W for JS.wclass;
         calls JobWorker::run(...) to load further start-of-run information
@@ -34,7 +32,7 @@ class JobComm;
 struct JobSpec {
     int uid = 0;            ///< unique identifier for this job (associated with persisted data)
     int wid = 0;            ///< worker ID (assigned by Job Control, e.g. an MPI rank)
-    size_t wclass = 0;      ///< worker type identifier; 0 for stop job
+    string wclass;          ///< worker type identifier; empty for stop job
     size_t N0 = 0;          ///< starting subdivision range
     size_t N1 = 0;          ///< ending range subdivision
     JobComm* C = nullptr;   ///< communicator for relaying job details and results
@@ -42,7 +40,13 @@ struct JobSpec {
     void display() const;   ///< print summary to stdout
 };
 
+/// JobSpec data send
+template<>
+void BinaryWriter::send<JobSpec>(const JobSpec& s);
 
+/// Receive JobSpec
+template<>
+void BinaryReader::receive<JobSpec>(JobSpec& s);
 
 /// Base class defining communications protocol (over supplied channel) between controller and worker.
 /// Runs on controller node to send start-of-job commands and process end-of-job results for each job instance.
@@ -54,7 +58,7 @@ public:
     virtual void endJob(BinaryReader&) = 0;
 
     /// Helper function to create subdivided jobs list, referencing this communicator
-    void splitJobs(vector<JobSpec>& vJS, size_t nSplit, size_t nItms, size_t wclass, int uid=0);
+    void splitJobs(vector<JobSpec>& vJS, size_t nSplit, size_t nItms, const string& wclass, int uid=0);
 };
 
 
@@ -100,8 +104,7 @@ protected:
     /// Check status for all running jobs, performing post-return jobs as needed; return number of still-running jobs
     vector<int> checkJobs();
 
-    map<int,JobSpec> jobs;      ///< active jobs by worker ID
-    int dataSrc = 0;        ///< source identifier for data received
+    map<int,JobSpec> jobs;  ///< active jobs by worker ID
 };
 
 
@@ -118,6 +121,7 @@ public:
 
     static MultiJobWorker* JW;          ///< singleton instance for job control type
     int verbose = 0;                    ///< debugging verbosity level
+    int wid = 0;                        ///< worker ID number
 
 protected:
 
@@ -125,7 +129,7 @@ protected:
     void runJob(JobSpec& JS);
 
     bool persistent = true;             ///< whether child processes are persistent or one-shot
-    map<size_t, JobWorker*> workers;    ///< workers by class
+    map<string, JobWorker*> workers;    ///< workers by class
 };
 
 

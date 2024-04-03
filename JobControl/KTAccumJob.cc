@@ -33,12 +33,10 @@ void KTAccumJobComm::endJob(BinaryReader& R) {
             auto h = kd->GetROOT<TH1>();
             if(!h) throw std::logic_error("Missing corresponding accumulation object");
             objs.at(i)->Add(h);
-            //printf("Accumulating '%s : %s'\n", combos.at(i).c_str(), h->GetName());    
             delete h;
         } else {
-            //printf("Accumulating '%s'\n", combos.at(i).c_str());    
-	    *cd += *kd;
-	}
+            *cd += *kd;
+        }
         delete kd;
     }
 }

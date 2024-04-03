@@ -28,6 +28,8 @@ protected:
 /// Distribute and collect jobs over MPI
 class MPIJobWorker: public MPIBinaryIO, public MultiJobWorker {
 public:
+    /// Constructor
+    MPIJobWorker() { wid = MPIBinaryIO::mpirank; }
     /// signal that job is done; ready for close-out comms
     void signalDone() override;
 };

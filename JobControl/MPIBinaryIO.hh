@@ -31,7 +31,6 @@ protected:
 
     vector<char> rbuff; ///< read buffer
     size_t rpt = 0;     ///< current read buffer read point
-    int dataSrc = 0;        ///< source identifier for data received
 };
 
 #endif

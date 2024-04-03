@@ -111,7 +111,7 @@ KeyData* BinaryReader::receive<KeyData*>() {
 template<>
 void BinaryReader::receive(KeyData& d) {
     UInt_t s = receive<UInt_t>();
-    Int_t w = receive<UInt_t>();
+    UInt_t w = receive<UInt_t>();
     d = KeyData(w,s);
     read(static_cast<void*>(d.data()), s);
 }

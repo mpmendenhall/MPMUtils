@@ -25,7 +25,7 @@ public:
     virtual void gather();
 
     /// get correct worker class ID
-    virtual size_t workerType() const = 0;
+    virtual string workerType() const = 0;
 
     /// launch accumulation jobs
     void launchAccumulate(int uid = 0);

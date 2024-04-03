@@ -10,7 +10,8 @@ MPIJobControl::~MPIJobControl() {
     // Send ending message to close worker process
     JobSpec JS0;
     for(auto r: availableRanks) {
-        dataDest = r;
+        if(verbose > 4) printf("Sending end message to worker [%i]\n", r);
+        JS0.wid = dataDest = r;
         send(JS0);
     }
 

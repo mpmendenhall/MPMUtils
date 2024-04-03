@@ -286,10 +286,13 @@ void BinaryWriter::send(const KeyData& M);
 /// Receive (and accept memory management of) KeyData
 template<>
 void BinaryReader::receive(KeyData& d);
-/// Receive (and accept memory management of) KeyData
+/// Receive (and accept memory management of) KeyData (for KeyTable receive)
 template<>
 KeyData* BinaryReader::receive<KeyData*>();
 
+/// Send KeyData by pointer (for KeyTable send)
+template<>
+inline void BinaryWriter::send(const KeyData* d) { send(*d); }
 /// Send KeyTable
 template<>
 inline void BinaryWriter::send(const KeyTable& kt) { send((const map<string,KeyData*>&)kt); }

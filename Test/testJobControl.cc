@@ -33,40 +33,59 @@ REGISTER_FACTORYOBJECT(MyAccumJob, JobWorker)
 class MyJobComm: public KTAccumJobComm {
 public:
     /// get correct worker class ID
-    size_t workerType() const override { return FactoriesIndex::hash("MyAccumJob"); }
+    string workerType() const override { return "MyAccumJob"; }
 };
 
-
-/// main() for executable
-int main(int argc, char **argv) {
-    CodeVersion::display_code_version();
-
+bool MPI_generic_init(int argc, char **argv) {
     MPIBinaryIO::init(argc,argv);
     MPIBinaryIO::display();
 
     if(MPIBinaryIO::mpisize <= 1) {
-
-        auto JCW = new LocalJobControl();
-        MultiJobControl::JC = JCW;
-        LocalJobControl::JW = JCW;
-
+        // single MPI node? configure to run locally
+        auto LJC = new LocalJobControl();
+        MultiJobControl::JC = LJC;
+        LocalJobControl::JW = LJC;
     } else if(!MPIBinaryIO::mpirank) {
-
+        // on MPI controller node?
         MultiJobControl::JC = new MPIJobControl();
 
     } else {
-
+        // on MPI worker node?
         MultiJobWorker::JW = new MPIJobWorker();
+        MultiJobWorker::JW->verbose = 5;
         JobState::stateDir = "./SavedState/";
         MultiJobWorker::JW->runWorkerJobs();
 
         delete MultiJobWorker::JW;
         MPIBinaryIO::uninit();
-        return EXIT_SUCCESS;
+        return false;
     }
+    return true;
+}
+
+/// main() for executable
+int main(int argc, char **argv) {
+    CodeVersion::display_code_version();
+
+    // exit here after completing jobs on worker node
+    if(!MPI_generic_init(argc,argv)) return EXIT_SUCCESS;
 
     MultiJobControl::JC->verbose = 5;
+    printf("\n---- Submitting 10 do-nothing jobs ----\n\n");
+    for(int i=0; i<10; i++) {
+        JobSpec JS;
+        JS.uid = i;
+        JS.wclass = "JobWorker";
+        MultiJobControl::JC->submitJob(JS);
+    }
+    printf("\n\nAll submitted!\n\n");
 
+    // wait for them all to complete
+    MultiJobControl::JC->waitComplete();
+    printf("----- *** -----\n\n");
+
+    // accumulate 1000 counts of events, spread over however many jobs available
+    printf("----- Launching accumulation jobs ------\n");
     MyJobComm KTC;
     auto foo = new TH1F("foo","bar",20,0,10);
     KTC.kt.Set("v", *foo);
@@ -74,25 +93,18 @@ int main(int argc, char **argv) {
     KTC.kt.Set("NSamples", 1000);
 
     KTC.launchAccumulate();
-    for(int i=0; i<10; i++) {
-        JobSpec JS;
-        JS.uid = i;
-        JS.wclass = FactoriesIndex::hash("JobWorker");
-        MultiJobControl::JC->submitJob(JS);
-    }
-    printf("\n\nAll submitted!\n\n");
+    printf("\n-- Accumulator jobs all launched. --\n\n");
 
     MultiJobControl::JC->waitComplete();
-
     printf("\n\nAll done!\n");
 
     KTC.gather();
     auto f = KTC.kt.GetROOT<TH1>("v");
-    assert(f);
+    if(!f) throw std::logic_error("missing accumulated histogram\n");
     for(int i=1; i<=f->GetNbinsX(); i++) printf("\t%i\t%g\n", i, f->GetBinContent(i));
 
+    // cleanup --- will send end command to remote jobs
     delete MultiJobControl::JC;
     MPIBinaryIO::uninit();
-
     return EXIT_SUCCESS;
 }
