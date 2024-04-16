@@ -1,21 +1,24 @@
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/.git)
 
-exec_program( "git" ${PROJECT_SOURCE_DIR}
-    ARGS "rev-parse -q HEAD"
+execute_process(COMMAND git rev-parse -q HEAD
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE GIT_SHA
-    RETURN_VALUE GIT_SHA_RET)
+    RESULT_VARIABLE GIT_SHA_RET
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 if(NOT ${GIT_SHA_RET})
 
-    exec_program( "git" ${PROJECT_SOURCE_DIR}
-        ARGS "describe --tags HEAD"
-        OUTPUT_VARIABLE GIT_TAGNAME )
-    exec_program("basename" ${PROJECT_SOURCE_DIR}
-        ARGS "`git rev-parse --show-toplevel`"
-        OUTPUT_VARIABLE REPO_NAME)
+    execute_process(COMMAND git describe --tags HEAD
+	WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_TAGNAME
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND sh -c "basename `git rev-parse --show-toplevel`"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        OUTPUT_VARIABLE REPO_NAME
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     SET(CODEVERSION_COMPILE_DEFS "REPO_NAME=${REPO_NAME};REPO_VERSION=${GIT_SHA};REPO_TAGNAME=${GIT_TAGNAME}")
-    message(STATUS "git repo ${REPO_NAME} '${GIT_TAGNAME}' (${GIT_SHA})")
+    message(STATUS "git repo ${REPO_NAME} tag '${GIT_TAGNAME}' (SHA ${GIT_SHA})")
 
 else()
 
