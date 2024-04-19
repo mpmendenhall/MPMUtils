@@ -43,7 +43,7 @@ namespace FactoriesIndex {
 
     /// show debugging list of registered classes
     void display();
-};
+}
 
 /// Factory base for particular arguments structure and base class
 template<typename B, typename... Args>
