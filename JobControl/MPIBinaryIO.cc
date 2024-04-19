@@ -95,9 +95,9 @@ void MPIBinaryIO::init(int argc, char **argv) {
 const char* _hname = "not_an_MPI_host";
 char* MPIBinaryIO::hostname = (char*)_hname;
 
-void MPIBinaryIO::_send(const void*, int) { throw std::logic_error("Not compiled with MPI!"); }
+void MPIBinaryIO::_send(const void*, size_t) { throw std::logic_error("Not compiled with MPI!"); }
 
-size_t MPIBinaryIO::read(void*, int) { throw std::logic_error("Not compiled with MPI!"); }
+void MPIBinaryIO::read(void*, size_t) { throw std::logic_error("Not compiled with MPI!"); }
 
 void MPIBinaryIO::init(int, char **) { }
 
