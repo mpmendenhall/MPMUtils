@@ -25,13 +25,13 @@ void EqMatrix::addSum(int i, int j, double x, double dx) {
 }
 
 void EqMatrix::lineq_t::display() const {
-    for(auto& p: coeffs) printf("%+g * [%i] ", p.second, p.first);
+    for(const auto& p: coeffs) printf("%+g * [%i] ", p.second, p.first);
     printf("= %g +- %g\n", x, dx);
 }
 
 void EqMatrix::index_vars() {
     indices.clear();
-    for(auto& d: dpts) for(auto& c: d.coeffs) indices.push_back(c.first);
+    for(const auto& d: dpts) for(const auto& c: d.coeffs) indices.push_back(c.first);
     std::sort(indices.begin(), indices.end());
     indices.erase(std::unique(indices.begin(), indices.end()), indices.end());
 
@@ -52,7 +52,7 @@ void EqMatrix::calculate(bool doErrs) {
     for(auto& p: dpts) {
         p.dx = 1./(p.dx * p.dx);
         sumw += p.dx;
-        for(auto& c: p.coeffs) {
+        for(const auto& c: p.coeffs) {
             v[i] = p.x*p.dx;
             M(i, to_idx.at(c.first)) += c.second*p.dx;
         }

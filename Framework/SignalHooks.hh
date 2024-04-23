@@ -12,7 +12,7 @@
 class ConfigSignals: public Configurable, public SignalSink, public XMLProvider {
 public:
     /// Constructor
-    ConfigSignals(const Setting& S);
+    explicit ConfigSignals(const Setting& S);
     /// Destructor
     ~ConfigSignals() { delete nextSig; }
 

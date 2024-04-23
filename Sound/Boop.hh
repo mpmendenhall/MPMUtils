@@ -23,7 +23,7 @@ struct BoopSpec_t {
 class BoopSynth: public BoopSpec_t {
 public:
     /// Constructor
-    BoopSynth(long srate = 48000, size_t nc = 2):
+    explicit BoopSynth(long srate = 48000, size_t nc = 2):
     samplerate(srate), nchan(nc) { }
     /// Destructor
     virtual ~BoopSynth() { }

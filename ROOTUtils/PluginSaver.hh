@@ -78,7 +78,7 @@ template <class Plug, class Base>
 class ConfigPluginBuilder: public _ArgsBaseFactory<SegmentSaver, SegmentSaver&, SettingsQuery&> {
 public:
     /// constructor
-    ConfigPluginBuilder(const string& cname) { this->register_class(cname); }
+    explicit ConfigPluginBuilder(const string& cname) { this->register_class(cname); }
 
     /// Re-casting plugin construction
     SegmentSaver* construct(SegmentSaver& pnt, SettingsQuery& S) const override {

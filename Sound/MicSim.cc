@@ -70,15 +70,15 @@ void MicSim::setup_cardiod_pair(double aopen, double l) {
 void MicSim::display() const {
     cout << "MicSim with microphones:" << std::endl;
     size_t i = 0;
-    for(auto& m: mics) {
+    for(const auto& m: mics) {
         cout << " [" << i++ << "] ";
         m.display();
     }
     cout << "and channel mixes:" << std::endl;
     i = 0;
-    for(auto& c: chans) {
+    for(const auto& c: chans) {
         cout << " (" << i++ << ")";
-        for(auto& p: c) cout << " " << p.second << " * " << "[" << p.first << "]";
+        for(const auto& p: c) cout << " " << p.second << " * " << "[" << p.first << "]";
         cout << std::endl;
     }
 }

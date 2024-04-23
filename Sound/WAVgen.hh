@@ -125,7 +125,7 @@ protected:
     /// play buffered items
     void processout() override {
         PBW::processout();
-        for(auto& v: PBW::_datq) write(v);
+        for(const auto& v: PBW::_datq) write(v);
     }
 
 #ifdef WITH_ALSA

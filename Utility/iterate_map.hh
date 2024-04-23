@@ -6,7 +6,7 @@ template<class M>
 class _iter_keys {
 public:
     /// Constructor
-    _iter_keys(const M& _m): m(_m) { }
+    explicit _iter_keys(const M& _m): m(_m) { }
 
     /// iterator through keys
     class iterator {
@@ -42,7 +42,7 @@ template<typename M>
 class _iter_vals {
 public:
     /// Constructor
-    _iter_vals(M& _m): m(_m) { }
+    explicit _iter_vals(M& _m): m(_m) { }
 
     /// iterator through keys (possibly const if M is const typename)
     class iterator {

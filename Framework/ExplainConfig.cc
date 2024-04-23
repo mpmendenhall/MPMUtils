@@ -102,8 +102,6 @@ SettingsQuery::~SettingsQuery() {
 }
 
 bool SettingsQuery::lookupChoice(const string& name, string& val, const string& descrip, const set<string>& choices, bool mandatory) {
-    queried.insert(name);
-
     // update default if setting present
     bool ex = show_exists(name, descrip, mandatory, false);
     if(ex) {
