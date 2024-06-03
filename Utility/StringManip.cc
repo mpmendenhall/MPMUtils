@@ -20,6 +20,7 @@
  */
 
 #include "StringManip.hh"
+#include <stdexcept>
 #include <stdlib.h>
 #include <time.h>
 
@@ -157,6 +158,7 @@ std::pair<string,string> splitLast(const string& str, const string& splitchars) 
 
 string loadFileString(const string& fname) {
     std::ifstream in(fname.c_str(), std::ios::in | std::ios::binary);
+    if(!in.good()) throw std::runtime_error("Failed to read file '" + fname + "'");
     if (in) {
         in.seekg(0, std::ios::end);
         string contents(in.tellg(), ' ');

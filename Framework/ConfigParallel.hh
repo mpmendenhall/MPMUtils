@@ -92,7 +92,7 @@ public:
     void _push(typename CLUST::cluster_t& C) override {
         if(!vout.size()) return;
         auto o = vout[(outn++) % vout.size()];
-        for(const auto& p: C) o->push(p);
+        for(auto& p: C) o->push(p);
     }
 
     /// handle signals through pre-transform
