@@ -5,7 +5,7 @@
 #define BITFLAGENUMS_HH
 
 #define BITFLAGIZE(base_t, flags_t)                                                 \
-enum flags_t { };                                                                   \
+enum flags_t: int { };                                                                   \
 inline constexpr flags_t operator|(flags_t s, flags_t o) { return flags_t(int(s)|o); }   \
 inline constexpr flags_t operator&(flags_t s, flags_t o) { return flags_t(int(s)&o); }   \
 inline void operator|=(flags_t& s, flags_t o) { s = s|o; }                          \
