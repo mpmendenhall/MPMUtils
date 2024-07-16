@@ -37,7 +37,7 @@ public:
 
     /// treat like gsl_matrix*
     operator const gsl_matrix*() const { return M; }
-    /// treat like gsl_matrix*
+    /// treat like gsl_matrix*&
     operator gsl_matrix*&() { return M; }
     /// treat like gsl_matrix*
     //gsl_matrix* operator->() { return M; }

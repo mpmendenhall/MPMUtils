@@ -32,7 +32,7 @@ public:
 
 protected:
     vector<string> combos;  ///< accumulation object names
-    vector<TH1*> objs;      ///< accumulation TH1's
+    vector<TObject*> objs;  ///< accumulation objects
 };
 
 /// Base job working with KTAccumJobComm

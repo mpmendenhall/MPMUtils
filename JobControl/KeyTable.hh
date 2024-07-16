@@ -127,7 +127,7 @@ public:
     /// Retrieve pointer to start of non-ROOT data block
     template<typename T>
     T* GetArrayPtr() {
-        assert(What() >= kMESS_ARRAY);
+        if(What() < kMESS_ARRAY) throw std::runtime_error("Incorrect data type for array");
         return (T*)(data()+sizeof(UInt_t));
     }
     /// Retrieve pointer to start of non-ROOT data block

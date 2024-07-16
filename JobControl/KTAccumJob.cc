@@ -2,20 +2,29 @@
 // -- Michael P. Mendenhall, LLNL 2019
 
 #include "KTAccumJob.hh"
+#include "TCumulative.hh"
 
 void KTAccumJobComm::endJob(BinaryReader& R) {
     if(!combos.size()) {
         for(auto& kv: kt) {
             if(kv.first.substr(0,7) != "Combine") continue;
             combos.push_back(kv.second->Get<string>());
+            //printf("Combining %s\n", combos.back().c_str());
             auto cd = kt.FindKey(combos.back());
             if(!cd) throw std::runtime_error("Missing key for combining '" + combos.back() + "'");
 
             objs.push_back(nullptr);
             auto tp = cd->What();
             if(tp == kMESS_OBJECT) {
-                objs.back() = cd->GetROOT<TH1>();
-                if(objs.back()) objs.back()->Reset();
+
+                objs.back() = cd->GetROOT<TObject>();
+
+                auto h = dynamic_cast<TH1*>(objs.back());
+                if(h) h->Reset();
+
+                auto cum = dynamic_cast<TCumulative*>(objs.back());
+                if(cum) cum->ClearCumulative();
+
             } else cd->clearV();
         }
     }
@@ -29,14 +38,19 @@ void KTAccumJobComm::endJob(BinaryReader& R) {
         if(tp != kd->What()) throw std::logic_error("Mismatched types for combining '" + combos[i] + "'");
 
         if(tp == kMESS_OBJECT) {
-	    if(!objs.at(i)) throw std::logic_error("Null accumulation object");
-            auto h = kd->GetROOT<TH1>();
-            if(!h) throw std::logic_error("Missing corresponding accumulation object");
-            objs.at(i)->Add(h);
-            delete h;
-        } else {
-            *cd += *kd;
-        }
+            if(!objs.at(i)) throw std::logic_error("Null accumulation object");
+
+            auto o = kd->GetROOT<TObject>();
+            if(!o) throw std::logic_error("Missing corresponding accumulation object");
+
+            auto h = dynamic_cast<TH1*>(o);
+            if(h) dynamic_cast<TH1&>(*objs.at(i)).Add(h);
+
+            auto cum = dynamic_cast<TCumulative*>(o);
+            if(cum) dynamic_cast<TCumulative&>(*objs.at(i)).Add(*cum);
+
+            delete o;
+        } else *cd += *kd;
         delete kd;
     }
 }
