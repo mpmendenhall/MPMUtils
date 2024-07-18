@@ -8,8 +8,6 @@
 #ifndef SQLITE_HELPER_HH
 #define SQLITE_HELPER_HH
 
-#include "sqlite3.h"
-
 #include <map>
 using std::map;
 #include <string>
@@ -17,6 +15,9 @@ using std::string;
 #include <vector>
 using std::vector;
 #include <stdexcept>
+
+class sqlite3;
+class sqlite3_stmt;
 
 /// Base for SQLite_Helper exceptions
 class SQLiteHelper_Exception: public std::runtime_error {
@@ -50,9 +51,9 @@ public:
     bool isValid() const { return db; }
 
     /// BEGIN TRANSACTION command
-    int beginTransaction(bool exclusive=false) { return (txdepth++)? SQLITE_OK : exec(exclusive? "BEGIN EXCLUSIVE TRANSACTION" : "BEGIN TRANSACTION"); }
+    int beginTransaction(bool exclusive=false);
     /// END TRANSACTION command
-    int endTransaction() { return (--txdepth)? SQLITE_OK : exec("END TRANSACTION"); }
+    int endTransaction();
 
     /// set up query for use
     int setQuery(const char* qry, sqlite3_stmt*& stmt);

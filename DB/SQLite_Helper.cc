@@ -9,6 +9,8 @@
 #include "StringManip.hh"
 #include "PathUtils.hh"
 
+#include "sqlite3.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -76,6 +78,14 @@ SQLite_Helper::~SQLite_Helper() {
         for(auto const& kv: statements) sqlite3_finalize(kv.second);
         sqlite3_close(db);
     }
+}
+
+int SQLite_Helper::beginTransaction(bool exclusive) {
+    return (txdepth++)? SQLITE_OK : exec(exclusive? "BEGIN EXCLUSIVE TRANSACTION" : "BEGIN TRANSACTION");
+}
+
+int SQLite_Helper::endTransaction() {
+    return (--txdepth)? SQLITE_OK : exec("END TRANSACTION");
 }
 
 int SQLite_Helper::setQuery(const char* qry, sqlite3_stmt*& stmt) {

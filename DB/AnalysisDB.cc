@@ -15,6 +15,8 @@
 #include <functional>
 #include <stdio.h>
 
+#include "sqlite3.h"
+
 AnalysisDB* AnalysisDB::myDB = nullptr;
 
 string ADBfile() {

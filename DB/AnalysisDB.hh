@@ -9,6 +9,7 @@
 #define ANALYSISDB_HH
 
 #include "SQLite_Helper.hh"
+#include <inttypes.h>
 
 /// Calibration database interface
 class AnalysisDB: public SQLite_Helper {
@@ -19,9 +20,9 @@ public:
     static void closeDB() { if(myDB) { delete myDB; myDB = nullptr; } }
 
     /// DB identifier for run
-    enum anarun_id_t: sqlite3_int64 { };
+    enum anarun_id_t: int64_t { };
     /// DB identifier for variable
-    enum anavar_id_t: sqlite3_int64 { };
+    enum anavar_id_t: int64_t { };
 
     /// create analysis run identifier
     anarun_id_t createAnaRun(const string& dataname);
