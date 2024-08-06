@@ -95,15 +95,20 @@ public:
         }
 
         if(t < t0) {
-            if(!--ndis) {
-                printf("Warning: out-of-order queue event at %g < %g (%g)!\n",
-                       double(t), double(t0), double(t0-t));
-                dispObj(o);
-                ndis = warn_ndis;
-                throw std::logic_error("OrderingQueue input before minimum");
+            printf("Warning: out-of-order queue event at %g < %g (%g)!\n",
+                    double(t), double(t0), double(t0-t));
+            dispObj(o);
+
+            if(flush_disordered) {
+                signal(DATASTREAM_FLUSH);
+                push(o, doFlush);
+                return;
             }
 
             if(skip_disordered) return;
+
+            throw std::logic_error("OrderingQueue input before minimum");
+
             output_t oo = o;
             processOrdered(oo);
             return;
@@ -116,9 +121,8 @@ public:
 
     ordering_t t0 = -order_max; ///< flush boundary
     ordering_t dt;              ///< flush ordered queue more than this far before highest item
-    int warn_ndis = 1;          ///< frequency to print disordered-event warning
-    int ndis = 1;               ///< number disordered since last warning
-    bool skip_disordered = true;///< skip over disordered events
+    bool skip_disordered = true;    ///< skip over disordered events
+    bool flush_disordered = true;   ///< flush queue on disordered entries
 
 protected:
     PQ_t PQ;

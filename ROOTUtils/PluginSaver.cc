@@ -32,11 +32,6 @@ void PluginSaver::buildPlugin(const string& pname, int& copynum, SettingsQuery& 
     cfg.lookupValue("order", o->order, "plugin execution order");
     byName[_rename] = o;
     myPlugins.push_back(o);
-    {
-        auto t0 = steady_clock::now();
-        o->initialize();
-        o->tSetup += std::chrono::duration<double>(steady_clock::now()-t0).count();
-    }
     if(rn0 == _rename) ++copynum;
 }
 
@@ -53,7 +48,8 @@ void PluginSaver::initialize() {
     registerConfig(*cfg);
     storedSQ = new SettingsQuery(cfg->lookup(snm));
     storedSQ->markused("class");
-    Configure(*storedSQ, true);
+
+    if(fIn) Configure(*storedSQ, true);
 }
 
 void PluginSaver::Configure(SettingsQuery& S, bool skipUnknown) {
@@ -77,6 +73,12 @@ void PluginSaver::Configure(SettingsQuery& S, bool skipUnknown) {
     printf("\n");
     if(optionalGlobalArg("plotformat", printsfx, "plot output format")) setPrintSuffix(printsfx);
     printf("\n");
+
+    for(auto P: myPlugins) {
+        auto t0 = steady_clock::now();
+        P->initialize();
+        P->tProcess += std::chrono::duration<double>(steady_clock::now()-t0).count();
+    }
 }
 
 map<string,float> PluginSaver::compareKolmogorov(const SegmentSaver& S) const {
@@ -164,6 +166,8 @@ void PluginSaver::signal(datastream_signal_t s) {
 
 
     if(s == DATASTREAM_INIT) {
+        if(!fIn && storedSQ) Configure(*storedSQ, false);
+
         SegmentSaver::signal(s);
         ana_t0 = steady_clock::now();
         for(auto P: myPlugins) {
